@@ -1,0 +1,148 @@
+<div class="flex min-h-screen">
+  <!-- Left panel - branding -->
+  <div class="hidden lg:flex lg:w-[58%] relative bg-primary overflow-hidden flex-col justify-between p-10">
+    <!-- Decorative background pattern -->
+    <div class="absolute inset-0 opacity-20">
+      <svg class="w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+        <circle cx="200" cy="300" r="250" fill="white" opacity="0.08" />
+        <circle cx="600" cy="150" r="180" fill="white" opacity="0.05" />
+        <circle cx="700" cy="500" r="220" fill="white" opacity="0.06" />
+      </svg>
+    </div>
+
+    <!-- MIDAGRI logo top-left -->
+    <div class="relative z-10">
+      <img src="assets/logo-midagri.png" alt="MIDAGRI" class="h-12 brightness-0 invert" />
+    </div>
+
+    <!-- Center content -->
+    <div class="relative z-10 space-y-4">
+      <h1 class="font-display text-5xl font-bold text-primary-foreground tracking-tight">
+        SRAEC 2026
+      </h1>
+      <div class="w-12 h-1 bg-accent rounded-full"></div>
+      <p class="text-xl text-primary-foreground/80 max-w-md leading-relaxed">
+        Gestión de Confianza para el Agro Peruano.
+      </p>
+    </div>
+
+    <!-- Bottom tagline -->
+    <div class="relative z-10 flex items-center gap-3 text-sm text-primary-foreground/60 tracking-widest uppercase">
+      <span>Inspirando Innovación</span>
+      <span class="w-1 h-1 rounded-full bg-primary-foreground/40"></span>
+      <span>Excelencia Operativa</span>
+    </div>
+  </div>
+
+  <!-- Right panel - login form -->
+  <div class="flex-1 flex flex-col justify-between bg-background">
+    <div class="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-20 max-w-lg mx-auto w-full">
+      <!-- Institutional headers -->
+      <div class="flex items-start justify-between mb-8">
+        <div>
+          <p class="text-sm font-bold text-foreground tracking-wide">MIDAGRI</p>
+          <p class="text-[10px] text-muted-foreground uppercase tracking-wider">Ministerio de Desarrollo Agrario</p>
+        </div>
+        <div class="text-right">
+          <img src="assets/logo-agroideas.png" alt="AGROIDEAS" class="h-10 ml-auto" />
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="mb-8">
+        <h2 class="font-display text-2xl font-bold text-foreground">Acceso al Sistema</h2>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Ingrese sus credenciales para continuar al registro agrario editorial.
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+        <div class="space-y-1.5">
+          <label for="usuario" class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Usuario
+          </label>
+          <div class="relative">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-muted-foreground">person</span>
+            <input
+              id="usuario"
+              type="text"
+              formControlName="usuario"
+              placeholder="nombre.apellido"
+              class="w-full pl-10 h-12 bg-muted border-0 text-sm rounded-md focus:ring-2 focus:ring-primary outline-none"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label for="password" class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Contraseña
+          </label>
+          <div class="relative">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-muted-foreground">lock</span>
+            <input
+              id="password"
+              [type]="showPw() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="••••••••"
+              class="w-full pl-10 pr-10 h-12 bg-muted border-0 text-sm rounded-md focus:ring-2 focus:ring-primary outline-none"
+            />
+            <button
+              type="button"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              (click)="togglePassword()"
+            >
+              <span class="material-icons text-[18px]">{{ showPw() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <div class="text-right">
+            <button type="button" class="text-xs text-primary hover:underline">
+              ¿Olvidó su contraseña?
+            </button>
+          </div>
+        </div>
+
+        @if (error()) {
+          <p class="text-sm text-destructive font-medium">{{ error() }}</p>
+        }
+
+        <ui-button type="submit" label="INGRESAR" icon="arrow_forward" [block]="true" size="lg"></ui-button>
+      </form>
+
+      <!-- Help link -->
+      <div class="mt-6">
+        <button class="w-full flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground hover:bg-muted transition-colors">
+          <span class="flex items-center gap-2">
+            <span class="material-icons text-[18px]">help_outline</span>
+            Centro de Ayuda
+          </span>
+          <span class="material-icons text-[18px]">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Legal notice -->
+      <p class="mt-6 text-center text-[10px] text-muted-foreground uppercase tracking-wider leading-relaxed">
+        Este es un sistema oficial del Gobierno del Perú.<br />
+        El acceso no autorizado está estrictamente prohibido.
+      </p>
+
+      <!-- Demo credentials -->
+      <div class="mt-4 rounded-lg bg-muted/60 p-3 border border-border">
+        <p class="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">Credenciales de prueba:</p>
+        <div class="space-y-0.5 text-xs text-muted-foreground">
+          <p><span class="font-medium text-foreground">Admin:</span> admin / admin123</p>
+          <p><span class="font-medium text-foreground">Asistente:</span> chuaman / campo2026</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-8 py-4 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border">
+      <span>© 2026 MIDAGRI · AGROIDEAS. Todos los derechos reservados.</span>
+      <div class="flex gap-4">
+        <button class="hover:text-foreground transition-colors">Privacidad</button>
+        <button class="hover:text-foreground transition-colors">Contacto</button>
+      </div>
+    </div>
+  </div>
+</div>

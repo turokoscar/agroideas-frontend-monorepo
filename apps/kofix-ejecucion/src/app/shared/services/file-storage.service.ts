@@ -1,9 +1,9 @@
+import { ResponseDto } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { ResponseDto } from '../../domain/models/response-dto.model';
 
 export interface FileUploadResult {
     fileUrl: string;

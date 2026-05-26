@@ -1,13 +1,13 @@
+import { UIModalComponent } from '@agroideas/ui';
+import { AlertService } from '@agroideas/feedback';
 import { Component, Output, EventEmitter, OnInit, inject, signal, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { UIModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
 
 import { ProgramacionRepository } from '../../../domain/repositories/programacion.repository';
 import { SaveProgramacionUseCase } from '../../../domain/usecases/programacion/save-programacion.usecase';
 import { ProgramacionItem, DetalleCronograma } from '../../../domain/models/programacion.model';
-import { AlertService } from '../../../shared/services/alert.service';
 
 /**
  * ProgramacionCronogramaModalComponent

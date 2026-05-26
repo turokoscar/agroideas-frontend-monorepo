@@ -1,8 +1,8 @@
+import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { AlertService } from '@agroideas/feedback';
 import { Component, input, output, signal, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormArray, FormGroup } from '@angular/forms';
-import { UIModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { RegistrarRendicionUseCase } from '../../../domain/usecases/rendicion/registrar-rendicion.usecase';
 import { UpdateRendicionUseCase } from '../../../domain/usecases/rendicion/update-rendicion.usecase';
@@ -11,7 +11,6 @@ import { UploadFileUseCase } from '../../../domain/usecases/rendicion/upload-fil
 import { Rendicion } from '../../../domain/models/rendicion.model';
 import { finalize } from 'rxjs';
 import { MessageService } from 'primeng/api';
-import { AlertService } from '../../../shared/services/alert.service';
 
 @Component({
   selector: 'app-rendicion-modal',

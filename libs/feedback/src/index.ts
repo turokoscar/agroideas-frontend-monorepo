@@ -1,1 +1,1 @@
-export * from './lib/feedback/feedback.component';
+export * from './lib/alert.service';

@@ -1,15 +1,14 @@
+import { AlertService } from '@agroideas/feedback';
+import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
 import { Component, Input, OnInit, Output, EventEmitter, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
-import { AlertService } from '../../../shared/services/alert.service';
 import { FileStorageService } from '../../../shared/services/file-storage.service';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { NoObjecionProgrammedItem } from '../../../domain/models/no-objecion-programmed-item.model';
 import { NoObjecionBalance } from '../../../domain/models/no-objecion.model';
-import { UIModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 @Component({
     selector: 'app-no-objecion-modal',

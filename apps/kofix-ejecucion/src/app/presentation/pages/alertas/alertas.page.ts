@@ -1,10 +1,7 @@
+import { StatusType, TableColumn, UiDataTableComponent, UiFilterBarComponent, UiKpiComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UiKpiComponent } from '../../../shared/components/ui-kpi/ui-kpi.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
 
 export interface Alerta {
     id: number;

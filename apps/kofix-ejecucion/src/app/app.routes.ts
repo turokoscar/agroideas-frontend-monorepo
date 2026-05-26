@@ -1,11 +1,11 @@
+import { PERMISSIONS } from '@agroideas/utils';
 import { Routes } from '@angular/router';
 import { LoginPageComponent } from './presentation/pages/login/login.page';
 import { inject } from '@angular/core';
 import { AuthRepository } from './domain/repositories/auth.repository';
 import { Router } from '@angular/router';
 import { AppLayoutComponent } from './layout/app.layout.component';
-import { permissionGuard } from './auth/permission.guard';
-import { PERMISSIONS } from './shared/utils/permissions';
+import { permissionGuard } from '@agroideas/security';
 
 const authGuard = () => {
     const authRepo = inject(AuthRepository);

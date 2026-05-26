@@ -1,1 +1,1 @@
-export * from './lib/http/http.component';
+export { ResponseDto } from '@agroideas/utils';

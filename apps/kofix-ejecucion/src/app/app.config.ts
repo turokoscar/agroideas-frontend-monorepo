@@ -1,10 +1,10 @@
+import { authInterceptor } from '@agroideas/auth';
 import { ApplicationConfig, provideZoneChangeDetection, Provider } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { routes } from './app.routes';
-import { authInterceptor } from './auth.interceptor';
 
 import { AuthRepository } from './domain/repositories/auth.repository';
 import { AuthRepositoryImpl } from './data/repositories/auth.repository.impl';
@@ -26,6 +26,10 @@ import { CarteraRepository } from './domain/repositories/cartera.repository';
 import { CarteraRepositoryImpl } from './data/repositories/cartera.repository.impl';
 import { KardexRepository } from './domain/repositories/kardex.repository';
 import { KardexRepositoryImpl } from './data/repositories/kardex.repository.impl';
+
+import { USER_PERMISSIONS_PROVIDER } from '@agroideas/security';
+import { AUTH_LOGOUT_HANDLER } from '@agroideas/auth';
+import { computed } from '@angular/core';
 
 /**
  * Raíz de composición: enlaza cada token abstracto de repositorio a su
@@ -59,5 +63,22 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
     ...repositoryProviders,
+    {
+      provide: USER_PERMISSIONS_PROVIDER,
+      useFactory: (authRepo: AuthRepository) => ({
+        permissions: authRepo.userPermissions$,
+        userRoles: computed(() => authRepo.user$()?.roles ?? []),
+        initialized$: authRepo.permissionsInitialized$
+      }),
+      deps: [AuthRepository]
+    },
+    {
+      provide: AUTH_LOGOUT_HANDLER,
+      useFactory: (authRepo: AuthRepository) => ({
+        logout: () => authRepo.logout()
+      }),
+      deps: [AuthRepository]
+    }
   ]
 };
+

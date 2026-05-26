@@ -14,11 +14,13 @@
     "@angular/platform-browser": "~18.2.0",
     "@angular/platform-browser-dynamic": "~18.2.0",
     "@angular/router": "~18.2.0",
+    "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "primeicons": "^7.0.0",
     "primeng": "^17.18.15",
     "rxjs": "~7.8.0",
     "sweetalert2": "^11.26.25",
+    "tailwind-merge": "^3.6.0",
     "zone.js": "~0.14.3"
   },
   "devDependencies": {

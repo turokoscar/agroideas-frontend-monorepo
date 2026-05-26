@@ -1,3 +1,4 @@
+import { ResponseDto } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -5,7 +6,6 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { CatalogoRepository } from '../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../domain/models/catalogo.model';
-import { ResponseDto } from '../../domain/models/response-dto.model';
 
 @Injectable({
     providedIn: 'root'

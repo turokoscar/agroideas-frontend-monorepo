@@ -1,3 +1,7 @@
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
+import { PERMISSIONS } from '@agroideas/utils';
 import { Component, OnInit, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,13 +10,6 @@ import { Desembolso } from '../../../domain/models/desembolso.model';
 import { DesembolsoModalComponent } from '../../components/desembolso-modal/desembolso-modal.component';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
-import { AlertService } from '../../../shared/services/alert.service';
-import { PermissionService } from '../../../shared/services/permission.service';
-import { PERMISSIONS } from '../../../shared/utils/permissions';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 
 @Component({

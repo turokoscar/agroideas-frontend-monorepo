@@ -1,13 +1,10 @@
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { HasPermissionDirective } from '@agroideas/security';
+import { PERMISSIONS } from '@agroideas/utils';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
-import { PERMISSIONS } from '../../../shared/utils/permissions';
 import { CarteraRepository, Especialista, ReasignarRequest } from '../../../domain/repositories/cartera.repository';
 import { CarteraItem } from '../../../domain/models/cartera.model';
 import Swal from 'sweetalert2';

@@ -1,3 +1,5 @@
+import { AlertService } from '@agroideas/feedback';
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, Input, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -5,11 +7,6 @@ import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-
 import { GetNoObjecionesByConvenioUseCase } from '../../../domain/usecases/no-objecion/get-no-objeciones.usecase';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
-import { AlertService } from '../../../shared/services/alert.service';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 @Component({
     selector: 'app-no-objecion-page',

@@ -1,15 +1,12 @@
+import { PermissionService } from '@agroideas/security';
+import { PERMISSIONS } from '@agroideas/utils';
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { GetAsignadosUseCase } from '../../../domain/usecases/get-asignados.usecase';
 import { GetTodosConveniosUseCase } from '../../../domain/usecases/get-todos-convenios.usecase';
-import { PermissionService } from '../../../shared/services/permission.service';
-import { PERMISSIONS } from '../../../shared/utils/permissions';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { Convenio } from '../../../domain/models/convenio.model';
 
 @Component({

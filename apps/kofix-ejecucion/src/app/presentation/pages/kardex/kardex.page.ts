@@ -1,17 +1,12 @@
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiKpiComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { PERMISSIONS, formatCurrency } from '@agroideas/utils';
+import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiKpiComponent } from '../../../shared/components/ui-kpi/ui-kpi.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { KardexRepository } from '../../../domain/repositories/kardex.repository';
 import { KardexMovimiento, KardexSummary } from '../../../domain/models/kardex.model';
-import { formatCurrency } from '../../../shared/utils/currency';
-import { AlertService } from '../../../shared/services/alert.service';
-import { PermissionService } from '../../../shared/services/permission.service';
-import { PERMISSIONS } from '../../../shared/utils/permissions';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 
 interface TipoOption {

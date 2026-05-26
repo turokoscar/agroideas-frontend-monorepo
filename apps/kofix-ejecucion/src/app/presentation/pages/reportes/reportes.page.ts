@@ -1,9 +1,7 @@
+import { UIButtonComponent, UICardComponent, UiKpiComponent } from '@agroideas/ui';
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UiKpiComponent } from '../../../shared/components/ui-kpi/ui-kpi.component';
-import { UICardComponent } from '../../../shared/components/ui-card/ui-card.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 export interface ReporteOption {
     label: string;

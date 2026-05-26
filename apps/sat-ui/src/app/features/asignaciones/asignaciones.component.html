@@ -1,0 +1,132 @@
+<div class="p-6 lg:p-8 space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="font-display text-2xl font-bold text-foreground">Gestión de Asignaciones</h1>
+      <p class="text-sm text-muted-foreground">Asigne organizaciones a asistentes técnicos</p>
+    </div>
+    <ui-button label="Nueva Asignación" icon="add" (onClick)="openModal()"></ui-button>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-8">
+      <span class="material-icons animate-spin text-primary">sync</span>
+    </div>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-border">
+            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Asistente</th>
+            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Organización</th>
+            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Tipo de Servicio</th>
+            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Período</th>
+            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Estado</th>
+            <th class="text-right py-3 px-4 font-medium text-muted-foreground">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of asignaciones(); track item.ide_asignacion) {
+            <tr class="border-b border-border/50 hover:bg-muted/30">
+              <td class="py-3 px-4">
+                <div class="font-medium">{{ item.txt_asistente }}</div>
+              </td>
+              <td class="py-3 px-4">
+                <div class="text-sm">{{ item.txt_organizacion }}</div>
+              </td>
+              <td class="py-3 px-4">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/10 text-primary">
+                  {{ item.txtTipoServicio }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-sm">
+                {{ formatDate(item.fecInicio) }} - {{ formatDate(item.fecFin) }}
+              </td>
+              <td class="py-3 px-4">
+                <app-ui-status-pill [status]="item.flgActivo ? 'Activo' : 'Finalizado'" [text]="item.flgActivo ? 'Activo' : 'Inactivo'" />
+              </td>
+              <td class="py-3 px-4 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <button (click)="openModal(item)" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-500 hover:text-primary" title="Editar">
+                    <span class="material-symbols-outlined text-lg">edit</span>
+                  </button>
+                  <button (click)="toggleEstado(item)" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-500 hover:text-warning" title="Cambiar estado">
+                    <span class="material-symbols-outlined text-lg">{{ item.flgActivo ? 'block' : 'check_circle' }}</span>
+                  </button>
+                  <button (click)="delete(item.ide_asignacion)" class="p-1.5 rounded-lg hover:bg-destructive/5 transition-colors flex items-center justify-center text-slate-500 hover:text-destructive" title="Eliminar">
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="py-8 text-center text-muted-foreground">
+                No hay asignaciones registradas
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Modal -->
+<app-ui-modal
+  [visible]="showModal()"
+  [title]="editingId() ? 'Editar Asignación' : 'Nueva Asignación'"
+  subtitle="Vincule organizaciones con asistentes técnicos del monorepo"
+  icon="assignment"
+  maxWidth="550px"
+  saveLabel="Guardar"
+  (onHide)="closeModal()"
+  (onSave)="save()"
+>
+  <div class="space-y-4 font-display">
+    <div>
+      <label for="ide_asistente" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Asistente Técnico</label>
+      <select id="ide_asistente" [(ngModel)]="form.ide_asistente" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
+        <option value="">Seleccionar asistente</option>
+        @for (a of asistentes(); track a.ideAsistente) {
+          <option [value]="a.ideAsistente">{{ a.txtNombres }} {{ a.txtApellidoPaterno }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="ide_organizacion" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Organización</label>
+      <select id="ide_organizacion" [(ngModel)]="form.ide_organizacion" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
+        <option value="">Seleccionar organización</option>
+        @for (o of organizaciones(); track o.ideOrganizacion) {
+          <option [value]="o.ideOrganizacion">{{ o.txtNombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="txtTipoServicio" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tipo de Servicio</label>
+      <select id="txtTipoServicio" [(ngModel)]="form.txtTipoServicio" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
+        <option value="">Seleccionar tipo</option>
+        @for (t of tiposServicio; track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="fecInicio" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Fecha Inicio</label>
+        <input id="fecInicio" type="date" [(ngModel)]="form.fecInicio" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+      </div>
+      <div>
+        <label for="fecFin" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Fecha Fin</label>
+        <input id="fecFin" type="date" [(ngModel)]="form.fecFin" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+      </div>
+    </div>
+
+    <div>
+      <label for="txtObservacion" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Observaciones</label>
+      <textarea id="txtObservacion" [(ngModel)]="form.txtObservacion" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary"></textarea>
+    </div>
+  </div>
+</app-ui-modal>

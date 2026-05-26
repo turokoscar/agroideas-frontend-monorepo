@@ -1,8 +1,6 @@
+import { UIButtonComponent, UICardComponent, UIModalComponent } from '@agroideas/ui';
 import { Component } from '@angular/core';
 
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
-import { UICardComponent } from '../../../shared/components/ui-card/ui-card.component';
-import { UIModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
 
 @Component({
     selector: 'app-styleguide',

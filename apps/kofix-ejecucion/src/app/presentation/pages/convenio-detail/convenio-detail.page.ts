@@ -1,3 +1,4 @@
+import { UIButtonComponent, UiKpiComponent, UiMapComponent } from '@agroideas/ui';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,9 +12,6 @@ import { ProgramacionItemsComponent } from '../../components/programacion-items/
 import { NoObjecionPageComponent } from '../../pages/no-objecion/no-objecion.page';
 import { DesembolsoPageComponent } from '../../pages/desembolso/desembolso.page';
 import { RendicionPageComponent } from '../../pages/rendicion/rendicion.page';
-import { UiKpiComponent } from '../../../shared/components/ui-kpi/ui-kpi.component';
-import { UiMapComponent } from '../../../shared/components/ui-map/ui-map.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 @Component({
     selector: 'app-convenio-detail-page',

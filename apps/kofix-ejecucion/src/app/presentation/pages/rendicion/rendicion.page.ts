@@ -1,16 +1,13 @@
+import { TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { AlertService } from '@agroideas/feedback';
 import { Component, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GetRendicionesByConvenioUseCase } from '../../../domain/usecases/rendicion/get-rendiciones.usecase';
 import { Rendicion } from '../../../domain/models/rendicion.model';
 import { RendicionModalComponent } from '../../components/rendicion-modal/rendicion-modal.component';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiStatusPillComponent } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UiFilterBarComponent } from '../../../shared/components/ui-filter-bar/ui-filter-bar.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { FormsModule } from '@angular/forms';
 import { DeleteRendicionUseCase } from '../../../domain/usecases/rendicion/delete-rendicion.usecase';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
-import { AlertService } from '../../../shared/services/alert.service';
 import { finalize } from 'rxjs';
 
 @Component({

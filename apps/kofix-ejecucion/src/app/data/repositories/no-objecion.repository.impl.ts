@@ -1,3 +1,4 @@
+import { ResponseDto } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -7,7 +8,6 @@ import { NoObjecionRepository } from '../../domain/repositories/no-objecion.repo
 import { NoObjecion, NoObjecionBalance } from '../../domain/models/no-objecion.model';
 import { NoObjecionProgrammedItem } from '../../domain/models/no-objecion-programmed-item.model';
 import { NoObjecionMapper } from '../mappers/no-objecion.mapper';
-import { ResponseDto } from '../../domain/models/response-dto.model';
 
 @Injectable({
     providedIn: 'root'

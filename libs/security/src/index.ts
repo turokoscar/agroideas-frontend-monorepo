@@ -1,1 +1,3 @@
-export * from './lib/security/security.component';
+export * from './lib/permission.service';
+export * from './lib/has-permission.directive';
+export * from './lib/permission.guard';

@@ -1,7 +1,7 @@
+import { UIButtonComponent } from '@agroideas/ui';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { User } from '../../../domain/models/auth/auth.model';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 @Component({
     selector: 'app-dashboard-header',

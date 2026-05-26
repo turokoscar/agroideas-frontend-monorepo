@@ -1,15 +1,14 @@
+import { AlertService } from '@agroideas/feedback';
+import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
 import { Component, Output, EventEmitter, OnInit, inject, signal, input } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 import { RegistrarDesembolsoUseCase } from '../../../domain/usecases/desembolso/registrar-desembolso.usecase';
-import { AlertService } from '../../../shared/services/alert.service';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
-import { UIModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 @Component({
     selector: 'app-desembolso-modal',

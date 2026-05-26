@@ -1,3 +1,4 @@
+import { ResponseDto } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -6,7 +7,6 @@ import { environment } from '../../../environments/environment';
 import { DesembolsoRepository } from '../../domain/repositories/desembolso.repository';
 import { Desembolso, SettlementBalance } from '../../domain/models/desembolso.model';
 import { DesembolsoMapper } from '../mappers/desembolso.mapper';
-import { ResponseDto } from '../../domain/models/response-dto.model';
 
 @Injectable({
     providedIn: 'root'

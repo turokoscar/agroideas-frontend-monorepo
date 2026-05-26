@@ -1,3 +1,4 @@
+import { ResponseDto } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
@@ -5,7 +6,6 @@ import { environment } from '../../../environments/environment';
 import { RendicionRepository } from '../../domain/repositories/rendicion.repository';
 import { RendicionRequest, RendicionListResponse } from '../../domain/models/rendicion.model';
 import { RendicionMapper } from '../mappers/rendicion.mapper';
-import { ResponseDto } from '../../domain/models/response-dto.model';
 
 @Injectable({
     providedIn: 'root'

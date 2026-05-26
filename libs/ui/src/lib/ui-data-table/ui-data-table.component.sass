@@ -1,0 +1,383 @@
+// ===============================================
+// UI Data Table - KOFIX Design System
+// Premium, minimal & elegant
+// ===============================================
+
+:host
+  display: block
+
+.dt-wrapper
+  background: #ffffff
+  border: 1px solid #eef0f3
+  border-radius: 16px
+  overflow: hidden
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)
+  transition: box-shadow 0.2s ease
+
+// ── Header ──────────────────────────────────────
+.dt-header
+  display: flex
+  align-items: center
+  justify-content: space-between
+  padding: 1.125rem 1.5rem
+  border-bottom: 1px solid #f1f4f8
+  background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)
+
+.dt-header__left
+  display: flex
+  align-items: center
+  gap: 0.75rem
+
+.dt-header__icon
+  font-size: 1.25rem
+  color: #008F49
+  background: rgba(0, 143, 73, 0.08)
+  border-radius: 8px
+  padding: 6px
+  line-height: 1
+
+.dt-header__title
+  margin: 0
+  font-size: 0.9rem
+  font-weight: 600
+  color: #0f172a
+  letter-spacing: -0.01em
+
+.dt-header__subtitle
+  margin: 2px 0 0
+  font-size: 0.75rem
+  color: #94a3b8
+
+// ── Scroll ──────────────────────────────────────
+.dt-scroll
+  overflow-x: auto
+  -webkit-overflow-scrolling: touch
+
+  &::-webkit-scrollbar
+    height: 4px
+  &::-webkit-scrollbar-track
+    background: #f8fafc
+  &::-webkit-scrollbar-thumb
+    background: #e2e8f0
+    border-radius: 4px
+
+// ── Table ───────────────────────────────────────
+.dt-table
+  width: 100%
+  min-width: 600px
+  border-collapse: collapse
+  font-size: 0.8125rem
+
+// ── THead ───────────────────────────────────────
+.dt-thead
+  background: #f8fafc
+
+.dt-th
+  padding: 0.75rem 1rem
+  font-size: 0.6875rem
+  font-weight: 700
+  color: #64748b
+  text-transform: uppercase
+  letter-spacing: 0.06em
+  text-align: left
+  border-bottom: 1px solid #f1f4f8
+  white-space: nowrap
+  user-select: none
+
+  &--index
+    width: 48px
+    text-align: center
+    color: #cbd5e1
+
+  &--actions
+    text-align: center
+    width: 120px
+
+  &--right
+    text-align: right
+
+  &--center
+    text-align: center
+
+  &--sortable
+    cursor: pointer
+    &:hover
+      color: #008F49
+      .dt-th__sort-icon
+        opacity: 1
+
+.dt-th__content
+  display: inline-flex
+  align-items: center
+  gap: 4px
+
+.dt-th__sort-icon
+  font-size: 0.875rem
+  opacity: 0.35
+  transition: opacity 0.15s, transform 0.15s
+  &--active
+    opacity: 1
+    color: #008F49
+
+// ── TBody ───────────────────────────────────────
+.dt-tbody
+  // divide rows
+  .dt-tr + .dt-tr
+    border-top: 1px solid #f8fafc
+
+.dt-tr
+  transition: background 0.12s ease
+  cursor: default
+
+  &:hover
+    background: #f8fdfb
+
+  &--skeleton
+    &:hover
+      background: transparent
+
+// ── TD ──────────────────────────────────────────
+.dt-td
+  padding: 0.875rem 1rem
+  vertical-align: middle
+
+  &--index
+    text-align: center
+    font-size: 0.6875rem
+    color: #cbd5e1
+    font-weight: 500
+    font-variant-numeric: tabular-nums
+
+  &--actions
+    text-align: center
+    padding: 0.5rem 0.75rem
+
+  &--right
+    text-align: right
+
+  &--center
+    text-align: center
+
+  &--empty
+    padding: 4rem 1rem
+
+// ── Cells ───────────────────────────────────────
+.dt-cell
+  color: #334155
+  font-size: 0.8125rem
+  line-height: 1.4
+
+  &--currency
+    font-weight: 600
+    color: #0f172a
+    font-variant-numeric: tabular-nums
+    letter-spacing: -0.01em
+
+  &--date
+    color: #64748b
+    font-size: 0.75rem
+    font-variant-numeric: tabular-nums
+
+  &--number
+    font-variant-numeric: tabular-nums
+    font-weight: 500
+    color: #1e293b
+
+// ── Skeleton ────────────────────────────────────
+.dt-skeleton
+  height: 12px
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf3 50%, #f1f5f9 75%)
+  background-size: 200% 100%
+  border-radius: 6px
+  animation: shimmer 1.6s infinite
+
+  &--action
+    width: 64px
+    height: 28px
+    border-radius: 8px
+    margin: 0 auto
+
+@keyframes shimmer
+  0%
+    background-position: 200% 0
+  100%
+    background-position: -200% 0
+
+// ── Empty State ─────────────────────────────────
+.dt-empty
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  padding: 3rem 1rem
+
+.dt-empty__icon-wrap
+  width: 64px
+  height: 64px
+  border-radius: 16px
+  background: #f8fafc
+  border: 1.5px dashed #e2e8f0
+  display: flex
+  align-items: center
+  justify-content: center
+  margin-bottom: 1rem
+
+.dt-empty__icon
+  font-size: 2rem
+  color: #cbd5e1
+
+.dt-empty__title
+  font-size: 0.875rem
+  font-weight: 600
+  color: #94a3b8
+  margin: 0
+
+.dt-empty__subtitle
+  font-size: 0.75rem
+  color: #cbd5e1
+  margin: 4px 0 0
+
+// ── Footer / Paginación ─────────────────────────
+.dt-footer
+  display: flex
+  align-items: center
+  justify-content: space-between
+  padding: 0.875rem 1.25rem
+  border-top: 1px solid #f1f4f8
+  background: #fafbfc
+  flex-wrap: wrap
+  gap: 0.75rem
+
+.dt-footer__info
+  font-size: 0.75rem
+  color: #94a3b8
+  margin: 0
+
+  strong
+    color: #475569
+    font-weight: 600
+
+.dt-pagination
+  display: flex
+  align-items: center
+  gap: 4px
+
+.dt-page-btn
+  display: flex
+  align-items: center
+  justify-content: center
+  min-width: 32px
+  height: 32px
+  padding: 0 8px
+  border: 1.5px solid #e2e8f0
+  border-radius: 8px
+  background: #ffffff
+  color: #475569
+  font-size: 0.8125rem
+  font-weight: 500
+  cursor: pointer
+  transition: all 0.15s ease
+  font-family: 'Roboto', sans-serif
+
+  .material-symbols-outlined
+    font-size: 1rem
+
+  &:hover:not(:disabled)
+    border-color: #008F49
+    color: #008F49
+    background: rgba(0, 143, 73, 0.04)
+
+  &:disabled
+    opacity: 0.35
+    cursor: not-allowed
+    background: #f8fafc
+
+  &--active
+    background: #008F49
+    border-color: #008F49
+    color: #ffffff
+    font-weight: 700
+    box-shadow: 0 2px 8px rgba(0, 143, 73, 0.25)
+
+    &:hover
+      background: #006B3A
+      border-color: #006B3A
+      color: #ffffff
+
+  &--nav
+    min-width: 32px
+    width: 32px
+
+// ── Responsive ──────────────────────────────────
+
+.dt-table--collapse
+  display: block
+  width: 100%
+  min-width: unset
+
+  tbody, thead, tr, th, td
+    display: block
+    width: 100%
+
+  thead
+    display: none
+
+  .dt-tr
+    margin-bottom: 1rem
+    border: 1px solid #e2e8f0
+    border-radius: 12px
+    background: #fff
+
+  .dt-td
+    display: flex
+    justify-content: space-between
+    align-items: center
+    padding: 0.75rem 1rem
+    border-bottom: 1px solid #f8fafc
+
+    &::before
+      content: attr(data-label)
+      font-size: 0.6875rem
+      font-weight: 700
+      color: #64748b
+      text-transform: uppercase
+      letter-spacing: 0.06em
+
+  .dt-td--index,
+  .dt-td--actions
+    display: none
+
+// Tablet
+@media (max-width: 1024px)
+  .dt-table
+    min-width: 800px
+
+  .dt-th--index
+    display: none
+
+  .dt-td--index
+    display: none
+
+// Mobile
+@media (max-width: 640px)
+  .dt-table
+    min-width: 500px
+
+  .dt-footer
+    justify-content: center
+
+  .dt-footer__info
+    text-align: center
+    width: 100%
+
+  .dt-header
+    padding: 1rem
+
+  .dt-td, .dt-th
+    padding: 0.75rem 0.75rem
+
+  .dt-th--actions
+    display: none
+
+  .dt-td--actions
+    display: none

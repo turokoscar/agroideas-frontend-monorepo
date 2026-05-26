@@ -1,3 +1,4 @@
+import { ResponseDto } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
@@ -5,7 +6,6 @@ import { environment } from '../../../environments/environment';
 import { ConvenioRepository } from '../../domain/repositories/convenio.repository';
 import { Convenio, ConvenioResumenFinanciero } from '../../domain/models/convenio.model';
 import { ConvenioMapper } from '../mappers/convenio.mapper';
-import { ResponseDto } from '../../domain/models/response-dto.model';
 
 @Injectable({
     providedIn: 'root'

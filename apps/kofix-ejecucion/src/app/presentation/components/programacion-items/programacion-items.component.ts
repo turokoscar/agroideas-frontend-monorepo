@@ -1,10 +1,8 @@
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, Input, OnInit, inject, signal, input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProgramacionRepository, ProgramacionItemsResponse } from '../../../domain/repositories/programacion.repository';
 import { ProgramacionItem } from '../../../domain/models/programacion.model';
-import { UiDataTableComponent, TableColumn } from '../../../shared/components/ui-data-table/ui-data-table.component';
-import { UiStatusPillComponent, StatusType } from '../../../shared/components/ui-status-pill/ui-status-pill.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { ProgramacionCronogramaModalComponent } from '../programacion-cronograma-modal/programacion-cronograma-modal.component';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 

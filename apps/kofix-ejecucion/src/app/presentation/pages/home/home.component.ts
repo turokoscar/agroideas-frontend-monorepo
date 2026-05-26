@@ -1,7 +1,6 @@
+import { UIButtonComponent, UICardComponent } from '@agroideas/ui';
 import { Component } from '@angular/core';
 
-import { UICardComponent } from '../../../shared/components/ui-card/ui-card.component';
-import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 
 @Component({
     selector: 'app-home',
