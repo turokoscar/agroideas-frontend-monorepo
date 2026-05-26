@@ -22,7 +22,10 @@
             "input": "apps/sat-ui/public"
           }
         ],
-        "styles": ["apps/sat-ui/src/styles.scss"],
+        "styles": [
+          "libs/theme/src/styles/base.css",
+          "apps/sat-ui/src/styles.scss"
+        ],
         "scripts": []
       },
       "configurations": {

@@ -68,7 +68,15 @@ respaldado en `agroideas-frontend-monorepo.ng21-backup-*`.
 
 ---
 
-## Fase 1 — `@agroideas/theme` (tokens y preset Tailwind)
+## Fase 1 — `@agroideas/theme` (tokens y preset Tailwind)  ✅ EJECUTADA (2026-05-25)
+
+**Estado:** completada y verde. `@agroideas/theme` con `styles/tokens.css` (variables
+HSL MIDAGRI/INIA de KOFIX), `tailwind-preset.js` (mapeo a `hsl(var(--token))`, sin hex,
+sombras premium, Roboto, plugins forms/container-queries) y `styles/base.css`
+(`@tailwind` + tipografía + clases compartidas). Tailwind 3.4 añadido al workspace.
+Validado en `sat-ui` (extiende el preset + importa `base.css`): el CSS generado contiene
+`var(--primary)` y `--primary: 118 64% 22%`. `lint`/`test`/`build` verdes.
+Detalle en el ADR 0001 → Registro de implementación.
 
 **Objetivo:** una sola fuente de verdad de marca MIDAGRI, themeable por app.
 

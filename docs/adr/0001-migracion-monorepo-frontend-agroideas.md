@@ -1,13 +1,16 @@
 # ADR 0001: Migración a Monorepo Frontend AGROIDEAS y Estandarización del Design System
 
 ## Estado
-Aceptado
+Aceptado · **En ejecución** (Fase 0 ✅ · Fase 1 ✅ — ver [Registro de implementación](#registro-de-implementación))
 
 ## Fecha
-2026-05-25
+2026-05-25 (última actualización: 2026-05-25)
 
 ## Responsables
 Equipo Frontend AGROIDEAS
+
+## Repositorio
+GitHub (privado): `turokoscar/agroideas-frontend-monorepo`
 
 ## Contexto
 
@@ -150,6 +153,42 @@ agroideas-frontend-monorepo/
 ## Plan de implementación
 El detalle por fases, tareas, entregables y criterios de aceptación se documenta en
 [`docs/plan-implementacion-monorepo.md`](../plan-implementacion-monorepo.md).
+
+## Registro de implementación
+
+Esta sección registra cómo se materializaron las decisiones (las decisiones D1–D5
+se mantienen como registro histórico; aquí se anota la realidad de ejecución).
+
+### Fase 0 — Fundación ✅ (2026-05-25)
+- **Versiones concretas** (precisa D2): **Nx 19.8.14 + Angular 18.2**. El scaffold previo
+  en Angular 21 se descartó (respaldado en `*.ng21-backup-*`).
+- Estructura creada: apps `kofix-ejecucion` + `sat-ui`; libs `theme`, `ui`, `auth`,
+  `http`, `feedback`, `security`, `utils` con tags `scope:*`/`type:*` (implementa D5).
+- `enforce-module-boundaries` activo + ban de `primeng`/`@angular/material`/etc. en
+  `apps/*` (verificado con test negativo).
+- **Pin del stack de lint**: `eslint 9.14.0` ↔ `typescript-eslint 8.13.0` (+ `overrides`)
+  por compatibilidad con `angular-eslint 18.4.3`; `ban-ts-comment` desactivado en
+  `**/*.html`. Detalle: [`docs/phase-0/version-pins.md`](../phase-0/version-pins.md).
+- Verificado: `lint` (11), `build` (2 apps), `test` (8). Publicado en GitHub.
+
+### Fase 1 — `@agroideas/theme` ✅ (2026-05-25)
+- Implementación de D4 (tokens unificados, dirigidos por variables CSS):
+  - `libs/theme/src/styles/tokens.css` — variables HSL canónicas MIDAGRI/INIA de KOFIX
+    (primario `#346b00`, accent `#fab50b`, sidebar `#008F49`, surface, estados); incluye
+    alias de compatibilidad de KOFIX (`--primary_container`, `--verde-agro`, …).
+  - `libs/theme/src/tailwind-preset.js` — preset que mapea las clases a
+    `hsl(var(--token) / <alpha>)`; **sin hex de marca hardcodeado** (elimina la
+    inconsistencia de KOFIX). Sombras `premium/card/pill/ambient`, fuente Roboto,
+    plugins `@tailwindcss/forms` y `container-queries`.
+  - `libs/theme/src/styles/base.css` — `@tailwind` + tokens + tipografía + clases
+    compartidas (`page-container`, `kpi-card`, `kardex-*`, `row-actions`, `cell-org`).
+- Tailwind 3.4 añadido al workspace.
+- **Validado** en `sat-ui` (extiende el preset + importa `base.css`): el CSS generado
+  contiene `var(--primary)` y `--primary: 118 64% 22%`. `lint`/`test`/`build` verdes.
+
+### Pendiente
+- Fase 2: importar KOFIX como `apps/kofix-ejecucion` consumiendo `@agroideas/theme`.
+- Fases 3–5 según el plan.
 
 ## Referencias
 - ADR 001 KOFIX — Estandarización de Arquitectura Frontend y Alineación de Marca
