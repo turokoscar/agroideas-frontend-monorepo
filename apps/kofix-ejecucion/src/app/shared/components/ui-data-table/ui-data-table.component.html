@@ -1,0 +1,154 @@
+<div class="dt-wrapper">
+
+  <!-- Header opcional con título -->
+  @if (title) {
+    <div class="dt-header">
+      <div class="dt-header__left">
+        @if (icon) {
+          <span class="material-symbols-outlined dt-header__icon">{{ icon }}</span>
+        }
+        <div>
+          <h3 class="dt-header__title">{{ title }}</h3>
+          @if (subtitle) {
+            <p class="dt-header__subtitle">{{ subtitle }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tabla -->
+  <div class="dt-scroll">
+    <table class="dt-table" [class.dt-table--collapse]="responsiveMode === 'collapse'">
+      <!-- Encabezado -->
+      <thead class="dt-thead">
+        <tr>
+          @if (showIndex) {
+            <th class="dt-th dt-th--index">#</th>
+          }
+          @for (col of columns; track col.field) {
+            <th
+              class="dt-th"
+              [style.width]="col.width"
+              [class.dt-th--right]="col.align === 'right'"
+              [class.dt-th--center]="col.align === 'center'"
+              [class.dt-th--sortable]="col.sortable"
+              (click)="col.sortable && onSort(col.field)">
+              <span class="dt-th__content">
+                {{ col.header }}
+                @if (col.sortable) {
+                  <span class="material-symbols-outlined dt-th__sort-icon"
+                    [class.dt-th__sort-icon--active]="sortField === col.field">
+                    {{ sortField === col.field ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}
+                  </span>
+                }
+              </span>
+            </th>
+          }
+          @if (hasActions) {
+            <th class="dt-th dt-th--actions">Acciones</th>
+          }
+        </tr>
+      </thead>
+
+      <!-- Cuerpo -->
+      <tbody class="dt-tbody">
+        @if (loading && data.length === 0) {
+          @for (i of [1,2,3,4,5,6]; track i) {
+            <tr class="dt-tr dt-tr--skeleton">
+              @if (showIndex) {
+                <td class="dt-td"><div class="dt-skeleton"></div></td>
+              }
+              @for (col of columns; track col.field) {
+                <td class="dt-td"><div class="dt-skeleton" [style.width]="col.type === 'currency' ? '80px' : '100%'"></div></td>
+              }
+              @if (hasActions) {
+                <td class="dt-td"><div class="dt-skeleton dt-skeleton--action"></div></td>
+              }
+            </tr>
+          }
+        } @else if (displayData.length === 0) {
+          <tr>
+            <td [attr.colspan]="columns.length + (hasActions ? 1 : 0) + (showIndex ? 1 : 0)" class="dt-td--empty">
+              <div class="dt-empty">
+                <div class="dt-empty__icon-wrap">
+                  <span class="material-symbols-outlined dt-empty__icon">{{ emptyIcon }}</span>
+                </div>
+                <p class="dt-empty__title">{{ emptyMessage }}</p>
+                @if (emptySubMessage) {
+                  <p class="dt-empty__subtitle">{{ emptySubMessage }}</p>
+                }
+              </div>
+            </td>
+          </tr>
+        } @else {
+          @for (row of displayData; track $index; let i = $index) {
+            <tr class="dt-tr" (click)="onRowClick.emit(row)">
+              @if (showIndex) {
+                <td class="dt-td dt-td--index" data-label="#">{{ first + i + 1 }}</td>
+              }
+              @for (col of columns; track col.field) {
+                <td class="dt-td"
+                  [class.dt-td--right]="col.align === 'right'"
+                  [class.dt-td--center]="col.align === 'center'"
+                  [attr.data-label]="col.header">
+                  @switch (col.type) {
+                    @case ('currency') {
+                      <span class="dt-cell dt-cell--currency">
+                        {{ row[col.field] | currency:'PEN':'S/ ':'1.2-2' }}
+                      </span>
+                    }
+                    @case ('date') {
+                      <span class="dt-cell dt-cell--date">{{ row[col.field] | date:'dd/MM/yyyy' }}</span>
+                    }
+                    @case ('number') {
+                      <span class="dt-cell dt-cell--number">{{ row[col.field] | number }}</span>
+                    }
+                    @case ('custom') {
+                      <ng-container *ngTemplateOutlet="rowTemplate || null; context: { $implicit: row, col: col }"></ng-container>
+                    }
+                    @default {
+                      <span class="dt-cell">{{ row[col.field] ?? '—' }}</span>
+                    }
+                  }
+                </td>
+              }
+              @if (hasActions) {
+                <td class="dt-td dt-td--actions">
+                  @if (actionsTemplate) {
+                    <ng-container *ngTemplateOutlet="actionsTemplate || null; context: { $implicit: row, index: i }"></ng-container>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  @if (paginator && effectiveTotalRecords > 0 && !loading) {
+    <div class="dt-footer">
+      <p class="dt-footer__info">
+        Mostrando <strong>{{ first + 1 }}–{{ minVal(first + rows, effectiveTotalRecords) }}</strong> de <strong>{{ effectiveTotalRecords }}</strong> registros
+      </p>
+      <div class="dt-pagination">
+        <button class="dt-page-btn dt-page-btn--nav" (click)="onPrevPage()" [disabled]="first === 0" title="Anterior">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        @for (page of getPageNumbers(); track page) {
+          <button class="dt-page-btn"
+            [class.dt-page-btn--active]="page === getCurrentPage()"
+            (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        }
+        <button class="dt-page-btn dt-page-btn--nav" (click)="onNextPage()" [disabled]="first + rows >= effectiveTotalRecords" title="Siguiente">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  }
+
+</div>

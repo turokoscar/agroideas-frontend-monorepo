@@ -1,7 +1,7 @@
 # ADR 0001: Migración a Monorepo Frontend AGROIDEAS y Estandarización del Design System
 
 ## Estado
-Aceptado · **En ejecución** (Fase 0 ✅ · Fase 1 ✅ — ver [Registro de implementación](#registro-de-implementación))
+Aceptado · **En ejecución** (Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ — ver [Registro de implementación](#registro-de-implementación))
 
 ## Fecha
 2026-05-25 (última actualización: 2026-05-25)
@@ -186,9 +186,28 @@ se mantienen como registro histórico; aquí se anota la realidad de ejecución)
 - **Validado** en `sat-ui` (extiende el preset + importa `base.css`): el CSS generado
   contiene `var(--primary)` y `--primary: 118 64% 22%`. `lint`/`test`/`build` verdes.
 
+### Fase 2 — Importar KOFIX como `apps/kofix-ejecucion` ✅ (2026-05-25)
+- Lift & shift de KOFIX (`src/app` completo, ~111 archivos: Clean Architecture
+  `domain`/`data`/`presentation`/`shared`/`layout`, interceptor, guard, environments,
+  assets, index.html) a `apps/kofix-ejecucion`.
+- Dependencias añadidas al workspace: PrimeNG 17.18, primeicons 7, leaflet 1.9,
+  sweetalert2 11, `@angular/localize` 18.2, `@types/leaflet`. **Se omitieron
+  `@ng-bootstrap/ng-bootstrap` y `bootstrap`**: KOFIX las declaraba pero no las usa
+  (además ng-bootstrap 20 exige Angular 21) → limpieza de dependencias muertas.
+- Build configurado: polyfill `@angular/localize/init`, `allowedCommonJsDependencies`
+  (sweetalert2, leaflet), budgets 2MB, `styles` = leaflet.css + primeng/primeicons +
+  `@agroideas/theme/base.css`, serve en puerto 7100. Tailwind apunta al preset del tema.
+- **Consume `@agroideas/theme`** (implementa D3/D4 a nivel de tokens): el CSS generado
+  incluye `--primary: 118 64% 22%`.
+- Ajustes transitorios (a saldar en Fase 3): override ESLint local que (a) permite
+  imports de proveedores y (b) degrada a `warn` reglas de estilo/a11y del código
+  heredado; conversión de specs Jasmine→Jest (`toBeTrue`→`toBe(true)`, `jasmine.*`).
+- Verificado: `lint` (11, 0 errores), `test` (8 · 56 tests de kofix), `build` (2 apps).
+
 ### Pendiente
-- Fase 2: importar KOFIX como `apps/kofix-ejecucion` consumiendo `@agroideas/theme`.
-- Fases 3–5 según el plan.
+- Fase 3: extraer librerías compartidas desde KOFIX (`utils`, `ui`, `feedback`,
+  `security`, `auth`/`http`) y reactivar la prohibición de proveedores en kofix.
+- Fases 4–5 según el plan.
 
 ## Referencias
 - ADR 001 KOFIX — Estandarización de Arquitectura Frontend y Alineación de Marca

@@ -1,0 +1,41 @@
+<div class="space-y-4">
+    <app-ui-data-table
+        [data]="items()"
+        [columns]="columns"
+        [loading]="loading()"
+        [hasActions]="true"
+        [actionsTemplate]="itemActions"
+        [rowTemplate]="alertaTemplate"
+        [totalRecords]="totalRecords()"
+        [rows]="pageSize"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        icon="account_tree"
+        title="Estructura de Inversión"
+        subtitle="Items del Marco Lógico y su avance de programación"
+        emptyMessage="No se encontraron items para este convenio.">
+    </app-ui-data-table>
+</div>
+
+<ng-template #alertaTemplate let-row>
+    <app-ui-status-pill [status]="getAlertaStatus(row)" [text]="getAlertaLabel(row)"></app-ui-status-pill>
+</ng-template>
+
+<ng-template #itemActions let-row>
+    <div class="row-actions">
+        <ui-button iconOnly appearance="soft" severity="primary" size="sm"
+            [icon]="readOnly() ? 'visibility' : 'calendar_month'"
+            ariaLabel="Ver cronograma" (onClick)="openCronograma(row)" />
+    </div>
+</ng-template>
+
+@if (selectedItem()) {
+    <app-programacion-cronograma-modal
+        [item]="selectedItem()!"
+        [fechaInicio]="fechaInicio()"
+        [fechaFin]="fechaFin()"
+        [readOnly]="readOnly()"
+        (close)="selectedItem.set(null)"
+        (saved)="onSaved()">
+    </app-programacion-cronograma-modal>
+}

@@ -1,0 +1,30 @@
+<div class="p-4 md:p-8">
+    <header class="mb-8">
+        <h1 class="text-2xl font-medium text-slate-800">Resumen Ejecutivo</h1>
+        <p class="text-slate-500 text-sm">Estado actual de la ejecución financiera y convenios.</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ui-card title="Convenios Activos" subtitle="Total año fiscal" icon="description">
+            <div class="text-3xl font-medium text-primary">124</div>
+            <p class="text-slate-400 text-xs mt-2 font-display">+5% respecto al mes anterior</p>
+        </ui-card>
+
+        <ui-card title="Monto Ejecutado" subtitle="En millones (S/.)" icon="payments">
+            <div class="text-3xl font-medium text-slate-800">45.2</div>
+            <p class="text-slate-400 text-xs mt-2 font-display">65% de la meta anual</p>
+        </ui-card>
+
+        <ui-card title="No Objeciones" subtitle="Pendientes de revisión" icon="info">
+            <div class="text-3xl font-medium text-marron-tierra">12</div>
+            <p class="text-slate-400 text-xs mt-2 font-display">Requieren atención inmediata</p>
+        </ui-card>
+
+        <ui-card title="Acciones" subtitle="Accesos rápidos" icon="bolt">
+            <div class="flex flex-col gap-2">
+                <ui-button severity="outline" icon="add" label="Nuevo Convenio"></ui-button>
+                <ui-button severity="ghost" icon="download" label="Reporte Mensual"></ui-button>
+            </div>
+        </ui-card>
+    </div>
+</div>

@@ -19,10 +19,11 @@
         "index": "apps/kofix-ejecucion/src/index.html",
         "browser": "apps/kofix-ejecucion/src/main.ts",
         "polyfills": [
-          "zone.js"
+          "zone.js",
+          "@angular/localize/init"
         ],
         "tsConfig": "apps/kofix-ejecucion/tsconfig.app.json",
-        "inlineStyleLanguage": "scss",
+        "inlineStyleLanguage": "css",
         "assets": [
           {
             "glob": "**/*",
@@ -30,22 +31,25 @@
           }
         ],
         "styles": [
-          "apps/kofix-ejecucion/src/styles.scss"
+          "node_modules/leaflet/dist/leaflet.css",
+          "apps/kofix-ejecucion/src/styles.css",
+          "libs/theme/src/styles/base.css"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": ["sweetalert2", "leaflet"]
       },
       "configurations": {
         "production": {
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumWarning": "1.5mb",
+              "maximumError": "2mb"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "2kb",
-              "maximumError": "4kb"
+              "maximumWarning": "10kb",
+              "maximumError": "20kb"
             }
           ],
           "outputHashing": "all"
@@ -60,6 +64,9 @@
     },
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
+      "options": {
+        "port": 7100
+      },
       "configurations": {
         "production": {
           "buildTarget": "kofix-ejecucion:build:production"

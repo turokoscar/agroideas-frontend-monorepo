@@ -1,0 +1,92 @@
+<div class="px-6 py-4">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Reportes</h1>
+        <p class="text-sm text-slate-500 mt-1">Genere reportes consolidados de la ejecución de convenios</p>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        <div class="xl:col-span-1 space-y-4">
+            <ui-card [title]="'Parámetros'">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Reporte</label>
+                        <select
+                            class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                            [(ngModel)]="selectedReporteValue"
+                            (change)="onReporteChange($event)">
+                            <option [ngValue]="null">Seleccione un reporte</option>
+                            @for (opt of reporteOptions; track opt.value) {
+                                <option [value]="opt.value">{{ opt.label }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Inicio</label>
+                        <input
+                            type="date"
+                            [(ngModel)]="fechaInicio"
+                            class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Fin</label>
+                        <input
+                            type="date"
+                            [(ngModel)]="fechaFin"
+                            class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all">
+                    </div>
+                    
+                    <ui-button
+                        block
+                        severity="primary"
+                        icon="file_open"
+                        label="Generar Reporte"
+                        [loading]="loading()"
+                        [disabled]="!selectedReporteValue"
+                        (onClick)="generarReporte()">
+                    </ui-button>
+                </div>
+            </ui-card>
+
+            <div class="flex gap-2">
+                <ui-button
+                    class="flex-1"
+                    block
+                    severity="success"
+                    size="sm"
+                    icon="description"
+                    label="Excel"
+                    [disabled]="!selectedReporte()"
+                    (onClick)="exportarExcel()">
+                </ui-button>
+                <ui-button
+                    class="flex-1"
+                    block
+                    severity="danger"
+                    size="sm"
+                    icon="picture_as_pdf"
+                    label="PDF"
+                    [disabled]="!selectedReporte()"
+                    (onClick)="exportarPdf()">
+                </ui-button>
+            </div>
+        </div>
+
+        <div class="xl:col-span-3">
+            <ui-card [title]="selectedReporte()?.label || 'Vista Previa'" [icon]="selectedReporte()?.icon || 'preview'">
+                @if (selectedReporte()) {
+                    <div class="flex flex-col items-center justify-center py-16 text-slate-400">
+                        <span class="material-symbols-outlined text-5xl mb-3">preview</span>
+                        <p class="font-medium">Vista previa del reporte</p>
+                        <p class="text-sm mt-1">{{ selectedReporte()?.description }}</p>
+                    </div>
+                } @else {
+                    <div class="flex flex-col items-center justify-center py-16 text-slate-400">
+                        <span class="material-symbols-outlined text-5xl mb-3">folder_open</span>
+                        <p class="font-medium">Seleccione un tipo de reporte</p>
+                        <p class="text-sm mt-1">Use el panel lateral para elegir un reporte</p>
+                    </div>
+                }
+            </ui-card>
+        </div>
+    </div>
+</div>

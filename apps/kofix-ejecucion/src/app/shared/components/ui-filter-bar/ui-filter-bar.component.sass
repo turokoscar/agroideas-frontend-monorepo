@@ -1,0 +1,187 @@
+// ===============================================
+// UI Filter Bar - KOFIX Design System
+// Clean, floating glass feel
+// ===============================================
+
+:host
+  display: block
+
+:host ::ng-deep
+
+  .fb-root
+    display: flex
+    align-items: flex-end
+    gap: 1rem
+    padding: 1rem 1.25rem
+    background: #ffffff
+    border: 1px solid #eef0f3
+    border-radius: 14px
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04)
+    flex-wrap: wrap
+
+    @media (max-width: 640px)
+      flex-direction: column
+      align-items: stretch
+
+  // ── Zona de filtros ──────────────────────────
+  .fb-filters
+    display: flex
+    align-items: flex-end
+    gap: 0.875rem
+    flex: 1
+    flex-wrap: wrap
+    min-width: 0
+
+    @media (max-width: 640px)
+      flex-direction: column
+      align-items: stretch
+      width: 100%
+
+  // ── Grupos de filtro (para que el padre los use) ──
+  .filter-group
+    display: flex
+    flex-direction: column
+    gap: 4px
+    min-width: 140px
+
+    @media (max-width: 640px)
+      width: 100%
+
+  .filter-group--search
+    flex: 1
+    min-width: 200px
+    max-width: 380px
+
+    @media (max-width: 640px)
+      max-width: 100%
+
+  .filter-label
+    font-size: 0.6rem
+    font-weight: 700
+    text-transform: uppercase
+    letter-spacing: 0.08em
+    color: #94a3b8
+    padding-left: 2px
+
+  // ── Input base ──────────────────────────────
+  .filter-input
+    width: 100%
+    border: 1.5px solid #eef0f3
+    border-radius: 10px
+    padding: 0.5rem 0.875rem
+    font-size: 0.8125rem
+    color: #1e293b
+    background: #f8fafc
+    outline: none
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease
+    font-family: 'Roboto', sans-serif
+    height: 38px
+    box-sizing: border-box
+
+    &::placeholder
+      color: #c1c9d2
+
+    &:focus
+      border-color: #008F49
+      background: #ffffff
+      box-shadow: 0 0 0 3px rgba(0, 143, 73, 0.1)
+
+  .filter-input--search
+    padding-left: 2.625rem
+
+  .filter-search-wrap
+    position: relative
+    width: 100%
+
+  .filter-search-icon
+    position: absolute
+    left: 0.75rem
+    top: 50%
+    transform: translateY(-50%)
+    color: #c1c9d2
+    font-size: 1.1rem
+    pointer-events: none
+    transition: color 0.15s
+
+  .filter-search-wrap:focus-within
+    .filter-search-icon
+      color: #008F49
+
+  // ── Select ──────────────────────────────────
+  select.filter-input
+    appearance: none
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+    background-repeat: no-repeat
+    background-position: right 12px center
+    padding-right: 2rem
+    cursor: pointer
+
+  // ── Acciones ────────────────────────────────
+  .fb-actions
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    flex-shrink: 0
+    padding-top: 0
+
+    @media (max-width: 640px)
+      justify-content: flex-end
+      padding-top: 0.25rem
+      border-top: 1px solid #f1f5f9
+
+  // ── Botones ─────────────────────────────────
+  .fb-btn
+    display: inline-flex
+    align-items: center
+    gap: 0.4rem
+    height: 38px
+    padding: 0 1rem
+    border-radius: 10px
+    font-size: 0.8125rem
+    font-weight: 600
+    cursor: pointer
+    transition: all 0.15s ease
+    font-family: 'Roboto', sans-serif
+    border: 1.5px solid transparent
+    white-space: nowrap
+
+  .fb-btn__icon
+    font-size: 1rem
+    line-height: 1
+
+  .fb-btn__label
+    @media (max-width: 480px)
+      display: none
+
+  .fb-btn--add
+    background: #008F49
+    color: #ffffff
+    border-color: #008F49
+    box-shadow: 0 2px 6px rgba(0, 143, 73, 0.2)
+    width: 38px
+    height: 38px
+    padding: 0
+    border-radius: 50%
+    justify-content: center
+
+    .fb-btn__label
+      display: none
+
+    .fb-btn__icon
+      font-size: 1.25rem
+      margin: 0
+
+    &:hover
+      background: #006B3A
+      border-color: #006B3A
+      box-shadow: 0 4px 12px rgba(0, 143, 73, 0.28)
+      transform: translateY(-1px) rotate(90deg)
+
+    &:active
+      transform: translateY(0) scale(0.95)
+      box-shadow: none
+
+    &:disabled
+      opacity: 0.5
+      cursor: not-allowed
+      transform: none

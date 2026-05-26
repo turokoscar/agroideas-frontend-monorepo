@@ -1,0 +1,83 @@
+<div class="page-container">
+
+  <!-- Filtros -->
+  <app-ui-filter-bar (onSearch)="applyFilters()" [showSearch]="true"
+    [showAdd]="!readOnly()" addLabel="Nueva No Objeción" (onAdd)="openRegisterModal()">
+    <div class="filter-group filter-group--search">
+      <label class="filter-label">Buscar</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input type="text" class="filter-input filter-input--search"
+          placeholder="N° No Objeción..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" (keyup.enter)="applyFilters()" />
+      </div>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Fecha Inicio</label>
+      <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)" class="filter-input" (keyup.enter)="applyFilters()" />
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Fecha Fin</label>
+      <input type="date" [ngModel]="fechaFin()" (ngModelChange)="fechaFin.set($event)" class="filter-input" (keyup.enter)="applyFilters()" />
+    </div>
+  </app-ui-filter-bar>
+
+  <!-- Tabla -->
+  <app-ui-data-table
+    [data]="noObjeciones()"
+    [columns]="columns"
+    [loading]="loading()"
+    [totalRecords]="totalRecords()"
+    [rows]="10"
+    [hasActions]="true"
+    [paginator]="true"
+    [lazy]="true"
+    [actionsTemplate]="noObjecionActions"
+    [rowTemplate]="rowTemplate"
+    icon="gavel"
+    title="No Objeciones"
+    emptyIcon="gavel"
+    emptyMessage="Sin No Objeciones"
+    emptySubMessage="No se han registrado No Objeciones para este convenio."
+    (onLazyLoad)="loadLazyNoObjeciones($event)">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'estadoNombre') {
+        <app-ui-status-pill [status]="getBadgeStatus(row.estadoNombre)" [text]="row.estadoNombre"></app-ui-status-pill>
+      }
+    </ng-template>
+
+  </app-ui-data-table>
+
+</div>
+
+<!-- Template de acciones por fila -->
+<ng-template #noObjecionActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
+      ariaLabel="Ver detalle" (onClick)="viewNoObjecion(row.id)" />
+    <ui-button iconOnly appearance="soft" severity="info" size="sm" icon="download"
+      [disabled]="!row.archivoUrl"
+      [ariaLabel]="row.archivoUrl ? 'Descargar documento' : 'Sin documento adjunto'"
+      (onClick)="downloadDocument(row.archivoUrl)" />
+    @if (!readOnly()) {
+      <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
+        [ariaLabel]="row.numSolicitudes > 0 ? 'No se puede editar: tiene desembolsos asociados' : 'Editar'"
+        [disabled]="row.numSolicitudes > 0"
+        (onClick)="editNoObjecion(row.id)" />
+      <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
+        [ariaLabel]="row.numSolicitudes > 0 ? 'No se puede eliminar: tiene desembolsos asociados' : 'Eliminar'"
+        [disabled]="row.numSolicitudes > 0"
+        (onClick)="deleteNoObjecion(row.id)" />
+    }
+  </div>
+</ng-template>
+
+<!-- Modal -->
+@if (showModal()) {
+  <app-no-objecion-modal
+    [convenioId]="convenioId()"
+    [mode]="modalMode()"
+    [noObjecionId]="selectedNoObjecionId()"
+    (onClose)="handleModalClose($event)">
+  </app-no-objecion-modal>
+}

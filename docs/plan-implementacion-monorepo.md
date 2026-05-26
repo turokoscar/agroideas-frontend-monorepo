@@ -95,7 +95,16 @@ Detalle en el ADR 0001 → Registro de implementación.
 
 ---
 
-## Fase 2 — Importar KOFIX como `apps/kofix-ejecucion`
+## Fase 2 — Importar KOFIX como `apps/kofix-ejecucion`  ✅ EJECUTADA (2026-05-25)
+
+**Estado:** completada y verde. KOFIX (~111 archivos, Clean Architecture) corre en el
+monorepo consumiendo `@agroideas/theme`. Deps añadidas (PrimeNG 17.18, primeicons,
+leaflet, sweetalert2, `@angular/localize`, `@types/leaflet`); se omitieron
+`@ng-bootstrap`/`bootstrap` (declaradas pero sin uso). Build con `@angular/localize/init`,
+`allowedCommonJsDependencies`, budgets 2MB, serve en :7100. Specs migrados Jasmine→Jest.
+Override ESLint transitorio (proveedores permitidos + reglas heredadas a `warn`) a
+revertir en Fase 3. Verificado: `lint` (11), `test` (8 · 56 de kofix), `build` (2 apps).
+Detalle en el ADR 0001 → Registro de implementación.
 
 **Objetivo:** traer la app de referencia al monorepo, compilando, **antes** de extraer librerías.
 

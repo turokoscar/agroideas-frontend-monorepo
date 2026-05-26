@@ -1,0 +1,83 @@
+<div class="page-container">
+
+  <!-- Filtros -->
+  <app-ui-filter-bar (onSearch)="onSearch()" [showSearch]="true"
+    [showAdd]="!readOnly()" addLabel="Nueva Solicitud" (onAdd)="showModal.set(true)">
+    <div class="filter-group">
+      <label class="filter-label">N° Desembolso</label>
+      <input type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
+        class="filter-input" (keyup.enter)="onSearch()" />
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Tipo de Pago</label>
+      <select [ngModel]="filterTipoPago()" (ngModelChange)="filterTipoPago.set($event); onSearch()" class="filter-input">
+        <option [ngValue]="undefined">Todos los tipos</option>
+        @for (tipo of tiposPago(); track tipo) {
+          <option [value]="tipo.id">{{ tipo.descripcion }}</option>
+        }
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Fecha Inicio</label>
+      <input type="date" [ngModel]="filterFechaInicio()" (ngModelChange)="filterFechaInicio.set($event); onSearch()" class="filter-input" />
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Fecha Fin</label>
+      <input type="date" [ngModel]="filterFechaFin()" (ngModelChange)="filterFechaFin.set($event); onSearch()" class="filter-input" />
+    </div>
+  </app-ui-filter-bar>
+
+  <app-ui-data-table
+    [data]="desembolsos()"
+    [columns]="columns"
+    [loading]="loading()"
+    [totalRecords]="totalRecords()"
+    [rows]="10"
+    [hasActions]="true"
+    [paginator]="true"
+    [lazy]="true"
+    [actionsTemplate]="desembolsoActions"
+    [rowTemplate]="rowTemplate"
+    icon="payments"
+    title="Solicitudes de Desembolso"
+    emptyIcon="payments"
+    emptyMessage="Sin solicitudes"
+    emptySubMessage="No se encontraron solicitudes de desembolso para este convenio."
+    (onLazyLoad)="loadLazyDesembolsos($event)">
+
+    <!-- Template para columnas custom (estado con badge) -->
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'estadoNombre') {
+        <app-ui-status-pill [status]="getBadgeStatus(row.estadoNombre)" [text]="row.estadoNombre"></app-ui-status-pill>
+      }
+    </ng-template>
+
+  </app-ui-data-table>
+
+</div>
+
+<!-- Template de acciones por fila -->
+<ng-template #desembolsoActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
+      ariaLabel="Ver detalle" (onClick)="viewDesembolso(row.id)" />
+    @if (!readOnly()) {
+      @if (puedeActivarCheque() && row.tipoPagoNombre === 'CHEQUE' && row.estadoNombre === 'PENDIENTE') {
+        <ui-button iconOnly appearance="soft" severity="success" size="sm" icon="verified"
+          ariaLabel="Activar y Efectivizar Cheque" (onClick)="activarCheque(row.id)" />
+      }
+      <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
+        ariaLabel="Editar" (onClick)="editDesembolso(row.id)" />
+      <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
+        ariaLabel="Eliminar" (onClick)="deleteDesembolso(row.id)" />
+    }
+  </div>
+</ng-template>
+
+<!-- Modal -->
+@if (showModal()) {
+  <app-desembolso-modal
+    [convenioId]="convenioId()"
+    (onClose)="handleModalClose($event)">
+  </app-desembolso-modal>
+}

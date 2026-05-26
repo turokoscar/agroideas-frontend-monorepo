@@ -1,0 +1,89 @@
+<div class="space-y-6">
+  <!-- Filtros -->
+  <app-ui-filter-bar (onSearch)="onSearch()" [showSearch]="true" searchLabel="Filtrar"
+    [showAdd]="!readOnly()" addLabel="Nueva Rendición" (onAdd)="openModal()">
+
+    <div class="filter-group">
+      <label class="filter-label">N° Solicitud Origen</label>
+      <input type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
+        class="filter-input" (keyup.enter)="onSearch()" />
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Fecha Inicio</label>
+      <input type="date" [ngModel]="filterFechaInicio()" (ngModelChange)="filterFechaInicio.set($event); onSearch()" class="filter-input" />
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Fecha Fin</label>
+      <input type="date" [ngModel]="filterFechaFin()" (ngModelChange)="filterFechaFin.set($event); onSearch()" class="filter-input" />
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Tipo de CP</label>
+      <select [ngModel]="filterTipoCp()" (ngModelChange)="filterTipoCp.set($event); onSearch()" class="filter-input">
+        <option [ngValue]="undefined">TODOS</option>
+        @for (tipo of tiposCpe(); track tipo.id) {
+          <option [ngValue]="tipo.id">{{ tipo.descripcion }}</option>
+        }
+      </select>
+    </div>
+  </app-ui-filter-bar>
+
+  <!-- Tabla -->
+  <app-ui-data-table
+    [data]="rendiciones()"
+    [loading]="loading()"
+    [totalRecords]="totalRecords()"
+    [columns]="columns"
+    [rows]="10"
+    [paginator]="true"
+    [lazy]="true"
+    [hasActions]="true"
+    [actionsTemplate]="rendicionActions"
+    [rowTemplate]="rowTemplate"
+    (onLazyLoad)="loadLazyRendiciones($event)"
+    icon="payments"
+    title="Rendiciones de Gasto"
+    emptyIcon="receipt_long"
+    emptyMessage="No se han registrado rendiciones para este convenio.">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'estado') {
+        <app-ui-status-pill
+          [status]="row.estado === 1 ? 'Activo' : 'Rechazado'"
+          [text]="row.estado === 1 ? 'Registrado' : 'Anulado'">
+        </app-ui-status-pill>
+      }
+      @if (col.field === 'total') {
+        <span class="dt-cell dt-cell--currency">{{ row.total | currency:'PEN':'S/ ' }}</span>
+      }
+    </ng-template>
+
+  </app-ui-data-table>
+</div>
+
+<!-- Template de acciones por fila -->
+<ng-template #rendicionActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
+      ariaLabel="Ver" (onClick)="viewRendicion(row)" />
+    @if (!readOnly() && row.estado === 1) {
+      <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
+        ariaLabel="Editar" (onClick)="editRendicion(row)" />
+      <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
+        ariaLabel="Anular" (onClick)="deleteRendicion(row.id)" />
+    }
+  </div>
+</ng-template>
+
+<!-- Modal de Registro -->
+@if (showModal()) {
+  <app-rendicion-modal
+    [visible]="showModal()"
+    [convenioId]="convenioId()"
+    [rendicion]="selectedRendicion()"
+    (onHide)="showModal.set(false)"
+    (onSuccess)="onRendicionSuccess()">
+  </app-rendicion-modal>
+}

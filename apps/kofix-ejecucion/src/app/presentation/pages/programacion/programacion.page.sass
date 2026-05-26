@@ -1,0 +1,67 @@
+// ===============================================
+// Programacion Page - KOFIX Design System
+// ===============================================
+
+:host
+  display: block
+
+// ── Barra de progreso ─────────────────────────
+.prog-bar-wrap
+  display: flex
+  align-items: center
+  gap: 8px
+  justify-content: flex-end
+
+.prog-bar
+  width: 60px
+  height: 6px
+  background: #f1f5f9
+  border-radius: 100px
+  overflow: hidden
+  flex-shrink: 0
+
+.prog-bar__fill
+  height: 100%
+  border-radius: 100px
+  transition: width 0.3s ease
+
+  &[data-level='full']
+    background: #16a34a
+
+  &[data-level='mid']
+    background: #0ea5e9
+
+  &[data-level='low']
+    background: #ca8a04
+
+.prog-bar__label
+  font-size: 0.75rem
+  font-weight: 600
+  color: #475569
+  min-width: 36px
+  text-align: right
+  font-variant-numeric: tabular-nums
+
+// ── Cell: Organización ────────────────────────────
+.cell-org
+  display: flex
+  flex-direction: column
+  gap: 2px
+
+.cell-org__name
+  font-size: 0.8125rem
+  font-weight: 500
+  color: #1e293b
+  line-height: 1.3
+
+.cell-org__ruc
+  font-size: 0.7rem
+  color: #94a3b8
+
+// ── Row Actions (compartidos) ─────────────────
+.row-actions
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 4px
+

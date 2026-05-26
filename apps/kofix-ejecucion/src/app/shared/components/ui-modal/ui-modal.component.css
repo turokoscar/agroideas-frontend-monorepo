@@ -1,0 +1,46 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal-container {
+    background: #fff;
+    border-radius: 1rem;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+.modal-header-left { display: flex; align-items: center; gap: 0.75rem; }
+.modal-icon { font-size: 1.5rem; color: #008F49; }
+.modal-title { font-size: 1rem; font-weight: 600; color: #1e293b; margin: 0; }
+.modal-subtitle { font-size: 0.75rem; color: #94a3b8; margin: 0.25rem 0 0; }
+.modal-close-btn { background: none; border: none; cursor: pointer; color: #94a3b8; display: flex; align-items: center; padding: 0.25rem; border-radius: 0.5rem; transition: background 0.15s; }
+.modal-close-btn:hover { background: #f1f5f9; color: #475569; }
+.modal-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8; gap: 0.5rem; }
+.modal-spinner { animation: spin 1s linear infinite; font-size: 2rem; color: #008F49; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+.modal-footer { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9; flex-shrink: 0; }
+.modal-footer-start { flex: 1; }
+.modal-footer-actions { display: flex; gap: 0.75rem; align-items: center; }
+.btn-cancel { background: transparent; border: 1px solid #e2e8f0; color: #64748b; padding: 0.5rem 1.25rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.btn-cancel:hover { background: #f8fafc; }
+.btn-save { background: #008F49; border: none; color: #fff; padding: 0.5rem 1.25rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: background 0.15s; }
+.btn-save:hover:not(:disabled) { background: #006835; }
+.btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-spinner { animation: spin 1s linear infinite; font-size: 1rem; }

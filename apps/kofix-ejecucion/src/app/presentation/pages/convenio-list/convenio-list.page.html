@@ -1,0 +1,96 @@
+<div class="page-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Convenios</h1>
+      <p class="page-subtitle">Consulta y seguimiento de convenios registrados</p>
+    </div>
+  </div>
+
+  <!-- Filters (usando el nuevo filter-bar) -->
+  <app-ui-filter-bar
+    [showSearch]="true"
+    searchLabel="Buscar Convenios"
+    (onSearch)="onSearch()">
+
+    <div class="filter-group filter-group--search">
+      <label class="filter-label">Filtro Rápido</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input
+          type="text"
+          class="filter-input filter-input--search"
+          placeholder="Organización, N° convenio, región..."
+          [(ngModel)]="search"
+          (keyup.enter)="onSearch()" />
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label">Estado</label>
+      <select class="filter-input" [(ngModel)]="estadoFilter" (change)="onSearch()">
+        <option value="">Todos los estados</option>
+        <option value="VIGENTE">Activo</option>
+        <option value="POR_INICIAR">Por Iniciar</option>
+        <option value="FINALIZADO">Finalizado</option>
+      </select>
+    </div>
+  </app-ui-filter-bar>
+
+  <!-- Table -->
+  <app-ui-data-table
+    [data]="convenios()"
+    [columns]="columns"
+    [loading]="loading()"
+    [totalRecords]="totalRecords()"
+    [rows]="pageSize"
+    [paginator]="true"
+    [lazy]="true"
+    [hasActions]="true"
+    [showIndex]="true"
+    [actionsTemplate]="convenioActions"
+    [rowTemplate]="rowTemplate"
+    icon="description"
+    title="Listado de Convenios"
+    subtitle="Seguimiento detallado de la ejecución financiera"
+    emptyIcon="folder_off"
+    emptyMessage="No se encontraron convenios"
+    emptySubMessage="Intenta ajustar los filtros de búsqueda"
+    (onLazyLoad)="loadData($event)">
+
+    <!-- Template para columnas custom -->
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'estado') {
+        <app-ui-status-pill
+          [status]="getStatusType(row.estado)"
+          [text]="getStatusLabel(row.estado)">
+        </app-ui-status-pill>
+      }
+      @if (col.field === 'saldoPorEjecutar') {
+        <span class="dt-cell dt-cell--currency" [class.text-danger]="getSaldo(row) < 0">
+          {{ getSaldo(row) | currency:'PEN':'S/ ' }}
+        </span>
+      }
+      @if (col.field === 'razonSocial') {
+        <div class="cell-org">
+          <span class="cell-org__name">{{ row.razonSocial }}</span>
+          <span class="cell-org__ruc">RUC: {{ row.ruc }}</span>
+        </div>
+      }
+    </ng-template>
+  </app-ui-data-table>
+
+</div>
+
+<!-- Template de acciones por fila (se pasa como Input, funciona correctamente dentro de @for) -->
+<ng-template #convenioActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
+      ariaLabel="Ver ficha" (onClick)="$event.stopPropagation(); goToDetail(row.id)" />
+    <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="calendar_month"
+      ariaLabel="Ver programación" (onClick)="$event.stopPropagation(); goToProgramacion(row.id)" />
+    <ui-button iconOnly appearance="soft" severity="info" size="sm" icon="swap_horiz"
+      ariaLabel="Ver kardex" (onClick)="$event.stopPropagation(); goToKardex(row.id)" />
+  </div>
+</ng-template>

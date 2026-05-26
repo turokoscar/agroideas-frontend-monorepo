@@ -1,0 +1,20 @@
+<div class="relative w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+  <!-- Loading Overlay -->
+  @if (isLoading) {
+    <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-primary"></div>
+      <p class="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Ubicando en el mapa...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (hasError && !isLoading) {
+    <div class="absolute inset-x-0 top-0 z-20 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 px-4 py-2 text-xs text-amber-700 dark:text-amber-400 border-b border-amber-200 dark:border-amber-800">
+      <span class="material-symbols-outlined mr-1 text-[16px]">warning</span>
+      No se pudo ubicar la región con precisión. Mostrando vista general.
+    </div>
+  }
+
+  <!-- Map Container -->
+  <div id="leaflet-map" class="map-container relative z-10"></div>
+</div>

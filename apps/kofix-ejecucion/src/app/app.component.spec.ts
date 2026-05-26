@@ -1,27 +1,26 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
-import { RouterModule } from '@angular/router';
+import { AuthRepository } from './domain/repositories/auth.repository';
 
 describe('AppComponent', () => {
+  const authRepositoryStub: Partial<AuthRepository> = {
+    isLoadingPermissions$: signal(false),
+    permissionsInitialized$: signal(true),
+    isAuthenticated$: signal(false),
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, NxWelcomeComponent, RouterModule.forRoot([])],
+      imports: [AppComponent],
+      providers: [{ provide: AuthRepository, useValue: authRepositoryStub }],
     }).compileComponents();
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Welcome kofix-ejecucion'
-    );
-  });
-
-  it(`should have as title 'kofix-ejecucion'`, () => {
+  it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('kofix-ejecucion');
+    expect(app).toBeTruthy();
   });
+
 });

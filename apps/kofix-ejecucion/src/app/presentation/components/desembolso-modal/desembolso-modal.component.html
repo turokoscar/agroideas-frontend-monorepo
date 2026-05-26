@@ -1,0 +1,128 @@
+<app-ui-modal [visible]="visible()" title="Nueva Solicitud de Desembolso" icon="payments"
+  [isSubmitting]="isSubmitting()" saveLabel="Registrar Solicitud"
+  [saveDisabled]="form.invalid || itemsFormArray.length === 0" (onHide)="onHide()" (onSave)="save()" maxWidth="900px">
+  <!-- Body -->
+  <div class="space-y-6" [formGroup]="form">
+
+    <!-- Cabecera de Solicitud -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">N° Solicitud</label>
+        <input type="text" formControlName="numeroSolicitud" placeholder="Ej: SD-2024-001"
+          class="w-full rounded-xl border-slate-200 bg-white p-3 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Pago</label>
+        <select formControlName="tipoPagoId"
+          class="w-full rounded-xl border-slate-200 bg-white p-3 text-sm outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 transition-all">
+          <option value="">Seleccionar...</option>
+          @for (tipo of tiposPago(); track tipo) {
+          <option [ngValue]="tipo.id">{{ tipo.descripcion }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha Solicitud</label>
+        <input type="date" formControlName="fechaDesembolso"
+          class="w-full rounded-xl border-slate-200 bg-white p-3 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-primary/20 transition-all">
+      </div>
+    </div>
+
+    <!-- Selector de Ítems Disponibles -->
+    <div class="flex items-end gap-3 bg-white p-4 rounded-2xl border-2 border-dashed border-slate-100 italic">
+      <div class="flex-1 space-y-2">
+        <label class="block text-[10px] font-black text-primary/60 uppercase tracking-widest ml-1">Añadir Ítem
+          adjudicado a la solicitud</label>
+        <select [(ngModel)]="selectedItemToAdd" [ngModelOptions]="{standalone: true}"
+          class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-xs outline-none cursor-pointer focus:bg-white transition-all">
+          <option [ngValue]="null">Seleccionar ítem para desembolsar...</option>
+          @for (item of itemsDisponibles(); track item) {
+          <option [ngValue]="item">
+            [{{ item.itemNombre }}] — {{ item.proveedorNombre }} — Saldo: S/ {{ item.saldoDisponible | number:'1.2-2' }}
+          </option>
+          }
+        </select>
+      </div>
+      <ui-button iconOnly shape="circle" severity="primary" icon="add" iconRotateOnHover
+        ariaLabel="Añadir Ítem" [disabled]="!selectedItemToAdd" (onClick)="addItem()" />
+    </div>
+
+    <!-- Tabla de Ítems Agregados -->
+    <div class="border border-slate-100 rounded-2xl overflow-hidden bg-white">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-slate-50/80 border-b border-slate-100">
+          <tr>
+            <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ítem / Proveedor</th>
+            <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Saldo Disponible
+            </th>
+            <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[200px]">Monto a Pagar</th>
+            <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody formArrayName="items">
+          @for (item of itemsFormArray.controls; track item; let i = $index) {
+          <tr [formGroupName]="i" class="border-b border-slate-50 group hover:bg-slate-50/30 transition-all">
+            <td class="p-4">
+              <div class="flex flex-col">
+                <span class="text-xs font-black text-slate-700">[{{ item.value.itemNombre }}]</span>
+                <span class="text-[10px] text-slate-400 truncate max-w-[300px]">{{ item.value.proveedorNombre }}</span>
+              </div>
+            </td>
+            <td class="p-4 text-right">
+              <span class="text-xs font-bold text-slate-600">S/ {{ item.value.saldoDisponible | number:'1.2-2' }}</span>
+            </td>
+            <td class="p-4">
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">S/</span>
+                <input type="number" formControlName="montoSolicitado"
+                  class="w-full rounded-lg border p-2 pl-7 text-xs font-black outline-none transition-all"
+                  [ngClass]="item.get('montoSolicitado')?.invalid ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-100 bg-slate-50 focus:border-primary/30 focus:bg-white'">
+              </div>
+              @if (item.get('montoSolicitado')?.hasError('max')) {
+              <div class="text-[8px] text-red-500 font-bold mt-1 uppercase">
+                Excede el saldo (S/ {{ item.value.saldoDisponible | number:'1.2-2' }})
+              </div>
+              }
+            </td>
+            <td class="p-4 text-center">
+              <ui-button iconOnly appearance="soft" severity="danger" size="sm"
+                icon="delete" ariaLabel="Eliminar ítem" (onClick)="removeItem(i)" />
+            </td>
+          </tr>
+          }
+          @if (itemsFormArray.length === 0) {
+          <tr>
+            <td colspan="4" class="p-8 text-center text-slate-400 text-xs italic">
+              No hay ítems agregados a esta solicitud. Seleccione uno arriba.
+            </td>
+          </tr>
+          }
+        </tbody>
+        @if (itemsFormArray.length > 0) {
+        <tfoot class="bg-slate-50/50">
+          <tr>
+            <td colspan="2" class="p-4 text-right">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Solicitud:</span>
+            </td>
+            <td class="p-4 text-left">
+              <span class="text-sm font-black text-primary">S/ {{ totalSolicitado() | number:'1.2-2' }}</span>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+        }
+      </table>
+    </div>
+
+    <!-- Observación General -->
+    <div class="space-y-2">
+      <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Observación
+        General</label>
+      <textarea formControlName="observacion" rows="2"
+        class="w-full rounded-2xl border border-slate-100 bg-slate-50/30 p-4 text-sm outline-none placeholder:text-slate-300 text-slate-900 focus:border-primary/30 focus:bg-white transition-all resize-none"
+        placeholder="Detalles adicionales de la solicitud masiva..."></textarea>
+    </div>
+  </div>
+</app-ui-modal>

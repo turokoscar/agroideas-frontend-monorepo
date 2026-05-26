@@ -1,0 +1,13 @@
+<div
+  class="overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md shadow-sm transition-all duration-300"
+  [ngClass]="{'p-0': !padded, 'p-6': padded, 'hover:shadow-md hover:border-slate-200': hoverable}"
+>
+  <div *ngIf="title" class="flex items-center justify-between mb-6">
+    <div>
+      <h4 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ title }}</h4>
+      <p *ngIf="subtitle" class="text-xs text-slate-500 font-medium mt-0.5 uppercase tracking-wider">{{ subtitle }}</p>
+    </div>
+    <ng-content select="[header-actions]"></ng-content>
+  </div>
+  <ng-content></ng-content>
+</div>

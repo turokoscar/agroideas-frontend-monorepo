@@ -1,0 +1,63 @@
+<div class="px-6 py-4">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Alertas</h1>
+        <p class="text-sm text-slate-500 mt-1">Convenios que requieren atención</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        @for (kpi of kpis(); track kpi.label) {
+            <app-ui-kpi
+                [label]="kpi.label"
+                [value]="kpi.value"
+                [icon]="kpi.icon"
+                [variant]="kpi.variant"
+                [subtitle]="kpi.subtitle">
+            </app-ui-kpi>
+        }
+    </div>
+
+    <!-- Filtros usando app-ui-filter-bar (sin duplicar p-dropdowns externos) -->
+    <app-ui-filter-bar [showSearch]="false" [showAdd]="false">
+      <div class="filter-group">
+        <label class="filter-label">Tipo de Alerta</label>
+        <select class="filter-input" [(ngModel)]="selectedTipoValue" (change)="onFilter()">
+          <option value="">Todos</option>
+          @for (opt of tipoOptions; track opt.label) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Severidad</label>
+        <select class="filter-input" [(ngModel)]="selectedSeveridadValue" (change)="onFilter()">
+          <option value="">Todas</option>
+          @for (opt of severidadOptions; track opt.label) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+    </app-ui-filter-bar>
+
+    <app-ui-data-table
+        [columns]="columns"
+        [data]="alertas()"
+        [loading]="loading()"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="loadData($event)"
+        [paginator]="true"
+        [rows]="10"
+        [rowTemplate]="rowTemplate"
+        icon="notifications_active"
+        title="Historial de Alertas"
+        subtitle="Registros de situaciones que requieren monitoreo"
+        emptyMessage="No hay alertas pendientes.">
+
+      <ng-template #rowTemplate let-row let-col="col">
+        @if (col.field === 'severidad') {
+          <app-ui-status-pill [status]="getSeveridadStatus(row.severidad)" [text]="row.severidad"></app-ui-status-pill>
+        }
+      </ng-template>
+
+    </app-ui-data-table>
+</div>

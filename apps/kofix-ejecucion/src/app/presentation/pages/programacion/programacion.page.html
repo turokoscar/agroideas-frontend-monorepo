@@ -1,0 +1,82 @@
+<div class="p-6 space-y-6">
+
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Programación Mensual</h1>
+    <p class="text-sm text-slate-500 mt-1">Vista consolidada de la programación presupuestal por convenio</p>
+  </div>
+
+  <!-- Filtros usando app-ui-filter-bar -->
+  <app-ui-filter-bar (onSearch)="onSearch()" [showAdd]="false">
+    <div class="filter-group filter-group--search">
+      <label class="filter-label">Buscar</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input type="text"
+          class="filter-input filter-input--search"
+          placeholder="Organización o N° convenio..."
+          [(ngModel)]="search"
+          (keyup.enter)="onSearch()" />
+      </div>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Estado</label>
+      <select class="filter-input" [(ngModel)]="estadoFilter" (change)="onSearch()">
+        <option value="">Todos</option>
+        <option value="VIGENTE">Activo</option>
+        <option value="POR_INICIAR">Por Iniciar</option>
+        <option value="FINALIZADO">Finalizado</option>
+      </select>
+    </div>
+  </app-ui-filter-bar>
+
+  <!-- Table -->
+  <app-ui-data-table
+    [data]="programaciones()"
+    [columns]="columns"
+    [loading]="loading()"
+    [totalRecords]="totalRecords()"
+    [rows]="pageSize"
+    [paginator]="true"
+    [hasActions]="true"
+    [showIndex]="true"
+    [actionsTemplate]="programacionActions"
+    [rowTemplate]="rowTemplate"
+    emptyIcon="calendar_month"
+    emptyMessage="No se encontraron registros"
+    emptySubMessage="Intenta ajustar los filtros de búsqueda"
+    (onLazyLoad)="loadData($event)">
+
+    <!-- Columnas custom: organización con doble línea, estado con pill, progreso con barra y minigrafica -->
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'razonSocial') {
+        <div class="cell-org">
+          <span class="cell-org__name">{{ row.razonSocial }}</span>
+          <span class="cell-org__ruc">RUC: {{ row.ruc }}</span>
+        </div>
+      }
+      @if (col.field === 'estado') {
+        <app-ui-status-pill [status]="getStatusType(row.estado)" [text]="getStatusLabel(row.estado)"></app-ui-status-pill>
+      }
+      @if (col.field === 'porcentajeProgramado') {
+        <div class="prog-bar-wrap">
+          <div class="prog-bar">
+            <div class="prog-bar__fill"
+              [attr.data-level]="row.porcentajeProgramado >= 100 ? 'full' : row.porcentajeProgramado >= 50 ? 'mid' : 'low'"
+              [style.width.%]="Math.min(row.porcentajeProgramado, 100)">
+            </div>
+          </div>
+          <span class="prog-bar__label">{{ row.porcentajeProgramado | number:'1.0-0' }}%</span>
+        </div>
+      }
+    </ng-template>
+  </app-ui-data-table>
+</div>
+
+<!-- Template de acciones por fila -->
+<ng-template #programacionActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
+      ariaLabel="Ver detalle" (onClick)="goToDetail(row.id)" />
+  </div>
+</ng-template>

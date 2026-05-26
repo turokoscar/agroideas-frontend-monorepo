@@ -1,0 +1,122 @@
+<app-ui-modal
+  [visible]="visible()"
+  [title]="'Programación Mensualizada'"
+  [subtitle]="item().orden + ' — ' + item().nombre"
+  icon="calendar_month"
+  [isLoading]="loading()"
+  [isSubmitting]="saving()"
+  saveLabel="Guardar Programación"
+  [saveIcon]="'save'"
+  [showSaveButton]="!readOnly()"
+  [saveDisabled]="!canSave()"
+  (onHide)="onHide()"
+  (onSave)="save()"
+  maxWidth="896px"
+  >
+  <!-- Body Content -->
+  <div class="space-y-8">
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-50 dark:bg-zinc-800/20 border border-slate-100 dark:border-zinc-800 p-4 rounded-xl text-center flex flex-col justify-center min-h-[110px]">
+        <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">META FÍSICA TOTAL</span>
+        <span class="text-2xl font-black text-slate-800 dark:text-white">{{(item().metaAprobada ?? item().metaFisica) | number:'1.0-2'}}</span>
+        <span class="text-[9px] font-bold text-slate-400 mt-1 uppercase">{{item().unidadMedida}}</span>
+      </div>
+      <div class="bg-slate-50 dark:bg-zinc-800/20 border border-slate-100 dark:border-zinc-800 p-4 rounded-xl text-center flex flex-col justify-center min-h-[110px]">
+        <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">APORTE AGROIDEAS TOTAL</span>
+        <span class="text-xl font-black text-slate-800 dark:text-white">{{formatCurrency(item().montoAprobado ?? item().metaFinanciera)}}</span>
+      </div>
+      <div class="bg-primary/5 border border-primary/20 p-4 rounded-xl text-center flex flex-col justify-center min-h-[110px] ring-1 ring-primary/10">
+        <span class="text-[9px] font-black uppercase tracking-widest text-primary mb-2">PROG. AGROIDEAS</span>
+        <span class="text-2xl font-black text-slate-900 dark:text-white">{{totalProgramadoFisico() | number:'1.0-2'}}</span>
+        <span class="text-[9px] font-bold text-primary/70 mt-1 uppercase">{{formatCurrency(totalProgramadoFinanciero())}}</span>
+      </div>
+      <div class="p-4 rounded-xl text-center flex flex-col justify-center min-h-[110px] transition-colors"
+           [ngClass]="{
+             'bg-green-50 border border-green-200': restanteFinanciero() === 0,
+             'bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20': restanteFinanciero() > 0,
+             'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/20': restanteFinanciero() < 0
+           }">
+        <span class="text-[9px] font-black uppercase tracking-widest mb-2"
+              [ngClass]="{
+                'text-green-600': restanteFinanciero() === 0,
+                'text-amber-600': restanteFinanciero() > 0,
+                'text-red-500': restanteFinanciero() < 0
+              }">SALDO POR PROG.</span>
+        <span class="text-2xl font-black"
+              [ngClass]="{
+                'text-green-600': restanteFinanciero() === 0,
+                'text-slate-900 dark:text-white': restanteFinanciero() > 0,
+                'text-red-500': restanteFinanciero() < 0
+              }">
+          {{restanteFisico() | number:'1.0-2'}}
+        </span>
+        <span class="text-[9px] font-bold mt-1 uppercase"
+              [ngClass]="{
+                'text-green-500': restanteFinanciero() === 0,
+                'text-amber-600/70': restanteFinanciero() > 0,
+                'text-red-400': restanteFinanciero() < 0
+              }">{{formatCurrency(restanteFinanciero())}}</span>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+      <div class="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200">
+        <table class="w-full text-left border-collapse">
+          <thead class="sticky top-0 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 z-10">
+            <tr class="text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+              <th class="px-6 py-4"># Periodo</th>
+              <th class="px-6 py-4 text-center">Cantidad Programada</th>
+              <th class="px-6 py-4 text-center">Precio Unitario</th>
+              <th class="px-6 py-4 text-right">Monto Estimado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50 dark:divide-zinc-800">
+            @for (mes of meses(); track mes) {
+              <tr class="text-sm text-slate-600 dark:text-slate-400 group hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-all">
+                <td class="px-6 py-4 font-bold">
+                  <div class="flex items-center gap-3">
+                    <span class="text-[10px] bg-slate-100 dark:bg-zinc-800 text-slate-500 w-6 h-6 rounded flex items-center justify-center font-black group-hover:bg-primary group-hover:text-white transition-colors">
+                      {{mes.mes}}
+                    </span>
+                    <div class="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                       <span class="material-symbols-outlined text-sm opacity-40">calendar_month</span>
+                      {{mes.fecha}}
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <p-inputNumber [ngModel]="mes.metaFisica"
+                    (ngModelChange)="onFisicaChange(mes, $event)"
+                    [min]="0" [max]="(item().metaAprobada ?? item().metaFisica) * 10"
+                    [disabled]="readOnly()"
+                    inputStyleClass="w-32 px-3 py-1.5 text-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-800 dark:text-white font-black focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                    [minFractionDigits]="2" [maxFractionDigits]="2">
+                  </p-inputNumber>
+                </td>
+                <td class="px-6 py-4 text-center font-medium opacity-60">
+                  {{formatCurrency(agroideasPrecioUnitario())}}
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <span class="font-black" [ngClass]="mes.metaFinanciera > 0 ? 'text-primary' : 'text-slate-300 dark:text-zinc-700'">
+                    {{formatCurrency(mes.metaFinanciera)}}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Start slot -->
+  <div footer-start class="flex items-start gap-3">
+    <span class="material-symbols-outlined text-primary text-xl opacity-60">info</span>
+    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">
+      <span class="font-black uppercase tracking-tighter text-slate-400 block mb-0.5">Cálculo automático</span>
+      Monto = Cantidad × PU Agroideas | El financiero se recalcula proporcionalmente.
+    </p>
+  </div>
+</app-ui-modal>

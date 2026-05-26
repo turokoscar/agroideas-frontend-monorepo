@@ -1,0 +1,39 @@
+:host ::ng-deep .p-button {
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+    border-radius: 0.75rem;
+    font-family: 'Roboto', sans-serif;
+}
+
+:host ::ng-deep .p-button.ui-btn-primary {
+    background: #008F49;
+    color: #fff;
+}
+:host ::ng-deep .p-button.ui-btn-primary:hover { background: #006835; }
+
+:host ::ng-deep .p-button.ui-btn-secondary {
+    background: #00B2E3;
+    color: #fff;
+}
+:host ::ng-deep .p-button.ui-btn-secondary:hover { opacity: 0.9; }
+
+:host ::ng-deep .p-button.ui-btn-accent {
+    background: #A0522D;
+    color: #fff;
+}
+:host ::ng-deep .p-button.ui-btn-accent:hover { opacity: 0.9; }
+
+:host ::ng-deep .p-button.ui-btn-outline {
+    background: transparent;
+    border: 2px solid #008F49;
+    color: #008F49;
+}
+:host ::ng-deep .p-button.ui-btn-outline:hover { background: rgba(0,143,73,0.05); }
+
+:host ::ng-deep .p-button.ui-btn-ghost {
+    background: transparent;
+    color: #475569;
+}
+:host ::ng-deep .p-button.ui-btn-ghost:hover { background: #f8fafc; }

@@ -1,0 +1,39 @@
+// ===============================================
+// Kardex Page - KOFIX Design System
+// ===============================================
+
+:host
+  display: block
+
+// ── Tipo badge (columna tipo de movimiento) ─────
+.dt-tipo-badge
+  display: inline-flex
+  align-items: center
+  gap: 5px
+  font-size: 0.75rem
+  font-weight: 600
+
+  &[data-tipo='Desembolso']
+    color: #dc2626
+
+  &[data-tipo='Rendición'],
+  &[data-tipo='Devolución']
+    color: #16a34a
+
+  &[data-tipo='Extorno']
+    color: #0284c7
+
+.dt-tipo-icon
+  font-size: 0.875rem
+
+// ── Monto con signo ─────────────────────────────
+.dt-monto
+  font-weight: 600
+  font-variant-numeric: tabular-nums
+  font-size: 0.8125rem
+
+  &[data-sign='pos']
+    color: #16a34a
+
+  &[data-sign='neg']
+    color: #dc2626

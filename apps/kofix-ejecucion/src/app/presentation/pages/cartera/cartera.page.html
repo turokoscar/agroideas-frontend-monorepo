@@ -1,0 +1,134 @@
+<div class="page-container p-4 md:p-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-foreground">Cartera de Proyectos</h1>
+        <p class="text-muted-foreground">Convenios y especialistas asignados</p>
+    </div>
+
+    <!-- Search -->
+    <app-ui-filter-bar
+        (onSearch)="onSearch()">
+        <div class="filter-group filter-group--search flex-1">
+            <label class="filter-label">Búsqueda</label>
+            <div class="filter-search-wrap">
+                <span class="material-symbols-outlined filter-search-icon">search</span>
+                <input type="text" class="filter-input filter-input--search"
+                    placeholder="Organización, RUC o especialista..."
+                    [(ngModel)]="search"
+                    (keyup.enter)="onSearch()" />
+            </div>
+        </div>
+    </app-ui-filter-bar>
+
+    <!-- Table -->
+    <app-ui-data-table
+        [columns]="columns"
+        [data]="cartera()"
+        [loading]="loading()"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="10"
+        [icon]="'work'"
+        [title]="'Cartera de Proyectos'"
+        [showIndex]="true"
+        [actionsTemplate]="carteraActions"
+        [rowTemplate]="rowTemplate"
+        [hasActions]="true"
+        (onLazyLoad)="loadData($event)"
+        emptyIcon="folder_off"
+        emptyMessage="Sin convenios en cartera"
+        emptySubMessage="No se encontraron convenios asignados.">
+
+        <!-- Template para columnas custom -->
+        <ng-template #rowTemplate let-row let-col="col">
+            @if (col.field === 'numeroConvenio') {
+                <span class="font-bold text-primary cursor-pointer hover:underline"
+                    (click)="goToDetail(row.postulanteId)">
+                    {{ row.numeroConvenio }}
+                </span>
+            }
+            @if (col.field === 'asignadoA') {
+                <div class="flex flex-col">
+                    <span class="font-medium text-slate-700">{{ row.asignadoA || row.nombresCompletos || '—' }}</span>
+                    <span class="text-xs text-slate-400">{{ row.email || '—' }}</span>
+                </div>
+            }
+            @if (col.field === 'saldo') {
+                <span [class]="getSaldoColor(row)">
+                    {{ row.saldo | number:'1.2-2' }}
+                </span>
+            }
+            @if (col.field === 'estadoSituacional') {
+                <app-ui-status-pill
+                    [status]="getEstadoSemaforo(row).status"
+                    [text]="getEstadoSemaforo(row).text">
+                </app-ui-status-pill>
+            }
+        </ng-template>
+
+    </app-ui-data-table>
+</div>
+
+<!-- Template de acciones por fila -->
+<ng-template #carteraActions let-row>
+    <div class="row-actions">
+        <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
+                   ariaLabel="Ver detalle" (onClick)="goToDetail(row.postulanteId)" />
+        <ng-container *appHasPermission="permGestionCartera">
+            <ui-button iconOnly appearance="soft" severity="warning" size="sm" icon="swap_horiz"
+                       ariaLabel="Reasignar especialista" (onClick)="abrirReasignar(row)" />
+        </ng-container>
+    </div>
+</ng-template>
+
+<!-- Modal de Reasignación -->
+@if (showReasignModal()) {
+    <div class="modal-overlay" (click)="cerrarReasignar()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="text-xl font-bold">Reasignar Especialista</h2>
+                <ui-button severity="ghost" iconOnly size="sm" icon="close"
+                    ariaLabel="Cerrar" (onClick)="cerrarReasignar()" />
+            </div>
+
+            @if (reasignItem(); as item) {
+                <div class="modal-body">
+                    <div class="info-group">
+                        <label class="info-label">Convenio:</label>
+                        <span class="info-value font-bold">{{ item.numeroConvenio }}</span>
+                    </div>
+                    <div class="info-group">
+                        <label class="info-label">Organización:</label>
+                        <span class="info-value">{{ item.razonSocial }}</span>
+                    </div>
+                    <div class="info-group">
+                        <label class="info-label">Especialista Actual:</label>
+                        <span class="info-value">{{ item.nombresCompletos }}</span>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <label class="form-label">Nuevo Especialista *</label>
+                        <select class="form-select" [(ngModel)]="selectedEspecialistaId">
+                            <option [ngValue]="null">-- Seleccionar --</option>
+                            @for (esp of especialistas(); track esp.id) {
+                                <option [ngValue]="esp.id">{{ esp.nombresCompletos }} ({{ esp.rol }})</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Observación</label>
+                        <textarea class="form-textarea" rows="3" [(ngModel)]="observacion"
+                            placeholder="Motivo de la reasignación (opcional)"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <ui-button severity="secondary" label="Cancelar" (onClick)="cerrarReasignar()" />
+                    <ui-button severity="primary" label="Confirmar Reasignación" (onClick)="confirmarReasignar()" />
+                </div>
+            }
+        </div>
+    </div>
+}

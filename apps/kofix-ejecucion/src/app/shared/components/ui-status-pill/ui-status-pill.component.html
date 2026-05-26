@@ -1,0 +1,6 @@
+<span class="status-pill" [attr.data-status]="status">
+  @if (showIcon) {
+    <span class="status-pill__dot"></span>
+  }
+  <span class="status-pill__label">{{ label || text }}</span>
+</span>

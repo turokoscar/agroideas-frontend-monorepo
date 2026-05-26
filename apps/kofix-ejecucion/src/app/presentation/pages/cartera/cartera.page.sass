@@ -1,0 +1,100 @@
+// Modal styles
+.modal-overlay
+    position: fixed
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background: rgba(0, 0, 0, 0.5)
+    display: flex
+    align-items: center
+    justify-content: center
+    z-index: 1000
+
+.modal-content
+    background: white
+    border-radius: 12px
+    width: 90%
+    max-width: 500px
+    max-height: 90vh
+    overflow-y: auto
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2)
+
+.modal-header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    padding: 1.25rem 1.5rem
+    border-bottom: 1px solid #e5e7eb
+
+    h2
+        margin: 0
+        font-size: 1.25rem
+        font-weight: 600
+
+.modal-body
+    padding: 1.5rem
+
+.info-group
+    display: flex
+    margin-bottom: 0.75rem
+
+.info-label
+    font-weight: 500
+    color: #6b7280
+    width: 140px
+    flex-shrink: 0
+
+.info-value
+    color: #111827
+
+.form-group
+    margin-bottom: 1rem
+
+.form-label
+    display: block
+    font-weight: 500
+    margin-bottom: 0.5rem
+    color: #374151
+
+.form-select
+    width: 100%
+    padding: 0.625rem 0.875rem
+    border: 1px solid #d1d5db
+    border-radius: 6px
+    font-size: 0.875rem
+    background: white
+    cursor: pointer
+
+    &:focus
+        outline: none
+        border-color: #3b82f6
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1)
+
+.form-textarea
+    width: 100%
+    padding: 0.625rem 0.875rem
+    border: 1px solid #d1d5db
+    border-radius: 6px
+    font-size: 0.875rem
+    font-family: inherit
+    resize: vertical
+
+    &:focus
+        outline: none
+        border-color: #3b82f6
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1)
+
+.modal-footer
+    display: flex
+    justify-content: flex-end
+    gap: 0.75rem
+    padding: 1rem 1.5rem
+    border-top: 1px solid #e5e7eb
+    background: #f9fafb
+    border-radius: 0 0 12px 12px
+
+.row-actions
+    display: flex
+    gap: 0.5rem
+

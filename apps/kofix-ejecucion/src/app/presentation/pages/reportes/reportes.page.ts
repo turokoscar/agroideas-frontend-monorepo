@@ -1,0 +1,94 @@
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { UiKpiComponent } from '../../../shared/components/ui-kpi/ui-kpi.component';
+import { UICardComponent } from '../../../shared/components/ui-card/ui-card.component';
+import { UIButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
+
+export interface ReporteOption {
+    label: string;
+    value: string;
+    icon: string;
+    description: string;
+}
+
+@Component({
+    selector: 'app-reportes-page',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        UiKpiComponent,
+        UICardComponent,
+        UIButtonComponent
+    ],
+    templateUrl: './reportes.page.html',
+    styleUrls: ['./reportes.page.sass']
+})
+export class ReportesPageComponent {
+    loading = signal(false);
+
+    reporteOptions: ReporteOption[] = [
+        {
+            label: 'Resumen de Ejecución',
+            value: 'resumen-ejecucion',
+            icon: 'analytics',
+            description: 'Ejecución acumulada, saldo disponible y porcentajes por convenio'
+        },
+        {
+            label: 'Kardex de Movimientos',
+            value: 'kardex',
+            icon: 'swap_horiz',
+            description: 'Movimientos de entrada y salida consolidados'
+        },
+        {
+            label: 'Estado de Convenios',
+            value: 'estado-convenios',
+            icon: 'assignment',
+            description: 'Lista de convenios con estado actual'
+        },
+        {
+            label: 'Programación Multianual',
+            value: 'programacion',
+            icon: 'calendar_month',
+            description: 'Programación mensual y anual por convenio'
+        },
+        {
+            label: 'Convenios con Riesgo',
+            value: 'convenios-riesgo',
+            icon: 'warning',
+            description: 'Convenios que presentan alertas o situaciones críticas'
+        },
+        {
+            label: 'Programado vs Ejecutado',
+            value: 'programado-vs-ejecutado',
+            icon: 'compare_arrows',
+            description: 'Comparativo entre montos programados y ejecución real por periodo'
+        }
+    ];
+
+    selectedReporteValue: string | null = null;
+    selectedReporte = signal<ReporteOption | null>(null);
+    fechaInicio: Date | null = null;
+    fechaFin: Date | null = null;
+
+    onReporteChange(event: any): void {
+        const val = event.value as string;
+        const found = this.reporteOptions.find(r => r.value === val) || null;
+        this.selectedReporte.set(found);
+    }
+
+    generarReporte(): void {
+        if (!this.selectedReporte()) return;
+        this.loading.set(true);
+        setTimeout(() => this.loading.set(false), 1500);
+    }
+
+    exportarExcel(): void {
+        if (!this.selectedReporte()) return;
+    }
+
+    exportarPdf(): void {
+        if (!this.selectedReporte()) return;
+    }
+}

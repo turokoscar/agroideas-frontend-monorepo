@@ -1,0 +1,20 @@
+<div class="fb-root">
+  <!-- Slots de filtros que el padre inyecta -->
+  <div class="fb-filters">
+    <ng-content></ng-content>
+  </div>
+
+  <!-- Acciones a la derecha -->
+  <div class="fb-actions">
+    @if (showSearch) {
+      <ui-button iconOnly shape="circle" severity="primary" [icon]="searchIcon"
+        iconRotateOnHover [ariaLabel]="searchLabel" (onClick)="onSearch.emit()" />
+    }
+    @if (showAdd) {
+      <button class="fb-btn fb-btn--add" (click)="onAdd.emit()" [title]="addLabel">
+        <span class="material-symbols-outlined fb-btn__icon">add</span>
+        <span class="fb-btn__label">{{ addLabel }}</span>
+      </button>
+    }
+  </div>
+</div>
