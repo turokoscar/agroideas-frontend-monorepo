@@ -1,101 +1,200 @@
-# AgroideasFrontendMonorepo
+# 🏛️ Monorepo Frontend — AGROIDEAS
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+<div align="center">
+  <img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="90" alt="Nx Logo" />
+  <h3>Ecosistema Unificado de Aplicaciones Frontend para AGROIDEAS</h3>
+  <p>Monorepo de alto rendimiento basado en <strong>Nx 19.8.14</strong> y <strong>Angular 18.2 (Standalone)</strong> con un sistema de diseño agnóstico y modular.</p>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+  [![Nx](https://img.shields.io/badge/Nx-19.8.14-blueviolet?style=flat-square&logo=nx)](https://nx.dev)
+  [![Angular](https://img.shields.io/badge/Angular-18.2.0-red?style=flat-square&logo=angular)](https://angular.io)
+  [![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4.17-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
+  [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+</div>
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+---
 
-## Run tasks
+## 📋 Descripción General
 
-To run the dev server for your app, use:
+Este repositorio unifica las aplicaciones frontend de **AGROIDEAS** bajo una arquitectura robusta de monorepo. Utiliza un **Sistema de Diseño (Design System)** propio y agnóstico que implementa la identidad visual institucional de **MIDAGRI / INIA** utilizando colores estandarizados (`#346b00` verde primario) y prohíbe el uso directo de proveedores de componentes terceros en las aplicaciones para garantizar consistencia, mantenibilidad y escalabilidad.
 
-```sh
-npx nx serve kofix-ejecucion
+---
+
+## 📂 Arquitectura del Repositorio
+
+El monorepo se organiza bajo la convención de **Nx** en aplicaciones (`apps/`) y librerías transversales (`libs/`), con límites estrictos de dependencias configurados en el linter (`@nx/enforce-module-boundaries`).
+
+```
+├── apps/
+│   ├── kofix-ejecucion/     # Aplicación de ejecución de planes (referencia de diseño) [Puerto: 7100]
+│   ├── kofix-ejecucion-e2e/ # Pruebas End-to-End con Playwright para kofix
+│   ├── sat-ui/              # Aplicación de Seguimiento y Acompañamiento Técnico [Puerto: 4200]
+│   └── sat-ui-e2e/          # Pruebas End-to-End con Playwright para sat-ui
+│
+└── libs/
+    ├── theme/               # @agroideas/theme     -> Tokens de diseño HSL y preset de TailwindCSS
+    ├── ui/                  # @agroideas/ui        -> Componentes de UI reutilizables (ui-button, ui-card, etc.)
+    ├── auth/                # @agroideas/auth      -> Autenticación JWT, Interceptor, Guard y Login
+    ├── http/                # @agroideas/http      -> Respuestas estandarizadas (ResponseDto) y cliente HTTP base
+    ├── feedback/            # @agroideas/feedback  -> Centralización de alertas y diálogos (SweetAlert2)
+    ├── security/            # @agroideas/security  -> Directivas y servicios de control de acceso por permisos
+    └── utils/               # @agroideas/utils     -> Utilidades puras de TypeScript (formatos, JWT, storage-keys)
 ```
 
-To create a production bundle:
+---
 
-```sh
-npx nx build kofix-ejecucion
+## 🛠️ Requisitos Previos
+
+Asegúrate de tener instaladas las siguientes herramientas en tu entorno de desarrollo local:
+*   [Node.js](https://nodejs.org/) (Versión **18.x** o **20.x** LTS recomendada)
+*   [npm](https://www.npmjs.com/) (Gestor de paquetes integrado con Node.js)
+
+---
+
+## 🚀 Proceso de Instalación
+
+Sigue estos pasos para poner en marcha el proyecto localmente:
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/turokoscar/agroideas-frontend-monorepo.git
+    cd agroideas-frontend-monorepo
+    ```
+
+2.  **Instalar las dependencias de npm:**
+    > [!IMPORTANT]
+    > No utilices comandos de actualización global ni actualices individualmente las dependencias de ESLint o TypeScript-ESLint, ya que están fijadas en un stack compatible específico.
+    
+    ```bash
+    npm install
+    ```
+
+3.  **Visualizar el grafo de dependencias (Opcional pero altamente recomendado):**
+    Permite comprender visualmente la estructura y dependencias entre las aplicaciones y las librerías transversales:
+    ```bash
+    npx nx graph
+    ```
+
+---
+
+## 💻 Desarrollo Local (Comandos Clave)
+
+Todos los comandos se deben ejecutar utilizando el comando `npx nx` para asegurar el uso de la versión de Nx local del proyecto. **No ejecutes scripts de npm directamente.**
+
+### Servidor de Desarrollo
+Para levantar los servidores de desarrollo de manera local:
+
+*   **SAT UI** (Seguimiento Técnico):
+    ```bash
+    npx nx serve sat-ui
+    ```
+    *Accede localmente en: http://localhost:4200*
+
+*   **KOFIX** (Ejecución):
+    ```bash
+    npx nx serve kofix-ejecucion
+    ```
+    *Accede localmente en: http://localhost:7100*
+
+### Asegurar Calidad (Linting y Testing)
+*   **Analizar el código con el Linter:**
+    ```bash
+    npx nx lint <proyecto>     # Ejemplo: npx nx lint sat-ui
+    ```
+*   **Ejecutar pruebas unitarias (Jest):**
+    ```bash
+    npx nx test <proyecto>     # Ejemplo: npx nx test sat-ui
+    ```
+*   **Ejecutar tareas únicamente en proyectos afectados por cambios locales:**
+    ```bash
+    npx nx affected -t lint,test,build
+    ```
+
+---
+
+## 🔀 Reglas de Límites de Módulos (Module Boundaries)
+
+Para evitar dependencias circulares y asegurar una arquitectura desacoplada, se aplican las siguientes reglas de arquitectura controladas por ESLint:
+
+1.  **Sin dependencias cruzadas entre aplicaciones:** `sat-ui` y `kofix-ejecucion` no pueden importarse entre sí.
+2.  **Arquitectura Unidireccional:** Las aplicaciones dependen de librerías en `libs/`.
+3.  **Prohibición de Proveedores Directos:** Las aplicaciones **no deben importar directamente** librerías externas de UI como `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2` o `leaflet`. Todo el consumo debe realizarse de forma indirecta consumiendo `@agroideas/ui`, `@agroideas/feedback`, etc.
+
+---
+
+## 🌐 Proceso de Despliegue
+
+El despliegue de las aplicaciones en producción consta de dos pasos principales: **compilación (build)** y **distribución estática**.
+
+### 1. Compilación para Producción (Build)
+
+Genera los archivos optimizados (minificados, con tree-shaking y compilación AOT) ejecutando:
+
+*   **Construir SAT UI:**
+    ```bash
+    npx nx build sat-ui
+    ```
+*   **Construir KOFIX:**
+    ```bash
+    npx nx build kofix-ejecucion
+    ```
+*   **Construir todos los proyectos:**
+    ```bash
+    npx nx run-many -t build
+    ```
+
+Los archivos resultantes se generarán en la ruta:
+*   `dist/apps/sat-ui/browser/`
+*   `dist/apps/kofix-ejecucion/browser/`
+
+### 2. Configuración y Despliegue en el Servidor (Hosting)
+
+Dado que las aplicaciones son SPA (Single Page Applications) generadas como archivos estáticos (HTML, CSS y JS), se pueden servir mediante cualquier servidor web de alto rendimiento.
+
+#### Opción A: Despliegue mediante Nginx (Recomendado)
+A continuación se presenta un archivo de configuración básico de Nginx (`nginx.conf`) que incluye el manejo correcto de rutas para Angular (redirección a `index.html` para evitar errores `404` en recargas de página):
+
+```nginx
+server {
+    listen 80;
+    server_name sat.agroideas.gob.pe;
+
+    location / {
+        root /usr/share/nginx/html/sat-ui;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
 ```
 
-To see all available targets to run for a project, run:
+#### Opción B: Contenedores Docker (Producción)
+Se puede empaquetar la aplicación en una imagen ligera de Docker utilizando Nginx:
 
-```sh
-npx nx show project kofix-ejecucion
-```
-        
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/angular:app demo
+```dockerfile
+# Paso 1: Servir con Nginx
+FROM nginx:alpine
+COPY dist/apps/sat-ui/browser /usr/share/nginx/html/sat-ui
+# Opcional: Reemplazar configuración default de Nginx
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 ```
 
-To generate a new library, use:
+#### Opción C: Servicios Cloud / CDN
+Puedes subir el contenido de la carpeta `dist/apps/<app>/browser/` directamente a:
+*   **AWS S3** habilitado para Static Website Hosting + CloudFront.
+*   **Azure Blob Storage** + Azure CDN.
+*   **Cloudflare Pages** o **Vercel**.
 
-```sh
-npx nx g @nx/angular:lib mylib
-```
+---
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## 🤝 Documentación Adicional
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+*   [`CONTRIBUTING.md`](./CONTRIBUTING.md): Guía de desarrollo local, convenciones de tags y creación de nuevos componentes/librerías con los generadores estándar.
+*   [`AGENTS.md`](./AGENTS.md): Guía detallada para asistentes inteligentes de codificación y diseño del sistema.
+*   [`docs/adr/`](./docs/adr/): Registro de Decisiones de Arquitectura (ADR) del proyecto.
+*   [`docs/plan-implementacion-monorepo.md`](./docs/plan-implementacion-monorepo.md): Plan de implementación por fases del monorepo.

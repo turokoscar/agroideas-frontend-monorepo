@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@agroideas-frontend-monorepo/menu": ["libs/menu/src/index.ts"],
       "@agroideas/auth": ["libs/auth/src/index.ts"],
       "@agroideas/feedback": ["libs/feedback/src/index.ts"],
       "@agroideas/http": ["libs/http/src/index.ts"],

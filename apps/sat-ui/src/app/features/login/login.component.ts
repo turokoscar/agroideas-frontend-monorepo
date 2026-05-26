@@ -24,13 +24,20 @@ export class LoginComponent {
 
   showPw = signal(false);
   error = signal('');
+  loading = signal(false);
 
   togglePassword() {
     this.showPw.update(v => !v);
   }
 
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.loginForm.get(fieldName);
+    return !!(field && field.invalid && field.touched);
+  }
+
   onSubmit() {
     if (this.loginForm.valid) {
+      this.loading.set(true);
       this.error.set('');
       const { usuario, password } = this.loginForm.value;
       
@@ -40,14 +47,18 @@ export class LoginComponent {
             this.router.navigate(['/dashboard']);
           } else {
             this.error.set('Credenciales inválidas o cuenta inactiva.');
+            this.loading.set(false);
           }
         },
         error: (err) => {
           console.error('Login error:', err);
           const errorMsg = err?.error?.mensaje || 'Error de conexión con el servidor.';
           this.error.set(errorMsg);
+          this.loading.set(false);
         }
       });
+    } else {
+      this.loginForm.markAllAsTouched();
     }
   }
 }
