@@ -1,0 +1,9 @@
+{
+  "name": "sat-ui-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/sat-ui-e2e/src",
+  "implicitDependencies": ["sat-ui"],
+  "// targets": "to see all targets run: nx show project sat-ui-e2e --web",
+  "targets": {}
+}

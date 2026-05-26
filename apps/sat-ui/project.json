@@ -1,37 +1,28 @@
 {
-  "name": "kofix-ejecucion",
+  "name": "sat-ui",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/kofix-ejecucion/src",
-  "tags": [
-    "scope:kofix",
-    "type:app"
-  ],
+  "sourceRoot": "apps/sat-ui/src",
+  "tags": ["scope:sat", "type:app"],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/kofix-ejecucion",
-        "index": "apps/kofix-ejecucion/src/index.html",
-        "browser": "apps/kofix-ejecucion/src/main.ts",
-        "polyfills": [
-          "zone.js"
-        ],
-        "tsConfig": "apps/kofix-ejecucion/tsconfig.app.json",
+        "outputPath": "dist/apps/sat-ui",
+        "index": "apps/sat-ui/src/index.html",
+        "browser": "apps/sat-ui/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/sat-ui/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/kofix-ejecucion/public"
+            "input": "apps/sat-ui/public"
           }
         ],
-        "styles": [
-          "apps/kofix-ejecucion/src/styles.scss"
-        ],
+        "styles": ["apps/sat-ui/src/styles.scss"],
         "scripts": []
       },
       "configurations": {
@@ -62,10 +53,10 @@
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "kofix-ejecucion:build:production"
+          "buildTarget": "sat-ui:build:production"
         },
         "development": {
-          "buildTarget": "kofix-ejecucion:build:development"
+          "buildTarget": "sat-ui:build:development"
         }
       },
       "defaultConfiguration": "development"
@@ -73,7 +64,7 @@
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "buildTarget": "kofix-ejecucion:build"
+        "buildTarget": "sat-ui:build"
       }
     },
     "lint": {
@@ -81,19 +72,17 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/kofix-ejecucion/jest.config.ts"
+        "jestConfig": "apps/sat-ui/jest.config.ts"
       }
     },
     "serve-static": {
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "kofix-ejecucion:build",
+        "buildTarget": "sat-ui:build",
         "port": 4200,
-        "staticFilePath": "dist/apps/kofix-ejecucion/browser",
+        "staticFilePath": "dist/apps/sat-ui/browser",
         "spa": true
       }
     }

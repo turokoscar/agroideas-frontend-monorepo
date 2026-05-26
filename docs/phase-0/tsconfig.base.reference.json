@@ -1,4 +1,5 @@
 {
+  "_comment": "REFERENCIA del estado esperado de paths tras la Fase 0. Los generadores de Nx (nx g ... --importPath) agregan estos paths automáticamente al crear cada lib. No es necesario aplicar este archivo a mano; sirve de trazabilidad/checklist.",
   "compileOnSave": false,
   "compilerOptions": {
     "rootDir": ".",
@@ -8,19 +9,19 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "es2022",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": ["es2022", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@agroideas/auth": ["libs/auth/src/index.ts"],
-      "@agroideas/feedback": ["libs/feedback/src/index.ts"],
-      "@agroideas/http": ["libs/http/src/index.ts"],
-      "@agroideas/security": ["libs/security/src/index.ts"],
       "@agroideas/theme": ["libs/theme/src/index.ts"],
       "@agroideas/ui": ["libs/ui/src/index.ts"],
+      "@agroideas/auth": ["libs/auth/src/index.ts"],
+      "@agroideas/http": ["libs/http/src/index.ts"],
+      "@agroideas/feedback": ["libs/feedback/src/index.ts"],
+      "@agroideas/security": ["libs/security/src/index.ts"],
       "@agroideas/utils": ["libs/utils/src/index.ts"]
     }
   },
