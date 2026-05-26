@@ -7,70 +7,44 @@
     <ui-button label="Nuevo Asistente" icon="person_add" (onClick)="openModal()"></ui-button>
   </div>
 
-  @if (loading()) {
-    <div class="flex justify-center py-8">
-      <span class="material-symbols-outlined animate-spin text-primary">sync</span>
-    </div>
-  } @else {
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-border">
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Asistente Técnico</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Usuario</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Contacto</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Período de Vigencia</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Estado</th>
-            <th class="text-right py-3 px-4 font-medium text-muted-foreground">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of asistentes(); track item.ideAsistente) {
-            <tr class="border-b border-border/50 hover:bg-muted/30">
-              <td class="py-3 px-4">
-                <div class="font-medium text-foreground">
-                  {{ item.txtNombres }} {{ item.txtApellidoPaterno }} {{ item.txtApellidoMaterno }}
-                </div>
-                <div class="text-[11px] text-muted-foreground uppercase tracking-wider font-mono">ID: {{ item.ideAsistente.substring(0, 8) }}...</div>
-              </td>
-              <td class="py-3 px-4 font-mono text-sm text-foreground">
-                {{ item.codUsuario }}
-              </td>
-              <td class="py-3 px-4 text-sm text-foreground">
-                {{ item.txtCorreo }}
-              </td>
-              <td class="py-3 px-4 text-sm text-foreground">
-                <span class="inline-flex items-center gap-1">
-                  <span class="material-symbols-outlined text-xs text-muted-foreground">calendar_today</span>
-                  {{ formatDate(item.fecInicioVigencia) }} - {{ formatDate(item.fecFinVigencia) }}
-                </span>
-              </td>
-              <td class="py-3 px-4">
-                <app-ui-status-pill [status]="item.flgActivo ? 'Activo' : 'Finalizado'" [text]="item.flgActivo ? 'Activo' : 'Inactivo'" />
-              </td>
-              <td class="py-3 px-4 text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <button (click)="openModal(item)" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-500 hover:text-primary" title="Editar datos">
-                    <span class="material-symbols-outlined text-lg">edit</span>
-                  </button>
-                  <button (click)="toggleEstado(item)" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-500 hover:text-warning" title="Cambiar estado de vigencia">
-                    <span class="material-symbols-outlined text-lg">{{ item.flgActivo ? 'block' : 'check_circle' }}</span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="py-8 text-center text-muted-foreground">
-                No hay asistentes técnicos registrados en el sistema
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+  <app-ui-data-table
+    [data]="processedData()"
+    [columns]="columns"
+    [loading]="loading()"
+    [hasActions]="true"
+    icon="people"
+    title="Listado de Asistentes"
+    subtitle="Personal de campo registrado en el sistema"
+    emptyIcon="group_off"
+    emptyMessage="No hay asistentes técnicos registrados"
+    emptySubMessage="Registre un nuevo asistente usando el botón superior"
+    [rowTemplate]="rowTemplate"
+    [actionsTemplate]="rowActions">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'estado') {
+        <app-ui-status-pill [status]="row.estadoValor" [text]="row.estadoText" />
+      } @else if (col.field === 'nombreCompleto') {
+        <div>
+          <div class="font-medium text-foreground">{{ row.nombreCompleto }}</div>
+          <div class="text-[11px] text-muted-foreground uppercase tracking-wider font-mono">ID: {{ row.ideAsistente.substring(0, 8) }}...</div>
+        </div>
+      }
+    </ng-template>
+
+  </app-ui-data-table>
 </div>
+
+<ng-template #rowActions let-row>
+  <div class="flex items-center gap-1">
+    <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
+      ariaLabel="Editar" [disabled]="!row.flgActivo" (onClick)="$event.stopPropagation(); openModal(row)" />
+    <ui-button iconOnly appearance="soft" severity="warning" size="sm" [icon]="row.flgActivo ? 'block' : 'check_circle'"
+      [attr.ariaLabel]="row.flgActivo ? 'Inhabilitar' : 'Habilitar'"
+      [disabled]="!row.flgActivo"
+      (onClick)="$event.stopPropagation(); toggleEstado(row)" />
+  </div>
+</ng-template>
 
 <!-- Modal -->
 <app-ui-modal

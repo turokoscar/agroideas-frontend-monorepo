@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
 
 interface LoginResponse {
-  exitoso: boolean;
+  respuesta: string;
   datos: {
     token: string;
     ideAsistente?: string;
@@ -56,7 +56,7 @@ export class AuthService {
       deviceId: 'web-admin'
     }).pipe(
       map(res => {
-        if (res && res.exitoso && res.datos) {
+        if (res && res.respuesta === 'OK' && res.datos) {
           const data = res.datos;
           const user: AuthUser = {
             id: data.ideAsistente || 'asis-001',

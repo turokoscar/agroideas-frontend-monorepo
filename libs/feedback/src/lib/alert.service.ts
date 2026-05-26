@@ -51,8 +51,8 @@ export class AlertService {
      * Muestra una alerta basada en el ResponseDto del servidor
      */
     showResponse(res: ResponseDto) {
-        const icon: SweetAlertIcon = res.exitoso ? 'success' : 'error';
-        const title = res.exitoso ? '¡Éxito!' : 'Ups...';
+        const icon: SweetAlertIcon = res.respuesta === 'OK' ? 'success' : 'error';
+        const title = res.respuesta === 'OK' ? '¡Éxito!' : 'Ups...';
 
         return this.show(title, res.mensaje, icon);
     }

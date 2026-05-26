@@ -1,8 +1,5 @@
 export interface ResponseDto<T = any> {
-    exitoso: boolean;
-    respuesta: number;
-    codigo: string | null;
+    respuesta: string; // "OK" | "ERROR"
     mensaje: string;
     datos: T;
-    total: number | null;
 }

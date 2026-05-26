@@ -7,69 +7,40 @@
     <ui-button label="Nueva Asignación" icon="add" (onClick)="openModal()"></ui-button>
   </div>
 
-  @if (loading()) {
-    <div class="flex justify-center py-8">
-      <span class="material-symbols-outlined animate-spin text-primary">sync</span>
-    </div>
-  } @else {
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-border">
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Asistente</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Organización</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Tipo de Servicio</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Período</th>
-            <th class="text-left py-3 px-4 font-medium text-muted-foreground">Estado</th>
-            <th class="text-right py-3 px-4 font-medium text-muted-foreground">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of asignaciones(); track item.ide_asignacion) {
-            <tr class="border-b border-border/50 hover:bg-muted/30">
-              <td class="py-3 px-4">
-                <div class="font-medium">{{ item.txt_asistente }}</div>
-              </td>
-              <td class="py-3 px-4">
-                <div class="text-sm">{{ item.txt_organizacion }}</div>
-              </td>
-              <td class="py-3 px-4">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/10 text-primary">
-                  {{ item.txtTipoServicio }}
-                </span>
-              </td>
-              <td class="py-3 px-4 text-sm">
-                {{ formatDate(item.fecInicio) }} - {{ formatDate(item.fecFin) }}
-              </td>
-              <td class="py-3 px-4">
-                <app-ui-status-pill [status]="item.flgActivo ? 'Activo' : 'Finalizado'" [text]="item.flgActivo ? 'Activo' : 'Inactivo'" />
-              </td>
-              <td class="py-3 px-4 text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <button (click)="openModal(item)" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-500 hover:text-primary" title="Editar">
-                    <span class="material-symbols-outlined text-lg">edit</span>
-                  </button>
-                  <button (click)="toggleEstado(item)" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-500 hover:text-warning" title="Cambiar estado">
-                    <span class="material-symbols-outlined text-lg">{{ item.flgActivo ? 'block' : 'check_circle' }}</span>
-                  </button>
-                  <button (click)="delete(item.ide_asignacion)" class="p-1.5 rounded-lg hover:bg-destructive/5 transition-colors flex items-center justify-center text-slate-500 hover:text-destructive" title="Eliminar">
-                    <span class="material-symbols-outlined text-lg">delete</span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="py-8 text-center text-muted-foreground">
-                No hay asignaciones registradas
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+  <app-ui-data-table
+    [data]="processedData()"
+    [columns]="columns"
+    [loading]="loading()"
+    [hasActions]="true"
+    icon="assignment"
+    title="Listado de Asignaciones"
+    subtitle="Vinculación de asistentes con organizaciones"
+    emptyIcon="assignment_late"
+    emptyMessage="No hay asignaciones registradas"
+    emptySubMessage="Cree una nueva asignación usando el botón superior"
+    [rowTemplate]="rowTemplate"
+    [actionsTemplate]="rowActions">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'estado') {
+        <app-ui-status-pill [status]="row.estadoValor" [text]="row.estadoText" />
+      }
+    </ng-template>
+
+  </app-ui-data-table>
 </div>
+
+<ng-template #rowActions let-row>
+  <div class="flex items-center gap-1">
+    <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
+      ariaLabel="Editar" (onClick)="$event.stopPropagation(); openModal(row)" />
+    <ui-button iconOnly appearance="soft" severity="warning" size="sm" [icon]="row.flgActivo ? 'block' : 'check_circle'"
+      [attr.ariaLabel]="row.flgActivo ? 'Desactivar' : 'Activar'"
+      (onClick)="$event.stopPropagation(); toggleEstado(row)" />
+    <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
+      ariaLabel="Eliminar" (onClick)="$event.stopPropagation(); delete(row.ide_asignacion)" />
+  </div>
+</ng-template>
 
 <!-- Modal -->
 <app-ui-modal
@@ -93,12 +64,30 @@
       </select>
     </div>
 
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="regionBusqueda" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Buscar organización</label>
+        <input id="regionBusqueda" type="text" placeholder="Número o razón social"
+          [value]="regionBusqueda()" (input)="onSearchChange($any($event.target).value)"
+          class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+      </div>
+      <div>
+        <label for="regionSeleccionada" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Región</label>
+        <select id="regionSeleccionada" [value]="regionSeleccionada()" (change)="onRegionChange($any($event.target).value)"
+          class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
+          <option value="">Todas las regiones</option>
+          @for (r of regiones(); track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+    </div>
     <div>
       <label for="ide_organizacion" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Organización</label>
       <select id="ide_organizacion" [(ngModel)]="form.ide_organizacion" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
         <option value="">Seleccionar organización</option>
         @for (o of organizaciones(); track o.ideOrganizacion) {
-          <option [value]="o.ideOrganizacion">{{ o.txtNombre }}</option>
+          <option [value]="o.ideOrganizacion">{{ o.numeroConvenio }} - {{ o.txtNombre }}</option>
         }
       </select>
     </div>

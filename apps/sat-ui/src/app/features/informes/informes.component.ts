@@ -1,9 +1,11 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { UIButtonComponent, UICardComponent, UiStatusPillComponent, UIModalComponent } from '@agroideas/ui';
+import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent } from '@agroideas/ui';
+import type { TableColumn } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
+import { ResponseDto } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 
 interface Informe {
@@ -12,8 +14,8 @@ interface Informe {
   txt_asistente: string;
   ide_estadoInforme: string;
   txt_estadoInforme: string;
-  fec_periodoInicio: string;
-  fec_periodoFin: string;
+  fec_periodoInicio: string | null;
+  fec_periodoFin: string | null;
   fec_generacion: string;
   txt_resumenGeneral: string;
   txt_conclusion: string;
@@ -63,7 +65,7 @@ interface Asistente {
 @Component({
   selector: 'app-informes',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent, UICardComponent, UiStatusPillComponent, UIModalComponent],
+  imports: [CommonModule, FormsModule, UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent],
   templateUrl: './informes.component.html',
   styleUrl: './informes.component.css'
 })
@@ -73,7 +75,7 @@ export class InformesComponent implements OnInit {
 
   informes = signal<Informe[]>([]);
   asistentes = signal<Asistente[]>([]);
-  
+
   loading = signal(false);
   showGenerateModal = signal(false);
   showDetalleModal = signal(false);
@@ -93,23 +95,40 @@ export class InformesComponent implements OnInit {
     { cod: 'PRESENTADO', label: 'Presentado', color: 'bg-green-100 text-green-700' }
   ];
 
+  columns: TableColumn[] = [
+    { field: 'txt_asistente', header: 'Asistente', sortable: true },
+    { field: 'periodo', header: 'Período' },
+    { field: 'estado', header: 'Estado', type: 'custom' },
+    { field: 'cantidad_actividades', header: 'Actividades', type: 'number', align: 'center' },
+    { field: 'cantidad_evidencias', header: 'Evidencias', type: 'number', align: 'center' }
+  ];
+
+  processedData = computed(() =>
+    this.informes().map(i => ({
+      ...i,
+      periodo: `${this.formatDate(i.fec_periodoInicio)} - ${this.formatDate(i.fec_periodoFin)}`,
+      estadoValor: i.ide_estadoInforme === 'PRESENTADO' ? 'Aprobado' : (i.ide_estadoInforme === 'GENERADO' ? 'Media' : 'Cerrado'),
+      estadoText: this.getEstadoLabel(i.ide_estadoInforme)
+    }))
+  );
+
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
     this.loading.set(true);
-    
-    this.http.get<Informe[]>(`${environment.apiUrl}/informe`).subscribe({
-      next: (data) => this.informes.set(data),
+
+    this.http.get<ResponseDto<Informe[]>>(`${environment.apiUrl}/informes`).subscribe({
+      next: (res) => this.informes.set(res.datos ?? []),
       error: () => {
         console.error('Error cargando informes');
         this.alertService.toast('Error cargando informes', 'error');
       }
     });
 
-    this.http.get<Asistente[]>(`${environment.apiUrl}/asistente`).subscribe({
-      next: (data) => this.asistentes.set(data),
+    this.http.get<ResponseDto<Asistente[]>>(`${environment.apiUrl}/asistentes`).subscribe({
+      next: (res) => this.asistentes.set(res.datos ?? []),
       error: () => console.error('Error cargando asistentes'),
       complete: () => this.loading.set(false)
     });
@@ -138,28 +157,32 @@ export class InformesComponent implements OnInit {
 
     const payload = {
       ide_asistente: this.form.ide_asistente,
-      fec_inicio: this.form.fec_periodoInicio,
+      fec_inicio: this.form.fec_periodoInicio
+        ? new Date(this.form.fec_periodoInicio).toISOString()
+        : null,
       fec_fin: this.form.fec_periodoFin
+        ? new Date(this.form.fec_periodoFin).toISOString()
+        : null
     };
 
-    this.http.post(`${environment.apiUrl}/informe/generar`, payload).subscribe({
-      next: () => {
+    this.http.post<ResponseDto<unknown>>(`${environment.apiUrl}/informes/generar`, payload).subscribe({
+      next: (res) => {
         this.loadData();
         this.closeGenerateModal();
-        this.alertService.toast('Reporte generado exitosamente');
+        this.alertService.toast(res.mensaje || 'Reporte generado exitosamente');
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast('Error al generar reporte', 'error');
+        this.alertService.toast(err.error?.mensaje || 'Error al generar reporte', 'error');
       },
       complete: () => this.generating.set(false)
     });
   }
 
   verDetalle(informe: Informe) {
-    this.http.get<InformeDetalle>(`${environment.apiUrl}/informe/${informe.ide_informe}/detalle`).subscribe({
-      next: (data) => {
-        this.selectedDetalle.set(data);
+    this.http.get<ResponseDto<InformeDetalle>>(`${environment.apiUrl}/informes/${informe.ide_informe}/detalle`).subscribe({
+      next: (res) => {
+        this.selectedDetalle.set(res.datos ?? null);
         this.showDetalleModal.set(true);
       },
       error: () => this.alertService.toast('Error al cargar detalle del informe', 'error')
@@ -171,7 +194,7 @@ export class InformesComponent implements OnInit {
     this.selectedDetalle.set(null);
   }
 
-  formatDate(dateStr: string): string {
+  formatDate(dateStr: string | null): string {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('es-PE');
   }
