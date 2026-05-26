@@ -1,0 +1,400 @@
+
+> nx run kofix-ejecucion:lint
+
+Linting "kofix-ejecucion"...
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/mappers/convenio.mapper.ts[24m[0m
+[0m   [2m4:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m29:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/mappers/desembolso.mapper.ts[24m[0m
+[0m   [2m4:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m19:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m28:59[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/mappers/no-objecion.mapper.ts[24m[0m
+[0m   [2m5:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m20:52[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m24:31[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m40:32[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m55:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m69:59[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/mappers/programacion.mapper.ts[24m[0m
+[0m   [2m1:10[22m  [33mwarning[39m  'Programacion' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m4:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m5:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m8:29[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m36:59[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/mappers/rendicion.mapper.ts[24m[0m
+[0m   [2m4:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m21:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/auth.repository.impl.ts[24m[0m
+[0m    [2m7:10[22m  [33mwarning[39m  'AuthResponse' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m59:24[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m59:53[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m60:43[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m94:24[22m  [33mwarning[39m  'err' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m110:38[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m150:44[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m156:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m159:43[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m173:24[22m  [33mwarning[39m  'err' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m177:34[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/cartera.repository.impl.ts[24m[0m
+[0m  [2m46:43[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/catalogo.repository.impl.ts[24m[0m
+[0m  [2m21:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m22:52[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/convenio.repository.impl.ts[24m[0m
+[0m  [2m29:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m46:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m63:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m72:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m78:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/desembolso.repository.impl.ts[24m[0m
+[0m  [2m31:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m33:52[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m40:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m50:71[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m51:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m56:62[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m60:76[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/kardex.repository.impl.ts[24m[0m
+[0m  [2m33:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m35:59[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m42:32[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/no-objecion.repository.impl.ts[24m[0m
+[0m  [2m23:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m37:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m39:52[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m60:57[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m86:71[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m87:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/programacion.repository.impl.ts[24m[0m
+[0m   [2m8:10[22m  [33mwarning[39m  'ProgramacionItem' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m38:42[22m  [33mwarning[39m  Unexpected any. Specify a different type      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m46:63[22m  [33mwarning[39m  Unexpected any. Specify a different type      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m47:42[22m  [33mwarning[39m  Unexpected any. Specify a different type      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m52:38[22m  [33mwarning[39m  Unexpected any. Specify a different type      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m56:21[22m  [33mwarning[39m  'id' is defined but never used                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m56:45[22m  [33mwarning[39m  Unexpected any. Specify a different type      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/data/repositories/rendicion.repository.impl.ts[24m[0m
+[0m  [2m33:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m41:60[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m42:31[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m45:72[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m46:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m49:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m50:33[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m57:24[22m  [33mwarning[39m  Forbidden non-null assertion              [2m@typescript-eslint/no-non-null-assertion[22m[0m
+[0m  [2m61:62[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m62:42[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/models/response-dto.model.ts[24m[0m
+[0m  [2m1:34[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/repositories/auth.repository.ts[24m[0m
+[0m  [2m12:33[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/repositories/desembolso.repository.ts[24m[0m
+[0m   [2m7:69[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m8:71[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m9:62[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m10:76[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/repositories/no-objecion.repository.ts[24m[0m
+[0m   [2m8:57[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m9:69[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m10:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m13:71[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/repositories/programacion.repository.ts[24m[0m
+[0m  [2m16:76[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m18:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/repositories/rendicion.repository.ts[24m[0m
+[0m   [2m2:10[22m  [33mwarning[39m  'Rendicion' is defined but never used     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m6:60[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m7:72[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m8:45[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m10:62[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/auth/login.usecase.ts[24m[0m
+[0m  [2m10:26[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/desembolso/registrar-desembolso.usecase.ts[24m[0m
+[0m  [2m10:58[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/no-objecion/save-no-objecion.usecase.ts[24m[0m
+[0m  [2m10:49[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/programacion/save-programacion.usecase.ts[24m[0m
+[0m  [2m10:60[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/rendicion/delete-rendicion.usecase.ts[24m[0m
+[0m  [2m9:37[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/rendicion/get-pendientes-rendicion.usecase.ts[24m[0m
+[0m  [2m9:47[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/rendicion/registrar-rendicion.usecase.ts[24m[0m
+[0m  [2m10:52[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/domain/usecases/rendicion/update-rendicion.usecase.ts[24m[0m
+[0m  [2m10:64[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/layout/app.layout.component.ts[24m[0m
+[0m   [2m1:32[22m  [33mwarning[39m  'signal' is defined but never used                                                      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m1:48[22m  [33mwarning[39m  'HostListener' is defined but never used                                                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m64:5[22m   [33mwarning[39m  Lifecycle methods should not be empty                                                   [2m@angular-eslint/no-empty-lifecycle-method[22m[0m
+[0m  [2m64:25[22m  [33mwarning[39m  Unexpected empty method 'ngOnDestroy'                                                   [2m@typescript-eslint/no-empty-function[22m[0m
+[0m  [2m28:17[22m  [33mwarning[39m  click must be accompanied by either keyup, keydown or keypress event for accessibility  [2m@angular-eslint/template/click-events-have-key-events[22m[0m
+[0m  [2m28:17[22m  [33mwarning[39m  Elements with interaction handlers must be focusable                                    [2m@angular-eslint/template/interactive-supports-focus[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/layout/service/layout.service.ts[24m[0m
+[0m   [2m1:30[22m  [33mwarning[39m  'computed' is defined but never used      [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m48:39[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/dashboard-header/dashboard-header.component.ts[24m[0m
+[0m  [2m15:15[22m  [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m  [2m16:15[22m  [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/desembolso-modal/desembolso-modal.component.html[24m[0m
+[0m   [2m10:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m16:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m27:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m36:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m121:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/desembolso-modal/desembolso-modal.component.ts[24m[0m
+[0m   [2m22:15[22m  [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m   [2m27:31[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m28:39[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m31:32[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m60:26[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m61:26[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m68:26[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m138:36[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m144:25[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m154:26[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/login-form/login-form.component.html[24m[0m
+[0m  [2m66:9[22m  [33mwarning[39m  <button> should have content  [2m@angular-eslint/template/elements-content[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/login-form/login-form.component.ts[24m[0m
+[0m   [2m4:1[22m   [31merror[39m    'primeng/inputtext' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui   [2mno-restricted-imports[22m[0m
+[0m   [2m5:1[22m   [31merror[39m    'primeng/button' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui      [2mno-restricted-imports[22m[0m
+[0m  [2m21:15[22m  [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m  [2m21:42[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/no-objecion-modal/no-objecion-modal.component.html[24m[0m
+[0m  [2m21:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m33:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m41:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m52:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m86:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/no-objecion-modal/no-objecion-modal.component.ts[24m[0m
+[0m   [2m24:15[22m  [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m   [2m73:46[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m87:37[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m161:45[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m271:27[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m278:48[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m279:33[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m302:27[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m308:56[22m  [33mwarning[39m  Forbidden non-null assertion                                                                                                      [2m@typescript-eslint/no-non-null-assertion[22m[0m
+[0m  [2m315:66[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m334:39[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m336:49[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m386:24[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m393:50[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/programacion-cronograma-modal/programacion-cronograma-modal.component.ts[24m[0m
+[0m    [2m6:1[22m   [31merror[39m    'primeng/inputnumber' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui  [2mno-restricted-imports[22m[0m
+[0m  [2m133:29[22m  [33mwarning[39m  Unexpected empty method 'calculateTotals'                                                                                          [2m@typescript-eslint/no-empty-function[22m[0m
+[0m  [2m162:27[22m  [33mwarning[39m  Forbidden non-null assertion                                                                                                       [2m@typescript-eslint/no-non-null-assertion[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/programacion-items/programacion-items.component.ts[24m[0m
+[0m   [2m2:21[22m  [33mwarning[39m  'Input' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m2:59[22m  [33mwarning[39m  'Output' is defined but never used        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m2:67[22m  [33mwarning[39m  'EventEmitter' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m63:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/rendicion-modal/rendicion-modal.component.html[24m[0m
+[0m   [2m15:7[22m   [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m32:11[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m44:13[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m49:13[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m57:13[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m62:13[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m77:9[22m   [33mwarning[39m  click must be accompanied by either keyup, keydown or keypress event for accessibility  [2m@angular-eslint/template/click-events-have-key-events[22m[0m
+[0m   [2m77:9[22m   [33mwarning[39m  Elements with interaction handlers must be focusable                                    [2m@angular-eslint/template/interactive-supports-focus[22m[0m
+[0m  [2m229:7[22m   [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/rendicion-modal/rendicion-modal.component.ts[24m[0m
+[0m    [2m5:80[22m  [33mwarning[39m  'FormGroup' is defined but never used                                                                                             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m13:1[22m   [31merror[39m    'primeng/api' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui         [2mno-restricted-imports[22m[0m
+[0m   [2m26:3[22m   [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m   [2m27:3[22m   [33mwarning[39m  Output bindings, including aliases, should not be named "on", nor prefixed with it (https://angular.dev/style-guide#style-05-16)  [2m@angular-eslint/no-output-on-prefix[22m[0m
+[0m   [2m41:21[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m42:34[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m43:31[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m76:17[22m  [33mwarning[39m  Unexpected empty constructor                                                                                                      [2m@typescript-eslint/no-empty-function[22m[0m
+[0m   [2m89:32[22m  [33mwarning[39m  Forbidden non-null assertion                                                                                                      [2m@typescript-eslint/no-non-null-assertion[22m[0m
+[0m  [2m103:42[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m171:25[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m240:67[22m  [33mwarning[39m  Forbidden non-null assertion                                                                                                      [2m@typescript-eslint/no-non-null-assertion[22m[0m
+[0m  [2m244:47[22m  [33mwarning[39m  Forbidden non-null assertion                                                                                                      [2m@typescript-eslint/no-non-null-assertion[22m[0m
+[0m  [2m244:80[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m245:61[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                          [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/components/sidebar/sidebar.component.ts[24m[0m
+[0m   [2m1:28[22m  [33mwarning[39m  'Output' is defined but never used        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m1:36[22m  [33mwarning[39m  'EventEmitter' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m15:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m16:29[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/alertas/alertas.page.html[24m[0m
+[0m  [2m22:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m31:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/alertas/alertas.page.ts[24m[0m
+[0m  [2m94:14[22m  [33mwarning[39m  'event' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m94:22[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m94:33[22m  [33mwarning[39m  Unexpected empty method 'loadData'        [2m@typescript-eslint/no-empty-function[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/cartera/cartera.page.html[24m[0m
+[0m   [2m12:13[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m   [2m46:17[22m  [33mwarning[39m  click must be accompanied by either keyup, keydown or keypress event for accessibility  [2m@angular-eslint/template/click-events-have-key-events[22m[0m
+[0m   [2m46:17[22m  [33mwarning[39m  Elements with interaction handlers must be focusable                                    [2m@angular-eslint/template/interactive-supports-focus[22m[0m
+[0m   [2m87:5[22m   [33mwarning[39m  click must be accompanied by either keyup, keydown or keypress event for accessibility  [2m@angular-eslint/template/click-events-have-key-events[22m[0m
+[0m   [2m87:5[22m   [33mwarning[39m  Elements with interaction handlers must be focusable                                    [2m@angular-eslint/template/interactive-supports-focus[22m[0m
+[0m   [2m88:9[22m   [33mwarning[39m  click must be accompanied by either keyup, keydown or keypress event for accessibility  [2m@angular-eslint/template/click-events-have-key-events[22m[0m
+[0m   [2m88:9[22m   [33mwarning[39m  Elements with interaction handlers must be focusable                                    [2m@angular-eslint/template/interactive-supports-focus[22m[0m
+[0m   [2m98:25[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m102:25[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m106:25[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m111:25[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m121:25[22m  [33mwarning[39m  A label component must be associated with a form element                                [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/cartera/cartera.page.ts[24m[0m
+[0m  [2m10:1[22m   [31merror[39m    'sweetalert2' import is restricted from being used. Usa @agroideas/feedback (AlertService) en lugar de SweetAlert2 directo  [2mno-restricted-imports[22m[0m
+[0m  [2m59:22[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                    [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/convenio-detail/convenio-detail.page.ts[24m[0m
+[0m  [2m5:10[22m  [33mwarning[39m  'GetConvenioByIdUseCase' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/convenio-list/convenio-list.page.html[24m[0m
+[0m  [2m18:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m31:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/convenio-list/convenio-list.page.ts[24m[0m
+[0m  [2m47:22[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/dashboard/dashboard.page.ts[24m[0m
+[0m  [2m1:29[22m  [33mwarning[39m  'OnInit' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m5:10[22m  [33mwarning[39m  'User' is defined but never used    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/desembolso/desembolso.page.html[24m[0m
+[0m   [2m7:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m12:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m21:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m25:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/desembolso/desembolso.page.ts[24m[0m
+[0m   [2m92:30[22m   [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m130:23[22m   [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m148:18[22m   [33mwarning[39m  'id' is defined but never used            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m152:18[22m   [33mwarning[39m  'id' is defined but never used            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m156:20[22m   [33mwarning[39m  'id' is defined but never used            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m157:108[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/kardex/kardex.page.html[24m[0m
+[0m  [2m43:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m51:9[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/kardex/kardex.page.ts[24m[0m
+[0m   [2m82:22[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m155:25[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/login/login.page.ts[24m[0m
+[0m   [2m1:29[22m  [33mwarning[39m  'signal' is defined but never used                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m4:1[22m   [31merror[39m    'primeng/api' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui    [2mno-restricted-imports[22m[0m
+[0m   [2m5:1[22m   [31merror[39m    'primeng/toast' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui  [2mno-restricted-imports[22m[0m
+[0m  [2m25:30[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                     [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m37:21[22m  [33mwarning[39m  'err' is defined but never used                                                                                              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/no-objecion/no-objecion.page.html[24m[0m
+[0m   [2m7:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m15:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m19:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/no-objecion/no-objecion.page.ts[24m[0m
+[0m   [2m3:21[22m  [33mwarning[39m  'Input' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m75:33[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/programacion-vigente/programacion-vigente.page.html[24m[0m
+[0m  [2m12:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/programacion-vigente/programacion-vigente.page.ts[24m[0m
+[0m   [2m6:1[22m   [31merror[39m    'primeng/api' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui  [2mno-restricted-imports[22m[0m
+[0m  [2m22:24[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m48:34[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m63:35[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m70:28[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m77:25[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m85:26[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m93:28[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/programacion/programacion.page.html[24m[0m
+[0m  [2m12:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m23:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/programacion/programacion.page.ts[24m[0m
+[0m   [2m6:1[22m   [31merror[39m    'primeng/api' import is restricted from being used by a pattern. No importes PrimeNG en apps: consúmelo vía @agroideas/ui  [2mno-restricted-imports[22m[0m
+[0m  [2m18:24[22m  [33mwarning[39m  Unexpected any. Specify a different type                                                                                   [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/rendicion/rendicion.page.html[24m[0m
+[0m   [2m7:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m13:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m18:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m23:7[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/rendicion/rendicion.page.ts[24m[0m
+[0m  [2m48:21[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m84:30[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/reportes/reportes.page.html[24m[0m
+[0m  [2m12:25[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m24:25[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m  [2m31:25[22m  [33mwarning[39m  A label component must be associated with a form element  [2m@angular-eslint/template/label-has-associated-control[22m[0m
+[0m[0m
+[0m[4m/home/opazos/MyProjects/AGROIDEAS/YACHAP_APP/agroideas-frontend-monorepo/apps/kofix-ejecucion/src/app/presentation/pages/reportes/reportes.page.ts[24m[0m
+[0m  [2m73:28[22m  [33mwarning[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[31m[1m✖ 251 problems (9 errors, 242 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m
+✖ 251 problems (9 errors, 242 warnings)
+
+
+
+ NX   Running target lint for project kofix-ejecucion failed
+
+Failed tasks:
+
+- kofix-ejecucion:lint
+
+Hint: run the command with --verbose for more details.
+

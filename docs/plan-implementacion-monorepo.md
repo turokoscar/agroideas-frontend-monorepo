@@ -16,11 +16,11 @@
 
 | Fase | Objetivo | Duración estimada |
 |---|---|---|
-| 0 | Fundación del monorepo (re-scaffold Angular 18, estructura, CI, convenciones) | 3–5 días |
-| 1 | `@agroideas/theme`: tokens MIDAGRI unificados + preset Tailwind | 2–4 días |
-| 2 | Importar KOFIX como app `kofix-ejecucion` (lift & shift, compila en monorepo) | 4–6 días |
-| 3 | Extraer librerías compartidas desde KOFIX (`ui`, `auth`, `http`, `feedback`, `security`, `utils`) | 8–12 días |
-| 4 | Importar YACHACHIP como `sat-ui`, retirar Material, adoptar las librerías | 8–12 días |
+| 0 | Fundación del monorepo (re-scaffold Angular 18, estructura, CI, convenciones) | ✅ EJECUTADA |
+| 1 | `@agroideas/theme`: tokens MIDAGRI unificados + preset Tailwind | ✅ EJECUTADA |
+| 2 | Importar KOFIX como app `kofix-ejecucion` (lift & shift, compila en monorepo) | ✅ EJECUTADA |
+| 3 | Extraer librerías compartidas desde KOFIX (`ui`, `auth`, `http`, `feedback`, `security`, `utils`) | ✅ EJECUTADA |
+| 4 | Importar YACHACHIP como `sat-ui`, retirar Material, adoptar las librerías | ✅ EJECUTADA |
 | 5 | Endurecimiento: boundaries, showcase, tests, CI/CD, decomiso de repos legados | 4–6 días |
 
 > Estimaciones para 1–2 desarrolladores; ajustar según disponibilidad.
@@ -125,7 +125,9 @@ Detalle en el ADR 0001 → Registro de implementación.
 
 ---
 
-## Fase 3 — Extraer librerías compartidas desde KOFIX
+## Fase 3 — Extraer librerías compartidas desde KOFIX  ✅ EJECUTADA (2026-05-26)
+
+**Estado:** completada y verde. Todas las utilidades, componentes UI unificados, alertas, directivas/servicios de permisos y el interceptor de autorización se extrajeron de `kofix-ejecucion` a las librerías transversales `@agroideas/*` consumiendo inyección de dependencias (`USER_PERMISSIONS_PROVIDER`, `AUTH_LOGOUT_HANDLER`) para desacoplar las aplicaciones.
 
 **Objetivo:** convertir lo común de KOFIX en librerías; KOFIX pasa a **consumirlas** (validación in-place).
 
@@ -153,7 +155,9 @@ Detalle en el ADR 0001 → Registro de implementación.
 
 ---
 
-## Fase 4 — Importar YACHACHIP como `apps/sat-ui` y adoptar librerías
+## Fase 4 — Importar YACHACHIP como `apps/sat-ui` y adoptar librerías  ✅ EJECUTADA (2026-05-26)
+
+**Estado:** completada y verde. Migramos YACHACHIP a `apps/sat-ui` en Angular 18 (Standalone). Adoptamos la marca visual unificada de `@agroideas/theme` (MIDAGRI/INIA `#346b00`), reemplazamos todo lo harcodeado por archivos de configuración (`mock-data.config.ts` y entornos `environment.ts`), y sustituimos toda la interfaz por `@agroideas/ui` (`ui-button`, `ui-card`, `ui-status-pill`, `ui-data-table`, `ui-map`), retirando Angular Material del todo.
 
 **Objetivo:** YACHACHIP hereda diseño y funcionalidad común; se retira Angular Material.
 

@@ -1,16 +1,14 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
+import { UIButtonComponent } from '@agroideas/ui';
 
 @Component({
     selector: 'app-login-form',
     standalone: true,
     imports: [
         ReactiveFormsModule,
-        InputTextModule,
-        ButtonModule
+        UIButtonComponent
     ],
     templateUrl: './login-form.component.html',
     styleUrls: ['./login-form.component.sass']

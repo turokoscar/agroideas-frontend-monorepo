@@ -10,14 +10,12 @@ import { GetPendientesRendicionUseCase } from '../../../domain/usecases/rendicio
 import { UploadFileUseCase } from '../../../domain/usecases/rendicion/upload-file.usecase';
 import { Rendicion } from '../../../domain/models/rendicion.model';
 import { finalize } from 'rxjs';
-import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-rendicion-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, UIModalComponent, FormsModule, UIButtonComponent],
-  templateUrl: './rendicion-modal.component.html',
-  providers: [MessageService]
+  templateUrl: './rendicion-modal.component.html'
 })
 export class RendicionModalComponent implements OnInit {
   visible = input.required<boolean>();

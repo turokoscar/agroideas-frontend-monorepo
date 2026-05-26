@@ -1,7 +1,7 @@
 # ADR 0001: Migración a Monorepo Frontend AGROIDEAS y Estandarización del Design System
 
 ## Estado
-Aceptado · **En ejecución** (Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ — ver [Registro de implementación](#registro-de-implementación))
+Aceptado · **En ejecución** (Fase 0 ✅ · Fase 1 ✅ · Fase 2 ✅ · Fase 3 ✅ · Fase 4 ✅ — ver [Registro de implementación](#registro-de-implementación))
 
 ## Fecha
 2026-05-25 (última actualización: 2026-05-25)
@@ -204,10 +204,31 @@ se mantienen como registro histórico; aquí se anota la realidad de ejecución)
   heredado; conversión de specs Jasmine→Jest (`toBeTrue`→`toBe(true)`, `jasmine.*`).
 - Verificado: `lint` (11, 0 errores), `test` (8 · 56 tests de kofix), `build` (2 apps).
 
+### Fase 3 — Extraer librerías compartidas desde KOFIX ✅ (2026-05-26)
+- **Extracción de Utilidades (`@agroideas/utils`)**: Implementamos utilidades transversales como `currency`, `jwt.util`, `permissions` y `storage-keys`, centralizando claves de almacenamiento unificadas como `SAT_TOKEN` y `SAT_USER_SESSION`. Se integró `cn()` para fusionar dinámicamente clases de Tailwind.
+- **Implementación del Design System (`@agroideas/ui`)**: Migramos los 9 componentes de diseño visual unificado (`ui-button`, `ui-card`, `ui-status-pill`, `ui-kpi`, `ui-progress-bar`, `ui-modal`, `ui-filter-bar`, `ui-data-table`, `ui-map`) con una API pública propia desacoplada de la implementación interna (permitiendo PrimeNG y Leaflet únicamente como detalle interno).
+- **Librerías Transversales (`@agroideas/feedback`, `@agroideas/security`, `@agroideas/auth`, `@agroideas/http`)**:
+  - Centralización de alertas interactivas a través de `AlertService` (con SweetAlert2 encapsulado).
+  - Creación del servicio de permisos reactivo basado en Signals (`PermissionService`), directiva `*appHasPermission` y guardias de ruta desacoplados mediante el token inyectable `USER_PERMISSIONS_PROVIDER`.
+  - Creación del interceptor JWT unificado (`auth.interceptor.ts`) desacoplado mediante el token `AUTH_LOGOUT_HANDLER`.
+- **Limpieza de Código Duplicado**: Eliminamos de forma segura todos los componentes y utilitarios comunes de la aplicación local de KOFIX, re-apuntando dinámicamente todas sus referencias a las nuevas librerías `@agroideas/*` a nivel monorepo.
+- **Validado**: `lint` (11), `test` (8 proyectos, 81 tests unitarios aprobados), `build` (2 apps).
+
+### Fase 4 — Importar YACHACHIP como `apps/sat-ui` y adoptar librerías ✅ (2026-05-26)
+- **Migración y Desacoplamiento de Código**: Portamos la aplicación legacy YACHACHIP completa a `apps/sat-ui` en Angular 18 (componentes Standalone).
+- **Eliminación de Hardcodeos (Alineado con feedback del usuario)**:
+  - Extrajimos todas las colecciones de datos in-memory a un archivo de configuración separado: `apps/sat-ui/src/app/core/config/mock-data.config.ts`.
+  - Definimos la clave de endpoint de la API (`apiAuth`) en variables de entorno (`environments/environment.ts`), independizando el servicio del servidor local.
+- **Adopción Completa del Design System**:
+  - Conectamos `tailwind.config.js` al preset de `@agroideas/theme` e importamos `base.css` en `styles.scss` para adoptar la identidad verde MIDAGRI/INIA (`#346b00`) con variables CSS HSL.
+  - Ajustamos los presupuestos de compilación de estilos (`budgets` en `project.json`) a `10kb` para soportar componentes transversales robustos (`ui-data-table`).
+  - Reemplazamos la librería Angular Material heredada y las plantillas manuales locales por componentes unificados de `@agroideas/ui` (`ui-button`, `ui-card`, `ui-status-pill`, `ui-data-table`, `ui-map`).
+- **Composición e Inyección de Dependencias**: Vinculamos el comportamiento de seguridad y flujo de logout heredados en SAT mediante los tokens de inyección `USER_PERMISSIONS_PROVIDER` y `AUTH_LOGOUT_HANDLER` en `app.config.ts`.
+- **Type-Safety y WCAG**: Corregimos todos los errores de tipado (eliminación total de `any`), advertencias de aserciones no nulas en login y simplificamos expresiones del motor de plantillas de Angular (cero advertencias del compilador).
+- **Validado**: `npx nx lint sat-ui` (exitoso), `npx nx test sat-ui` (exitoso), `npx nx build sat-ui` (compilación optimizada verde exitosa) y verificación de monorepo completo `npx nx run-many -t lint,test,build` (21 de 21 tareas exitosas).
+
 ### Pendiente
-- Fase 3: extraer librerías compartidas desde KOFIX (`utils`, `ui`, `feedback`,
-  `security`, `auth`/`http`) y reactivar la prohibición de proveedores en kofix.
-- Fases 4–5 según el plan.
+- Fase 5: Endurecimiento (boundaries finales, Storybook/showcase viva, cobertura extendida, documentación de onboarding y decomiso final de repositorios legados).
 
 ## Referencias
 - ADR 001 KOFIX — Estandarización de Arquitectura Frontend y Alineación de Marca

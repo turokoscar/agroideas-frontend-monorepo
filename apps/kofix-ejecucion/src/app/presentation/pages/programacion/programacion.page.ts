@@ -3,9 +3,13 @@ import { Component, signal, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { LazyLoadEvent } from 'primeng/api';
 import { GetProgramacionResumenUseCase } from '../../../domain/usecases/programacion/get-programacion-resumen.usecase';
 import { ProgramacionResumen } from '../../../domain/models/programacion.model';
+
+interface LazyLoadEvent {
+    first?: number;
+    rows?: number;
+}
 
 @Component({
     selector: 'app-programacion-page',

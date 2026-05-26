@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CarteraRepository, Especialista, ReasignarRequest } from '../../../domain/repositories/cartera.repository';
 import { CarteraItem } from '../../../domain/models/cartera.model';
-import Swal from 'sweetalert2';
+import { AlertService } from '@agroideas/feedback';
 
 @Component({
     selector: 'app-cartera-page',
@@ -27,6 +27,7 @@ import Swal from 'sweetalert2';
 export class CarteraPageComponent implements OnInit {
     private carteraRepo = inject(CarteraRepository);
     private router = inject(Router);
+    private alertService = inject(AlertService);
 
     protected readonly permGestionCartera = PERMISSIONS.GESTION_CARTERA;
 
@@ -111,7 +112,7 @@ export class CarteraPageComponent implements OnInit {
         const especialistaId = this.selectedEspecialistaId();
 
         if (!item || !especialistaId) {
-            Swal.fire('Error', 'Debe seleccionar un especialista.', 'error');
+            this.alertService.show('Error', 'Debe seleccionar un especialista.', 'error');
             return;
         }
 
@@ -124,15 +125,15 @@ export class CarteraPageComponent implements OnInit {
         this.carteraRepo.reasignar(request).subscribe({
             next: (res) => {
                 if (res.exitoso) {
-                    Swal.fire('Éxito', 'Especialista reasignado correctamente.', 'success');
+                    this.alertService.show('Éxito', 'Especialista reasignado correctamente.', 'success');
                     this.cerrarReasignar();
                     this.loadData();
                 } else {
-                    Swal.fire('Error', res.mensaje || 'No se pudo reasignar.', 'error');
+                    this.alertService.show('Error', res.mensaje || 'No se pudo reasignar.', 'error');
                 }
             },
             error: () => {
-                Swal.fire('Error', 'Ocurrió un error al reasignar.', 'error');
+                this.alertService.show('Error', 'Ocurrió un error al reasignar.', 'error');
             }
         });
     }

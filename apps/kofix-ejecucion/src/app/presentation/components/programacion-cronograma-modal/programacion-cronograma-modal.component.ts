@@ -3,7 +3,6 @@ import { AlertService } from '@agroideas/feedback';
 import { Component, Output, EventEmitter, OnInit, inject, signal, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { InputNumberModule } from 'primeng/inputnumber';
 
 import { ProgramacionRepository } from '../../../domain/repositories/programacion.repository';
 import { SaveProgramacionUseCase } from '../../../domain/usecases/programacion/save-programacion.usecase';
@@ -28,7 +27,7 @@ import { ProgramacionItem, DetalleCronograma } from '../../../domain/models/prog
 @Component({
     selector: 'app-programacion-cronograma-modal',
     standalone: true,
-    imports: [CommonModule, FormsModule, InputNumberModule, UIModalComponent],
+    imports: [CommonModule, FormsModule, UIModalComponent],
     templateUrl: './programacion-cronograma-modal.component.html'
 })
 export class ProgramacionCronogramaModalComponent implements OnInit {

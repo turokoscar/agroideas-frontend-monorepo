@@ -3,8 +3,12 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { LazyLoadEvent } from 'primeng/api';
 import { GetVigenteConveniosUseCase } from '../../../domain/usecases/get-vigente-convenios.usecase';
+
+interface LazyLoadEvent {
+    first?: number;
+    rows?: number;
+}
 
 @Component({
     selector: 'app-programacion-vigente-page',

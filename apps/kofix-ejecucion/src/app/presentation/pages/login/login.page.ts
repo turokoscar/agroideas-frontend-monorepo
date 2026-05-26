@@ -1,23 +1,19 @@
 import { Component, inject, signal } from '@angular/core';
 
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { LoginUseCase } from '../../../domain/usecases/auth/login.usecase';
 import { LoginFormComponent } from '../../components/login-form/login-form.component';
 
 @Component({
     selector: 'app-login-page',
     standalone: true,
-    imports: [LoginFormComponent, ToastModule],
-    providers: [MessageService],
+    imports: [LoginFormComponent],
     templateUrl: './login.page.html',
     styleUrls: ['./login.page.sass']
 })
 export class LoginPageComponent {
     private loginUseCase = inject(LoginUseCase);
     private router = inject(Router);
-    private messageService = inject(MessageService);
 
     loading = false;
     errorMessage = '';

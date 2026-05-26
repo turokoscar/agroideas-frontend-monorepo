@@ -87,13 +87,12 @@
                   </div>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <p-inputNumber [ngModel]="mes.metaFisica"
+                  <input type="number" [ngModel]="mes.metaFisica"
                     (ngModelChange)="onFisicaChange(mes, $event)"
                     [min]="0" [max]="(item().metaAprobada ?? item().metaFisica) * 10"
                     [disabled]="readOnly()"
-                    inputStyleClass="w-32 px-3 py-1.5 text-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-800 dark:text-white font-black focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                    [minFractionDigits]="2" [maxFractionDigits]="2">
-                  </p-inputNumber>
+                    step="0.01"
+                    class="w-32 px-3 py-1.5 text-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-800 dark:text-white font-black focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
                 </td>
                 <td class="px-6 py-4 text-center font-medium opacity-60">
                   {{formatCurrency(agroideasPrecioUnitario())}}
