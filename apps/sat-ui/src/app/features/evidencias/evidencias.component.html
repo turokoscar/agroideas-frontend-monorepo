@@ -55,29 +55,26 @@
     </div>
 
     <!-- Filtros -->
-    <div class="flex flex-wrap gap-3 items-end">
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-slate-500 font-medium">Fecha Inicio</label>
-        <input type="date" [(ngModel)]="filtro.fecInicio" (change)="onFiltroChange()"
-          class="px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary"/>
+    <app-ui-filter-bar [showSearch]="false" [showAdd]="false">
+      <div class="filter-group">
+        <label for="evFecInicio" class="filter-label">Fecha Inicio</label>
+        <input id="evFecInicio" type="date" [(ngModel)]="filtro.fecInicio" (change)="onFiltroChange()" class="filter-input"/>
       </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-slate-500 font-medium">Fecha Fin</label>
-        <input type="date" [(ngModel)]="filtro.fecFin" (change)="onFiltroChange()"
-          class="px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary"/>
+      <div class="filter-group">
+        <label for="evFecFin" class="filter-label">Fecha Fin</label>
+        <input id="evFecFin" type="date" [(ngModel)]="filtro.fecFin" (change)="onFiltroChange()" class="filter-input"/>
       </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-slate-500 font-medium">Asistente</label>
-        <input type="text" [(ngModel)]="filtro.ideAsistente" (change)="onFiltroChange()" placeholder="UUID o vacío"
-          class="px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary w-48"/>
+      <div class="filter-group">
+        <label for="evAsistente" class="filter-label">Asistente</label>
+        <input id="evAsistente" type="text" [(ngModel)]="filtro.ideAsistente" (change)="onFiltroChange()" placeholder="UUID" class="filter-input"/>
       </div>
-      <div class="flex flex-col gap-1">
+      <div class="filter-group" style="justify-content: flex-end;">
         <ui-button label="Limpiar" appearance="soft" severity="secondary" (onClick)="limpiarFiltros()"></ui-button>
       </div>
-      <div class="flex flex-col gap-1 ml-auto">
+      <div class="filter-group" style="justify-content: flex-end;">
         <ui-button label="Actualizar" icon="refresh" [loading]="loading()" (onClick)="recargar()"></ui-button>
       </div>
-    </div>
+    </app-ui-filter-bar>
 
     <!-- Grid de Evidencias -->
     @if (loading() && evidencias().length === 0) {
@@ -95,25 +92,19 @@
         </div>
       </div>
     } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         @for (ev of evidencias(); track ev.ideEvidencia) {
           <app-evidencia-card [ev]="ev" (abrirDetalle)="abrirDetalle($event)"></app-evidencia-card>
         }
       </div>
 
       <!-- Paginación -->
-      @if (total() > 0) {
-        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-          <span class="text-sm text-slate-500">
-            Mostrando {{ evidencias().length }} de {{ total() }} evidencias
-          </span>
-          <div class="flex items-center gap-2">
-            <ui-button label="Anterior" icon="chevron_left" appearance="soft" severity="secondary" size="sm" [disabled]="paginaActual() <= 1" (onClick)="paginaAnterior()"></ui-button>
-            <span class="text-sm text-slate-600">Página {{ paginaActual() }}</span>
-            <ui-button label="Siguiente" icon="chevron_right" iconPos="right" appearance="soft" severity="secondary" size="sm" [disabled]="paginaActual() * tamanioPagina >= total()" (onClick)="paginaSiguiente()"></ui-button>
-          </div>
-        </div>
-      }
+      <app-ui-pagination class="mt-6"
+        [total]="total()"
+        [pageSize]="tamanioPagina"
+        [currentPage]="paginaActual()"
+        (pageChange)="onPageChange($event)"
+      ></app-ui-pagination>
     }
   </div>
 

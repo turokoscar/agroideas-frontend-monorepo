@@ -9,6 +9,7 @@ import { UiDataTableComponent, TableColumn } from '@agroideas/ui';
   selector: 'app-sync-history-table',
   standalone: true,
   imports: [CommonModule, FormatDatePipe, UiDataTableComponent],
+  styles: [`:host { display: block; }`],
   template: `
     <app-ui-data-table
       [data]="sincronizaciones()"

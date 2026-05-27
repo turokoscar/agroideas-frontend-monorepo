@@ -25,6 +25,7 @@ export class SidebarComponent {
   user = this.authService.user;
 
   allLinks: NavLink[] = [
+    { to: '/', icon: 'home', label: 'Inicio', roles: ['ADMINISTRADOR', 'TECNICO'] },
     { to: '/dashboard', icon: 'dashboard', label: 'Panel General', roles: ['ADMINISTRADOR'] },
     { to: '/asistentes', icon: 'people', label: 'Asistentes Técnicos', roles: ['ADMINISTRADOR'] },
     { to: '/asignaciones', icon: 'assignment', label: 'Asignaciones', roles: ['ADMINISTRADOR'] },

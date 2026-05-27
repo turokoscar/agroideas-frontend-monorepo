@@ -20,13 +20,17 @@ import { FormatDatePipe } from '@agroideas/utils';
           }
         </div>
       </div>
-      <div class="p-3 space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="text-xs text-slate-500">{{ ev().txtAsistente }}</span>
+      <div class="p-4 space-y-2.5">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm text-emerald-600">person</span>
+          <span class="text-xs text-slate-500 font-medium">{{ ev().txtAsistente }}</span>
         </div>
-        <div class="text-xs text-slate-600 font-medium truncate">{{ ev().txtOrganizacion }}</div>
-        <div class="text-xs text-slate-400">{{ ev().txtTipoActividad }}</div>
-        <div class="flex items-center gap-2 text-xs text-slate-400">
+        <div class="text-xs text-slate-700 font-semibold leading-snug">{{ ev().txtOrganizacion }}</div>
+        <div class="text-xs text-slate-400 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-xs">badge</span>
+          {{ ev().txtTipoActividad }}
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 pt-1 border-t border-slate-50">
           <span class="material-symbols-outlined text-xs">calendar_today</span>
           {{ ev().fecCaptura | formatDate: { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' } }}
         </div>

@@ -1,0 +1,20 @@
+<div class="dt-footer">
+  <p class="dt-footer__info">
+    Mostrando <strong>{{ from() }}–{{ to() }}</strong> de <strong>{{ total }}</strong> registros
+  </p>
+  <div class="dt-pagination">
+    <button class="dt-page-btn dt-page-btn--nav" (click)="prevPage()" [disabled]="currentPage <= 1" title="Anterior">
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    @for (page of pages(); track page) {
+      <button class="dt-page-btn"
+        [class.dt-page-btn--active]="page === currentPage"
+        (click)="goToPage(page)">
+        {{ page }}
+      </button>
+    }
+    <button class="dt-page-btn dt-page-btn--nav" (click)="nextPage()" [disabled]="currentPage >= totalPages()" title="Siguiente">
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+  </div>
+</div>

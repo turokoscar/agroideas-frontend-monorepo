@@ -1,46 +1,41 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UiFilterBarComponent, UIButtonComponent } from '@agroideas/ui';
 import { SyncLogFiltro } from '../../../../core/services/sync.service';
 
 @Component({
   selector: 'app-sync-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UiFilterBarComponent, UIButtonComponent],
+  styles: [`:host { display: block; }`],
   template: `
-    <div class="flex flex-wrap gap-3 items-end">
-      <div class="flex flex-col gap-1">
-        <label for="fecInicio" class="text-xs text-slate-500 font-medium">Fecha Inicio</label>
-        <input id="fecInicio" type="date" [(ngModel)]="filtro().fecInicio" (change)="filtroChange.emit()"
-          class="px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary"/>
+    <app-ui-filter-bar [showSearch]="false" [showAdd]="false">
+      <div class="filter-group">
+        <label for="syncFecInicio" class="filter-label">Fecha Inicio</label>
+        <input id="syncFecInicio" type="date" [(ngModel)]="filtro().fecInicio" (change)="filtroChange.emit()" class="filter-input"/>
       </div>
-      <div class="flex flex-col gap-1">
-        <label for="fecFin" class="text-xs text-slate-500 font-medium">Fecha Fin</label>
-        <input id="fecFin" type="date" [(ngModel)]="filtro().fecFin" (change)="filtroChange.emit()"
-          class="px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary"/>
+      <div class="filter-group">
+        <label for="syncFecFin" class="filter-label">Fecha Fin</label>
+        <input id="syncFecFin" type="date" [(ngModel)]="filtro().fecFin" (change)="filtroChange.emit()" class="filter-input"/>
       </div>
-      <div class="flex flex-col gap-1">
-        <label for="codDispositivo" class="text-xs text-slate-500 font-medium">Dispositivo</label>
-        <input id="codDispositivo" type="text" [(ngModel)]="filtro().codDispositivo" (change)="filtroChange.emit()" placeholder="Código dispositivo"
-          class="px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary w-40"/>
+      <div class="filter-group">
+        <label for="syncDispositivo" class="filter-label">Dispositivo</label>
+        <input id="syncDispositivo" type="text" [(ngModel)]="filtro().codDispositivo" (change)="filtroChange.emit()" placeholder="Código dispositivo" class="filter-input"/>
       </div>
-      <div class="flex flex-col gap-1">
-        <label for="txtResultado" class="text-xs text-slate-500 font-medium">Resultado</label>
-        <select id="txtResultado" [(ngModel)]="filtro().txtResultado" (change)="filtroChange.emit()"
-          class="px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary bg-white">
+      <div class="filter-group">
+        <label for="syncResultado" class="filter-label">Resultado</label>
+        <select id="syncResultado" [(ngModel)]="filtro().txtResultado" (change)="filtroChange.emit()" class="filter-input">
           <option value="">Todos</option>
           <option value="EXITOSO">Exitoso</option>
           <option value="ERROR_PARCIAL">Error Parcial</option>
           <option value="FALLIDO">Fallido</option>
         </select>
       </div>
-      <div class="flex flex-col gap-1">
-        <button (click)="limpiar.emit()" 
-          class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
-          Limpiar
-        </button>
+      <div class="filter-group" style="justify-content: flex-end;">
+        <ui-button label="Limpiar" appearance="soft" severity="secondary" (onClick)="limpiar.emit()"></ui-button>
       </div>
-    </div>
+    </app-ui-filter-bar>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

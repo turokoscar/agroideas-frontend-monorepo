@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin, finalize } from 'rxjs';
-import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent } from '@agroideas/ui';
+import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent, UiFilterBarComponent } from '@agroideas/ui';
 import type { TableColumn, StatusType } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { AuthService } from '../../core/services/auth.service';
@@ -25,11 +26,13 @@ import { InformeUploadPdfModalComponent } from './components/informe-upload-pdf-
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     UIButtonComponent,
     UiStatusPillComponent,
     UIModalComponent,
     UiDataTableComponent,
+    UiFilterBarComponent,
     FormatDatePipe,
     InformeDetalleModalComponent,
     InformeUploadPdfModalComponent
@@ -62,10 +65,30 @@ export class InformesComponent implements OnInit {
 
   selectedDetalle = signal<InformeDetalle | null>(null);
 
+  filtroAsistente = signal('');
+  filtroEstado = signal('');
+  filtroFechaInicio = signal('');
+  filtroFechaFin = signal('');
+
   filtroForm = this.fb.group({
     ide_asistente: ['', [Validators.required]],
     fec_periodoInicio: ['', [Validators.required]],
     fec_periodoFin: ['', [Validators.required]]
+  });
+
+  filteredData = computed(() => {
+    const data = this.processedData();
+    const asistente = this.filtroAsistente().toLowerCase();
+    const estado = this.filtroEstado();
+    const fecInicio = this.filtroFechaInicio();
+    const fecFin = this.filtroFechaFin();
+    return data.filter(i => {
+      if (asistente && !i.txt_asistente?.toLowerCase().includes(asistente)) return false;
+      if (estado && i.estadoText !== estado && i.estadoValor !== estado) return false;
+      if (fecInicio && i.fec_periodoInicio && i.fec_periodoInicio < fecInicio) return false;
+      if (fecFin && i.fec_periodoFin && i.fec_periodoFin > fecFin) return false;
+      return true;
+    });
   });
 
   columns: TableColumn[] = [
@@ -134,6 +157,13 @@ export class InformesComponent implements OnInit {
           this.alertService.toast('Error cargando informes', 'error');
         }
       });
+  }
+
+  limpiarFiltros() {
+    this.filtroAsistente.set('');
+    this.filtroEstado.set('');
+    this.filtroFechaInicio.set('');
+    this.filtroFechaFin.set('');
   }
 
   openGenerateModal() {

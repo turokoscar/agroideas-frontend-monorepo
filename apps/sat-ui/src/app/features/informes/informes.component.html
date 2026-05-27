@@ -7,8 +7,38 @@
     <ui-button label="Generar Informe" icon="add" (onClick)="openGenerateModal()"></ui-button>
   </div>
 
+  <app-ui-filter-bar [showSearch]="false" [showAdd]="false">
+    <div class="filter-group filter-group--search">
+      <label for="infAsistente" class="filter-label">Buscar Asistente</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input id="infAsistente" type="text" [(ngModel)]="filtroAsistente" placeholder="Nombre del asistente" class="filter-input filter-input--search"/>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label for="infEstado" class="filter-label">Estado</label>
+      <select id="infEstado" [(ngModel)]="filtroEstado" class="filter-input">
+        <option value="">Todos</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Generado">Generado</option>
+        <option value="Presentado">Presentado</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="infFecInicio" class="filter-label">Fecha Inicio</label>
+      <input id="infFecInicio" type="date" [(ngModel)]="filtroFechaInicio" class="filter-input"/>
+    </div>
+    <div class="filter-group">
+      <label for="infFecFin" class="filter-label">Fecha Fin</label>
+      <input id="infFecFin" type="date" [(ngModel)]="filtroFechaFin" class="filter-input"/>
+    </div>
+    <div class="filter-group" style="justify-content: flex-end;">
+      <ui-button label="Limpiar" appearance="soft" severity="secondary" (onClick)="limpiarFiltros()"></ui-button>
+    </div>
+  </app-ui-filter-bar>
+
   <app-ui-data-table
-    [data]="processedData()"
+    [data]="filteredData()"
     [columns]="columns"
     [loading]="loading()"
     [hasActions]="true"

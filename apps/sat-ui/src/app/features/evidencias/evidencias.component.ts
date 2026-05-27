@@ -6,12 +6,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { EvidenciaService, EvidenciaFiltro, EvidenciaListadoItem, EvidenciaValidacion } from '../../core/services/evidencia.service';
 import { EvidenciaCardComponent } from './components/evidencia-card/evidencia-card.component';
 import { EvidenciaDetalleModalComponent } from './components/evidencia-detalle-modal/evidencia-detalle-modal.component';
-import { UIButtonComponent } from '@agroideas/ui';
+import { UIButtonComponent, UiFilterBarComponent, UiPaginationComponent } from '@agroideas/ui';
 
 @Component({
   selector: 'app-evidencias',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvidenciaCardComponent, EvidenciaDetalleModalComponent, UIButtonComponent],
+  imports: [CommonModule, FormsModule, EvidenciaCardComponent, EvidenciaDetalleModalComponent, UIButtonComponent, UiFilterBarComponent, UiPaginationComponent],
   templateUrl: './evidencias.component.html',
   styles: [`
     :host {
@@ -73,17 +73,9 @@ export class EvidenciasComponent implements OnInit {
     });
   }
 
-  paginaAnterior() {
-    if (this.paginaActual() > 1) {
-      this.paginaActual.update(p => p - 1);
-      this.filtro.pagina = this.paginaActual();
-      this.recargar();
-    }
-  }
-
-  paginaSiguiente() {
-    this.paginaActual.update(p => p + 1);
-    this.filtro.pagina = this.paginaActual();
+  onPageChange(page: number) {
+    this.paginaActual.set(page);
+    this.filtro.pagina = page;
     this.recargar();
   }
 
