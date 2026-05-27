@@ -9,7 +9,7 @@ import { FormatDatePipe } from '@agroideas/utils';
   imports: [CommonModule, FormatDatePipe, NgOptimizedImage],
   template: `
     <div (click)="abrirDetalle.emit(ev())" 
-      class="bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-indigo-200 transition-all group">
+      class="bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-primary transition-all group">
       <div class="aspect-square bg-slate-100 relative overflow-hidden">
         <img [ngSrc]="getImageUrl(ev().ideEvidencia)" fill alt="Evidencia" 
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

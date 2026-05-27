@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output, input, inject
 import { CommonModule } from '@angular/common';
 import { EvidenciaListadoItem, EvidenciaService, EvidenciaValidacion } from '../../../../core/services/evidencia.service';
 import { FormatDatePipe } from '@agroideas/utils';
+import { UIButtonComponent } from '@agroideas/ui';
 
 @Component({
   selector: 'app-evidencia-detalle-modal',
   standalone: true,
-  imports: [CommonModule, FormatDatePipe],
+  imports: [CommonModule, FormatDatePipe, UIButtonComponent],
   template: `
     @if (ev()) {
       <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="cerrar.emit()">
@@ -26,11 +27,12 @@ import { FormatDatePipe } from '@agroideas/utils';
                     class="w-full h-full object-contain"/>
                 </div>
                 <div class="flex gap-2">
-                  <button (click)="validar.emit()"
-                    class="flex-1 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-sm">verified_user</span>
-                    Validar SHA-256
-                  </button>
+                  <ui-button
+                    label="Validar SHA-256"
+                    icon="verified_user"
+                    class="flex-1"
+                    (onClick)="validar.emit()"
+                  />
                   <a [href]="getImageUrl(ev()!.ideEvidencia)" target="_blank"
                     class="px-4 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">open_in_new</span>

@@ -6,11 +6,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { EvidenciaService, EvidenciaFiltro, EvidenciaListadoItem, EvidenciaValidacion } from '../../core/services/evidencia.service';
 import { EvidenciaCardComponent } from './components/evidencia-card/evidencia-card.component';
 import { EvidenciaDetalleModalComponent } from './components/evidencia-detalle-modal/evidencia-detalle-modal.component';
+import { UIButtonComponent } from '@agroideas/ui';
 
 @Component({
   selector: 'app-evidencias',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvidenciaCardComponent, EvidenciaDetalleModalComponent],
+  imports: [CommonModule, FormsModule, EvidenciaCardComponent, EvidenciaDetalleModalComponent, UIButtonComponent],
   templateUrl: './evidencias.component.html',
   styles: [`
     :host {

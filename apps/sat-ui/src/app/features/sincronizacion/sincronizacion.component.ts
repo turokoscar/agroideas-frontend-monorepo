@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, compute
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UiKpiComponent } from '@agroideas/ui';
+import { UiKpiComponent, UIButtonComponent } from '@agroideas/ui';
 import { SyncService, SyncLogFiltro, SyncLogDto } from '../../core/services/sync.service';
 import { SyncFiltersComponent } from './components/sync-filters/sync-filters.component';
 import { SyncHistoryTableComponent } from './components/sync-history-table/sync-history-table.component';
@@ -10,7 +10,7 @@ import { SyncHistoryTableComponent } from './components/sync-history-table/sync-
 @Component({
   selector: 'app-sincronizacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiKpiComponent, SyncFiltersComponent, SyncHistoryTableComponent],
+  imports: [CommonModule, FormsModule, UiKpiComponent, UIButtonComponent, SyncFiltersComponent, SyncHistoryTableComponent],
   templateUrl: './sincronizacion.component.html',
   styles: [`
     :host {
@@ -71,17 +71,10 @@ export class SincronizacionComponent implements OnInit {
     });
   }
 
-  paginaAnterior() {
-    if (this.paginaActual() > 1) {
-      this.paginaActual.update(p => p - 1);
-      this.filtro.pagina = this.paginaActual();
-      this.recargar();
-    }
-  }
-
-  paginaSiguiente() {
-    this.paginaActual.update(p => p + 1);
-    this.filtro.pagina = this.paginaActual();
+  onLazyLoad(event: { first: number, rows: number }) {
+    const page = Math.floor(event.first / event.rows) + 1;
+    this.paginaActual.set(page);
+    this.filtro.pagina = page;
     this.recargar();
   }
 }
