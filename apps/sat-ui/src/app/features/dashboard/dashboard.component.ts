@@ -1,15 +1,19 @@
-import { Component, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../core/services/data.service';
 import { UiKpiComponent, UICardComponent, UiStatusPillComponent, StatusType } from '@agroideas/ui';
 import { TipoIntervencion } from '../../shared/models/sat-data.model';
+import { FormatDatePipe } from '@agroideas/utils';
+import { getSyncStatus } from '../../shared/utils/estado-labels';
+
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, UiKpiComponent, UICardComponent, UiStatusPillComponent],
+  imports: [CommonModule, UiKpiComponent, UICardComponent, UiStatusPillComponent, FormatDatePipe],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrl: './dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent {
   private dataService = inject(DataService);
@@ -57,18 +61,7 @@ export class DashboardComponent {
     return this.dataService.getTipoIntervencionLabel(t);
   }
 
-  formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('es-PE');
-  }
-
   getSyncStatus(estado: string): { status: StatusType, text: string } {
-    const map: Record<string, { status: StatusType, text: string }> = {
-      sincronizado: { status: 'Aprobado', text: 'Sincronizado' },
-      pendiente: { status: 'Pendiente', text: 'Pendiente' },
-      error: { status: 'Rechazado', text: 'Error' },
-      exitoso: { status: 'Aprobado', text: 'Exitoso' },
-      error_parcial: { status: 'Suspendido', text: 'Error Parcial' }
-    };
-    return map[estado] ?? { status: 'Pendiente', text: estado };
+    return getSyncStatus(estado);
   }
 }

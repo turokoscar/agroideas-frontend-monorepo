@@ -25,6 +25,11 @@
       @if (col.field === 'estado') {
         <app-ui-status-pill [status]="row.estadoValor" [text]="row.estadoText" />
       }
+      @if (col.field === 'flg_exportadoPdf') {
+        <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getPdfBadgeClass(row.tienePdf)">
+          {{ getPdfBadgeText(row.tienePdf) }}
+        </span>
+      }
     </ng-template>
 
   </app-ui-data-table>
@@ -34,6 +39,8 @@
   <div class="flex items-center gap-1">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
       ariaLabel="Ver detalle" (onClick)="$event.stopPropagation(); verDetalle(row)" />
+    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="edit"
+      ariaLabel="Editar informe" (onClick)="$event.stopPropagation(); editarInforme(row)" />
   </div>
 </ng-template>
 
@@ -49,10 +56,10 @@
   (onHide)="closeGenerateModal()"
   (onSave)="generarReporte()"
 >
-  <div class="space-y-4 font-display">
+  <div [formGroup]="filtroForm" class="space-y-4 font-display">
     <div>
       <label for="ide_asistente" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Asistente Técnico</label>
-      <select id="ide_asistente" [(ngModel)]="form.ide_asistente" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
+      <select id="ide_asistente" formControlName="ide_asistente" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-indigo-500 disabled:opacity-60 disabled:bg-slate-50">
         <option value="">Seleccionar asistente</option>
         @for (a of asistentes(); track a.ideAsistente) {
           <option [value]="a.ideAsistente">{{ a.txtNombres }} {{ a.txtApellidoPaterno }}</option>
@@ -63,11 +70,11 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label for="fec_periodoInicio" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Fecha Inicio</label>
-        <input id="fec_periodoInicio" type="date" [(ngModel)]="form.fec_periodoInicio" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="fec_periodoInicio" type="date" formControlName="fec_periodoInicio" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
       <div>
         <label for="fec_periodoFin" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Fecha Fin</label>
-        <input id="fec_periodoFin" type="date" [(ngModel)]="form.fec_periodoFin" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="fec_periodoFin" type="date" formControlName="fec_periodoFin" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
     </div>
 
@@ -84,75 +91,22 @@
 </app-ui-modal>
 
 <!-- Modal Detalle del Informe -->
-<app-ui-modal
-  [visible]="showDetalleModal() && !!selectedDetalle()"
-  title="Detalle del Informe"
-  subtitle="Auditoría de integridad criptográfica SHA-256"
-  icon="verified_user"
-  maxWidth="750px"
-  [showSaveButton]="false"
-  (onHide)="closeDetalleModal()"
->
-  <div class="space-y-6 font-display" *ngIf="selectedDetalle()">
-    <!-- Resumen del Informe -->
-    <div class="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Asistente Técnico</p>
-        <p class="font-bold text-slate-800 text-sm">{{ selectedDetalle()!.txt_asistente }}</p>
-      </div>
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Período de Intervención</p>
-        <p class="font-bold text-slate-800 text-sm">{{ formatDate(selectedDetalle()!.fec_periodoInicio) }} - {{ formatDate(selectedDetalle()!.fec_periodoFin) }}</p>
-      </div>
-    </div>
+<app-informe-detalle-modal
+  [visible]="showDetalleModal()"
+  [detalle]="selectedDetalle()"
+  [isEditing]="isEditing()"
+  [saving]="saving()"
+  (hide)="closeDetalleModal()"
+  (save)="guardarSecciones()"
+  (toggleEdit)="toggleEdit()"
+  (descargarPdf)="descargarPdf()"
+  (openUploadPdf)="openUploadPdfModal()"
+></app-informe-detalle-modal>
 
-    <!-- Validación SHA-256 -->
-    <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="material-symbols-outlined text-emerald-600">verified_user</span>
-        <span class="font-black text-xs uppercase tracking-wider text-emerald-700">Integridad Criptográfica Validada</span>
-      </div>
-      <div class="grid grid-cols-3 gap-4 text-sm">
-        <div>
-          <p class="text-xs font-medium text-slate-500">Total Evidencias</p>
-          <p class="font-black text-lg text-slate-800">{{ selectedDetalle()!.resumenHashes.total_evidencias }}</p>
-        </div>
-        <div>
-          <p class="text-xs font-medium text-slate-500 text-emerald-600">Integras</p>
-          <p class="font-black text-lg text-emerald-600">{{ selectedDetalle()!.resumenHashes.evidencias_integras }}</p>
-        </div>
-        <div>
-          <p class="text-xs font-medium text-slate-500 text-destructive">Modificadas</p>
-          <p class="font-black text-lg text-destructive">{{ selectedDetalle()!.resumenHashes.evidencias_modificadas }}</p>
-        </div>
-      </div>
-      <div class="mt-3 pt-3 border-t border-emerald-500/10">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Hash SHA-256 del Informe</p>
-        <code class="text-xs font-mono bg-emerald-500/10 text-emerald-800 px-2.5 py-1 rounded-md block mt-1 break-all select-all">
-          {{ selectedDetalle()!.resumenHashes.hashes[0].txt_hash || '7d2e8f1a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e' }}
-        </code>
-      </div>
-    </div>
-
-    <!-- Actividades -->
-    <div>
-      <h3 class="font-black text-xs uppercase tracking-wider text-slate-700 mb-3">Actividades del Período</h3>
-      <div class="space-y-3.5">
-        @for (act of selectedDetalle()!.actividades; track act.ide_actividad) {
-          <div class="border border-slate-100 rounded-xl p-4 bg-slate-50/30">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="font-bold text-slate-800 text-sm">{{ act.txt_organizacion }}</span>
-              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ formatDate(act.fec_registro) }}</span>
-            </div>
-            <p class="text-xs font-black text-primary uppercase tracking-wider">{{ act.txt_tipoActividad }}</p>
-            @if (act.txt_observaciones) {
-              <p class="text-xs text-slate-600 mt-2 italic leading-relaxed">"{{ act.txt_observaciones }}"</p>
-            }
-          </div>
-        } @empty {
-          <p class="text-xs text-slate-400 italic">No hay actividades reportadas en este período</p>
-        }
-      </div>
-    </div>
-  </div>
-</app-ui-modal>
+<!-- Modal Upload PDF Firmado -->
+<app-informe-upload-pdf-modal
+  [visible]="showUploadPdfModal()"
+  [uploading]="uploadingPdf()"
+  (hide)="closeUploadPdfModal()"
+  (save)="subirPdfFirmado($event)"
+></app-informe-upload-pdf-modal>

@@ -5,7 +5,4 @@ export function formatCurrency(value: number): string {
     }).format(value);
 }
 
-export function formatDate(value: string): string {
-    if (!value) return '';
-    return value;
-}
+

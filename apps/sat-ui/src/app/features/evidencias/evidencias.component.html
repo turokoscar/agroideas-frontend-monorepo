@@ -1,0 +1,140 @@
+<div class="p-6 lg:p-8 space-y-6 font-display bg-slate-50 min-h-screen">
+  <!-- Encabezado -->
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Banco de Evidencias Fotográficas</h1>
+    <p class="text-sm text-slate-500">Auditoría, validación de integridad SHA-256 y control anti-fraude de capturas de campo</p>
+  </div>
+
+  <!-- Protocolos de Auditoría (Wow Cards) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">verified_user</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Integridad SHA-256</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">Cada fotografía capturada en campo genera un hash SHA-256 único al instante, asegurando que la evidencia no sea manipulada ni reemplazada.</p>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">location_searching</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Filtro de Deriva GPS</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">El obturador móvil de Yachahiq exige estabilidad GPS de 3 lecturas consecutivas (&lt;0.0001 drift y &lt;=10m precisión) antes de permitir la captura.</p>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">layers</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Watermark a Nivel de Pixel</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">La estampa de agua (fecha, hora, latitud, longitud y especialista) se dibuja directamente en la matriz de pixeles de la imagen de forma offline.</p>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">cloud_done</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Sincronización Segura</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">Las imágenes se codifican en Base64 para su transferencia segura a través de los túneles del API REST, validando el Hash al recibir.</p>
+    </div>
+  </div>
+
+  <!-- Panel Técnico de Campo (Audit Desk) -->
+  <div class="bg-white border border-slate-100 rounded-xl p-6 shadow-sm space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-indigo-500">photo_library</span>
+        <h2 class="font-bold text-slate-800 tracking-tight">Registro de Capturas</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400 font-mono">USUARIO: {{ userRole() }}</span>
+        <span class="text-xs text-slate-400">|</span>
+        <span class="text-xs text-slate-400">Total: {{ total() }}</span>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex flex-wrap gap-3 items-end">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-slate-500 font-medium">Fecha Inicio</label>
+        <input type="date" [(ngModel)]="filtro.fecInicio" (change)="onFiltroChange()"
+          class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-slate-500 font-medium">Fecha Fin</label>
+        <input type="date" [(ngModel)]="filtro.fecFin" (change)="onFiltroChange()"
+          class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-slate-500 font-medium">Asistente</label>
+        <input type="text" [(ngModel)]="filtro.ideAsistente" (change)="onFiltroChange()" placeholder="UUID o vacío"
+          class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48"/>
+      </div>
+      <div class="flex flex-col gap-1">
+        <button (click)="limpiarFiltros()" 
+          class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+          Limpiar
+        </button>
+      </div>
+      <div class="flex flex-col gap-1 ml-auto">
+        <button (click)="recargar()" [disabled]="loading()"
+          class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">refresh</span>
+          {{ loading() ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid de Evidencias -->
+    @if (loading() && evidencias().length === 0) {
+      <div class="flex items-center justify-center py-12">
+        <div class="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+      </div>
+    } @else if (evidencias().length === 0) {
+      <div class="flex flex-col items-center justify-center text-center py-12 px-4 space-y-4">
+        <div class="h-16 w-16 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center border border-dashed border-slate-200">
+          <span class="material-symbols-outlined text-3xl">photo_camera_back</span>
+        </div>
+        <div class="max-w-md">
+          <h4 class="font-bold text-slate-700 text-sm">Sin evidencias registradas</h4>
+          <p class="text-xs text-slate-500 mt-1">Las evidencias fotográficas aparecerán aquí una vez sincronizadas desde el dispositivo móvil.</p>
+        </div>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        @for (ev of evidencias(); track ev.ideEvidencia) {
+          <app-evidencia-card [ev]="ev" (abrirDetalle)="abrirDetalle($event)"></app-evidencia-card>
+        }
+      </div>
+
+      <!-- Paginación -->
+      @if (total() > 0) {
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+          <span class="text-sm text-slate-500">
+            Mostrando {{ evidencias().length }} de {{ total() }} evidencias
+          </span>
+          <div class="flex items-center gap-2">
+            <button (click)="paginaAnterior()" [disabled]="paginaActual() <= 1"
+              class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              Anterior
+            </button>
+            <span class="text-sm text-slate-600">Página {{ paginaActual() }}</span>
+            <button (click)="paginaSiguiente()" [disabled]="paginaActual() * tamanioPagina >= total()"
+              class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              Siguiente
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Modal de Detalle -->
+  <app-evidencia-detalle-modal 
+    [ev]="evidenciaSeleccionada()" 
+    [val]="validacion()"
+    (cerrar)="cerrarDetalle()"
+    (validar)="validarIntegridad()"
+  ></app-evidencia-detalle-modal>
+</div>

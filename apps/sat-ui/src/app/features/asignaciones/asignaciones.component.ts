@@ -1,62 +1,29 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent } from '@agroideas/ui';
 import type { TableColumn } from '@agroideas/ui';
-import { environment } from '../../../environments/environment';
 import { AlertService } from '@agroideas/feedback';
-import { ResponseDto } from '@agroideas/utils';
-
-interface Asignacion {
-  ide_asignacion: number;
-  ide_asistente: string;
-  txt_asistente: string;
-  ide_organizacion: string;
-  txt_organizacion: string;
-  txtTipoServicio: string;
-  fecInicio: string | null;
-  fecFin: string | null;
-  txtObservacion: string;
-  flgActivo: boolean;
-  fec_registro: string;
-}
-
-interface AsignacionPayload {
-  ide_asistente: string;
-  ide_organizacion: string;
-  txtTipoServicio: string;
-  fecInicio: string | null;
-  fecFin: string | null;
-  txtObservacion: string;
-  ide_asignacion?: number | null;
-  flgActivo?: boolean;
-}
-
-interface Asistente {
-  ideAsistente: string;
-  txtNombres: string;
-  txtApellidoPaterno: string;
-  txtApellidoMaterno: string;
-}
-
-interface Organizacion {
-  ideOrganizacion: string;
-  txtNombre: string;
-  numeroConvenio: string;
-  codUbigeo?: string;
-}
+import { AsignacionService, Asignacion } from '../../core/services/asignacion.service';
+import { AsistenteService, Asistente } from '../../core/services/asistente.service';
+import { OrganizacionService, Organizacion } from '../../core/services/organizacion.service';
+import { debounceTime, distinctUntilChanged, skip } from 'rxjs';
 
 @Component({
   selector: 'app-asignaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent],
+  imports: [ReactiveFormsModule, UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent],
   templateUrl: './asignaciones.component.html',
-  styleUrl: './asignaciones.component.css'
+  styleUrl: './asignaciones.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AsignacionesComponent implements OnInit {
-  private http = inject(HttpClient);
   private alertService = inject(AlertService);
+  private asignacionService = inject(AsignacionService);
+  private asistenteService = inject(AsistenteService);
+  private organizacionService = inject(OrganizacionService);
+  private destroyRef = inject(DestroyRef);
+  private fb = inject(FormBuilder);
 
   asignaciones = signal<Asignacion[]>([]);
   asistentes = signal<Asistente[]>([]);
@@ -70,37 +37,20 @@ export class AsignacionesComponent implements OnInit {
   showModal = signal(false);
   editingId = signal<number | null>(null);
 
-  private searchTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  form = {
-    ide_asistente: '',
-    ide_organizacion: '',
-    txtTipoServicio: '',
-    fecInicio: '',
-    fecFin: '',
-    txtObservacion: ''
-  };
-
-  tiposServicio = [
-    'Asistencia Técnica Pecuaria',
-    'Asistencia Técnica Agrícola',
-    'Capacitación',
-    'Seguimiento',
-    'Asesoría Técnica'
-  ];
+  asignacionForm = this.fb.group({
+    ideAsistente: ['', [Validators.required]],
+    ideOrganizacion: ['', [Validators.required]]
+  });
 
   columns: TableColumn[] = [
-    { field: 'txt_asistente', header: 'Asistente', sortable: true },
-    { field: 'txt_organizacion', header: 'Organización', sortable: true },
-    { field: 'txtTipoServicio', header: 'Tipo de Servicio' },
-    { field: 'periodo', header: 'Período' },
+    { field: 'txtAsistente', header: 'Asistente', sortable: true },
+    { field: 'txtOrganizacion', header: 'Organización', sortable: true },
     { field: 'estado', header: 'Estado', type: 'custom' }
   ];
 
   processedData = computed(() =>
     this.asignaciones().map(a => ({
       ...a,
-      periodo: `${this.formatDate(a.fecInicio)} - ${this.formatDate(a.fecFin)}`,
       estadoText: a.flgActivo ? 'Activo' : 'Inactivo',
       estadoValor: a.flgActivo ? 'Activo' : 'Finalizado'
     }))
@@ -110,50 +60,60 @@ export class AsignacionesComponent implements OnInit {
     this.loadAsignaciones();
     this.loadAsistentes();
     this.loadOrganizaciones(true);
+
+    toObservable(this.regionBusqueda)
+      .pipe(
+        skip(1),
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.loadOrganizaciones();
+      });
   }
 
   loadAsignaciones() {
     this.loading.set(true);
-    this.http.get<ResponseDto<Asignacion[]>>(`${environment.apiUrl}/asignaciones`).subscribe({
-      next: (res) => this.asignaciones.set(res.datos ?? []),
+    this.asignacionService.listar()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+      next: (datos) => this.asignaciones.set(datos),
       error: () => {
         console.error('Error cargando asignaciones');
         this.alertService.toast('Error cargando asignaciones', 'error');
-      }
+      },
+      complete: () => this.loading.set(false)
     });
   }
 
   loadAsistentes() {
-    this.http.get<ResponseDto<Asistente[]>>(`${environment.apiUrl}/asistentes`).subscribe({
-      next: (res) => this.asistentes.set(res.datos ?? []),
+    this.asistenteService.listar()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+      next: (datos) => this.asistentes.set(datos),
       error: () => console.error('Error cargando asistentes')
     });
   }
 
   loadOrganizaciones(extraerRegiones = false) {
-    const params = new URLSearchParams();
-    if (this.regionBusqueda()) params.set('busqueda', this.regionBusqueda());
-    if (this.regionSeleccionada()) params.set('region', this.regionSeleccionada());
-
-    const url = `${environment.apiUrl}/organizaciones${params.toString() ? '?' + params.toString() : ''}`;
-    this.http.get<ResponseDto<Organizacion[]>>(url).subscribe({
-      next: (res) => {
-        const datos = res.datos ?? [];
-        this.organizaciones.set(datos);
-        if (extraerRegiones) {
-          const unique = [...new Set(datos.map(o => o.codUbigeo).filter(Boolean))].sort();
-          this.regiones.set(unique as string[]);
-        }
-        this.loading.set(false);
-      },
-      error: () => console.error('Error cargando organizaciones')
-    });
+    this.organizacionService
+      .listar({ busqueda: this.regionBusqueda(), region: this.regionSeleccionada() })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (datos) => {
+          this.organizaciones.set(datos);
+          if (extraerRegiones) {
+            const unique = [...new Set(datos.map(o => o.txtDepartamento).filter(Boolean))].sort();
+            this.regiones.set(unique as string[]);
+          }
+        },
+        error: () => console.error('Error cargando organizaciones')
+      });
   }
 
   onSearchChange(value: string) {
     this.regionBusqueda.set(value);
-    clearTimeout(this.searchTimeout);
-    this.searchTimeout = setTimeout(() => this.loadOrganizaciones(), 300);
   }
 
   onRegionChange(value: string) {
@@ -163,25 +123,17 @@ export class AsignacionesComponent implements OnInit {
 
   openModal(asignacion?: Asignacion) {
     if (asignacion) {
-      this.editingId.set(asignacion.ide_asignacion);
-      this.form = {
-        ide_asistente: asignacion.ide_asistente,
-        ide_organizacion: asignacion.ide_organizacion,
-        txtTipoServicio: asignacion.txtTipoServicio,
-        fecInicio: asignacion.fecInicio ? asignacion.fecInicio.split('T')[0] : '',
-        fecFin: asignacion.fecFin ? asignacion.fecFin.split('T')[0] : '',
-        txtObservacion: asignacion.txtObservacion || ''
-      };
+      this.editingId.set(asignacion.ideAsignacion);
+      this.asignacionForm.patchValue({
+        ideAsistente: asignacion.ideAsistente,
+        ideOrganizacion: asignacion.ideOrganizacion
+      });
     } else {
       this.editingId.set(null);
-      this.form = {
-        ide_asistente: '',
-        ide_organizacion: '',
-        txtTipoServicio: '',
-        fecInicio: '',
-        fecFin: '',
-        txtObservacion: ''
-      };
+      this.asignacionForm.reset({
+        ideAsistente: '',
+        ideOrganizacion: ''
+      });
     }
     this.showModal.set(true);
   }
@@ -189,49 +141,64 @@ export class AsignacionesComponent implements OnInit {
   closeModal() {
     this.showModal.set(false);
     this.editingId.set(null);
+    this.asignacionForm.reset();
   }
 
   save() {
-    const payload: AsignacionPayload = {
-      ide_asistente: this.form.ide_asistente,
-      ide_organizacion: this.form.ide_organizacion,
-      txtTipoServicio: this.form.txtTipoServicio,
-      fecInicio: this.form.fecInicio ? new Date(this.form.fecInicio).toISOString() : null,
-      fecFin: this.form.fecFin ? new Date(this.form.fecFin).toISOString() : null,
-      txtObservacion: this.form.txtObservacion
-    };
+    if (this.asignacionForm.invalid) {
+      this.asignacionForm.markAllAsTouched();
+      this.alertService.toast('Por favor complete los campos obligatorios correctamente.', 'warning');
+      return;
+    }
 
-    if (this.editingId()) {
-      payload.ide_asignacion = this.editingId();
-      payload.flgActivo = true;
-      this.http.put<ResponseDto<unknown>>(`${environment.apiUrl}/asignaciones`, payload).subscribe({
-        next: (res) => {
-          this.alertService.toast(res.mensaje || 'Asignación actualizada con éxito');
-          this.loadAsignaciones();
-          this.closeModal();
-        },
-        error: (err) => {
-          console.error(err);
-          this.alertService.toast(err.error?.mensaje || 'Error al actualizar', 'error');
-        }
-      });
+    const editingId = this.editingId();
+    const formValue = this.asignacionForm.value;
+
+    if (editingId) {
+      this.asignacionService
+        .actualizar({
+          ideAsistente: formValue.ideAsistente || '',
+          ideOrganizacion: formValue.ideOrganizacion || '',
+          ideAsignacion: editingId,
+          flgActivo: true
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (res) => {
+            this.alertService.toast(res.mensaje || 'Asignación actualizada con éxito');
+            this.loadAsignaciones();
+            this.closeModal();
+          },
+          error: (err) => {
+            console.error(err);
+            this.alertService.toast(err.error?.mensaje || 'Error al actualizar', 'error');
+          }
+        });
     } else {
-      this.http.post<ResponseDto<unknown>>(`${environment.apiUrl}/asignaciones`, payload).subscribe({
-        next: (res) => {
-          this.alertService.toast(res.mensaje || 'Asignación creada con éxito');
-          this.loadAsignaciones();
-          this.closeModal();
-        },
-        error: (err) => {
-          console.error(err);
-          this.alertService.toast(err.error?.mensaje || 'Error al crear', 'error');
-        }
-      });
+      this.asignacionService
+        .crear({
+          ideAsistente: formValue.ideAsistente || '',
+          ideOrganizacion: formValue.ideOrganizacion || ''
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (res) => {
+            this.alertService.toast(res.mensaje || 'Asignación creada con éxito');
+            this.loadAsignaciones();
+            this.closeModal();
+          },
+          error: (err) => {
+            console.error(err);
+            this.alertService.toast(err.error?.mensaje || 'Error al crear', 'error');
+          }
+        });
     }
   }
 
   toggleEstado(asignacion: Asignacion) {
-    this.http.patch<ResponseDto<unknown>>(`${environment.apiUrl}/asignaciones/${asignacion.ide_asignacion}/estado`, !asignacion.flgActivo).subscribe({
+    this.asignacionService.cambiarEstado(asignacion.ideAsignacion, !asignacion.flgActivo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (res) => {
         this.alertService.toast(res.mensaje || (asignacion.flgActivo ? 'Asignación desactivada' : 'Asignación activada'));
         this.loadAsignaciones();
@@ -243,7 +210,9 @@ export class AsignacionesComponent implements OnInit {
   delete(id: number) {
     this.alertService.confirm('¿Estás seguro?', '¿Desea eliminar permanentemente esta asignación?').then((result) => {
       if (result.isConfirmed) {
-        this.http.delete<ResponseDto<unknown>>(`${environment.apiUrl}/asignaciones/${id}`).subscribe({
+        this.asignacionService.eliminar(id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
           next: (res) => {
             this.alertService.toast(res.mensaje || 'Asignación eliminada con éxito');
             this.loadAsignaciones();
@@ -254,10 +223,7 @@ export class AsignacionesComponent implements OnInit {
     });
   }
 
-  formatDate(dateStr: string | null): string {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('es-PE');
-  }
+
 
   getAsistenteNombre(ide: string): string {
     const a = this.asistentes().find(x => x.ideAsistente === ide);

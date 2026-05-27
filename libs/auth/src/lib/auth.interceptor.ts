@@ -14,8 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const injector = inject(Injector);
     const alertService = inject(AlertService);
     
-    // Acceso directo al token para evitar ciclo circular durante la construcción
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const token = localStorage.getItem(STORAGE_KEYS.SAT_TOKEN);
 
     let request = req;
     if (token) {

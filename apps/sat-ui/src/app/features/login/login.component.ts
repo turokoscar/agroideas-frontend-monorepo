@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -8,14 +8,16 @@ import { UIButtonComponent } from '@agroideas/ui';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UIButtonComponent],
+  imports: [ReactiveFormsModule, UIButtonComponent],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   loginForm = this.fb.group({
     usuario: ['', [Validators.required]],
@@ -41,7 +43,9 @@ export class LoginComponent {
       this.error.set('');
       const { usuario, password } = this.loginForm.value;
       
-      this.authService.login(usuario || '', password || '').subscribe({
+      this.authService.login(usuario || '', password || '')
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
         next: (success) => {
           if (success) {
             this.router.navigate(['/dashboard']);

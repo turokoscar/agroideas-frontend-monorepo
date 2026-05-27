@@ -57,46 +57,53 @@
   (onHide)="closeModal()"
   (onSave)="save()"
 >
-  <div class="space-y-4 font-display">
+  <div [formGroup]="asistenteForm" class="space-y-4 font-display">
     <div class="grid grid-cols-3 gap-4">
       <div>
         <label for="txtNombres" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Nombres</label>
-        <input id="txtNombres" type="text" [(ngModel)]="form.txtNombres" placeholder="Nombres" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="txtNombres" type="text" formControlName="txtNombres" placeholder="Nombres" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
       <div>
         <label for="txtApellidoPaterno" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Ap. Paterno</label>
-        <input id="txtApellidoPaterno" type="text" [(ngModel)]="form.txtApellidoPaterno" placeholder="Paterno" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="txtApellidoPaterno" type="text" formControlName="txtApellidoPaterno" placeholder="Paterno" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
       <div>
         <label for="txtApellidoMaterno" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Ap. Materno</label>
-        <input id="txtApellidoMaterno" type="text" [(ngModel)]="form.txtApellidoMaterno" placeholder="Materno" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="txtApellidoMaterno" type="text" formControlName="txtApellidoMaterno" placeholder="Materno" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-3 gap-4">
       <div>
-        <label for="codUsuario" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Usuario (Móvil)</label>
-        <input id="codUsuario" type="text" [(ngModel)]="form.codUsuario" placeholder="usuario_campo" [disabled]="!!editingId()" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary disabled:opacity-55" />
+        <label for="codUsuario" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Usuario (Login) *</label>
+        <input id="codUsuario" type="text" formControlName="codUsuario" placeholder="usuario_campo" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-indigo-500 disabled:opacity-55" />
       </div>
       <div>
         <label for="txtPasswordHash" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Contraseña</label>
-        <input id="txtPasswordHash" type="password" [(ngModel)]="form.txtPasswordHash" [placeholder]="editingId() ? 'Sin cambiar' : '••••••••'" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="txtPasswordHash" type="password" formControlName="txtPasswordHash" [placeholder]="editingId() ? 'Sin cambiar' : '••••••••'" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-indigo-500" />
+      </div>
+      <div>
+        <label for="txtRol" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Rol de Acceso *</label>
+        <select id="txtRol" formControlName="txtRol" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-indigo-500">
+          <option value="TECNICO">Técnico de Campo</option>
+          <option value="ADMINISTRADOR">Administrador</option>
+        </select>
       </div>
     </div>
 
     <div>
       <label for="txtCorreo" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Correo de Contacto</label>
-      <input id="txtCorreo" type="email" [(ngModel)]="form.txtCorreo" placeholder="ejemplo@agroideas.gob.pe" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+      <input id="txtCorreo" type="email" formControlName="txtCorreo" placeholder="ejemplo@agroideas.gob.pe" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label for="fecInicioVigencia" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Inicio de Vigencia</label>
-        <input id="fecInicioVigencia" type="date" [(ngModel)]="form.fecInicioVigencia" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="fecInicioVigencia" type="date" formControlName="fecInicioVigencia" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
       <div>
         <label for="fecFinVigencia" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Fin de Vigencia</label>
-        <input id="fecFinVigencia" type="date" [(ngModel)]="form.fecFinVigencia" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
+        <input id="fecFinVigencia" type="date" formControlName="fecFinVigencia" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
       </div>
     </div>
   </div>

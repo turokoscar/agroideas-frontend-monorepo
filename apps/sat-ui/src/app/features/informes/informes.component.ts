@@ -1,77 +1,52 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin, finalize } from 'rxjs';
 import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent } from '@agroideas/ui';
-import type { TableColumn } from '@agroideas/ui';
+import type { TableColumn, StatusType } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
-import { ResponseDto } from '@agroideas/utils';
-import { environment } from '../../../environments/environment';
-
-interface Informe {
-  ide_informe: number;
-  ide_asistente: string;
-  txt_asistente: string;
-  ide_estadoInforme: string;
-  txt_estadoInforme: string;
-  fec_periodoInicio: string | null;
-  fec_periodoFin: string | null;
-  fec_generacion: string;
-  txt_resumenGeneral: string;
-  txt_conclusion: string;
-  cantidad_actividades: number;
-  cantidad_evidencias: number;
-  fec_registro: string;
-}
-
-interface InformeDetalle {
-  ide_informe: number;
-  txt_asistente: string;
-  fec_periodoInicio: string;
-  fec_periodoFin: string;
-  fec_generacion: string;
-  txt_resumenGeneral: string;
-  txt_conclusion: string;
-  actividades: ActividadReporte[];
-  resumenHashes: {
-    total_evidencias: number;
-    evidencias_integras: number;
-    evidencias_modificadas: number;
-    hashes: HashDetalle[];
-  };
-}
-
-interface ActividadReporte {
-  ide_actividad: string;
-  txt_organizacion: string;
-  txt_tipoActividad: string;
-  fec_registro: string;
-  txt_observaciones: string;
-}
-
-interface HashDetalle {
-  ide_evidencia: string;
-  txt_hash: string;
-  flg_integro: boolean;
-}
-
-interface Asistente {
-  ideAsistente: string;
-  txtNombres: string;
-  txtApellidoPaterno: string;
-  txtApellidoMaterno: string;
-}
+import { AuthService } from '../../core/services/auth.service';
+import {
+  InformeService,
+  Informe,
+  InformeDetalle,
+  InformeSeccionesUpdate,
+  GenerarInformePayload
+} from '../../core/services/informe.service';
+import { AsistenteService, Asistente } from '../../core/services/asistente.service';
+import { formatDate, FormatDatePipe } from '@agroideas/utils';
+import { getEstadoClass, getEstadoLabel } from '../../shared/utils/estado-labels';
+import { InformeDetalleModalComponent } from './components/informe-detalle-modal/informe-detalle-modal.component';
+import { InformeUploadPdfModalComponent } from './components/informe-upload-pdf-modal/informe-upload-pdf-modal.component';
 
 @Component({
   selector: 'app-informes',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    UIButtonComponent,
+    UiStatusPillComponent,
+    UIModalComponent,
+    UiDataTableComponent,
+    FormatDatePipe,
+    InformeDetalleModalComponent,
+    InformeUploadPdfModalComponent
+  ],
   templateUrl: './informes.component.html',
-  styleUrl: './informes.component.css'
+  styleUrl: './informes.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InformesComponent implements OnInit {
-  private http = inject(HttpClient);
   private alertService = inject(AlertService);
+  private authService = inject(AuthService);
+  private informeService = inject(InformeService);
+  private asistenteService = inject(AsistenteService);
+  private destroyRef = inject(DestroyRef);
+  private fb = inject(FormBuilder);
+
+  isTecnico = computed(() => this.authService.user()?.role === 'TECNICO');
 
   informes = signal<Informe[]>([]);
   asistentes = signal<Asistente[]>([]);
@@ -79,37 +54,54 @@ export class InformesComponent implements OnInit {
   loading = signal(false);
   showGenerateModal = signal(false);
   showDetalleModal = signal(false);
+  showUploadPdfModal = signal(false);
   generating = signal(false);
+  isEditing = signal(false);
+  saving = signal(false);
+  uploadingPdf = signal(false);
 
   selectedDetalle = signal<InformeDetalle | null>(null);
 
-  form = {
-    ide_asistente: '',
-    fec_periodoInicio: '',
-    fec_periodoFin: ''
-  };
-
-  estadosInforme = [
-    { cod: 'BORRADOR', label: 'Borrador', color: 'bg-gray-100 text-gray-600' },
-    { cod: 'GENERADO', label: 'Generado', color: 'bg-blue-100 text-blue-700' },
-    { cod: 'PRESENTADO', label: 'Presentado', color: 'bg-green-100 text-green-700' }
-  ];
+  filtroForm = this.fb.group({
+    ide_asistente: ['', [Validators.required]],
+    fec_periodoInicio: ['', [Validators.required]],
+    fec_periodoFin: ['', [Validators.required]]
+  });
 
   columns: TableColumn[] = [
     { field: 'txt_asistente', header: 'Asistente', sortable: true },
     { field: 'periodo', header: 'Período' },
     { field: 'estado', header: 'Estado', type: 'custom' },
     { field: 'cantidad_actividades', header: 'Actividades', type: 'number', align: 'center' },
-    { field: 'cantidad_evidencias', header: 'Evidencias', type: 'number', align: 'center' }
+    { field: 'cantidad_evidencias', header: 'Evidencias', type: 'number', align: 'center' },
+    { field: 'flg_exportadoPdf', header: 'PDF', type: 'custom' }
   ];
 
   processedData = computed(() =>
-    this.informes().map(i => ({
-      ...i,
-      periodo: `${this.formatDate(i.fec_periodoInicio)} - ${this.formatDate(i.fec_periodoFin)}`,
-      estadoValor: i.ide_estadoInforme === 'PRESENTADO' ? 'Aprobado' : (i.ide_estadoInforme === 'GENERADO' ? 'Media' : 'Cerrado'),
-      estadoText: this.getEstadoLabel(i.ide_estadoInforme)
-    }))
+    this.informes().map(i => {
+      const evidenciasCount = i.cantidad_evidecias ?? i.cantidad_evidencias ?? 0;
+
+      let statusValue: StatusType = 'Pendiente';
+      const estadoRaw = (i.txt_estadoInforme || '').toLowerCase();
+      const codRaw = (i.ide_estadoInforme || '').toString().toLowerCase();
+
+      if (estadoRaw === 'presentado' || codRaw === 'presentado' || codRaw === '3') {
+        statusValue = 'Aprobado';
+      } else if (estadoRaw === 'generado' || codRaw === 'generado' || codRaw === '2') {
+        statusValue = 'Media';
+      } else if (estadoRaw === 'borrador' || codRaw === 'borrador' || codRaw === '1') {
+        statusValue = 'Pendiente';
+      }
+
+      return {
+        ...i,
+        periodo: `${formatDate(i.fec_periodoInicio)} - ${formatDate(i.fec_periodoFin)}`,
+        estadoValor: statusValue,
+        estadoText: i.txt_estadoInforme || getEstadoLabel(i.ide_estadoInforme),
+        cantidad_evidencias: evidenciasCount,
+        tienePdf: i.flg_exportadoPdf && i.txt_rutaPdf
+      };
+    })
   );
 
   ngOnInit() {
@@ -117,55 +109,77 @@ export class InformesComponent implements OnInit {
   }
 
   loadData() {
+    const user = this.authService.user();
+    if (!user) return;
+
     this.loading.set(true);
 
-    this.http.get<ResponseDto<Informe[]>>(`${environment.apiUrl}/informes`).subscribe({
-      next: (res) => this.informes.set(res.datos ?? []),
-      error: () => {
-        console.error('Error cargando informes');
-        this.alertService.toast('Error cargando informes', 'error');
-      }
-    });
-
-    this.http.get<ResponseDto<Asistente[]>>(`${environment.apiUrl}/asistentes`).subscribe({
-      next: (res) => this.asistentes.set(res.datos ?? []),
-      error: () => console.error('Error cargando asistentes'),
-      complete: () => this.loading.set(false)
-    });
+    forkJoin({
+      informes: user.role === 'TECNICO'
+        ? this.informeService.listarPorAsistente(user.id)
+        : this.informeService.listar(),
+      asistentes: this.asistenteService.listar()
+    })
+      .pipe(
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: ({ informes, asistentes }) => {
+          this.informes.set(informes);
+          this.asistentes.set(asistentes);
+        },
+        error: (err) => {
+          console.error('Error cargando datos de informes:', err);
+          this.alertService.toast('Error cargando informes', 'error');
+        }
+      });
   }
 
   openGenerateModal() {
-    this.form = {
-      ide_asistente: '',
+    const user = this.authService.user();
+    const isTecnico = user?.role === 'TECNICO';
+    this.filtroForm.reset({
+      ide_asistente: isTecnico ? user.id : '',
       fec_periodoInicio: '',
       fec_periodoFin: ''
-    };
+    });
+    if (isTecnico) {
+      this.filtroForm.get('ide_asistente')?.disable();
+    } else {
+      this.filtroForm.get('ide_asistente')?.enable();
+    }
     this.showGenerateModal.set(true);
   }
 
   closeGenerateModal() {
     this.showGenerateModal.set(false);
+    this.filtroForm.reset();
   }
 
   generarReporte() {
-    if (!this.form.ide_asistente || !this.form.fec_periodoInicio || !this.form.fec_periodoFin) {
-      this.alertService.toast('Complete todos los campos obligatorios', 'warning');
+    if (this.filtroForm.invalid) {
+      this.filtroForm.markAllAsTouched();
+      this.alertService.toast('Por favor complete todos los campos obligatorios correctamente.', 'warning');
       return;
     }
 
     this.generating.set(true);
+    const formValue = this.filtroForm.getRawValue();
 
-    const payload = {
-      ide_asistente: this.form.ide_asistente,
-      fec_inicio: this.form.fec_periodoInicio
-        ? new Date(this.form.fec_periodoInicio).toISOString()
+    const payload: GenerarInformePayload = {
+      ide_asistente: formValue.ide_asistente || '',
+      fec_inicio: formValue.fec_periodoInicio
+        ? new Date(formValue.fec_periodoInicio).toISOString()
         : null,
-      fec_fin: this.form.fec_periodoFin
-        ? new Date(this.form.fec_periodoFin).toISOString()
+      fec_fin: formValue.fec_periodoFin
+        ? new Date(formValue.fec_periodoFin).toISOString()
         : null
     };
 
-    this.http.post<ResponseDto<unknown>>(`${environment.apiUrl}/informes/generar`, payload).subscribe({
+    this.informeService.generar(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (res) => {
         this.loadData();
         this.closeGenerateModal();
@@ -180,37 +194,147 @@ export class InformesComponent implements OnInit {
   }
 
   verDetalle(informe: Informe) {
-    this.http.get<ResponseDto<InformeDetalle>>(`${environment.apiUrl}/informes/${informe.ide_informe}/detalle`).subscribe({
-      next: (res) => {
-        this.selectedDetalle.set(res.datos ?? null);
-        this.showDetalleModal.set(true);
-      },
-      error: () => this.alertService.toast('Error al cargar detalle del informe', 'error')
-    });
+    this.informeService.obtenerDetalle(informe.ide_informe)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detalle) => {
+          this.selectedDetalle.set(detalle);
+          this.showDetalleModal.set(true);
+        },
+        error: () => this.alertService.toast('Error al cargar detalle del informe', 'error')
+      });
+  }
+
+  editarInforme(informe: Informe) {
+    this.informeService.obtenerDetalle(informe.ide_informe)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detalle) => {
+          this.selectedDetalle.set(detalle);
+          this.isEditing.set(true);
+          this.showDetalleModal.set(true);
+        },
+        error: () => this.alertService.toast('Error al cargar detalle del informe', 'error')
+      });
   }
 
   closeDetalleModal() {
     this.showDetalleModal.set(false);
+    this.isEditing.set(false);
     this.selectedDetalle.set(null);
   }
 
-  formatDate(dateStr: string | null): string {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('es-PE');
+  toggleEdit() {
+    this.isEditing.update(v => !v);
+  }
+
+  guardarSecciones() {
+    const detalle = this.selectedDetalle();
+    if (!detalle) return;
+
+    this.saving.set(true);
+
+    const payload: InformeSeccionesUpdate = {
+      ide_informe: detalle.ide_informe,
+      txt_resumenGeneral: detalle.txt_resumenGeneral ?? '',
+      txt_resultados: detalle.txt_resultados ?? '',
+      txt_problemas: detalle.txt_problemas ?? '',
+      txt_propuestas: detalle.txt_propuestas ?? '',
+      txt_recomendaciones: detalle.txt_recomendaciones ?? '',
+      txt_metas: detalle.txt_metas ?? '',
+      txt_conclusion: detalle.txt_conclusion ?? ''
+    };
+
+    this.informeService.actualizarSecciones(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+      next: (res) => {
+        this.isEditing.set(false);
+        this.alertService.toast(res.mensaje || 'Secciones guardadas exitosamente');
+      },
+      error: (err) => {
+        console.error(err);
+        this.alertService.toast(err.error?.mensaje || 'Error al guardar secciones', 'error');
+      },
+      complete: () => this.saving.set(false)
+    });
+  }
+
+  descargarPdf() {
+    const detalle = this.selectedDetalle();
+    if (!detalle) return;
+
+    this.alertService.toast('Generando PDF...', 'info');
+    this.informeService.descargarPdf(detalle.ide_informe)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `InformeTecnico_${detalle.ide_informe}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.alertService.toast('PDF descargado correctamente');
+      },
+      error: (err) => {
+        console.error('Error al descargar PDF:', err);
+        this.alertService.toast('Error al descargar el PDF', 'error');
+      }
+    });
+  }
+
+  openUploadPdfModal() {
+    this.showUploadPdfModal.set(true);
+  }
+
+  closeUploadPdfModal() {
+    this.showUploadPdfModal.set(false);
+  }
+
+  subirPdfFirmado(file: File) {
+    const detalle = this.selectedDetalle();
+    if (!detalle || !file) return;
+
+    this.uploadingPdf.set(true);
+
+    this.informeService.subirPdfFirmado(detalle.ide_informe, file)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+      next: (res) => {
+        this.alertService.toast(res.mensaje || 'PDF firmado adjuntado exitosamente');
+        this.closeUploadPdfModal();
+        this.loadData();
+        this.verDetalle({ ide_informe: detalle.ide_informe } as Informe);
+      },
+      error: (err) => {
+        console.error(err);
+        this.alertService.toast(err.error?.mensaje || 'Error al adjuntar PDF firmado', 'error');
+      },
+      complete: () => this.uploadingPdf.set(false)
+    });
   }
 
   getEstadoClass(cod: string): string {
-    const estado = this.estadosInforme.find(e => e.cod === cod);
-    return estado ? estado.color : 'bg-gray-100 text-gray-600';
+    return getEstadoClass(cod);
   }
 
   getEstadoLabel(cod: string): string {
-    const estado = this.estadosInforme.find(e => e.cod === cod);
-    return estado ? estado.label : cod;
+    return getEstadoLabel(cod);
   }
 
   getAsistenteNombre(ide: string): string {
     const a = this.asistentes().find(x => x.ideAsistente === ide);
     return a ? `${a.txtNombres} ${a.txtApellidoPaterno}` : ide;
+  }
+
+  getPdfBadgeClass(tienePdf: boolean): string {
+    return tienePdf ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500';
+  }
+
+  getPdfBadgeText(tienePdf: boolean): string {
+    return tienePdf ? 'Con PDF' : 'Sin PDF';
   }
 }

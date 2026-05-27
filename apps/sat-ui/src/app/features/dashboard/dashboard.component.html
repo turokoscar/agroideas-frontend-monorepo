@@ -71,7 +71,7 @@
             <div>
               <p class="text-sm font-semibold text-slate-800">{{ getAsistenteNombre(log.asistenteId) }}</p>
               <p class="text-xs text-slate-500">
-                {{ log.dispositivoId }} · {{ log.registrosEnviados }} registros · {{ formatDate(log.fechaHora) }}
+                {{ log.dispositivoId }} · {{ log.registrosEnviados }} registros · {{ log.fechaHora | formatDate }}
               </p>
             </div>
             <app-ui-status-pill [status]="getSyncStatus(log.resultado).status" [text]="getSyncStatus(log.resultado).text" />

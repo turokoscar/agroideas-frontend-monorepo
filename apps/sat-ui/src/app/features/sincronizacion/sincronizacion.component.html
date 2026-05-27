@@ -1,0 +1,98 @@
+<div class="p-6 lg:p-8 space-y-6 font-display bg-slate-50 min-h-screen">
+  <!-- Encabezado -->
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Consola de Sincronización Móvil</h1>
+    <p class="text-sm text-slate-500">Supervise la cola de transacciones offline, la carga de actividades y la consistencia de datos</p>
+  </div>
+
+  <!-- Arquitectura de Sincronización Offline-First (Wow Cards) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">dataset</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Cola Local SQLite</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">El aplicativo móvil almacena las actividades y evidencias localmente en SQLite, asegurando el 100% de operatividad en zonas rurales sin cobertura de red celular.</p>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">published_with_changes</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Auto-completado Transaccional</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">Al sincronizar una actividad con un código de programación válido, el backend marca la visita programada como <span class="text-emerald-600 font-semibold">COMPLETADA</span> a nivel de base de datos de manera atómica.</p>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-xl p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+      <div class="h-10 w-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+        <span class="material-symbols-outlined text-xl">network_check</span>
+      </div>
+      <h3 class="font-bold text-slate-800 text-sm">Túneles Dinámicos (Ngrok)</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">Las variables externas dinámicas se gestionan a través de variables de entorno, permitiendo restablecer la sincronización móvil al instante cuando los túneles ngrok de desarrollo cambian.</p>
+    </div>
+  </div>
+
+  <!-- Métricas Resumen -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <app-ui-kpi 
+      icon="sync" 
+      label="Total Sincronizaciones" 
+      [value]="total().toString()" 
+      subtitle="Intentos de conexión"
+      variant="glass"
+    />
+    <app-ui-kpi 
+      icon="check_circle" 
+      label="Exitosas" 
+      [value]="exitosas().toString()" 
+      subtitle="Sin errores de carga"
+      variant="glass"
+    />
+    <app-ui-kpi 
+      icon="warning" 
+      label="Error Parcial" 
+      [value]="errorParcial().toString()" 
+      subtitle="Cargas incompletas"
+      variant="glass"
+    />
+    <app-ui-kpi 
+      icon="error" 
+      label="Fallidas" 
+      [value]="fallidas().toString()" 
+      subtitle="Errores críticos de red"
+      variant="glass"
+    />
+  </div>
+
+  <!-- Historial de Sincronizaciones -->
+  <div class="bg-white border border-slate-100 rounded-xl p-6 shadow-sm space-y-6">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-indigo-500">history</span>
+        <h2 class="font-bold text-slate-800 tracking-tight">Historial de Sincronizaciones</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400">Total: {{ total() }}</span>
+        <button (click)="recargar()" [disabled]="loading()"
+          class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">refresh</span>
+          {{ loading() ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <app-sync-filters [filtro]="filtro" (filtroChange)="onFiltroChange()" (limpiar)="limpiarFiltros()"></app-sync-filters>
+
+    <!-- Tabla de Historial -->
+    <app-sync-history-table
+      [sincronizaciones]="sincronizaciones()"
+      [loading]="loading()"
+      [total]="total()"
+      [paginaActual]="paginaActual()"
+      [tamanioPagina]="tamanioPagina"
+      (anterior)="paginaAnterior()"
+      (siguiente)="paginaSiguiente()"
+    ></app-sync-history-table>
+  </div>
+</div>

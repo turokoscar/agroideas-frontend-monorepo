@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthUser } from '../../shared/models/auth.model';
+import { AuthUser, UserRole } from '../../shared/models/auth.model';
 import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
 
@@ -15,6 +15,7 @@ interface LoginResponse {
     txtApellidoPaterno: string;
     txtApellidoMaterno?: string;
     codUsuario: string;
+    txtRol?: string;
   };
 }
 
@@ -62,7 +63,7 @@ export class AuthService {
             id: data.ideAsistente || 'asis-001',
             nombre: `${data.txtNombres} ${data.txtApellidoPaterno} ${data.txtApellidoMaterno || ''}`.trim(),
             usuario: data.codUsuario,
-            role: 'asistente'
+            role: (data.txtRol as UserRole) || 'TECNICO'
           };
           
           localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, data.token);
