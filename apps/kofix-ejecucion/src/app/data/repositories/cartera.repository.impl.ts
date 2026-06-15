@@ -47,7 +47,7 @@ export class CarteraRepositoryImpl extends CarteraRepository {
             `${this.apiUrl}/cartera/${request.postulanteId}/reasignar`,
             { nuevoEspecialistaId: Number(request.nuevoEspecialistaId), observacion: request.observacion }
         ).pipe(
-            map(res => ({ exitoso: res.exitoso, mensaje: res.mensaje || '' }))
+            map(res => ({ exitoso: !!res.exitoso, mensaje: res.mensaje || '' }))
         );
     }
 }

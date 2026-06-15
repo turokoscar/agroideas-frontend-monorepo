@@ -5,21 +5,22 @@
 ```sh
 npx nx serve kofix-ejecucion     # dev server on :7100
 npx nx serve sat-ui              # dev server on :4200 (default)
-npx nx test <project>            # single project (Jest)
+npx nx test <project>            # Jest
 npx nx test <project> -- --testPathPattern=<pattern>  # single file
 npx nx test <project> -- -t "test name"               # single test
-npx nx lint <project>            # lint one project
-npx nx build <project>           # production build (outputs: dist/apps/<app>/browser/)
+npx nx e2e <project>-e2e        # Playwright e2e
+npx nx lint <project>
+npx nx build <project>           # production build → dist/apps/<app>/browser/
 npx nx run-many -t lint,test,build
 npx nx affected -t lint,test,build
+npx nx show projects             # list projects + tags
 npx nx graph                     # dependency graph
-npx nx show projects             # list all projects with tags
-npx nx reset                     # clear Nx cache (after version/generator/config changes)
+npx nx reset                     # clear cache (after version/generator/config changes)
 ```
 
 ## Module boundaries
 
-Enforced by `@nx/enforce-module-boundaries` in root `eslint.config.js` via tags on each `project.json`:
+Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 | sourceTag | can depend on |
 |-----------|--------------|
@@ -31,57 +32,49 @@ Enforced by `@nx/enforce-module-boundaries` in root `eslint.config.js` via tags 
 | `type:data-access` | `data-access`, `util` |
 | `type:util` | `util` only |
 
-**Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in `apps/**`).
+**Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
 
-**Watch out:** `@agroideas/menu` has `tags: []` (empty — breaks module boundaries; needs fixing).
+**Watch out:** `@agroideas/menu` has `tags: []` (empty — breaks boundary checks; add `scope:shared,type:ui` when using it).
 
-## ESLint pinned stack (do NOT upgrade individually)
+## App architectures
 
-- `eslint 9.14.0` + `typescript-eslint 8.13.0` + `angular-eslint 18.4.3`, forced via `overrides` in `package.json`
-- `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto templates)
-- `apps/kofix-ejecucion/eslint.config.js` has ~270 warnings as intentional Fase 2 transition debt (to be hardened in Fase 3)
+- **kofix-ejecucion** (:7100): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`, components). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. Use cases are `@Injectable({providedIn:'root'})`. Style: `inlineStyleLanguage: "css"` (global) but most components use `.sass` files. Auth via shared `@agroideas/auth` interceptor. Real backend permission provider.
+- **sat-ui** (:4200): Feature-based — `core/` (services, guards, interceptors), `features/` (dashboard, login, asignaciones, etc.), `shared/` (models, utils). Style: `inlineStyleLanguage: "scss"` (global SCSS + some `.css` component files). Auth via **local** `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth`). Permissions provider is a **stub** (`of([])`) — not wired to real backend.
 
-## Design system chain (`@agroideas/theme`)
+## Lib state
 
-Single source of truth for MIDAGRI/INIA green `#346b00`. No hex outside this lib:
-1. `libs/theme/src/styles/tokens.css` — HSL CSS variables
-2. `libs/theme/src/tailwind-preset.js` — maps Tailwind classes to `hsl(var(--x) / <alpha>)`
-3. `libs/theme/src/styles/base.css` — `@tailwind` directives + fonts (Google Fonts CDN)
+| Lib | Status | Exports |
+|-----|--------|---------|
+| `theme` | done | `tokens.css` (HSL vars), `tailwind-preset.js`, `base.css`, `theme.ts` (metadata) |
+| `ui` | done | 10 standalone components: button, card, kpi, modal, data-table, status-pill, progress-bar, filter-bar, map, pagination |
+| `utils` | done | `cn`, `currency`, `date-formatter`, `jwt.util`, `permissions`, `response.dto`, `storage-keys`, `format-date` pipe |
+| `security` | done | `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
+| `auth` | done | `authInterceptor` (HttpInterceptorFn), `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY` injection tokens |
+| `feedback` | done | `AlertService` (SweetAlert2 wrapper with MIDAGRI theme) — methods: `show`, `toast`, `showResponse`, `confirm` |
+| `menu` | partial | Exports stub component only. Real models (`MenuItem`, `MenuAgrupado`, `MenuRepository`) exist in `lib/` but are **not** exported via `index.ts`. Tags are empty. |
+| `http` | scaffold | Only re-exports `ResponseDto` from `@agroideas/utils`; no own code |
 
-**Each app wires it two ways:**
-- `tailwind.config.js`: `presets: [require('../../libs/theme/src/tailwind-preset.js')]`
-- `base.css` added to build's `styles` array in `project.json` (NOT `@import`ed from `.scss` — that would leave `@tailwind` unprocessed)
-- No `postcss.config.js` (managed via Angular build)
+## Gotchas
 
-## Current state of the workspace
-
-| Project | Status |
-|---------|--------|
-| `@agroideas/theme` | Fully implemented |
-| `@agroideas/ui` | 9 real components (button, card, kpi, modal, data-table, status-pill, progress-bar, filter-bar, map), 1 dead scaffold |
-| `@agroideas/utils` | Fully implemented (currency, date-formatter, storage-keys, permissions, jwt.util, cn, response.dto, pipes) |
-| `@agroideas/auth` | `authInterceptor` real, `AUTH_LOGOUT_HANDLER` injection token, dead scaffold |
-| `@agroideas/feedback` | `AlertService` real (SweetAlert2 wrapper), dead scaffold |
-| `@agroideas/security` | 3 real: `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
-| `@agroideas/http` | Scaffolding (only re-exports `ResponseDto` from utils) |
-| `@agroideas/menu` | Scaffolding (has model + abstract repo, `tags: []` empty — breaks boundaries) |
-| `kofix-ejecucion` | Full Clean Architecture (domain/data/presentation), 10 pages, 10 repos, 19 use cases |
-| `sat-ui` | Real login/auth flow, 7 feature pages (mostly stub shells) |
-| `*-e2e` | Playwright boilerplate only |
-
-## Critical conventions & gotchas
-
-- **All components are `standalone: true`** (no NgModules)
-- **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names
-- **kofix-ejecucion composition root** (`app.config.ts`): binds abstract repos via `useExisting` pattern; use cases are `@Injectable({providedIn:'root'})` and auto-resolve
-- **In Angular templates**, literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002)
-- **kofix-ejecucion** needs `@angular/localize/init` polyfill in its build `polyfills` — do not remove
-- **Prettier:** `singleQuote: true` (`.prettierrc`)
-- **TypeScript 5.5.2** — not 5.6+
+- **ESLint stack pinned** — `eslint 9.14.0` + `typescript-eslint 8.13.0` + `angular-eslint 18.4.3` must be upgraded together (enforced via `overrides` in `package.json`). Mismatches crash linting.
+- `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto Angular templates).
+- **Design system chain:** `libs/theme/src/styles/tokens.css` (HSL CSS vars) → `tailwind-preset.js` → `base.css`. No brand hex outside this lib. Apps wire `base.css` in `project.json` `styles` array (NOT `@import` in `.scss` — that leaves `@tailwind` unprocessed). No `postcss.config.js` (managed via Angular build).
+- **kofix-ejecucion lint** passes with 0 errors but ~270 warnings (intentional Fase 2 debt; hardened in Fase 3). Its `eslint.config.js` has transitional overrides downgrading rules to `warn` and allowing direct provider imports during migration.
+- **sat-ui** uses a local `jwt.interceptor.ts` (in `core/interceptors/`), NOT the shared `@agroideas/auth` interceptor. Its permissions provider is not connected to backend.
+- **All components** are `standalone: true` (no NgModules).
+- **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names.
+- **In Angular templates,** literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).
+- **kofix-ejecucion** needs `@angular/localize/init` polyfill — do not remove. Also allows `sweetalert2` and `leaflet` as CommonJS deps.
+- **TypeScript 5.5.2** — not 5.6+.
+- **Prettier:** `singleQuote: true` (`.prettierrc`).
+- **Playwright e2e** projects exist: `kofix-ejecucion-e2e`, `sat-ui-e2e`. Run with `npx nx e2e <project>`.
+- **No CI/CD** — no GitHub workflows, Jenkinsfile, husky, or lint-staged.
 
 ## References
 
 - `CONTRIBUTING.md` — generator commands and tag reference
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — full ADR
-- `docs/plan-implementacion-monorepo.md` — phased plan
-- `docs/phase-0/version-pins.md` — why lint stack is pinned
+- `docs/adr/0002-modernizacion-sat-ui-buenas-practicas-angular.md`
+- `docs/adr/0003-unificacion-visual-reusabilidad-sat-ui.md`
+- `docs/plan-implementacion-monorepo.md` — phased plan (Fase 5 hardening is next)
+- `docs/phase-0/version-pins.md` — why the lint stack is pinned

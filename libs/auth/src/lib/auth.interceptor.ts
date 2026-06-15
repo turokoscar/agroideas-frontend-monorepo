@@ -9,12 +9,14 @@ export interface AuthLogoutHandler {
 }
 
 export const AUTH_LOGOUT_HANDLER = new InjectionToken<AuthLogoutHandler>('AUTH_LOGOUT_HANDLER');
+export const AUTH_TOKEN_KEY = new InjectionToken<string>('AUTH_TOKEN_KEY');
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const injector = inject(Injector);
     const alertService = inject(AlertService);
     
-    const token = localStorage.getItem(STORAGE_KEYS.SAT_TOKEN);
+    const tokenKey = inject(AUTH_TOKEN_KEY, { optional: true }) || STORAGE_KEYS.SAT_TOKEN;
+    const token = localStorage.getItem(tokenKey);
 
     let request = req;
     if (token) {

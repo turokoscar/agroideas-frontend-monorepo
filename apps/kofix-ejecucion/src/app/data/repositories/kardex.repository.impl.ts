@@ -80,7 +80,7 @@ export class KardexRepositoryImpl extends KardexRepository {
 
     override getDetallePorItem(postulanteId: number, itemMlId: number): Observable<KardexDetalleItem> {
         return this.http.get<ResponseDto<KardexDetalleItem>>(`${this.apiUrl}/detalle/${postulanteId}/${itemMlId}`).pipe(
-            map(res => res.datos)
+            map(res => res.datos!)
         );
     }
 }

@@ -1,8 +1,10 @@
-import { authInterceptor } from '@agroideas/auth';
-import { ApplicationConfig, provideZoneChangeDetection, Provider } from '@angular/core';
+import { authInterceptor, AUTH_TOKEN_KEY } from '@agroideas/auth';
+import { STORAGE_KEYS } from '@agroideas/utils';
+import { ApplicationConfig, provideZoneChangeDetection, Provider, computed } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { of } from 'rxjs';
 
 import { routes } from './app.routes';
 
@@ -29,7 +31,6 @@ import { KardexRepositoryImpl } from './data/repositories/kardex.repository.impl
 
 import { USER_PERMISSIONS_PROVIDER } from '@agroideas/security';
 import { AUTH_LOGOUT_HANDLER } from '@agroideas/auth';
-import { computed } from '@angular/core';
 
 /**
  * Raíz de composición: enlaza cada token abstracto de repositorio a su
@@ -65,19 +66,21 @@ export const appConfig: ApplicationConfig = {
     ...repositoryProviders,
     {
       provide: USER_PERMISSIONS_PROVIDER,
-      useFactory: (authRepo: AuthRepository) => ({
-        permissions: authRepo.userPermissions$,
-        userRoles: computed(() => authRepo.user$()?.roles ?? []),
-        initialized$: authRepo.permissionsInitialized$
-      }),
-      deps: [AuthRepository]
+      useFactory: () => ({
+        permissions: of([]),
+        userRoles: computed(() => []),
+        initialized$: of(true)
+      })
     },
     {
       provide: AUTH_LOGOUT_HANDLER,
-      useFactory: (authRepo: AuthRepository) => ({
-        logout: () => authRepo.logout()
-      }),
-      deps: [AuthRepository]
+      useFactory: () => ({
+        logout: () => localStorage.removeItem(STORAGE_KEYS.TOKEN)
+      })
+    },
+    {
+      provide: AUTH_TOKEN_KEY,
+      useValue: STORAGE_KEYS.TOKEN
     }
   ]
 };

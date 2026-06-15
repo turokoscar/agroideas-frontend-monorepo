@@ -54,7 +54,7 @@ export class AlertService {
         const icon: SweetAlertIcon = res.respuesta === 'OK' ? 'success' : 'error';
         const title = res.respuesta === 'OK' ? '¡Éxito!' : 'Ups...';
 
-        return this.show(title, res.mensaje, icon);
+        return this.show(title, res.mensaje || '', icon);
     }
 
     /**

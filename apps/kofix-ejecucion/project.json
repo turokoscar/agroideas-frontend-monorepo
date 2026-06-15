@@ -31,9 +31,9 @@
           }
         ],
         "styles": [
+          "libs/theme/src/styles/base.css",
           "node_modules/leaflet/dist/leaflet.css",
-          "apps/kofix-ejecucion/src/styles.css",
-          "libs/theme/src/styles/base.css"
+          "apps/kofix-ejecucion/src/styles.css"
         ],
         "scripts": [],
         "allowedCommonJsDependencies": ["sweetalert2", "leaflet"]

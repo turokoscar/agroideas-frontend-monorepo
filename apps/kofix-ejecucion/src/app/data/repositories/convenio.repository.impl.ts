@@ -28,7 +28,7 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
 
         return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/asignados`, { params }).pipe(
             map(res => ({
-                datos: ConvenioMapper.fromApiList(res.datos),
+                datos: ConvenioMapper.fromApiList(res.datos || []),
                 total: res.total || 0
             }))
         );
@@ -45,7 +45,7 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
 
         return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/todos`, { params }).pipe(
             map(res => ({
-                datos: ConvenioMapper.fromApiList(res.datos),
+                datos: ConvenioMapper.fromApiList(res.datos || []),
                 total: res.total || 0
             }))
         );
@@ -62,7 +62,7 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
 
         return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/vigentes`, { params }).pipe(
             map(res => ({
-                datos: ConvenioMapper.fromApiList(res.datos),
+                datos: ConvenioMapper.fromApiList(res.datos || []),
                 total: res.total || 0
             }))
         );
@@ -70,16 +70,16 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
 
     override getById(id: number): Observable<Convenio> {
         return this.http.get<ResponseDto<any>>(`${this.apiUrl}/${id}`).pipe(
-            map(res => ConvenioMapper.fromApi(res.datos))
+            map(res => ConvenioMapper.fromApi(res.datos || {}))
         );
     }
 
     override getResumenFinanciero(id: number): Observable<ConvenioResumenFinanciero> {
         return this.http.get<ResponseDto<any>>(`${this.apiUrl}/${id}/resumen`).pipe(
             map(res => ({
-                programacionAcumulada: res.datos.programacionAcumulada || 0,
-                ejecucionAcumulada: res.datos.ejecucionAcumulada || 0,
-                saldoDisponible: res.datos.saldoDisponible || 0
+                programacionAcumulada: res.datos?.programacionAcumulada || 0,
+                ejecucionAcumulada: res.datos?.ejecucionAcumulada || 0,
+                saldoDisponible: res.datos?.saldoDisponible || 0
             }))
         );
     }

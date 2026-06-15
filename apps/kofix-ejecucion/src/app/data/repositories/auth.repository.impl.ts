@@ -56,9 +56,14 @@ export class AuthRepositoryImpl implements AuthRepository {
         }
     }
 
-    login(credentials: any): Observable<ResponseDto<any>> {
+    login(credentials: any): Observable<AuthResponse> {
         return this.http.post<ResponseDto<any>>(`${environment.apiSeguridad}/auth/login`, credentials).pipe(
             switchMap(res => {
+                const authRes: AuthResponse = {
+                    exitoso: !!res.exitoso,
+                    mensaje: res.mensaje,
+                    datos: res.datos
+                };
                 if (res.exitoso && res.datos?.accessToken) {
                     this.saveToken(res.datos.accessToken);
                     if (res.datos?.refreshToken) {
@@ -70,14 +75,15 @@ export class AuthRepositoryImpl implements AuthRepository {
 
                     return this.fetchPermissions().pipe(
                         tap(() => this.auditLogin().subscribe()),
-                        map(() => res),
-                        catchError(() => of(res))
+                        map(() => authRes),
+                        catchError(() => of(authRes))
                     );
                 }
-                return of(res);
+                return of(authRes);
             })
         );
     }
+
 
     fetchPermissions(): Observable<ResponseDto<string[]>> {
         this._isLoadingPermissions.set(true);
@@ -98,11 +104,11 @@ export class AuthRepositoryImpl implements AuthRepository {
                 return of({ 
                     exitoso: false, 
                     mensaje: 'Error al cargar permisos',
-                    respuesta: 0,
+                    respuesta: 'ERROR',
                     codigo: null,
                     datos: [],
                     total: 0
-                } as ResponseDto<string[]>);
+                } as any);
             })
         );
     }

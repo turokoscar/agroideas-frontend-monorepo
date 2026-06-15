@@ -1,5 +1,8 @@
 export interface ResponseDto<T = unknown> {
-    respuesta: string; // "OK" | "ERROR"
-    mensaje: string;
-    datos: T;
+    respuesta?: string; // "OK" | "ERROR"
+    mensaje?: string;
+    datos?: T;
+    exitoso?: boolean;
+    total?: number;
 }
+

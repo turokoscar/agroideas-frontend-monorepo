@@ -1,10 +1,5 @@
-<!-- Pantalla de Carga Global para Validación de Seguridad -->
-<div *ngIf="isLoadingPermissions()" class="security-overlay">
-  <div class="loader-content">
-    <div class="agro-spinner"></div>
-    <h3>Sincronizando Seguridad</h3>
-    <p>Validando sus capacidades en el sistema...</p>
-  </div>
+<div style="padding: 2rem;">
+  <h1>Test AuthRepository</h1>
+  <p>{{ testMsg() }}</p>
 </div>
-
 <router-outlet></router-outlet>

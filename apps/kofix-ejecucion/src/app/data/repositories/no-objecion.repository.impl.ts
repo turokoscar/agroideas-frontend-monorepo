@@ -60,9 +60,10 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
         return this.http.get<ResponseDto<Record<string, any>>>(`${this.apiUrl}/postulante/${postulanteId}/balances`).pipe(
             map(res => {
                 const balances: Record<string, NoObjecionBalance> = {};
-                if (res.datos) {
-                    Object.keys(res.datos).forEach(key => {
-                        balances[key] = NoObjecionMapper.fromBalanceApi(res.datos[key]);
+                const data = res.datos;
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        balances[key] = NoObjecionMapper.fromBalanceApi(data[key]);
                     });
                 }
                 return balances;

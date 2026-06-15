@@ -30,7 +30,7 @@ export class FileStorageService {
         const formData = new FormData();
         formData.append('file', file);
         return this.http.post<ResponseDto<FileUploadResult>>(`${this.apiUrl}/upload/${subDirectory}`, formData).pipe(
-            map(res => res.datos)
+            map(res => res.datos!)
         );
     }
 
