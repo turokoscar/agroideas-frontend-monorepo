@@ -1,5 +1,7 @@
 # AGROIDEAS Frontend Monorepo — Agent Guide
 
+**Canonical instruction file.** `CLAUDE.md` in this repo is stale (says libs are scaffolding; they are not — see table below).
+
 ## Commands (use `npx nx` — no npm scripts)
 
 ```sh
@@ -34,12 +36,12 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 **Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
 
-**Watch out:** `@agroideas/menu` has `tags: []` (empty — breaks boundary checks; add `scope:shared,type:ui` when using it).
+**Watch out:** `@agroideas/menu` has `tags: []` (empty — breaks boundary checks; add `scope:shared,type:ui` when using it). It also has unexported models/repository classes in `lib/` not exposed via `index.ts`.
 
 ## App architectures
 
-- **kofix-ejecucion** (:7100): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`, components). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. Use cases are `@Injectable({providedIn:'root'})`. Style: `inlineStyleLanguage: "css"` (global) but most components use `.sass` files. Auth via shared `@agroideas/auth` interceptor. Real backend permission provider.
-- **sat-ui** (:4200): Feature-based — `core/` (services, guards, interceptors), `features/` (dashboard, login, asignaciones, etc.), `shared/` (models, utils). Style: `inlineStyleLanguage: "scss"` (global SCSS + some `.css` component files). Auth via **local** `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth`). Permissions provider is a **stub** (`of([])`) — not wired to real backend.
+- **kofix-ejecucion** (:7100, `scope:kofix`): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`, components). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. Use cases are `@Injectable({providedIn:'root'})`. `inlineStyleLanguage: "css"` (global) but most components use `.sass` files. Auth via shared `@agroideas/auth` interceptor. Real backend permission provider. Talks to three .NET APIs (`apiSeguridad`, `apiEjecucion`, `apiGeneral`).
+- **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards, interceptors), `features/` (dashboard, login, asignaciones, etc.), `shared/` (models, utils). `inlineStyleLanguage: "scss"`. Auth via local `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth` interceptor, though it does import `AUTH_LOGOUT_HANDLER` from `@agroideas/auth`). Permissions provider is a stub (`of([])`) — not wired to real backend.
 
 ## Lib state
 
@@ -60,7 +62,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto Angular templates).
 - **Design system chain:** `libs/theme/src/styles/tokens.css` (HSL CSS vars) → `tailwind-preset.js` → `base.css`. No brand hex outside this lib. Apps wire `base.css` in `project.json` `styles` array (NOT `@import` in `.scss` — that leaves `@tailwind` unprocessed). No `postcss.config.js` (managed via Angular build).
 - **kofix-ejecucion lint** passes with 0 errors but ~270 warnings (intentional Fase 2 debt; hardened in Fase 3). Its `eslint.config.js` has transitional overrides downgrading rules to `warn` and allowing direct provider imports during migration.
-- **sat-ui** uses a local `jwt.interceptor.ts` (in `core/interceptors/`), NOT the shared `@agroideas/auth` interceptor. Its permissions provider is not connected to backend.
+- **sat-ui** uses a local `jwt.interceptor.ts` (in `core/interceptors/`), NOT the shared `@agroideas/auth` interceptor (though it does import `AUTH_LOGOUT_HANDLER` from that lib). Its permissions provider is not connected to backend.
 - **All components** are `standalone: true` (no NgModules).
 - **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names.
 - **In Angular templates,** literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).

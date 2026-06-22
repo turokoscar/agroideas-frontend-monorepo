@@ -1,10 +1,9 @@
 import { authInterceptor, AUTH_TOKEN_KEY } from '@agroideas/auth';
 import { STORAGE_KEYS } from '@agroideas/utils';
-import { ApplicationConfig, provideZoneChangeDetection, Provider, computed } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, Provider, computed, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
 
 import { routes } from './app.routes';
 
@@ -66,11 +65,14 @@ export const appConfig: ApplicationConfig = {
     ...repositoryProviders,
     {
       provide: USER_PERMISSIONS_PROVIDER,
-      useFactory: () => ({
-        permissions: of([]),
-        userRoles: computed(() => []),
-        initialized$: of(true)
-      })
+      useFactory: () => {
+        const authRepo = inject(AuthRepositoryImpl);
+        return {
+          permissions: authRepo.userPermissions$,
+          userRoles: computed(() => authRepo.user$()?.roles ?? []),
+          initialized$: authRepo.permissionsInitialized$
+        };
+      }
     },
     {
       provide: AUTH_LOGOUT_HANDLER,
