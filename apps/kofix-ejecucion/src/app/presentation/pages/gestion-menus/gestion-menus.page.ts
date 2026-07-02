@@ -49,6 +49,7 @@ export class GestionMenusPageComponent implements OnInit {
   menus = signal<MenuItem[]>([]);
   filteredMenus = signal<MenuItem[]>([]);
   loading = signal(false);
+  isSubmitting = signal(false);
 
   // Filtros
   search = '';
@@ -163,8 +164,10 @@ export class GestionMenusPageComponent implements OnInit {
       ? this.updateMenuUseCase.execute(payload.id, payload)
       : this.createMenuUseCase.execute(payload);
 
+    this.isSubmitting.set(true);
     action$.subscribe({
       next: (res) => {
+        this.isSubmitting.set(false);
         if (res.respuesta === 'OK') {
           this.alertService.show('Éxito', isEdit ? 'Menú actualizado correctamente.' : 'Menú creado correctamente.', 'success');
           this.closeModal();
@@ -174,6 +177,7 @@ export class GestionMenusPageComponent implements OnInit {
         }
       },
       error: () => {
+        this.isSubmitting.set(false);
         this.alertService.show('Error', 'Ocurrió un error en el servidor.', 'error');
       }
     });

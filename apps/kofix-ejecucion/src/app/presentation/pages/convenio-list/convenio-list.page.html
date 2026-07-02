@@ -61,21 +61,32 @@
 
     <!-- Template para columnas custom -->
     <ng-template #rowTemplate let-row let-col="col">
-      @if (col.field === 'estado') {
-        <app-ui-status-pill
-          [status]="getStatusType(row.estado)"
-          [text]="getStatusLabel(row.estado)">
-        </app-ui-status-pill>
-      }
-      @if (col.field === 'saldoPorEjecutar') {
-        <span class="dt-cell dt-cell--currency" [class.text-danger]="getSaldo(row) < 0">
-          {{ getSaldo(row) | currency:'PEN':'S/ ' }}
-        </span>
-      }
       @if (col.field === 'razonSocial') {
         <div class="cell-org">
           <span class="cell-org__name">{{ row.razonSocial }}</span>
           <span class="cell-org__ruc">RUC: {{ row.ruc }}</span>
+        </div>
+      }
+      @if (col.field === 'vigencia') {
+        <div class="cell-vigencia">
+          <span class="cell-vigencia__date">{{ formatDate(row.fechaInicio) }}</span>
+          <span class="cell-vigencia__sep">→</span>
+          <span class="cell-vigencia__date">{{ formatDate(row.fechaFin) }}</span>
+        </div>
+      }
+      @if (col.field === 'montoEjecutado') {
+        <div class="cell-ejecucion">
+          <app-ui-progress-bar
+            [value]="row.montoEjecutado"
+            [maxValue]="row.montoAprobado"
+            [showLabel]="true">
+          </app-ui-progress-bar>
+        </div>
+      }
+      @if (col.field === 'estado') {
+        <div class="cell-semaforo">
+          <span class="semaforo" [ngClass]="getSemaphoreClass(row.estado)"></span>
+          <span class="semaforo__label">{{ getStatusLabel(row.estado) }}</span>
         </div>
       }
     </ng-template>

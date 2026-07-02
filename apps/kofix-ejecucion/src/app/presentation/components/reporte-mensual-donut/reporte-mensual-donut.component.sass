@@ -1,0 +1,219 @@
+.donut-card
+  background: white
+  border: 1px solid #e2e8f0
+  border-radius: 1rem
+  padding: 1.25rem 1.5rem
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05)
+  display: flex
+  flex-direction: column
+  gap: 1rem
+
+  :root.dark &
+    background: #18181b
+    border-color: #27272a
+
+.donut-header
+  .donut-title
+    font-size: 1rem
+    font-weight: 800
+    color: #0f172a
+    text-transform: uppercase
+    letter-spacing: 0.025em
+
+    :root.dark &
+      color: #f4f4f5
+
+  .donut-subtitle
+    font-size: 0.75rem
+    color: #64748b
+    margin-top: 0.125rem
+    display: block
+
+.donut-body
+  display: flex
+  flex-direction: column
+  align-items: center
+  gap: 1rem
+
+.donut-svg-container
+  width: 90%
+  max-width: 180px
+  aspect-ratio: 1
+
+.donut-svg
+  width: 100%
+  height: 100%
+  display: block
+
+.donut-track
+  stroke: #f1f5f9
+  stroke-width: 16
+
+  :root.dark &
+    stroke: #27272a
+
+.donut-arc
+  stroke: #94a3b8
+  stroke-width: 16
+  stroke-linecap: round
+  transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease
+
+  &--success
+    stroke: #008f49
+
+  &--warning
+    stroke: #f59e0b
+
+  &--danger
+    stroke: #ef4444
+
+  &--info
+    stroke: #007599
+
+.donut-pct
+  font-size: 2rem
+  font-weight: 900
+  fill: #1e293b
+
+  :root.dark &
+    fill: #fafafa
+
+.donut-label
+  font-size: 0.65rem
+  fill: #94a3b8
+  text-transform: uppercase
+  letter-spacing: 0.05em
+
+.donut-values
+  width: 100%
+  display: flex
+  flex-direction: column
+  gap: 0.375rem
+
+.value-row
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding: 0.375rem 0.75rem
+  border-radius: 0.5rem
+  font-size: 0.75rem
+
+  .value-label
+    font-weight: 600
+    text-transform: uppercase
+    letter-spacing: 0.05em
+
+  .value-number
+    font-weight: 800
+    font-variant-numeric: tabular-nums
+
+  &--prog
+    background: #f0f9ff
+    color: #007599
+
+    :root.dark &
+      background: #0c4a6e33
+      color: #38bdf8
+
+  &--ejec
+    background: #f0fdf4
+    color: #008f49
+
+    :root.dark &
+      background: #14532d33
+      color: #4ade80
+
+.donut-footer
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding-top: 0.5rem
+  border-top: 1px solid #f1f5f9
+
+  :root.dark &
+    border-color: #27272a
+
+.year-nav
+  display: flex
+  align-items: center
+  gap: 0.5rem
+
+.year-arrow
+  background: none
+  border: 1px solid #e2e8f0
+  border-radius: 0.375rem
+  width: 1.5rem
+  height: 1.5rem
+  display: flex
+  align-items: center
+  justify-content: center
+  cursor: pointer
+  font-size: 1rem
+  line-height: 1
+  color: #64748b
+  transition: all 0.15s
+
+  &:hover:not(:disabled)
+    background: #f1f5f9
+    border-color: #94a3b8
+
+  &:disabled
+    opacity: 0.3
+    cursor: not-allowed
+
+  :root.dark &
+    border-color: #3f3f46
+    color: #a1a1aa
+
+    &:hover:not(:disabled)
+      background: #27272a
+
+.donut-year
+  font-size: 0.75rem
+  font-weight: 700
+  color: #475569
+  min-width: 2.5rem
+  text-align: center
+
+  :root.dark &
+    color: #d4d4d8
+
+.donut-status
+  font-size: 0.625rem
+  font-weight: 700
+  text-transform: uppercase
+  letter-spacing: 0.08em
+  padding: 0.25rem 0.625rem
+  border-radius: 999px
+
+  &.donut-arc--success
+    background: #f0fdf4
+    color: #008f49
+
+    :root.dark &
+      background: #14532d33
+      color: #4ade80
+
+  &.donut-arc--warning
+    background: #fffbeb
+    color: #d97706
+
+    :root.dark &
+      background: #78350f33
+      color: #fbbf24
+
+  &.donut-arc--danger
+    background: #fef2f2
+    color: #dc2626
+
+    :root.dark &
+      background: #7f1d1d33
+      color: #f87171
+
+  &.donut-arc--info
+    background: #f0f9ff
+    color: #007599
+
+    :root.dark &
+      background: #0c4a6e33
+      color: #38bdf8

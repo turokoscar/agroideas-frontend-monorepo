@@ -1,6 +1,6 @@
 import { PermissionService } from '@agroideas/security';
 import { PERMISSIONS } from '@agroideas/utils';
-import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,7 @@ import { ConvenioRepository } from '../../../domain/repositories/convenio.reposi
 @Component({
     selector: 'app-convenio-list-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UIButtonComponent],
+    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent],
     templateUrl: './convenio-list.page.html',
     styleUrls: ['./convenio-list.page.sass']
 })
@@ -39,10 +39,9 @@ export class ConvenioListPageComponent implements OnInit {
         { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
         { field: 'razonSocial', header: 'Organización', type: 'custom' },
         { field: 'region', header: 'Región', width: '130px' },
+        { field: 'vigencia', header: 'Vigencia', type: 'custom', width: '160px' },
         { field: 'montoAprobado', header: 'Monto Aprobado', type: 'currency', align: 'right', width: '145px' },
-        { field: 'montoProgramado', header: 'Programación', type: 'currency', align: 'right', width: '130px' },
-        { field: 'montoEjecutado', header: 'Ejecución', type: 'currency', align: 'right', width: '130px' },
-        { field: 'saldoPorEjecutar', header: 'Saldo', type: 'currency', align: 'right', width: '130px' },
+        { field: 'montoEjecutado', header: 'Ejecutado', type: 'custom', width: '160px' },
         { field: 'estado', header: 'Estado', type: 'custom', align: 'center', width: '110px' }
     ];
 
@@ -391,5 +390,26 @@ export class ConvenioListPageComponent implements OnInit {
             'SUSPENDIDO': 'Suspendido'
         };
         return map[estado] ?? estado;
+    }
+
+    getSemaphoreClass(estado: string): string {
+        const map: Record<string, string> = {
+            'VIGENTE': 'semaforo--green',
+            'POR_INICIAR': 'semaforo--yellow',
+            'FINALIZADO': 'semaforo--red',
+            'SUSPENDIDO': 'semaforo--gray'
+        };
+        return map[estado] ?? 'semaforo--gray';
+    }
+
+    formatDate(date: string): string {
+        if (!date) return '-';
+        const d = new Date(date);
+        return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    getPorcentajeEjecucion(convenio: Convenio): number {
+        if (!convenio.montoAprobado || convenio.montoAprobado <= 0) return 0;
+        return Math.round((convenio.montoEjecutado / convenio.montoAprobado) * 100);
     }
 }

@@ -19,14 +19,14 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
         <!-- 8 Columns Chart -->
         <div class="lg:col-span-8 w-full max-w-full overflow-hidden block">
-            <!-- Loading Chart -->
-            <div *ngIf="loadingChart()" class="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4">
-                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando datos del gráfico...</span>
-            </div>
-
-            <!-- SVG Line Chart Component -->
-            <div *ngIf="!loadingChart()">
+            <!-- SVG Line Chart Component (siempre montado) -->
+            <div class="relative">
+                @if (loadingChart()) {
+                    <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-zinc-900/80 rounded-2xl space-y-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando datos del gráfico...</span>
+                    </div>
+                }
                 <app-reporte-mensual-chart 
                     [data]="chartData()" 
                     [selectedYear]="selectedYear()"
@@ -35,21 +35,20 @@
             </div>
         </div>
 
-        <!-- 4 Columns Empty Space / Acceso Directo Info -->
+        <!-- 4 Columns Donut Chart -->
         <div class="lg:col-span-4 flex flex-col gap-6">
-            <div class="bg-slate-50/50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col justify-between h-full min-h-[250px]">
-                <div>
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Atención y Soporte</h4>
-                    <h3 class="text-md font-bold text-slate-800 dark:text-white mt-2">Monitoreo de Ejecución Contable</h3>
-                    <p class="text-slate-500 text-xs mt-3 leading-relaxed">
-                        Este gráfico representa la evolución mensual de las metas del plan de negocios. La brecha (gap) entre las curvas azul y verde ayuda a identificar desviaciones presupuestales en la cartera.
-                    </p>
+            @if (!loadingChart()) {
+                <app-reporte-mensual-donut
+                    [data]="donutData()"
+                    [year]="selectedYear()"
+                    (onYearChange)="onYearChange($event)">
+                </app-reporte-mensual-donut>
+            } @else {
+                <div class="flex flex-col items-center justify-center py-10 space-y-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl min-h-[250px]">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando dona...</span>
                 </div>
-                <div class="border-t border-slate-200 dark:border-zinc-800 pt-4 mt-6 flex items-center justify-between text-xs text-slate-400">
-                    <span>AGROIDEAS - OGTI</span>
-                    <span class="font-bold">v1.2.0</span>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </div>

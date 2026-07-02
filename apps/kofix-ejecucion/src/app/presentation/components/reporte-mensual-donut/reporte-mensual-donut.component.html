@@ -1,0 +1,53 @@
+<div class="donut-card">
+  <div class="donut-header">
+    <h3 class="donut-title">Ejecución Anual</h3>
+    <span class="donut-subtitle">Avance de ejecución vs programación anual</span>
+  </div>
+
+  <div class="donut-body">
+    <div class="donut-svg-container">
+      <svg [attr.viewBox]="'0 0 ' + viewbox + ' ' + viewbox" class="donut-svg">
+        <circle
+          [attr.cx]="center"
+          [attr.cy]="center"
+          [attr.r]="radius"
+          fill="none"
+          class="donut-track" />
+
+        <circle
+          [attr.cx]="center"
+          [attr.cy]="center"
+          [attr.r]="radius"
+          fill="none"
+          class="donut-arc"
+          [ngClass]="colorClass()"
+          [attr.stroke-dasharray]="circumference"
+          [attr.stroke-dashoffset]="dashOffset()"
+          [attr.transform]="'rotate(-90, ' + center + ', ' + center + ')'" />
+
+        <text [attr.x]="center" [attr.y]="center - 6" text-anchor="middle" class="donut-pct">{{ centerLabel() }}</text>
+        <text [attr.x]="center" [attr.y]="center + 18" text-anchor="middle" class="donut-label">{{ hasProgram() ? 'ejecutado' : 'sin referencia' }}</text>
+      </svg>
+    </div>
+
+    <div class="donut-values">
+      <div class="value-row value-row--prog">
+        <span class="value-label">Programado</span>
+        <span class="value-number">{{ formatCurrency(prog()) }}</span>
+      </div>
+      <div class="value-row value-row--ejec">
+        <span class="value-label">Ejecutado</span>
+        <span class="value-number">{{ formatCurrency(ejec()) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="donut-footer">
+    <div class="year-nav">
+      <button class="year-arrow" (click)="prevYear()" [disabled]="year() <= minYear" title="Año anterior">&#8249;</button>
+      <span class="donut-year">{{ year() }}</span>
+      <button class="year-arrow" (click)="nextYear()" [disabled]="year() >= maxYear" title="Año siguiente">&#8250;</button>
+    </div>
+    <span class="donut-status" [ngClass]="colorClass()">{{ statusLabel() }}</span>
+  </div>
+</div>
