@@ -32,6 +32,10 @@ export class ConvenioStateService {
     return (c.programacionAcumulada || 0) / c.montoAprobado * 100;
   });
 
+  readonly isProgramacionCompleta = computed(() => {
+    return Math.round(this.porcentajeProgramacion()) >= 100;
+  });
+
   constructor(private getConvenioByIdUseCase: GetConvenioByIdUseCase) {}
 
   /**

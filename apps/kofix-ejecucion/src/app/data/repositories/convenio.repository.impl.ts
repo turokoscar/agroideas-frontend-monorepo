@@ -5,7 +5,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ConvenioRepository } from '../../domain/repositories/convenio.repository';
 import { Convenio, ConvenioResumenFinanciero } from '../../domain/models/convenio.model';
-import { ConvenioMapper } from '../mappers/convenio.mapper';
+import { ConvenioMapper, ConvenioDto } from '../mappers/convenio.mapper';
 
 @Injectable({
     providedIn: 'root'
@@ -26,7 +26,7 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
             params = params.set('busqueda', busqueda);
         }
 
-        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/asignados`, { params }).pipe(
+        return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/asignados`, { params }).pipe(
             map(res => ({
                 datos: ConvenioMapper.fromApiList(res.datos || []),
                 total: res.total || 0
@@ -43,7 +43,7 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
             params = params.set('busqueda', busqueda);
         }
 
-        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/todos`, { params }).pipe(
+        return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/todos`, { params }).pipe(
             map(res => ({
                 datos: ConvenioMapper.fromApiList(res.datos || []),
                 total: res.total || 0
@@ -60,7 +60,7 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
             params = params.set('busqueda', busqueda);
         }
 
-        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/vigentes`, { params }).pipe(
+        return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/vigentes`, { params }).pipe(
             map(res => ({
                 datos: ConvenioMapper.fromApiList(res.datos || []),
                 total: res.total || 0
@@ -69,8 +69,8 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
     }
 
     override getById(id: number): Observable<Convenio> {
-        return this.http.get<ResponseDto<any>>(`${this.apiUrl}/${id}`).pipe(
-            map(res => ConvenioMapper.fromApi(res.datos || {}))
+        return this.http.get<ResponseDto<ConvenioDto>>(`${this.apiUrl}/${id}`).pipe(
+            map(res => ConvenioMapper.fromApi(res.datos || {} as ConvenioDto))
         );
     }
 
@@ -81,6 +81,24 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
                 ejecucionAcumulada: res.datos?.ejecucionAcumulada || 0,
                 saldoDisponible: res.datos?.saldoDisponible || 0
             }))
+        );
+    }
+
+    override getCronogramasMensuales(id: number): Observable<any> {
+        return this.http.get<ResponseDto<any>>(`${this.apiUrl}/${id}/cronogramas-mensuales`).pipe(
+            map(res => res.datos)
+        );
+    }
+
+    override getResumenEjecutivo(): Observable<any> {
+        return this.http.get<ResponseDto<any>>(`${this.apiUrl}/resumen-ejecutivo`).pipe(
+            map(res => res.datos)
+        );
+    }
+
+    override getReporteMensual(anio: number): Observable<any> {
+        return this.http.get<ResponseDto<any>>(`${this.apiUrl}/reporte-mensual?anio=${anio}`).pipe(
+            map(res => res.datos)
         );
     }
 }

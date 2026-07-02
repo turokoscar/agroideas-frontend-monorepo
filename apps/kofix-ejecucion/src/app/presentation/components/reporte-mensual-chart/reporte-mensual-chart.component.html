@@ -1,0 +1,137 @@
+<div class="chart-container">
+  <div class="chart-header">
+    <div class="chart-title-wrapper">
+      <h3 class="chart-title">Desempeño Financiero Mensual</h3>
+      <span class="chart-subtitle">Comparativa entre presupuesto programado vs ejecución efectivizada</span>
+    </div>
+    
+    <div class="chart-controls">
+      <!-- Legend -->
+      <div class="chart-legend">
+        <div class="legend-item">
+          <span class="legend-dot legend-dot--blue"></span>
+          <span class="legend-text">Programado</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot legend-dot--green"></span>
+          <span class="legend-text">Ejecutado</span>
+        </div>
+      </div>
+
+      <!-- Year Selector -->
+      <div class="year-selector">
+        <label for="yearSelect" class="sr-only">Año Fiscal</label>
+        <select id="yearSelect" [value]="selectedYear()" (change)="onYearSelect($event)" class="year-select-input">
+          @for (year of availableYears(); track year) {
+            <option [value]="year">Año {{ year }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-body relative">
+    <!-- SVG Chart -->
+    <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" class="w-full h-auto overflow-visible select-none">
+      <!-- Gridlines & Y-Axis Labels -->
+      @for (val of gridLines(); track val; let i = $index) {
+        <g class="grid-group">
+          <!-- Grid line -->
+          <line 
+            [attr.x1]="paddingLeft" 
+            [attr.y1]="getY(val)" 
+            [attr.x2]="width - paddingRight" 
+            [attr.y2]="getY(val)" 
+            class="grid-line" />
+          <!-- Y-axis Label -->
+          <text 
+            [attr.x]="paddingLeft - 10" 
+            [attr.y]="getY(val) + 4" 
+            class="axis-label axis-label--y">
+            {{ formatCurrency(val) }}
+          </text>
+        </g>
+      }
+
+      <!-- X-Axis Labels -->
+      @for (monthName of monthsNames; track monthName; let i = $index) {
+        <text 
+          [attr.x]="getX(i)" 
+          [attr.y]="height - paddingBottom + 20" 
+          class="axis-label axis-label--x">
+          {{ monthName }}
+        </text>
+      }
+
+      <!-- Paths -->
+      <!-- Programado Path -->
+      <path 
+        [attr.d]="programadoPath()" 
+        class="chart-path chart-path--programado" />
+      
+      <!-- Ejecutado Path -->
+      <path 
+        [attr.d]="ejecutadoPath()" 
+        class="chart-path chart-path--ejecutado" />
+
+      <!-- Dots & Hover Hotspots -->
+      @for (item of data(); track item.mes; let i = $index) {
+        <!-- Dots for Programado -->
+        <circle 
+          [attr.cx]="getX(i)" 
+          [attr.cy]="getY(item.programado)" 
+          r="4" 
+          class="chart-dot chart-dot--programado" />
+        
+        <!-- Dots for Ejecutado -->
+        <circle 
+          [attr.cx]="getX(i)" 
+          [attr.cy]="getY(item.ejecutado)" 
+          r="4" 
+          class="chart-dot chart-dot--ejecutado" />
+
+        <!-- Vertical Month Hover Line Indicator -->
+        @if (activeTooltip()?.index === i) {
+          <line
+            [attr.x1]="getX(i)"
+            [attr.y1]="paddingTop"
+            [attr.x2]="getX(i)"
+            [attr.y2]="height - paddingBottom"
+            class="hover-vertical-line" />
+        }
+
+        <!-- Interactive Hotspot Columns -->
+        <rect 
+          [attr.x]="getX(i) - ((width - paddingLeft - paddingRight) / 22)" 
+          [attr.y]="paddingTop" 
+          [attr.width]="(width - paddingLeft - paddingRight) / 11" 
+          [attr.height]="height - paddingTop - paddingBottom" 
+          class="hotspot-rect"
+          (mouseenter)="showTooltip(i, $event)"
+          (mouseleave)="hideTooltip()" />
+      }
+    </svg>
+
+    <!-- Floating Interactive HTML Tooltip -->
+    @if (activeTooltip(); as tooltip) {
+      <div 
+        class="chart-tooltip animate-fade-in"
+        [style.left.%]="((tooltip.x + 10) / width) * 100"
+        [style.top.px]="tooltip.y - 40">
+        <div class="tooltip-header">{{ tooltip.mesName }} - Año {{ selectedYear() }}</div>
+        <div class="tooltip-body">
+          <div class="tooltip-row">
+            <span class="tooltip-dot tooltip-dot--blue"></span>
+            <span class="tooltip-label">Programado:</span>
+            <span class="tooltip-value">{{ formatCurrency(tooltip.programado) }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="tooltip-dot tooltip-dot--green"></span>
+            <span class="tooltip-label">Ejecutado:</span>
+            <span class="tooltip-value">{{ formatCurrency(tooltip.ejecutado) }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

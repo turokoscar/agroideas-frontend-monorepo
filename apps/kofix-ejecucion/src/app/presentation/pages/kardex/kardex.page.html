@@ -9,7 +9,7 @@
             <ui-button
                 severity="danger"
                 icon="lock"
-                label="Cerrar Mes Contable"
+                [label]="'Cerrar Periodo ' + (proximoMesACerrar().mes < 10 ? '0' : '') + proximoMesACerrar().mes + '/' + proximoMesACerrar().anio"
                 (onClick)="ejecutarCierreContable()">
             </ui-button>
         }
@@ -76,7 +76,7 @@
       <!-- Columnas custom: tipo con ícono, estado con pill -->
       <ng-template #rowTemplate let-row let-col="col">
         @if (col.field === 'tipo') {
-          <span class="dt-tipo-badge" [attr.data-tipo]="row.tipo">
+          <span class="dt-tipo-badge" [attr.data-tipo]="getTipoNormalized(row.tipo)">
             <span class="material-symbols-outlined dt-tipo-icon">{{ getTipoIcon(row.tipo) }}</span>
             {{ row.tipo }}
           </span>

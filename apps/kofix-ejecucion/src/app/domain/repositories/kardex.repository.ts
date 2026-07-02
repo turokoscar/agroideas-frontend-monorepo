@@ -12,4 +12,5 @@ export abstract class KardexRepository {
     abstract getConsolidado(postulanteId: number): Observable<KardexConsolidado[]>;
     abstract getResumenPorMes(postulanteId: number): Observable<KardexMensual[]>;
     abstract getDetallePorItem(postulanteId: number, itemMlId: number): Observable<KardexDetalleItem>;
+    abstract getCierres(): Observable<any[]>;
 }

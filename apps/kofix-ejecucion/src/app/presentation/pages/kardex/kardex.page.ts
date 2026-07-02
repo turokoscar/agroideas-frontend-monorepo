@@ -48,6 +48,24 @@ export class KardexPageComponent implements OnInit {
     movimientos = signal<KardexMovimiento[]>([]);
     summary = signal<KardexSummary>({ totalMovimientos: 0, totalGastos: 0, totalIngresos: 0 });
 
+    ultimoCierre = signal<{ mes: number, anio: number } | null>(null);
+
+    protected readonly proximoMesACerrar = computed(() => {
+        const ultimo = this.ultimoCierre();
+        if (!ultimo) {
+            const currentMes = new Date().getMonth() + 1;
+            const currentAnio = new Date().getFullYear();
+            return { mes: currentMes, anio: currentAnio };
+        }
+        let mes = ultimo.mes + 1;
+        let anio = ultimo.anio;
+        if (mes > 12) {
+            mes = 1;
+            anio++;
+        }
+        return { mes, anio };
+    });
+
     tipoOptions: TipoOption[] = [
         { label: 'Todos', value: 'all' },
         { label: 'Desembolso', value: 'DESEMBOLSO' },
@@ -66,17 +84,34 @@ export class KardexPageComponent implements OnInit {
     selectedEstado = 'all';
 
     columns: TableColumn[] = [
-        { field: 'fecha', header: 'Fecha', type: 'date', width: '110px' },
+        { field: 'fecha', header: 'Fecha', width: '110px' },
         { field: 'convenioId', header: 'N° Convenio', width: '120px' },
         { field: 'organizacion', header: 'Organización', width: '180px' },
-        { field: 'tipo', header: 'Tipo', width: '130px' },
+        { field: 'tipo', header: 'Tipo', type: 'custom', width: '130px' },
         { field: 'documento', header: 'Documento', width: '150px' },
-        { field: 'monto', header: 'Monto', type: 'currency', align: 'right', width: '130px' },
+        { field: 'monto', header: 'Monto', type: 'custom', align: 'right', width: '130px' },
         { field: 'estado', header: 'Estado', type: 'custom', align: 'center', width: '120px' }
     ];
 
     ngOnInit(): void {
+        this.loadCierres();
         this.loadData();
+    }
+
+    loadCierres(): void {
+        this.kardexRepo.getCierres().subscribe({
+            next: (data) => {
+                if (data && data.length > 0) {
+                    const latest = data[0];
+                    this.ultimoCierre.set({
+                        mes: latest.numMes ?? latest.num_mes ?? latest.mes,
+                        anio: latest.numAnio ?? latest.num_anio ?? latest.anio
+                    });
+                } else {
+                    this.ultimoCierre.set(null);
+                }
+            }
+        });
     }
 
     loadData(event?: any): void {
@@ -124,15 +159,26 @@ export class KardexPageComponent implements OnInit {
     }
 
     getTipoIcon(tipo: string): string {
-        if (tipo === 'Desembolso') return 'arrow_upward';
-        if (tipo === 'Rendición' || tipo === 'Devolución') return 'arrow_downward';
+        const t = (tipo || '').toUpperCase();
+        if (t.includes('DESEMBOLSO')) return 'arrow_upward';
+        if (t.includes('RENDIC') || t.includes('DEVOLUC') || t.includes('GASTO') || t.includes('EXTORNO')) return 'arrow_downward';
         return 'remove';
     }
 
     getTipoClass(tipo: string): string {
-        if (tipo === 'Desembolso') return 'text-danger';
-        if (tipo === 'Rendición' || tipo === 'Devolución') return 'text-success';
+        const t = (tipo || '').toUpperCase();
+        if (t.includes('DESEMBOLSO')) return 'text-success';
+        if (t.includes('RENDIC') || t.includes('DEVOLUC') || t.includes('GASTO') || t.includes('EXTORNO')) return 'text-danger';
         return 'text-muted-foreground';
+    }
+
+    getTipoNormalized(tipo: string): string {
+        const t = (tipo || '').toUpperCase();
+        if (t.includes('DESEMBOLSO')) return 'Desembolso';
+        if (t.includes('RENDIC')) return 'Rendición';
+        if (t.includes('DEVOLUC')) return 'Devolución';
+        if (t.includes('EXTORNO')) return 'Extorno';
+        return 'Gasto';
     }
 
     getEstadoStatus(estado: string): StatusType {
@@ -146,19 +192,21 @@ export class KardexPageComponent implements OnInit {
     }
 
     ejecutarCierreContable(): void {
-        const mesActual = new Date().getMonth() + 1;
-        const anioActual = new Date().getFullYear();
+        const target = this.proximoMesACerrar();
+        const mes = target.mes;
+        const anio = target.anio;
 
         this.alertService.confirm(
             '¿Ejecutar Cierre Contable Mensual?',
-            `Esta acción cerrará permanentemente el mes contable de ${mesActual}/${anioActual}. No se permitirán modificaciones operativas posteriores.`
+            `Esta acción cerrará permanentemente el mes contable de ${mes}/${anio}. No se permitirán modificaciones operativas posteriores.`
         ).then((result: any) => {
             if (result.isConfirmed) {
                 this.loading.set(true);
-                this.desembolsoRepo.ejecutarCierreContable(mesActual, anioActual).subscribe({
+                this.desembolsoRepo.ejecutarCierreContable(mes, anio).subscribe({
                     next: () => {
                         this.loading.set(false);
-                        this.alertService.show('Éxito', `Cierre contable ejecutado correctamente para el mes ${mesActual}/${anioActual}.`, 'success');
+                        this.alertService.show('Éxito', `Cierre contable ejecutado correctamente para el mes ${mes}/${anio}.`, 'success');
+                        this.loadCierres();
                         this.loadData();
                     },
                     error: (err) => {

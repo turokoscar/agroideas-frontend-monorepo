@@ -31,11 +31,14 @@ export class KardexRepositoryImpl extends KardexRepository {
         if (estado && estado !== 'all') params = params.set('est_estado', estado);
 
         return this.http.get<ResponseDto<any>>(`${this.apiUrl}/movimientos`, { params }).pipe(
-            map(res => ({
-                items: (res.datos?.items || []).map((dto: any) => this.mapMovimiento(dto)),
-                total: res.datos?.total || 0,
-                summary: res.datos?.summary || this.calcSummary(res.datos?.items || [])
-            }))
+            map(res => {
+                const itemsList = Array.isArray(res.datos) ? res.datos : (res.datos?.items || []);
+                return {
+                    items: itemsList.map((dto: any) => this.mapMovimiento(dto)),
+                    total: res.total ?? res.datos?.total ?? 0,
+                    summary: res.datos?.summary || this.calcSummary(itemsList)
+                };
+            })
         );
     }
 
@@ -81,6 +84,12 @@ export class KardexRepositoryImpl extends KardexRepository {
     override getDetallePorItem(postulanteId: number, itemMlId: number): Observable<KardexDetalleItem> {
         return this.http.get<ResponseDto<KardexDetalleItem>>(`${this.apiUrl}/detalle/${postulanteId}/${itemMlId}`).pipe(
             map(res => res.datos!)
+        );
+    }
+
+    override getCierres(): Observable<any[]> {
+        return this.http.get<ResponseDto<any[]>>(`${environment.apiEjecucion}/cierre`).pipe(
+            map(res => res.datos || [])
         );
     }
 }

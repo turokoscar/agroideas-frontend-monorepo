@@ -1,0 +1,77 @@
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <!-- Card 1: Convenios Activos -->
+  <div class="tile-card tile-card--green">
+    <div class="tile-card__header">
+      <div class="tile-card__text">
+        <span class="tile-card__label">Convenios Activos</span>
+        <span class="tile-card__value">
+          {{ data().conveniosActivos }} de {{ data().totalConvenios }} convenios
+        </span>
+      </div>
+      <div class="tile-card__icon-wrapper">
+        <span class="material-symbols-outlined tile-card__icon">handshake</span>
+      </div>
+    </div>
+    <div class="tile-card__footer">
+      <span class="tile-card__status">Vigentes en el año fiscal</span>
+    </div>
+  </div>
+
+  <!-- Card 2: Programación Acumulada -->
+  <div class="tile-card tile-card--blue">
+    <div class="tile-card__header">
+      <div class="tile-card__text">
+        <span class="tile-card__label">Programación Acumulada</span>
+        <span class="tile-card__value text-lg md:text-xl font-bold truncate block">
+          {{ formatCurrency(data().programacionAcumulada) }}
+        </span>
+      </div>
+      <div class="tile-card__icon-wrapper">
+        <span class="material-symbols-outlined tile-card__icon">calendar_month</span>
+      </div>
+    </div>
+    <div class="tile-card__footer">
+      <span class="tile-card__status">Multianual (hasta 36 meses)</span>
+    </div>
+  </div>
+
+  <!-- Card 3: Ejecución Acumulada -->
+  <div class="tile-card tile-card--emerald">
+    <div class="tile-card__header">
+      <div class="tile-card__text">
+        <span class="tile-card__label">Ejecución Acumulada</span>
+        <span class="tile-card__value text-lg md:text-xl font-bold truncate block">
+          {{ formatCurrency(data().ejecucionAcumulada) }}
+        </span>
+      </div>
+      <div class="tile-card__icon-wrapper">
+        <span class="material-symbols-outlined tile-card__icon">payments</span>
+      </div>
+    </div>
+    <div class="tile-card__footer">
+      <span class="tile-card__status text-emerald-600 dark:text-emerald-400 font-bold">
+        {{ getPercent(data().ejecucionAcumulada, data().programacionAcumulada) }} del programado
+      </span>
+    </div>
+  </div>
+
+  <!-- Card 4: Saldo Disponible -->
+  <div class="tile-card tile-card--amber">
+    <div class="tile-card__header">
+      <div class="tile-card__text">
+        <span class="tile-card__label">Saldo Disponible</span>
+        <span class="tile-card__value text-lg md:text-xl font-bold truncate block">
+          {{ formatCurrency(data().saldoDisponible) }}
+        </span>
+      </div>
+      <div class="tile-card__icon-wrapper">
+        <span class="material-symbols-outlined tile-card__icon">account_balance_wallet</span>
+      </div>
+    </div>
+    <div class="tile-card__footer">
+      <span class="tile-card__status text-amber-600 dark:text-amber-400 font-bold">
+        {{ getPercent(data().saldoDisponible, data().programacionAcumulada) }} por ejecutar
+      </span>
+    </div>
+  </div>
+</div>

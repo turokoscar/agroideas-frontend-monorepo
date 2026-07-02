@@ -1,30 +1,55 @@
-<div class="p-4 md:p-8">
-    <header class="mb-8">
-        <h1 class="text-2xl font-medium text-slate-800">Resumen Ejecutivo</h1>
-        <p class="text-slate-500 text-sm">Estado actual de la ejecución financiera y convenios.</p>
+<div class="p-6 md:p-8 space-y-8 animate-fade-in font-display w-full max-w-full overflow-hidden block">
+    <header class="border-b border-slate-200 dark:border-zinc-800 pb-5">
+        <h1 class="text-2xl font-black uppercase text-slate-800 dark:text-white tracking-tight leading-tight">Resumen Ejecutivo</h1>
+        <p class="text-slate-500 text-sm mt-1">Estado de ejecución presupuestal y convenios vigentes en el sistema.</p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ui-card title="Convenios Activos" subtitle="Total año fiscal" icon="description">
-            <div class="text-3xl font-medium text-primary">124</div>
-            <p class="text-slate-400 text-xs mt-2 font-display">+5% respecto al mes anterior</p>
-        </ui-card>
+    <!-- Loading Resumen -->
+    <div *ngIf="loadingResumen()" class="flex flex-col items-center justify-center py-10 space-y-4">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando métricas...</span>
+    </div>
 
-        <ui-card title="Monto Ejecutado" subtitle="En millones (S/.)" icon="payments">
-            <div class="text-3xl font-medium text-slate-800">45.2</div>
-            <p class="text-slate-400 text-xs mt-2 font-display">65% de la meta anual</p>
-        </ui-card>
+    <!-- Executive Summary Dashboard (Tiles) -->
+    <div *ngIf="!loadingResumen() && resumenData()">
+        <app-resumen-ejecutivo [data]="resumenData()"></app-resumen-ejecutivo>
+    </div>
 
-        <ui-card title="No Objeciones" subtitle="Pendientes de revisión" icon="info">
-            <div class="text-3xl font-medium text-marron-tierra">12</div>
-            <p class="text-slate-400 text-xs mt-2 font-display">Requieren atención inmediata</p>
-        </ui-card>
-
-        <ui-card title="Acciones" subtitle="Accesos rápidos" icon="bolt">
-            <div class="flex flex-col gap-2">
-                <ui-button severity="outline" icon="add" label="Nuevo Convenio"></ui-button>
-                <ui-button severity="ghost" icon="download" label="Reporte Mensual"></ui-button>
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+        <!-- 8 Columns Chart -->
+        <div class="lg:col-span-8 w-full max-w-full overflow-hidden block">
+            <!-- Loading Chart -->
+            <div *ngIf="loadingChart()" class="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando datos del gráfico...</span>
             </div>
-        </ui-card>
+
+            <!-- SVG Line Chart Component -->
+            <div *ngIf="!loadingChart()">
+                <app-reporte-mensual-chart 
+                    [data]="chartData()" 
+                    [selectedYear]="selectedYear()"
+                    (onYearChange)="onYearChange($event)">
+                </app-reporte-mensual-chart>
+            </div>
+        </div>
+
+        <!-- 4 Columns Empty Space / Acceso Directo Info -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+            <div class="bg-slate-50/50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col justify-between h-full min-h-[250px]">
+                <div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Atención y Soporte</h4>
+                    <h3 class="text-md font-bold text-slate-800 dark:text-white mt-2">Monitoreo de Ejecución Contable</h3>
+                    <p class="text-slate-500 text-xs mt-3 leading-relaxed">
+                        Este gráfico representa la evolución mensual de las metas del plan de negocios. La brecha (gap) entre las curvas azul y verde ayuda a identificar desviaciones presupuestales en la cartera.
+                    </p>
+                </div>
+                <div class="border-t border-slate-200 dark:border-zinc-800 pt-4 mt-6 flex items-center justify-between text-xs text-slate-400">
+                    <span>AGROIDEAS - OGTI</span>
+                    <span class="font-bold">v1.2.0</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

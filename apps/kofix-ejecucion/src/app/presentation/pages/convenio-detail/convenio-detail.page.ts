@@ -1,5 +1,5 @@
 import { UIButtonComponent, UiKpiComponent, UiMapComponent } from '@agroideas/ui';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GetConvenioByIdUseCase } from '../../../domain/usecases/get-convenio-by-id.usecase';
@@ -7,6 +7,7 @@ import { Convenio } from '../../../domain/models/convenio.model';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 import { KardexRepository } from '../../../domain/repositories/kardex.repository';
 import { KardexConsolidado } from '../../../domain/models/kardex.model';
+import { AlertService } from '@agroideas/feedback';
 
 import { ProgramacionItemsComponent } from '../../components/programacion-items/programacion-items.component';
 import { NoObjecionPageComponent } from '../../pages/no-objecion/no-objecion.page';
@@ -32,15 +33,56 @@ export class ConvenioDetailPageComponent implements OnInit {
     activeTabIndex = 0;
     
     private kardexRepo = inject(KardexRepository);
+    private alertService = inject(AlertService);
     kardexConsolidado = signal<KardexConsolidado[]>([]);
     loadingKardex = signal<boolean>(false);
     showHelpGuide = signal<boolean>(false);
+
+    downloadConvenioFisico(): void {
+        const c = this.stateService.convenio();
+        const num = c ? this.formatConvenioNumber(c) : '';
+        this.alertService.show(
+            'Descarga de Convenio',
+            `La descarga del convenio físico original para el convenio ${num} estará disponible próximamente en línea.`,
+            'info'
+        );
+    }
+
+    downloadKardexResumen(): void {
+        const c = this.stateService.convenio();
+        const num = c ? this.formatConvenioNumber(c) : '';
+        this.alertService.show(
+            'Exportar Kardex',
+            `La exportación del resumen contable de Kardex para el convenio ${num} estará disponible próximamente.`,
+            'info'
+        );
+    }
+
+    downloadReporteProgramacion(): void {
+        const c = this.stateService.convenio();
+        const num = c ? this.formatConvenioNumber(c) : '';
+        this.alertService.show(
+            'Exportar Programación',
+            `La exportación del reporte de programación de 36 meses para el convenio ${num} estará disponible próximamente.`,
+            'info'
+        );
+    }
 
     constructor(
         private route: ActivatedRoute,
         private router: Router,
         public stateService: ConvenioStateService
-    ) { }
+    ) { 
+        effect(() => {
+            const convenio = this.stateService.convenio();
+            if (convenio) {
+                const tab = this.route.snapshot.queryParamMap.get('tab');
+                if (tab) {
+                    this.setTabIndexByTab(tab);
+                }
+            }
+        });
+    }
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id');
@@ -75,6 +117,9 @@ export class ConvenioDetailPageComponent implements OnInit {
     }
 
     setActiveTab(index: number): void {
+        if (index > 1 && !this.stateService.isProgramacionCompleta()) {
+            return;
+        }
         this.activeTabIndex = index;
         if (index === 5) {
             const convenio = this.stateService.convenio();
@@ -85,18 +130,23 @@ export class ConvenioDetailPageComponent implements OnInit {
     }
 
     setTabIndexByTab(tab: string): void {
+        const isProgComplete = this.stateService.isProgramacionCompleta();
         switch (tab) {
             case 'ficha': this.activeTabIndex = 0; break;
             case 'programacion': this.activeTabIndex = 1; break;
-            case 'no-objeciones': this.activeTabIndex = 2; break;
-            case 'desembolsos': this.activeTabIndex = 3; break;
-            case 'rendiciones': this.activeTabIndex = 4; break;
-            case 'auditoria': this.activeTabIndex = 5; break;
+            case 'no-objeciones': this.activeTabIndex = isProgComplete ? 2 : 1; break;
+            case 'desembolsos': this.activeTabIndex = isProgComplete ? 3 : 1; break;
+            case 'rendiciones': this.activeTabIndex = isProgComplete ? 4 : 1; break;
+            case 'auditoria': this.activeTabIndex = isProgComplete ? 5 : 1; break;
             case 'kardex': {
-                this.activeTabIndex = 5;
-                const id = this.route.snapshot.paramMap.get('id');
-                if (id) {
-                    this.loadKardexConsolidado(Number(id));
+                if (isProgComplete) {
+                    this.activeTabIndex = 5;
+                    const id = this.route.snapshot.paramMap.get('id');
+                    if (id) {
+                        this.loadKardexConsolidado(Number(id));
+                    }
+                } else {
+                    this.activeTabIndex = 1;
                 }
                 break;
             }
@@ -114,6 +164,9 @@ export class ConvenioDetailPageComponent implements OnInit {
 
     formatConvenioNumber(convenio?: Convenio): string {
         if (!convenio || !convenio.numeroConvenio) return '-';
+        if (convenio.numeroConvenio.includes('-ST')) {
+            return convenio.numeroConvenio;
+        }
         const padded = convenio.numeroConvenio.toString().padStart(4, '0');
         const year = convenio.fechaInicio ? new Date(convenio.fechaInicio).getFullYear() : 'XXXX';
         return `${padded}-${year}-ST`;

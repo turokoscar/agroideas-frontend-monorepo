@@ -88,9 +88,11 @@
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
       ariaLabel="Ver ficha" (onClick)="$event.stopPropagation(); goToDetail(row.id)" />
-    <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="calendar_month"
-      ariaLabel="Ver programación" (onClick)="$event.stopPropagation(); goToProgramacion(row.id)" />
-    <ui-button iconOnly appearance="soft" severity="info" size="sm" icon="swap_horiz"
-      ariaLabel="Ver kardex" (onClick)="$event.stopPropagation(); goToKardex(row.id)" />
+    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="download"
+      ariaLabel="Descargar convenio físico" (onClick)="$event.stopPropagation(); downloadConvenioFisico(row.id, formatConvenioNumber(row))" />
+    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="receipt_long"
+      ariaLabel="Descargar Kardex resumen" (onClick)="$event.stopPropagation(); downloadKardexResumen(row.id, formatConvenioNumber(row))" />
+    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="table_view"
+      ariaLabel="Descargar reporte de programación" (onClick)="$event.stopPropagation(); downloadReporteProgramacion(row.id, formatConvenioNumber(row))" />
   </div>
 </ng-template>

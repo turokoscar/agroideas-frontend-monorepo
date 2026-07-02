@@ -1,0 +1,135 @@
+.tile-card
+  background-color: #ffffff
+  border: 1px solid #e2e8f0
+  border-radius: 1rem
+  padding: 1.5rem
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)
+  display: flex
+  flex-direction: column
+  justify-content: space-between
+  gap: 1rem
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+
+  &:hover
+    transform: translateY(-4px)
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)
+
+  &__header
+    display: flex
+    justify-content: space-between
+    align-items: flex-start
+    gap: 1rem
+
+  &__text
+    display: flex
+    flex-direction: column
+    gap: 0.25rem
+    min-w: 0
+    flex: 1
+
+  &__label
+    font-size: 0.75rem
+    font-weight: 700
+    text-transform: uppercase
+    letter-spacing: 0.05em
+    color: #64748b
+
+  &__value
+    font-size: 1.125rem
+    font-weight: 800
+    color: #0f172a
+    word-break: break-all
+
+  &__icon-wrapper
+    padding: 0.625rem
+    border-radius: 0.75rem
+    display: flex
+    align-items: center
+    justify-content: center
+    flex-shrink: 0
+
+  &__icon
+    font-size: 1.5rem
+    font-weight: bold
+
+  &__footer
+    border-top: 1px solid #f1f5f9
+    padding-top: 0.75rem
+    margin-top: auto
+
+  &__status
+    font-size: 0.75rem
+    font-weight: 600
+    color: #94a3b8
+
+  /* Variantes de color institucionales */
+  &--green
+    border-color: rgba(0, 143, 73, 0.25)
+    background-color: rgba(0, 143, 73, 0.03)
+    .tile-card__icon-wrapper
+      background-color: rgba(0, 143, 73, 0.1)
+      color: #008F49
+    .tile-card__value
+      color: #008F49
+
+  &--blue
+    border-color: rgba(0, 117, 153, 0.25)
+    background-color: rgba(0, 117, 153, 0.03)
+    .tile-card__icon-wrapper
+      background-color: rgba(0, 117, 153, 0.1)
+      color: #007599
+    .tile-card__value
+      color: #007599
+
+  &--emerald
+    border-color: rgba(16, 185, 129, 0.25)
+    background-color: rgba(16, 185, 129, 0.03)
+    .tile-card__icon-wrapper
+      background-color: rgba(16, 185, 129, 0.1)
+      color: #10b981
+    .tile-card__value
+      color: #10b981
+
+  &--amber
+    border-color: rgba(245, 158, 11, 0.25)
+    background-color: rgba(245, 158, 11, 0.03)
+    .tile-card__icon-wrapper
+      background-color: rgba(245, 158, 11, 0.1)
+      color: #d97706
+    .tile-card__value
+      color: #d97706
+
+.dark
+  .tile-card
+    background-color: #18181b
+    border-color: #27272a
+    
+    &__value
+      color: #f4f4f5
+
+    &__footer
+      border-top-color: #27272a
+
+    &--green
+      border-color: rgba(0, 143, 73, 0.4)
+      background-color: rgba(0, 143, 73, 0.06)
+      .tile-card__value
+        color: #34d399
+
+    &--blue
+      border-color: rgba(0, 117, 153, 0.4)
+      background-color: rgba(0, 117, 153, 0.06)
+      .tile-card__value
+        color: #38bdf8
+
+    &--emerald
+      border-color: rgba(16, 185, 129, 0.4)
+      background-color: rgba(16, 185, 129, 0.06)
+      .tile-card__value
+        color: #34d399
+
+    &--amber
+      border-color: rgba(245, 158, 11, 0.4)
+      background-color: rgba(245, 158, 11, 0.06)
+      .tile-card__value
+        color: #fbbf24

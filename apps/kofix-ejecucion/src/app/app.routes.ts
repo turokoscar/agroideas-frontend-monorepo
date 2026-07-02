@@ -82,6 +82,12 @@ export const routes: Routes = [
                 canActivate: [permissionGuard],
                 data: { permission: PERMISSIONS.ACCESO_APP },
                 loadComponent: () => import('./presentation/pages/reportes/reportes.page').then(m => m.ReportesPageComponent)
+            },
+            {
+                path: 'gestion-menus',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.GESTION_CARTERA },
+                loadComponent: () => import('./presentation/pages/gestion-menus/gestion-menus.page').then(m => m.GestionMenusPageComponent)
             }
         ]
     },

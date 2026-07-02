@@ -31,6 +31,6 @@ export class UiStatusPillComponent {
     };
 
     get label(): string {
-        return this.labelMap[this.status] ?? this.text;
+        return this.text || this.labelMap[this.status] || '';
     }
 }

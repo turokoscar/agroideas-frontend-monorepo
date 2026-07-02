@@ -6,4 +6,4 @@ export * from './lib/cn';
 export * from './lib/response.dto';
 export * from './lib/date-formatter';
 export * from './lib/pipes/format-date.pipe';
-
+export * from './lib/roles';

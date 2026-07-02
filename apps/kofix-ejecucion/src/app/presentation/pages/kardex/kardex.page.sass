@@ -14,14 +14,14 @@
   font-weight: 600
 
   &[data-tipo='Desembolso']
-    color: #dc2626
+    color: hsl(var(--danger))
 
   &[data-tipo='Rendición'],
   &[data-tipo='Devolución']
-    color: #16a34a
+    color: hsl(var(--success))
 
   &[data-tipo='Extorno']
-    color: #0284c7
+    color: hsl(var(--info))
 
 .dt-tipo-icon
   font-size: 0.875rem
@@ -33,7 +33,7 @@
   font-size: 0.8125rem
 
   &[data-sign='pos']
-    color: #16a34a
+    color: hsl(var(--success))
 
   &[data-sign='neg']
-    color: #dc2626
+    color: hsl(var(--danger))

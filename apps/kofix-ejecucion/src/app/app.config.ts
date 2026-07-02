@@ -76,9 +76,10 @@ export const appConfig: ApplicationConfig = {
     },
     {
       provide: AUTH_LOGOUT_HANDLER,
-      useFactory: () => ({
-        logout: () => localStorage.removeItem(STORAGE_KEYS.TOKEN)
-      })
+      useFactory: (authRepo: AuthRepository) => ({
+        logout: () => authRepo.logout()
+      }),
+      deps: [AuthRepository]
     },
     {
       provide: AUTH_TOKEN_KEY,

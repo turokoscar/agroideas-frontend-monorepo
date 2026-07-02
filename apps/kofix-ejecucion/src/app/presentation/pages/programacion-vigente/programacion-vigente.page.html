@@ -56,7 +56,8 @@
         <div class="prog-bar-wrap">
           <div class="prog-bar">
             <div class="prog-bar__fill"
-              [attr.data-level]="getProgressLevel(row)">
+              [attr.data-level]="getProgressLevel(row)"
+              [style.width.%]="getPorcentajeProgramado(row)">
             </div>
           </div>
           <span class="prog-bar__label">{{ getPorcentajeProgramado(row) | number:'1.0-0' }}%</span>

@@ -1,5 +1,5 @@
 @if (stateService.convenio(); as convenio) {
-  <div class="px-6 py-8 animate-fade-in font-display">
+  <div class="px-6 py-8 animate-fade-in font-display w-full max-w-full overflow-hidden block">
     <!-- Navigation & Title -->
     <div class="flex flex-col md:flex-row items-start justify-between mb-8 gap-6">
       <div class="flex gap-4 w-full md:w-auto">
@@ -81,29 +81,37 @@
               <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
             }
           </button>
-          <button (click)="setActiveTab(2)" class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="activeTabIndex === 2 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
+          <button (click)="setActiveTab(2)" 
+            [disabled]="!stateService.isProgramacionCompleta()"
+            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
+            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex === 2 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
             No Objeciones
             @if (activeTabIndex === 2) {
               <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
             }
           </button>
-          <button (click)="setActiveTab(3)" class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="activeTabIndex === 3 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
+          <button (click)="setActiveTab(3)" 
+            [disabled]="!stateService.isProgramacionCompleta()"
+            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
+            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex === 3 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
             Desembolsos
             @if (activeTabIndex === 3) {
               <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
             }
           </button>
-          <button (click)="setActiveTab(4)" class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="activeTabIndex === 4 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
+          <button (click)="setActiveTab(4)" 
+            [disabled]="!stateService.isProgramacionCompleta()"
+            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
+            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex === 4 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
             Rendiciones
             @if (activeTabIndex === 4) {
               <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
             }
           </button>
-          <button (click)="setActiveTab(5)" class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="activeTabIndex === 5 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
+          <button (click)="setActiveTab(5)" 
+            [disabled]="!stateService.isProgramacionCompleta()"
+            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
+            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex === 5 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
             Kardex & Varianza
             @if (activeTabIndex === 5) {
               <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
@@ -153,6 +161,17 @@
                 <div>
                   <p class="text-[10px] font-bold text-slate-400 uppercase">Email</p>
                   <p class="font-bold text-primary">{{ convenio.email || '-' }}</p>
+                </div>
+                
+                <div class="pt-6">
+                  <h4 class="text-xs font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 pb-2 mb-3">
+                    Formatos y Descargas
+                  </h4>
+                  <div class="flex flex-col gap-2.5">
+                    <ui-button severity="secondary" size="sm" icon="download" label="Descargar Convenio Físico" (onClick)="downloadConvenioFisico()"></ui-button>
+                    <ui-button severity="secondary" size="sm" icon="receipt_long" label="Descargar Kardex Resumen" (onClick)="downloadKardexResumen()"></ui-button>
+                    <ui-button severity="secondary" size="sm" icon="table_view" label="Descargar Reporte 36 Meses" (onClick)="downloadReporteProgramacion()"></ui-button>
+                  </div>
                 </div>
               </div>
             </div>

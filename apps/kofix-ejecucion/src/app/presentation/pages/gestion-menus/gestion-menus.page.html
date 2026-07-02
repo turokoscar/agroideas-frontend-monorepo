@@ -1,0 +1,157 @@
+<div class="p-6 space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Administración de Menús</h1>
+      <p class="text-sm text-slate-500 mt-1">Configura el árbol de navegación del sistema y restringe el acceso según el rol del usuario.</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <app-ui-filter-bar (onSearch)="applyFilter()" [showAdd]="false">
+    <div class="filter-group filter-group--search">
+      <label class="filter-label">Buscar menú</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input type="text"
+          class="filter-input filter-input--search"
+          placeholder="Buscar por nombre o ruta..."
+          [(ngModel)]="search"
+          (keyup.enter)="applyFilter()" />
+      </div>
+    </div>
+    <div class="filter-actions-right ml-auto flex items-center">
+      <ui-button label="Nuevo Menú" icon="add" severity="primary" (onClick)="openCreateModal()"></ui-button>
+    </div>
+  </app-ui-filter-bar>
+
+  <!-- Tabla de Datos -->
+  <app-ui-data-table
+    [data]="filteredMenus()"
+    [columns]="columns"
+    [loading]="loading()"
+    [paginator]="true"
+    [rows]="10"
+    [hasActions]="true"
+    [actionsTemplate]="menuActions"
+    [rowTemplate]="rowTemplate"
+    emptyIcon="menu"
+    emptyMessage="No se encontraron menús"
+    emptySubMessage="Puedes agregar un nuevo menú desde el botón superior">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'icono') {
+        <span class="material-symbols-outlined text-slate-500 text-lg">{{ row.icono || 'circle' }}</span>
+      }
+      @if (col.field === 'esHijo') {
+        <app-ui-status-pill [status]="row.menuPadreId ? 'Pendiente' : 'Activo'" [text]="row.menuPadreId ? 'Submenú' : 'Raíz'"></app-ui-status-pill>
+      }
+    </ng-template>
+  </app-ui-data-table>
+</div>
+
+<!-- Template de Acciones -->
+<ng-template #menuActions let-row>
+  <div class="flex items-center gap-2">
+    <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="edit"
+      ariaLabel="Editar menú" (onClick)="openEditModal(row)" />
+    <ui-button iconOnly appearance="soft" severity="warning" size="sm" icon="shield"
+      ariaLabel="Gestionar Roles" (onClick)="openRolesModal(row)" />
+    <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
+      ariaLabel="Eliminar menú" (onClick)="deleteMenu(row)" />
+  </div>
+</ng-template>
+
+@if (isModalOpen()) {
+  <app-ui-modal [visible]="isModalOpen()" (onHide)="closeModal()">
+    <div class="modal-header-custom p-4 border-b">
+      <h3 class="text-lg font-semibold text-slate-800">
+        {{ selectedMenu() ? 'Editar Menú' : 'Nuevo Menú' }}
+      </h3>
+    </div>
+    
+    <form [formGroup]="menuForm" (ngSubmit)="saveMenu()" class="p-6 space-y-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">Nombre del Menú <span class="text-red-500">*</span></label>
+        <input type="text" formControlName="nombre" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        @if (menuForm.get('nombre')?.touched && menuForm.get('nombre')?.invalid) {
+          <span class="text-xs text-red-500">
+            El nombre es obligatorio (máx. 150 caracteres).
+          </span>
+        }
+      </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-slate-700">Descripción</label>
+      <input type="text" formControlName="descripcion" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">Icono (Google Material Icon)</label>
+        <input type="text" formControlName="icono" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">Orden de Visualización <span class="text-red-500">*</span></label>
+        <input type="number" formControlName="orden" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">Ruta de Navegación</label>
+        <input type="text" formControlName="ruta" class="w-full px-3 py-2 border rounded-md focus:outline-none" placeholder="/main/..." />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-slate-700">ID del Menú Padre (Opcional)</label>
+        <input type="number" formControlName="menuPadreId" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-4 border-t">
+      <ui-button label="Cancelar" appearance="soft" severity="secondary" (onClick)="closeModal()"></ui-button>
+      <ui-button label="Guardar" type="submit" severity="success"></ui-button>
+    </div>
+  </form>
+</app-ui-modal>
+}
+
+<!-- Modal de Roles -->
+@if (isRolesModalOpen()) {
+  <app-ui-modal [visible]="isRolesModalOpen()" (onHide)="closeRolesModal()">
+    <div class="p-4 border-b">
+      <h3 class="text-lg font-semibold text-slate-800">
+        Roles Autorizados: {{ selectedMenu()?.nombre }}
+      </h3>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <!-- Asignar nuevo Rol -->
+      <div class="flex gap-2">
+        <select [(ngModel)]="newRole" class="flex-1 px-3 py-2 border rounded-md focus:outline-none">
+          <option value="">Seleccione un Rol...</option>
+          @for (rol of availableRoles; track rol) {
+            <option [value]="rol">{{ rol }}</option>
+          }
+        </select>
+        <ui-button label="Asignar" severity="primary" (onClick)="addRole()"></ui-button>
+      </div>
+
+      <!-- Lista de Roles Asignados -->
+      <div class="space-y-2 max-h-60 overflow-y-auto">
+        @if (menuRoles().length === 0) {
+          <div class="text-center text-sm text-slate-400 py-4">
+            No hay roles asignados a este menú. Todos tienen acceso restringido.
+          </div>
+        }
+        @for (rol of menuRoles(); track rol) {
+          <div class="flex items-center justify-between p-2 bg-slate-50 border rounded-md">
+            <span class="text-sm font-medium text-slate-700">{{ rol }}</span>
+            <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="close" (onClick)="removeRole(rol)"></ui-button>
+          </div>
+        }
+      </div>
+    </div>
+  </app-ui-modal>
+}
