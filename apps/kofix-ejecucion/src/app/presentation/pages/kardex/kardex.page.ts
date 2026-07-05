@@ -85,7 +85,7 @@ export class KardexPageComponent implements OnInit {
 
     columns: TableColumn[] = [
         { field: 'fecha', header: 'Fecha', width: '110px' },
-        { field: 'convenioId', header: 'N° Convenio', width: '120px' },
+        { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
         { field: 'organizacion', header: 'Organización', width: '180px' },
         { field: 'tipo', header: 'Tipo', type: 'custom', width: '130px' },
         { field: 'documento', header: 'Documento', width: '150px' },

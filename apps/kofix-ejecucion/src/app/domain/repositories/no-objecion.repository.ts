@@ -13,4 +13,6 @@ export abstract class NoObjecionRepository {
     abstract getItemsParaDesembolso(postulanteId: number): Observable<any[]>;
     abstract uploadFile(file: File): Observable<{ fileUrl: string }>;
     abstract downloadFile(fileUrl: string): Observable<Blob>;
+    abstract getBandejaAprobacion(estado: string, offset?: number, limit?: number): Observable<{ items: any[], total: number }>;
+    abstract evaluar(id: number, estado: string, observacion: string): Observable<any>;
 }

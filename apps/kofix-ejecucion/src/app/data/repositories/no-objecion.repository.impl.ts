@@ -101,4 +101,22 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
             responseType: 'blob'
         });
     }
+
+    override getBandejaAprobacion(estado: string, offset = 0, limit = 10): Observable<{ items: any[], total: number }> {
+        const params = new HttpParams()
+            .set('estado', estado)
+            .set('offset', offset.toString())
+            .set('limit', limit.toString());
+
+        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/bandeja-aprobacion`, { params }).pipe(
+            map(res => ({
+                items: res.datos || [],
+                total: res.total || 0
+            }))
+        );
+    }
+
+    override evaluar(id: number, estado: string, observacion: string): Observable<any> {
+        return this.http.post<ResponseDto>(`${this.apiUrl}/${id}/evaluar`, { estado, observacion });
+    }
 }

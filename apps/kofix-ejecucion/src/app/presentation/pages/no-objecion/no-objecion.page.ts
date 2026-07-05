@@ -46,7 +46,7 @@ export class NoObjecionPageComponent implements OnInit {
     selectedNoObjecionId = signal<number | undefined>(undefined);
 
     columns: TableColumn[] = [
-        { field: 'numeroDocumento', header: 'N° Documento', width: '140px' },
+        { field: 'numeroDocumento', header: 'N° Documento', type: 'custom', width: '140px' },
         { field: 'tipoDocumentoNombre', header: 'Tipo Doc.', width: '130px' },
         { field: 'fechaDocumento', header: 'Fecha', type: 'date', width: '110px', align: 'center' },
         { field: 'totalMonto', header: 'Total Adjudicado', type: 'currency', align: 'right', width: '150px' },
@@ -62,6 +62,16 @@ export class NoObjecionPageComponent implements OnInit {
 
     getBadgeStatus(value: string): StatusType {
         return this.statusMap[value] ?? 'Pendiente';
+    }
+
+    formatDocNumber(num: string, date: any): string {
+        if (!num) return '';
+        if (num.includes('-')) return num;
+        const cleanNum = parseInt(num, 10);
+        if (isNaN(cleanNum)) return num;
+        
+        const year = date ? new Date(date).getFullYear() : new Date().getFullYear();
+        return `${cleanNum.toString().padStart(4, '0')}-${year}`;
     }
 
     ngOnInit(): void {

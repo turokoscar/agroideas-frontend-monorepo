@@ -1,7 +1,7 @@
 import { AlertService } from '@agroideas/feedback';
 import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
 import { Component, Input, OnInit, Output, EventEmitter, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
@@ -23,10 +23,10 @@ export class NoObjecionModalComponent implements OnInit {
     @Input() noObjecionId?: number;
     @Output() onClose = new EventEmitter<boolean>();
 
+    private alertService = inject(AlertService);
     private fb = inject(FormBuilder);
     private noObjecionRepo = inject(NoObjecionRepository);
     private catalogoRepo = inject(CatalogoRepository);
-    private alertService = inject(AlertService);
     private fileStorageService = inject(FileStorageService);
 
     visible = true;
@@ -41,7 +41,10 @@ export class NoObjecionModalComponent implements OnInit {
     constructor() {
         this.noObjecionForm = this.fb.group({
             tipoDocumento: ['', Validators.required],
-            numeroDocumento: ['', Validators.required],
+            numeroDocumento: ['', [
+                Validators.required, 
+                Validators.pattern(/^\d+$/)
+            ]],
             fechaDocumento: ['', Validators.required],
             archivoUrl: [''],
             observacion: [''],
@@ -71,9 +74,12 @@ export class NoObjecionModalComponent implements OnInit {
     }
 
     private populateFormWithNoObjecion(data: any): void {
+        const numDoc = data.numeroDocumento;
+        const plainNumber = numDoc && numDoc.includes('-') ? parseInt(numDoc.split('-')[0], 10).toString() : numDoc;
+
         this.noObjecionForm.patchValue({
             tipoDocumento: data.tipoDocumentoId,
-            numeroDocumento: data.numeroDocumento,
+            numeroDocumento: plainNumber,
             fechaDocumento: typeof data.fechaDocumento === 'string' ? data.fechaDocumento.split('T')[0] : data.fechaDocumento,
             archivoUrl: data.archivoUrl,
             observacion: data.observacion

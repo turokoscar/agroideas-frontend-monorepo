@@ -33,10 +33,17 @@ export class KardexRepositoryImpl extends KardexRepository {
         return this.http.get<ResponseDto<any>>(`${this.apiUrl}/movimientos`, { params }).pipe(
             map(res => {
                 const itemsList = Array.isArray(res.datos) ? res.datos : (res.datos?.items || []);
+                const backendSummary = res.datos?.summary;
+                const summary: KardexSummary = backendSummary ? {
+                    totalMovimientos: backendSummary.totalMovimientos ?? backendSummary.TotalMovimientos ?? 0,
+                    totalGastos: backendSummary.totalGastos ?? backendSummary.TotalGastos ?? 0,
+                    totalIngresos: backendSummary.totalIngresos ?? backendSummary.TotalIngresos ?? 0
+                } : this.calcSummary(itemsList);
+
                 return {
                     items: itemsList.map((dto: any) => this.mapMovimiento(dto)),
                     total: res.total ?? res.datos?.total ?? 0,
-                    summary: res.datos?.summary || this.calcSummary(itemsList)
+                    summary
                 };
             })
         );

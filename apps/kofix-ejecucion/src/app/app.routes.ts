@@ -78,6 +78,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./presentation/pages/kardex/kardex.page').then(m => m.KardexPageComponent)
             },
             {
+                path: 'bandeja-aprobacion',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.MONITOREO_ALERTAS },
+                loadComponent: () => import('./presentation/pages/bandeja-aprobacion/bandeja-aprobacion.page').then(m => m.BandejaAprobacionPageComponent)
+            },
+            {
                 path: 'reportes',
                 canActivate: [permissionGuard],
                 data: { permission: PERMISSIONS.ACCESO_APP },

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { 
@@ -60,10 +60,16 @@ export class GestionMenusPageComponent implements OnInit {
   menuForm!: FormGroup;
   selectedMenu = signal<MenuItem | null>(null);
 
+  parentMenus = computed(() => {
+    const selectedId = this.selectedMenu()?.id;
+    // Only root menus (menuPadreId === null or undefined) can act as parent menus,
+    // and we exclude the current menu itself to avoid self-referencing loops.
+    return this.menus().filter(m => !m.menuPadreId && m.id !== selectedId);
+  });
+
   // Gestión de Roles por Menú
   menuRoles = signal<string[]>([]);
-  availableRoles = ['Administrador', 'Administrador del sistema', 'Jefe de Unidad de Negocios', 'Supervisor de Monitoreo', 'Especialista de Monitoreo'];
-  newRole = '';
+  availableRoles = ['Administrador del sistema', 'Jefe de Unidad de Negocios', 'Supervisor de Monitoreo', 'Especialista de Monitoreo'];
 
   columns: TableColumn[] = [
     { field: 'id', header: 'ID', width: '80px', align: 'center' },
@@ -168,7 +174,7 @@ export class GestionMenusPageComponent implements OnInit {
     action$.subscribe({
       next: (res) => {
         this.isSubmitting.set(false);
-        if (res.respuesta === 'OK') {
+        if (res.exitoso) {
           this.alertService.show('Éxito', isEdit ? 'Menú actualizado correctamente.' : 'Menú creado correctamente.', 'success');
           this.closeModal();
           this.loadMenus();
@@ -188,7 +194,7 @@ export class GestionMenusPageComponent implements OnInit {
       if (confirmed.isConfirmed) {
         this.deleteMenuUseCase.execute(menu.id).subscribe({
           next: (res) => {
-            if (res.respuesta === 'OK') {
+            if (res.exitoso) {
               this.alertService.show('Eliminado', 'El menú ha sido desactivado.', 'success');
               this.loadMenus();
             } else {
@@ -204,7 +210,6 @@ export class GestionMenusPageComponent implements OnInit {
   openRolesModal(menu: MenuItem): void {
     this.selectedMenu.set(menu);
     this.isRolesModalOpen.set(true);
-    this.newRole = '';
     this.loadMenuRoles(menu.id);
   }
 
@@ -215,43 +220,52 @@ export class GestionMenusPageComponent implements OnInit {
   loadMenuRoles(menuId: number): void {
     this.getMenuRolesUseCase.execute(menuId).subscribe({
       next: (res) => {
-        if (res.respuesta === 'OK') {
+        if (res.exitoso) {
           this.menuRoles.set(res.datos || []);
         }
       }
     });
   }
 
-  addRole(): void {
-    const rol = this.newRole;
-    const menuId = this.selectedMenu()?.id;
-    if (!rol || !menuId) return;
-
-    if (this.menuRoles().includes(rol)) {
-      this.alertService.show('Aviso', 'El rol ya está asignado.', 'warning');
-      return;
-    }
-
-    this.assignMenuRoleUseCase.execute(menuId, rol).subscribe({
-      next: (res) => {
-        if (res.respuesta === 'OK') {
-          this.loadMenuRoles(menuId);
-          this.newRole = '';
-        }
-      }
-    });
+  isRoleAssigned(rol: string): boolean {
+    return this.menuRoles().includes(rol);
   }
 
-  removeRole(rol: string): void {
+  toggleRole(rol: string, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
     const menuId = this.selectedMenu()?.id;
-    if (!rol || !menuId) return;
+    if (!menuId) return;
 
-    this.removeMenuRoleUseCase.execute(menuId, rol).subscribe({
-      next: (res) => {
-        if (res.respuesta === 'OK') {
-          this.loadMenuRoles(menuId);
+    if (checkbox.checked) {
+      this.assignMenuRoleUseCase.execute(menuId, rol).subscribe({
+        next: (res) => {
+          if (res.exitoso) {
+            this.loadMenuRoles(menuId);
+          } else {
+            checkbox.checked = false;
+            this.alertService.show('Error', res.mensaje || 'No se pudo asignar el rol.', 'error');
+          }
+        },
+        error: () => {
+          checkbox.checked = false;
+          this.alertService.show('Error', 'Ocurrió un error en el servidor.', 'error');
         }
-      }
-    });
+      });
+    } else {
+      this.removeMenuRoleUseCase.execute(menuId, rol).subscribe({
+        next: (res) => {
+          if (res.exitoso) {
+            this.loadMenuRoles(menuId);
+          } else {
+            checkbox.checked = true;
+            this.alertService.show('Error', res.mensaje || 'No se pudo remover el rol.', 'error');
+          }
+        },
+        error: () => {
+          checkbox.checked = true;
+          this.alertService.show('Error', 'Ocurrió un error en el servidor.', 'error');
+        }
+      });
+    }
   }
 }

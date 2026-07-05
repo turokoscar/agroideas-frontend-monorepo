@@ -28,7 +28,11 @@ El monorepo se organiza bajo la convención de **Nx** en aplicaciones (`apps/`) 
 │   ├── kofix-ejecucion/     # Aplicación de ejecución de planes (referencia de diseño) [Puerto: 7100]
 │   ├── kofix-ejecucion-e2e/ # Pruebas End-to-End con Playwright para kofix
 │   ├── sat-ui/              # Aplicación de Seguimiento y Acompañamiento Técnico [Puerto: 4200]
-│   └── sat-ui-e2e/          # Pruebas End-to-End con Playwright para sat-ui
+│   ├── sat-ui-e2e/          # Pruebas End-to-End con Playwright para sat-ui
+│   ├── sigec-rtf/           # Módulo de Reporte Técnico Financiero - SIGEC [Puerto: 4300]
+│   ├── sigec-rtf-e2e/       # Pruebas End-to-End con Playwright para sigec-rtf
+│   ├── sigec-cierre/        # Módulo de Cierre de Convenios - SIGEC [Puerto: 4400]
+│   └── sigec-cierre-e2e/    # Pruebas End-to-End con Playwright para sigec-cierre
 │
 └── libs/
     ├── theme/               # @agroideas/theme     -> Tokens de diseño HSL y preset de TailwindCSS
@@ -61,7 +65,7 @@ Sigue estos pasos para poner en marcha el proyecto localmente:
     ```
 
 2.  **Instalar las dependencias de npm:**
-    > [!IMPORTANT]
+    > [vanilla] [IMPORTANT]
     > No utilices comandos de actualización global ni actualices individualmente las dependencias de ESLint o TypeScript-ESLint, ya que están fijadas en un stack compatible específico.
     
     ```bash
@@ -95,14 +99,26 @@ Para levantar los servidores de desarrollo de manera local:
     ```
     *Accede localmente en: http://localhost:7100*
 
+*   **SIGEC RTF** (Reporte Técnico Financiero):
+    ```bash
+    npx nx serve sigec-rtf --port=4300
+    ```
+    *Accede localmente en: http://localhost:4300*
+
+*   **SIGEC CIERRE** (Cierre de Convenios):
+    ```bash
+    npx nx serve sigec-cierre --port=4400
+    ```
+    *Accede localmente en: http://localhost:4400*
+
 ### Asegurar Calidad (Linting y Testing)
 *   **Analizar el código con el Linter:**
     ```bash
-    npx nx lint <proyecto>     # Ejemplo: npx nx lint sat-ui
+    npx nx lint <proyecto>     # Ejemplo: npx nx lint sigec-rtf
     ```
 *   **Ejecutar pruebas unitarias (Jest):**
     ```bash
-    npx nx test <proyecto>     # Ejemplo: npx nx test sat-ui
+    npx nx test <proyecto>     # Ejemplo: npx nx test sigec-rtf
     ```
 *   **Ejecutar tareas únicamente en proyectos afectados por cambios locales:**
     ```bash
@@ -115,7 +131,7 @@ Para levantar los servidores de desarrollo de manera local:
 
 Para evitar dependencias circulares y asegurar una arquitectura desacoplada, se aplican las siguientes reglas de arquitectura controladas por ESLint:
 
-1.  **Sin dependencias cruzadas entre aplicaciones:** `sat-ui` y `kofix-ejecucion` no pueden importarse entre sí.
+1.  **Sin dependencias cruzadas entre aplicaciones:** Las aplicaciones (`sat-ui`, `kofix-ejecucion`, `sigec-rtf`, `sigec-cierre`) no pueden importarse entre sí.
 2.  **Arquitectura Unidireccional:** Las aplicaciones dependen de librerías en `libs/`.
 3.  **Prohibición de Proveedores Directos:** Las aplicaciones **no deben importar directamente** librerías externas de UI como `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2` o `leaflet`. Todo el consumo debe realizarse de forma indirecta consumiendo `@agroideas/ui`, `@agroideas/feedback`, etc.
 
@@ -137,6 +153,14 @@ Genera los archivos optimizados (minificados, con tree-shaking y compilación AO
     ```bash
     npx nx build kofix-ejecucion
     ```
+*   **Construir SIGEC RTF:**
+    ```bash
+    npx nx build sigec-rtf
+    ```
+*   **Construir SIGEC CIERRE:**
+    ```bash
+    npx nx build sigec-cierre
+    ```
 *   **Construir todos los proyectos:**
     ```bash
     npx nx run-many -t build
@@ -145,6 +169,8 @@ Genera los archivos optimizados (minificados, con tree-shaking y compilación AO
 Los archivos resultantes se generarán en la ruta:
 *   `dist/apps/sat-ui/browser/`
 *   `dist/apps/kofix-ejecucion/browser/`
+*   `dist/apps/sigec-rtf/browser/`
+*   `dist/apps/sigec-cierre/browser/`
 
 ### 2. Configuración y Despliegue en el Servidor (Hosting)
 

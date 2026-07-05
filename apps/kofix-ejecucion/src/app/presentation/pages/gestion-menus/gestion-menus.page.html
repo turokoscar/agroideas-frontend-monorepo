@@ -107,8 +107,13 @@
         <input type="text" formControlName="ruta" class="w-full px-3 py-2 border rounded-md focus:outline-none" placeholder="/main/..." />
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-slate-700">ID del Menú Padre (Opcional)</label>
-        <input type="number" formControlName="menuPadreId" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+        <label class="text-sm font-medium text-slate-700">Menú Padre (Opcional)</label>
+        <select formControlName="menuPadreId" class="w-full px-3 py-2 border rounded-md focus:outline-none bg-white font-medium text-slate-700">
+          <option [ngValue]="null">Ninguno (Menú Raíz)</option>
+          @for (m of parentMenus(); track m.id) {
+            <option [ngValue]="m.id">{{ m.nombre }} (ID: {{ m.id }})</option>
+          }
+        </select>
       </div>
     </div>
   </div>
@@ -117,37 +122,25 @@
 
 <!-- Modal de Roles -->
 @if (isRolesModalOpen()) {
-  <app-ui-modal [visible]="isRolesModalOpen()" (onHide)="closeRolesModal()">
-    <div class="p-4 border-b">
-      <h3 class="text-lg font-semibold text-slate-800">
-        Roles Autorizados: {{ selectedMenu()?.nombre }}
-      </h3>
-    </div>
-
+  <app-ui-modal
+    [visible]="isRolesModalOpen()"
+    [title]="'Roles Autorizados: ' + selectedMenu()?.nombre"
+    icon="security"
+    [showSaveButton]="false"
+    (onHide)="closeRolesModal()">
+    
     <div class="p-6 space-y-4">
-      <!-- Asignar nuevo Rol -->
-      <div class="flex gap-2">
-        <select [(ngModel)]="newRole" class="flex-1 px-3 py-2 border rounded-md focus:outline-none">
-          <option value="">Seleccione un Rol...</option>
-          @for (rol of availableRoles; track rol) {
-            <option [value]="rol">{{ rol }}</option>
-          }
-        </select>
-        <ui-button label="Asignar" severity="primary" (onClick)="addRole()"></ui-button>
-      </div>
+      <p class="text-sm text-slate-500">Seleccione los roles autorizados para acceder a este menú:</p>
 
-      <!-- Lista de Roles Asignados -->
-      <div class="space-y-2 max-h-60 overflow-y-auto">
-        @if (menuRoles().length === 0) {
-          <div class="text-center text-sm text-slate-400 py-4">
-            No hay roles asignados a este menú. Todos tienen acceso restringido.
-          </div>
-        }
-        @for (rol of menuRoles(); track rol) {
-          <div class="flex items-center justify-between p-2 bg-slate-50 border rounded-md">
-            <span class="text-sm font-medium text-slate-700">{{ rol }}</span>
-            <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="close" (onClick)="removeRole(rol)"></ui-button>
-          </div>
+      <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+        @for (rol of availableRoles; track rol) {
+          <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 border rounded-md cursor-pointer transition-colors">
+            <input type="checkbox"
+                   [checked]="isRoleAssigned(rol)"
+                   (change)="toggleRole(rol, $event)"
+                   class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" />
+            <span class="text-sm font-medium text-slate-700 select-none">{{ rol }}</span>
+          </label>
         }
       </div>
     </div>

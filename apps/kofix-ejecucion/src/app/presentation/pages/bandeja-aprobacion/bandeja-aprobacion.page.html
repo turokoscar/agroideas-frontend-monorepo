@@ -1,0 +1,180 @@
+<div class="page-container p-4 md:p-8">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-foreground">Bandeja de Aprobación</h1>
+      <p class="text-muted-foreground">Evaluación de No Objeciones y apertura de líneas contables</p>
+    </div>
+  </div>
+
+  <!-- Custom Navigation Tabs (Midagri Theme Style) -->
+  <div class="flex border-b border-slate-200 mb-6">
+    <button
+      (click)="setTab('PENDIENTE')"
+      [class.border-primary]="activeTab() === 'PENDIENTE'"
+      [class.text-primary]="activeTab() === 'PENDIENTE'"
+      class="py-3 px-6 font-bold text-xs uppercase tracking-wider border-b-2 border-transparent transition-all focus:outline-none">
+      Pendientes
+    </button>
+    <button
+      (click)="setTab('APROBADO')"
+      [class.border-primary]="activeTab() === 'APROBADO'"
+      [class.text-primary]="activeTab() === 'APROBADO'"
+      class="py-3 px-6 font-bold text-xs uppercase tracking-wider border-b-2 border-transparent transition-all focus:outline-none">
+      Aprobadas
+    </button>
+    <button
+      (click)="setTab('RECHAZADO')"
+      [class.border-primary]="activeTab() === 'RECHAZADO'"
+      [class.text-primary]="activeTab() === 'RECHAZADO'"
+      class="py-3 px-6 font-bold text-xs uppercase tracking-wider border-b-2 border-transparent transition-all focus:outline-none">
+      Rechazadas
+    </button>
+  </div>
+
+  <!-- Data Table -->
+  <app-ui-data-table
+    [columns]="columns"
+    [data]="items()"
+    [loading]="loading()"
+    [totalRecords]="totalRecords()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="10"
+    [rowTemplate]="rowTemplate"
+    [hasActions]="false"
+    (onLazyLoad)="loadData($event)"
+    emptyIcon="verified"
+    emptyMessage="Bandeja vacía."
+    emptySubMessage="No hay No Objeciones registradas para esta categoría.">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      <!-- Custom Col: numeroNoObjecion -->
+      @if (col.field === 'numeroNoObjecion') {
+        <span class="font-bold text-slate-800">
+          {{ formatDocNumber(row.numeroNoObjecion, row.fecha) }}
+        </span>
+      }
+
+      <!-- Custom Col: organizacion (Name + RUC) -->
+      @if (col.field === 'organizacion') {
+        <div class="flex flex-col">
+          <span class="font-bold text-slate-800 text-xs truncate max-w-[200px]" [title]="row.organizacionNombre">
+            {{ row.organizacionNombre || 'Organización no asignada' }}
+          </span>
+          <span class="text-[10px] text-slate-400 font-medium">RUC: {{ row.organizacionRuc || 'N/D' }}</span>
+        </div>
+      }
+
+      <!-- Custom Col: montoSolicitado -->
+      @if (col.field === 'montoSolicitado') {
+        <span class="font-black text-slate-800">
+          {{ formatCurrency(row.montoSolicitado) }}
+        </span>
+      }
+
+      <!-- Custom Col: acciones -->
+      @if (col.field === 'acciones') {
+        <div class="flex items-center justify-center gap-2">
+          <!-- Button Download Evidencia -->
+          <ui-button
+            iconOnly
+            appearance="soft"
+            severity="secondary"
+            size="sm"
+            icon="download"
+            title="Descargar No Objeción"
+            (onClick)="downloadEvidencia(row)">
+          </ui-button>
+
+          <!-- Button Evaluate (Only in PENDIENTE tab) -->
+          @if (activeTab() === 'PENDIENTE') {
+            <ui-button
+              appearance="soft"
+              severity="primary"
+              size="sm"
+              label="Evaluar"
+              icon="rate_review"
+              (onClick)="openEvaluarModal(row)">
+            </ui-button>
+          }
+        </div>
+      }
+    </ng-template>
+
+  </app-ui-data-table>
+</div>
+
+<!-- Modal de Evaluación para Supervisor -->
+<app-ui-modal
+  [visible]="showEvalModal()"
+  title="Evaluar No Objeción"
+  [subtitle]="selectedItem() ? 'N° ' + selectedItem().numeroNoObjecion : ''"
+  icon="rate_review"
+  [isLoading]="isSubmitting()"
+  [showSaveButton]="false"
+  maxWidth="600px"
+  (onHide)="closeEvaluarModal()">
+
+  @if (selectedItem(); as item) {
+    <div class="space-y-6">
+      <!-- Info Box (RUC/Organización/Monto) -->
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-3 shadow-inner">
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <span class="block text-[9px] font-black uppercase text-slate-400">Organización</span>
+            <span class="font-bold text-slate-800">{{ item.organizacionNombre }}</span>
+          </div>
+          <div>
+            <span class="block text-[9px] font-black uppercase text-slate-400">RUC</span>
+            <span class="font-mono font-bold text-slate-700">{{ item.organizacionRuc }}</span>
+          </div>
+          <div>
+            <span class="block text-[9px] font-black uppercase text-slate-400">Convenio</span>
+            <span class="font-bold text-slate-800">{{ item.numeroConvenio }}</span>
+          </div>
+          <div>
+            <span class="block text-[9px] font-black uppercase text-slate-400">Monto Adjudicado</span>
+            <span class="font-black text-primary">{{ formatCurrency(item.montoSolicitado) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sustento Form Field -->
+      <div>
+        <label class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2.5">
+          Sustento / Observaciones de Evaluación <span class="text-primary">*</span>
+        </label>
+        <textarea
+          [(ngModel)]="observacionSupervisor"
+          rows="4"
+          placeholder="Ingrese los motivos de la aprobación o el rechazo detalladamente..."
+          class="w-full bg-white border border-slate-200 rounded-xl text-xs p-4 focus:ring-primary/20 focus:border-primary transition-all resize-none shadow-sm text-slate-700"></textarea>
+      </div>
+
+      <!-- Actions Footer -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <ui-button
+          appearance="soft"
+          severity="secondary"
+          label="Cancelar"
+          (onClick)="closeEvaluarModal()">
+        </ui-button>
+        <ui-button
+          severity="danger"
+          label="Rechazar"
+          icon="close"
+          [disabled]="!observacionSupervisor.trim()"
+          (onClick)="procesarEvaluacion('RECHAZADO')">
+        </ui-button>
+        <ui-button
+          severity="success"
+          label="Aprobar & Abrir Saldo"
+          icon="check"
+          [disabled]="!observacionSupervisor.trim()"
+          (onClick)="procesarEvaluacion('APROBADO')">
+        </ui-button>
+      </div>
+    </div>
+  }
+</app-ui-modal>

@@ -37,14 +37,14 @@ export class CarteraRepositoryImpl extends CarteraRepository {
     }
 
     override getEspecialistas(): Observable<Especialista[]> {
-        return this.http.get<ResponseDto<Especialista[]>>(`${this.apiUrl}/cartera/especialistas`).pipe(
+        return this.http.get<ResponseDto<Especialista[]>>(`${this.carteraUrl}/especialistas`).pipe(
             map(res => res.datos || [])
         );
     }
 
     override reasignar(request: ReasignarRequest): Observable<{ exitoso: boolean; mensaje: string }> {
         return this.http.post<ResponseDto<any>>(
-            `${this.apiUrl}/cartera/${request.postulanteId}/reasignar`,
+            `${this.carteraUrl}/${request.postulanteId}/reasignar`,
             { nuevoEspecialistaId: Number(request.nuevoEspecialistaId), observacion: request.observacion }
         ).pipe(
             map(res => ({ exitoso: !!res.exitoso, mensaje: res.mensaje || '' }))
