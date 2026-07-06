@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -26,14 +26,123 @@ import { AuthService } from '../../core/services/auth.service';
           <!-- Navigation Links -->
           <nav class="p-3 space-y-1">
             @if (user()?.role === 'POSTULANTE') {
+              <!-- Dashboard -->
               <a
-                routerLink="/rtf/registrar"
+                routerLink="/rtf/dashboard"
                 routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
               >
-                <span class="material-symbols-outlined text-[20px]">edit_note</span>
-                Registrar RTF
+                <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                Inicio / Dashboard
               </a>
+
+              <!-- Pasos Críticos Collapsible -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleSteps()"
+                  class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all text-left"
+                >
+                  <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+                    <span>Pasos Críticos</span>
+                  </div>
+                  <span class="material-symbols-outlined text-[16px] transition-transform" [class.rotate-180]="isStepsExpanded()">
+                    expand_more
+                  </span>
+                </button>
+
+                @if (isStepsExpanded()) {
+                  <div class="pl-4 space-y-1 transition-all">
+                    <!-- Paso 1 (Disabled) -->
+                    <div class="flex items-center justify-between px-3 py-1.5 text-xs text-sidebar-foreground/40 font-medium">
+                      <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">lock_open</span>
+                        PC 1 (Aprobado)
+                      </div>
+                    </div>
+                    
+                    <!-- Paso 2 (Vigente / Active) -->
+                    <div class="space-y-0.5 border-l border-primary/20 pl-2">
+                      <div class="px-3 py-1 text-xs text-primary font-bold flex items-center gap-1.5">
+                        <span class="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
+                        PC 2 (Vigente)
+                      </div>
+                      
+                      <a
+                        routerLink="/rtf/pasos-criticos/registrar"
+                        routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
+                        class="flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">edit_note</span>
+                        a. Registrar avance
+                      </a>
+                      <a
+                        routerLink="/rtf/pasos-criticos/enviar"
+                        routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
+                        class="flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">send</span>
+                        b. Enviar PC
+                      </a>
+                      <a
+                        routerLink="/rtf/pasos-criticos/observaciones"
+                        routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
+                        class="flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">feedback</span>
+                        c. Levantar Observaciones
+                      </a>
+                    </div>
+
+                    <!-- Pasos 3 to 6 (Disabled) -->
+                    @for (step of [3,4,5,6]; track step) {
+                      <div class="flex items-center justify-between px-3 py-1.5 text-xs text-sidebar-foreground/30 font-medium">
+                        <div class="flex items-center gap-2">
+                          <span class="material-symbols-outlined text-[14px]">lock</span>
+                          PC {{ step }} (Pendiente)
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Reportes Collapsible -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleReports()"
+                  class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all text-left"
+                >
+                  <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-[20px]">query_stats</span>
+                    <span>Reportes</span>
+                  </div>
+                  <span class="material-symbols-outlined text-[16px] transition-transform" [class.rotate-180]="isReportsExpanded()">
+                    expand_more
+                  </span>
+                </button>
+
+                @if (isReportsExpanded()) {
+                  <div class="pl-4 space-y-0.5 border-l border-border/30 transition-all">
+                    <a
+                      routerLink="/rtf/reportes/metas-fisicas"
+                      routerLinkActive="bg-sidebar-accent/30 text-sidebar-accent-foreground font-medium"
+                      class="flex items-center gap-2 px-3 py-1.5 rounded text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                      3.1 Metas físicas
+                    </a>
+                    <a
+                      routerLink="/rtf/reportes/metas-financieras"
+                      routerLinkActive="bg-sidebar-accent/30 text-sidebar-accent-foreground font-medium"
+                      class="flex items-center gap-2 px-3 py-1.5 rounded text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">payments</span>
+                      3.2 Metas financieras
+                    </a>
+                  </div>
+                }
+              </div>
             }
 
             @if (user()?.role === 'UR') {
@@ -111,6 +220,17 @@ export class AppShellComponent {
   private router = inject(Router);
 
   user = this.authService.user;
+
+  isStepsExpanded = signal(true);
+  isReportsExpanded = signal(true);
+
+  toggleSteps() {
+    this.isStepsExpanded.update(v => !v);
+  }
+
+  toggleReports() {
+    this.isReportsExpanded.update(v => !v);
+  }
 
   onLogout() {
     this.authService.logout();

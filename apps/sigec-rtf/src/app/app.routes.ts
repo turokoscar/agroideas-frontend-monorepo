@@ -1,7 +1,12 @@
 import { Route } from '@angular/router';
 import { LoginComponent } from './features/login/login.component';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
+import { OaDashboardComponent } from './features/oa-dashboard/oa-dashboard.component';
 import { OaRegistroComponent } from './features/oa-registro/oa-registro.component';
+import { OaEnviarComponent } from './features/oa-enviar/oa-enviar.component';
+import { OaObservacionesComponent } from './features/oa-observaciones/oa-observaciones.component';
+import { ReporteFisicoComponent } from './features/reportes/reporte-fisico.component';
+import { ReporteFinancieroComponent } from './features/reportes/reporte-financiero.component';
 import { UrAuditoriaComponent } from './features/ur-auditoria/ur-auditoria.component';
 import { UnGabineteComponent } from './features/un-gabinete/un-gabinete.component';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
@@ -17,8 +22,33 @@ export const appRoutes: Route[] = [
     canActivate: [authGuard],
     children: [
       {
-        path: 'rtf/registrar',
+        path: 'rtf/dashboard',
+        component: OaDashboardComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
+        path: 'rtf/pasos-criticos/registrar',
         component: OaRegistroComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
+        path: 'rtf/pasos-criticos/enviar',
+        component: OaEnviarComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
+        path: 'rtf/pasos-criticos/observaciones',
+        component: OaObservacionesComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
+        path: 'rtf/reportes/metas-fisicas',
+        component: ReporteFisicoComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
+        path: 'rtf/reportes/metas-financieras',
+        component: ReporteFinancieroComponent,
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
@@ -33,7 +63,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: '',
-        redirectTo: 'rtf/registrar',
+        redirectTo: 'rtf/dashboard',
         pathMatch: 'full'
       }
     ]

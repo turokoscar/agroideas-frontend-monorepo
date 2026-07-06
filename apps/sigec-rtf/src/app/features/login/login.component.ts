@@ -208,13 +208,13 @@ export class LoginComponent {
 
   private redirectByUserRole(role: string) {
     if (role === 'POSTULANTE') {
-      this.router.navigate(['/rtf/registrar']);
+      this.router.navigate(['/rtf/dashboard']);
     } else if (role === 'UR') {
       this.router.navigate(['/rtf/auditoria-regional']);
     } else if (role === 'UN' || role === 'DE' || role === 'UAJ' || role === 'USE') {
       this.router.navigate(['/rtf/evaluacion-gabinete']);
     } else {
-      this.router.navigate(['/rtf/registrar']);
+      this.router.navigate(['/rtf/dashboard']);
     }
   }
 }

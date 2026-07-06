@@ -1,0 +1,112 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RtfService } from '../../core/services/rtf.service';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-oa-observaciones',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
+      <!-- Header -->
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Levantar Observaciones</h1>
+        <p class="text-sm text-muted-foreground">
+          Atienda las observaciones emitidas por la Unidad Regional antes del plazo de subsanación.
+        </p>
+      </div>
+
+      <!-- Observations Box -->
+      <div class="bg-amber-500/10 border border-amber-500/35 p-5 rounded-xl text-amber-600 space-y-2">
+        <div class="flex items-center gap-2 font-bold text-sm">
+          <span class="material-symbols-outlined text-[20px]">warning</span>
+          Observaciones Técnicas Registradas (Especialista Regional)
+        </div>
+        <p class="text-xs leading-relaxed pl-7">
+          "{{ rtfService.observacionesUR() }}"
+        </p>
+      </div>
+
+      <!-- Form to lift -->
+      <div class="bg-surface-container-lowest border border-border rounded-xl p-6 space-y-4">
+        <h3 class="text-sm font-bold text-foreground flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[18px]">rate_review</span>
+          Detalle de la Subsanación
+        </h3>
+        
+        <!-- Textarea response -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-muted-foreground block">Sustento / Informe de Levantamiento</label>
+          <textarea 
+            rows="5"
+            placeholder="Describa brevemente los cambios realizados o la justificación técnica..."
+            class="w-full text-xs p-3 rounded-lg border border-border bg-surface-container/20 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          ></textarea>
+        </div>
+
+        <!-- File upload for backing documents -->
+        <div class="space-y-1.5 pt-2">
+          <label class="text-xs font-semibold text-muted-foreground block">Cargar Documento de Sustento (Opcional)</label>
+          <div class="border border-dashed border-border rounded-lg p-5 text-center bg-surface-container/5 hover:bg-surface-container/10 transition-all cursor-pointer">
+            <input type="file" id="obs-pdf" class="hidden" (change)="onFileSelected($event)" accept=".pdf">
+            <label for="obs-pdf" class="cursor-pointer space-y-1.5 block">
+              <span class="material-symbols-outlined text-[24px] text-muted-foreground block">upload_file</span>
+              <span class="text-xs font-medium text-primary block">Adjuntar PDF adicional de sustento</span>
+            </label>
+          </div>
+          <div *ngIf="fileName" class="flex items-center justify-between bg-surface-container/30 border border-border p-2 rounded mt-2 text-xs">
+            <span class="font-medium text-foreground truncate max-w-xs">{{ fileName }}</span>
+            <button (click)="removeFile()" class="text-muted-foreground hover:text-danger">
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center justify-end gap-3 pt-4">
+        <button 
+          (click)="onCancel()"
+          class="px-4 py-2 border border-border rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors"
+        >
+          Volver
+        </button>
+        <button 
+          (click)="onSubmit()"
+          class="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/95 shadow transition-all flex items-center gap-1.5"
+        >
+          <span class="material-symbols-outlined text-[16px]">check</span>
+          Levantar y Enviar Observaciones
+        </button>
+      </div>
+    </div>
+  `
+})
+export class OaObservacionesComponent {
+  rtfService = inject(RtfService);
+  router = inject(Router);
+
+  fileName: string | null = null;
+
+  onFileSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (file) {
+      this.fileName = file.name;
+    }
+  }
+
+  removeFile() {
+    this.fileName = null;
+  }
+
+  onCancel() {
+    this.router.navigate(['/rtf/dashboard']);
+  }
+
+  onSubmit() {
+    // Reset status to Sent to represent re-submission of observations
+    this.rtfService.rtfStatus.set('Enviado');
+    this.router.navigate(['/rtf/dashboard']);
+  }
+}

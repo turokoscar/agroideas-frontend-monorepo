@@ -1,0 +1,152 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RtfService } from '../../core/services/rtf.service';
+
+@Component({
+  selector: 'app-reporte-fisico',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="space-y-6 animate-fade-in">
+      <!-- Header -->
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Reporte de Metas Físicas (Anexo N° 17)</h1>
+        <p class="text-sm text-muted-foreground">
+          Seguimiento consolidado y comparativo de las actividades programadas frente a las ejecutadas en el convenio.
+        </p>
+      </div>
+
+      <!-- Overview Cards -->
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="bg-surface-container-lowest border border-border p-4 rounded-xl">
+          <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Actividades Programadas</span>
+          <div class="text-xl font-bold mt-1 text-foreground">4 actividades</div>
+        </div>
+        <div class="bg-surface-container-lowest border border-border p-4 rounded-xl">
+          <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Actividades en Progreso</span>
+          <div class="text-xl font-bold mt-1 text-primary">3 en ejecución</div>
+        </div>
+        <div class="bg-surface-container-lowest border border-border p-4 rounded-xl">
+          <span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Avance Físico Global</span>
+          <div class="text-xl font-bold mt-1 text-success">32% completado</div>
+        </div>
+      </div>
+
+      <!-- Comparative SVG Chart -->
+      <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
+        <h2 class="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[18px]">bar_chart</span>
+          Gráfico Comparativo de Metas Físicas (%)
+        </h2>
+        
+        <!-- SVG bar chart -->
+        <div class="relative w-full h-64 border-l-2 border-b-2 border-border/60 pb-2 pl-2">
+          <div class="absolute inset-0 flex flex-col justify-between text-[9px] text-muted-foreground/60 pr-2 pointer-events-none">
+            <div class="border-t border-dashed border-border/20 w-full pt-1 text-right">100%</div>
+            <div class="border-t border-dashed border-border/20 w-full pt-1 text-right">75%</div>
+            <div class="border-t border-dashed border-border/20 w-full pt-1 text-right">50%</div>
+            <div class="border-t border-dashed border-border/20 w-full pt-1 text-right">25%</div>
+            <div></div>
+          </div>
+
+          <!-- Bars Container -->
+          <div class="h-full flex items-end justify-around pt-6">
+            <!-- Item 1 -->
+            <div class="flex flex-col items-center gap-1.5 w-16">
+              <div class="relative w-8 h-40 bg-surface-container/30 rounded-t-md overflow-hidden">
+                <div class="absolute bottom-0 w-full bg-primary rounded-t-md transition-all duration-500" style="height: 100%"></div>
+                <div class="absolute bottom-0 w-full bg-success rounded-t-md transition-all duration-500" style="height: 75%"></div>
+              </div>
+              <span class="text-[9px] font-bold text-foreground">Secadores</span>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="flex flex-col items-center gap-1.5 w-16">
+              <div class="relative w-8 h-40 bg-surface-container/30 rounded-t-md overflow-hidden">
+                <div class="absolute bottom-0 w-full bg-primary rounded-t-md transition-all duration-500" style="height: 100%"></div>
+                <div class="absolute bottom-0 w-full bg-success rounded-t-md transition-all duration-500" style="height: 40%"></div>
+              </div>
+              <span class="text-[9px] font-bold text-foreground">Fertilizantes</span>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="flex flex-col items-center gap-1.5 w-16">
+              <div class="relative w-8 h-40 bg-surface-container/30 rounded-t-md overflow-hidden">
+                <div class="absolute bottom-0 w-full bg-primary rounded-t-md transition-all duration-500" style="height: 100%"></div>
+                <div class="absolute bottom-0 w-full bg-success rounded-t-md transition-all duration-500" style="height: 0%"></div>
+              </div>
+              <span class="text-[9px] font-bold text-foreground">Talleres BPA</span>
+            </div>
+
+            <!-- Item 4 -->
+            <div class="flex flex-col items-center gap-1.5 w-16">
+              <div class="relative w-8 h-40 bg-surface-container/30 rounded-t-md overflow-hidden">
+                <div class="absolute bottom-0 w-full bg-primary rounded-t-md transition-all duration-500" style="height: 100%"></div>
+                <div class="absolute bottom-0 w-full bg-success rounded-t-md transition-all duration-500" style="height: 0%"></div>
+              </div>
+              <span class="text-[9px] font-bold text-foreground">Análisis</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center justify-center gap-4 mt-4 text-[10px]">
+          <div class="flex items-center gap-1">
+            <span class="h-2 w-4 bg-primary rounded-sm inline-block"></span>
+            <span class="text-muted-foreground">Programado</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="h-2 w-4 bg-success rounded-sm inline-block"></span>
+            <span class="text-muted-foreground">Ejecutado (Verificado)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Table -->
+      <div class="bg-surface-container-lowest border border-border rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-border bg-surface-container/10">
+          <h3 class="text-xs font-bold text-foreground">Detalle de Avance por Actividad</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-surface-container/20 border-b border-border text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                <th class="px-5 py-3">Actividad / Item</th>
+                <th class="px-5 py-3 text-center">Unidad</th>
+                <th class="px-5 py-3 text-center">Programado</th>
+                <th class="px-5 py-3 text-center">Ejecutado</th>
+                <th class="px-5 py-3 text-center">Progreso</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border text-foreground">
+              <tr *ngFor="let m of rtfService.metas()" class="hover:bg-surface-container/5 transition-colors">
+                <td class="px-5 py-3.5 font-medium">{{ m.activity }}</td>
+                <td class="px-5 py-3.5 text-center text-muted-foreground">{{ m.unit }}</td>
+                <td class="px-5 py-3.5 text-center font-semibold">{{ m.programmed }}</td>
+                <td class="px-5 py-3.5 text-center font-semibold">
+                  {{ m.executed !== null ? m.executed : '0' }}
+                </td>
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center justify-center gap-2">
+                    <div class="w-20 bg-surface-container rounded-full h-1.5">
+                      <div class="bg-success h-1.5 rounded-full" [style.width.%]="getPercent(m)"></div>
+                    </div>
+                    <span class="text-[10px] font-bold text-muted-foreground">{{ getPercent(m) }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `
+})
+export class ReporteFisicoComponent {
+  rtfService = inject(RtfService);
+
+  getPercent(m: any): number {
+    if (m.executed == null) return 0;
+    return Math.round((m.executed / m.programmed) * 100);
+  }
+}
