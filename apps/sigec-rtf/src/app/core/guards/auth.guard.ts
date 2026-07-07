@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = (route, state) => {
+export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -16,7 +16,7 @@ export const authGuard: CanActivateFn = (route, state) => {
 };
 
 export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
-  return (route, state) => {
+  return () => {
     const authService = inject(AuthService);
     const router = inject(Router);
     const user = authService.user();

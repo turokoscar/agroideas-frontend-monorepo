@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { RtfService, PasoCritico, Disbursement } from '../../core/services/rtf.service';
+import { RtfService } from '../../core/services/rtf.service';
 
 @Component({
   selector: 'app-oa-dashboard',
@@ -37,7 +37,7 @@ import { RtfService, PasoCritico, Disbursement } from '../../core/services/rtf.s
           <div class="mt-3 text-xl font-bold tracking-tight text-foreground">{{ rtfService.convenioId() }}</div>
           <div class="mt-1 text-xs text-success font-medium flex items-center gap-1">
             <span class="h-1.5 w-1.5 rounded-full bg-success"></span>
-            Vigente · 36 meses
+            Vigente · {{ rtfService.durationMonths() }} meses
           </div>
         </div>
 
@@ -49,9 +49,11 @@ import { RtfService, PasoCritico, Disbursement } from '../../core/services/rtf.s
               <span class="material-symbols-outlined text-[20px]">star</span>
             </div>
           </div>
-          <div class="mt-3 text-xl font-bold tracking-tight text-foreground">2 de 6</div>
-          <div class="mt-1 text-xs text-muted-foreground font-medium">
-            Estado: <span class="text-amber-500 font-bold">{{ rtfService.rtfStatus() }}</span>
+          <div class="mt-3 text-xl font-bold tracking-tight text-foreground">
+            {{ rtfService.activePasoNumero() }} de {{ rtfService.totalPasos() }}
+          </div>
+          <div class="mt-1 text-xs text-muted-foreground font-medium flex items-center gap-1">
+            Estado: <span class="text-amber-500 font-bold uppercase">{{ rtfService.rtfStatus() }}</span>
           </div>
         </div>
 
@@ -63,9 +65,9 @@ import { RtfService, PasoCritico, Disbursement } from '../../core/services/rtf.s
               <span class="material-symbols-outlined text-[20px]">trending_up</span>
             </div>
           </div>
-          <div class="mt-3 text-xl font-bold tracking-tight text-foreground">32%</div>
+          <div class="mt-3 text-xl font-bold tracking-tight text-foreground">{{ rtfService.physicalProgress() }}%</div>
           <div class="mt-3 w-full bg-surface-container rounded-full h-1.5">
-            <div class="bg-info h-1.5 rounded-full" style="width: 32%"></div>
+            <div class="bg-info h-1.5 rounded-full" [style.width.%]="rtfService.physicalProgress()"></div>
           </div>
         </div>
 
@@ -93,7 +95,7 @@ import { RtfService, PasoCritico, Disbursement } from '../../core/services/rtf.s
       <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
         <h2 class="text-base font-bold text-foreground mb-4 flex items-center gap-2">
           <span class="material-symbols-outlined text-primary text-[20px]">timeline</span>
-          Cronograma de Convenio · 6 Pasos Críticos
+          Cronograma de Convenio · {{ rtfService.totalPasos() }} Pasos Críticos
         </h2>
         <div class="space-y-4">
           <!-- Month labels -->
@@ -204,11 +206,13 @@ export class OaDashboardComponent implements OnInit {
   rtfService = inject(RtfService);
 
   ngOnInit() {
-    this.rtfService.loadPasosCriticos(13348, 5043);
+    this.rtfService.loadDashboard(13348).subscribe();
   }
 
   getFinancialProgressPercentage(): number {
-    return Math.round((this.rtfService.disbursed() / this.rtfService.budget()) * 100);
+    const budget = this.rtfService.budget();
+    if (budget <= 0) return 0;
+    return Math.round((this.rtfService.disbursed() / budget) * 100);
   }
 
   getPasoClass(status: string): string {

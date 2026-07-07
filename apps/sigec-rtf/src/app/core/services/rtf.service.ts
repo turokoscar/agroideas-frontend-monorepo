@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { forkJoin, of } from 'rxjs';
+import { of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 export interface PasoCritico {
@@ -42,6 +42,43 @@ export interface Indicador {
   executed: number | null;
 }
 
+export interface PasoCriticoGeneralResponse {
+  id: number;
+  label: string;
+  startMonth: number;
+  endMonth: number;
+  start: string;
+  end: string;
+  status: 'Aprobado' | 'Activo' | 'Pendiente' | 'Validado' | 'Vencido';
+}
+
+export interface DashboardData {
+  convenioId: string;
+  oa: string;
+  budget: number;
+  disbursed: number;
+  durationMonths: number;
+  currentMonth: number;
+  activeRtfStatus: string;
+  activePasoNumero: number;
+  totalPasos: number;
+  physicalProgress: number;
+  pasos: PasoCriticoGeneralResponse[];
+  disbursements: Disbursement[];
+}
+
+export interface DashboardResponse {
+  respuesta: string;
+  mensaje: string;
+  datos: DashboardData;
+}
+
+export interface PasosCriticosResponse {
+  respuesta: string;
+  mensaje: string;
+  datos: PasoCriticoGeneralResponse[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -54,6 +91,11 @@ export class RtfService {
   disbursed = signal(47100);
   durationMonths = signal(36);
   currentMonth = signal(9);
+
+  // Nuevas señales para el Dashboard dinámico
+  activePasoNumero = signal(1);
+  totalPasos = signal(6);
+  physicalProgress = signal(0);
 
   pasos = signal<PasoCritico[]>([
     { id: 1, label: 'Paso Crítico 1', startMonth: 0, endMonth: 6, start: new Date(2025, 6, 1), end: new Date(2025, 11, 30), status: 'Aprobado' },
@@ -71,7 +113,7 @@ export class RtfService {
     { id: 'd4', item: 'Análisis de suelos laboratorio', activityId: 'a4', amount: 2300, date: '2026-05-05', status: 'Ejecutado' }
   ]);
 
-  rtfStatus = signal<'En Edición' | 'Enviado' | 'En Auditoría Regional' | 'Auditado en Campo' | 'Observado en Región' | 'Validado Oficialmente'>('En Edición');
+  rtfStatus = signal<string>('PENDIENTE');
   rtfDeadlineHours = signal(12 * 24 + 4);
   observacionesUR = signal('El informe de campo requiere fotos adicionales de los secadores solares.');
 
@@ -88,57 +130,70 @@ export class RtfService {
     { id: 'i3', name: 'Volumen comercializado', unit: 'ton', baseline: 28, programmed: 42, executed: null }
   ]);
 
-  loadPasosCriticos(postulanteId: number, convenioId: number = 5043) {
-    const generalUrl = `${environment.apiGeneral}/proyectos/${postulanteId}/pasos-criticos`;
-    const rtfUrl = `${environment.apiUrl}/rtfs?ideConvenio=${convenioId}`;
+  loadDashboard(postulanteId: number) {
+    return this.http.get<DashboardResponse>(`${environment.apiUrl}/rtfs/postulante/${postulanteId}/dashboard`).pipe(
+      map(res => {
+        const data = res.datos;
+        if (data) {
+          this.convenioId.set(data.convenioId);
+          this.oa.set(data.oa);
+          this.budget.set(data.budget);
+          this.disbursed.set(data.disbursed);
+          this.durationMonths.set(data.durationMonths);
+          this.currentMonth.set(data.currentMonth);
+          this.rtfStatus.set(data.activeRtfStatus);
+          this.activePasoNumero.set(data.activePasoNumero);
+          this.totalPasos.set(data.totalPasos);
+          this.physicalProgress.set(data.physicalProgress);
 
-    forkJoin({
-      generalPasos: this.http.get<any>(generalUrl).pipe(
-        map(res => res.exitoso ? res.datos : (res.datos || res)),
-        catchError(() => of([]))
-      ),
-      rtfList: this.http.get<any>(rtfUrl).pipe(
-        map(res => res.exitoso ? res.datos : (res.datos || res)),
-        catchError(() => of([]))
-      )
-    }).subscribe(({ generalPasos, rtfList }) => {
-      if (!Array.isArray(generalPasos)) return;
-      
-      const rtfArray = Array.isArray(rtfList) ? rtfList : [];
-      const mapped = generalPasos.map((p: any) => {
-        const matchedRtf = rtfArray.find((r: any) => r.numPasoCritico === p.numero);
-        
-        let status: 'Aprobado' | 'Activo' | 'Pendiente' | 'Validado' | 'Vencido' = 'Pendiente';
-        if (matchedRtf) {
-          const est = matchedRtf.estRtf.toUpperCase();
-          if (est === 'APROBADO' || est === 'VALIDADO') {
-            status = 'Aprobado';
-          } else if (est === 'EN_EDICION' || est === 'EN_REVISION' || est === 'PENDIENTE') {
-            status = 'Activo';
-          } else if (est === 'VENCIDO') {
-            status = 'Vencido';
+          if (data.pasos) {
+            this.pasos.set(data.pasos.map((p: PasoCriticoGeneralResponse) => ({
+              id: p.id,
+              label: p.label,
+              startMonth: p.startMonth,
+              endMonth: p.endMonth,
+              start: new Date(p.start),
+              end: new Date(p.end),
+              status: p.status
+            })));
           }
-        } else {
-          if (p.numero === 1) {
-            status = 'Activo';
+          if (data.disbursements) {
+            this.disbursements.set(data.disbursements);
           }
         }
+        return data;
+      }),
+      catchError(err => {
+        console.error('Error loading dashboard data', err);
+        return of(null);
+      })
+    );
+  }
 
-        return {
-          id: p.id,
-          label: `Paso Crítico ${p.numero}`,
-          startMonth: p.mesInicio - 1,
-          endMonth: p.mesFin,
-          start: new Date(p.fechaInicio),
-          end: new Date(p.fechaFin),
-          status: status
-        };
-      });
-
-      if (mapped.length > 0) {
-        this.pasos.set(mapped);
-      }
-    });
+  loadPasosCriticos(postulanteId: number) {
+    const url = `${environment.apiUrl}/rtfs/postulante/${postulanteId}/pasos-criticos`;
+    this.http.get<PasosCriticosResponse>(url).pipe(
+      map(res => {
+        const data = res.datos;
+        if (Array.isArray(data)) {
+          const mapped = data.map((p: PasoCriticoGeneralResponse) => ({
+            id: p.id,
+            label: p.label,
+            startMonth: p.startMonth,
+            endMonth: p.endMonth,
+            start: new Date(p.start),
+            end: new Date(p.end),
+            status: p.status
+          }));
+          this.pasos.set(mapped);
+        }
+        return data;
+      }),
+      catchError(err => {
+        console.error('Error loading pasos criticos', err);
+        return of([]);
+      })
+    ).subscribe();
   }
 
   updateMeta(id: string, executed: number | null, comments?: string) {

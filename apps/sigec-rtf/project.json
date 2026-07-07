@@ -4,7 +4,10 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/sigec-rtf/src",
-  "tags": [],
+  "tags": [
+    "scope:kofix",
+    "type:app"
+  ],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:application",

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RtfService } from '../../core/services/rtf.service';
+import { RtfService, MetaFisica } from '../../core/services/rtf.service';
 
 @Component({
   selector: 'app-reporte-fisico',
@@ -145,7 +145,7 @@ import { RtfService } from '../../core/services/rtf.service';
 export class ReporteFisicoComponent {
   rtfService = inject(RtfService);
 
-  getPercent(m: any): number {
+  getPercent(m: MetaFisica): number {
     if (m.executed == null) return 0;
     return Math.round((m.executed / m.programmed) * 100);
   }

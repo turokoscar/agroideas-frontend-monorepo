@@ -37,8 +37,9 @@ import { Router } from '@angular/router';
         
         <!-- Textarea response -->
         <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-muted-foreground block">Sustento / Informe de Levantamiento</label>
+          <label for="sustento-textarea" class="text-xs font-semibold text-muted-foreground block">Sustento / Informe de Levantamiento</label>
           <textarea 
+            id="sustento-textarea"
             rows="5"
             placeholder="Describa brevemente los cambios realizados o la justificación técnica..."
             class="w-full text-xs p-3 rounded-lg border border-border bg-surface-container/20 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
@@ -47,7 +48,7 @@ import { Router } from '@angular/router';
 
         <!-- File upload for backing documents -->
         <div class="space-y-1.5 pt-2">
-          <label class="text-xs font-semibold text-muted-foreground block">Cargar Documento de Sustento (Opcional)</label>
+          <label for="obs-pdf" class="text-xs font-semibold text-muted-foreground block">Cargar Documento de Sustento (Opcional)</label>
           <div class="border border-dashed border-border rounded-lg p-5 text-center bg-surface-container/5 hover:bg-surface-container/10 transition-all cursor-pointer">
             <input type="file" id="obs-pdf" class="hidden" (change)="onFileSelected($event)" accept=".pdf">
             <label for="obs-pdf" class="cursor-pointer space-y-1.5 block">
@@ -89,8 +90,9 @@ export class OaObservacionesComponent {
 
   fileName: string | null = null;
 
-  onFileSelected(event: any) {
-    const file = event.target.files?.[0];
+  onFileSelected(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (file) {
       this.fileName = file.name;
     }

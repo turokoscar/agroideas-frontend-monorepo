@@ -121,8 +121,9 @@ export class OaEnviarComponent {
 
   fileName: string | null = null;
 
-  onFileSelected(event: any) {
-    const file = event.target.files?.[0];
+  onFileSelected(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (file && file.type === 'application/pdf') {
       this.fileName = file.name;
     }
