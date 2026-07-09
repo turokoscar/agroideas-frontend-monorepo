@@ -1,4 +1,4 @@
-import { ResponseDto } from '@agroideas/utils';
+import { ResponseDto, isSuccess } from '@agroideas/utils';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -47,7 +47,7 @@ export class CarteraRepositoryImpl extends CarteraRepository {
             `${this.carteraUrl}/${request.postulanteId}/reasignar`,
             { nuevoEspecialistaId: Number(request.nuevoEspecialistaId), observacion: request.observacion }
         ).pipe(
-            map(res => ({ exitoso: !!res.exitoso, mensaje: res.mensaje || '' }))
+            map(res => ({ exitoso: isSuccess(res), mensaje: res.mensaje || '' }))
         );
     }
 }

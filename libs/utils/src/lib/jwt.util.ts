@@ -12,8 +12,10 @@
 /** Claims conocidos del JWT emitido por `sel-api-seguridad`, más claims dinámicos. */
 export interface JwtPayload {
     readonly exp?: number;
+    readonly sub?: string;
     readonly email?: string;
     readonly given_name?: string;
+    readonly family_name?: string;
     readonly unique_name?: string;
     readonly name?: string;
     readonly [claim: string]: unknown;

@@ -6,3 +6,7 @@ export interface ResponseDto<T = unknown> {
     total?: number;
 }
 
+export function isSuccess(res: ResponseDto): boolean {
+    return !!res.exitoso || res.respuesta === 'OK';
+}
+

@@ -1,4 +1,4 @@
-import { ResponseDto, STORAGE_KEYS, decodeJwt, extractRoles, getExpiration, isExpired } from '@agroideas/utils';
+import { ResponseDto, STORAGE_KEYS, decodeJwt, extractRoles, getExpiration, isExpired, isSuccess } from '@agroideas/utils';
 import { AlertService } from '@agroideas/feedback';
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -59,12 +59,13 @@ export class AuthRepositoryImpl implements AuthRepository {
     login(credentials: any): Observable<AuthResponse> {
         return this.http.post<ResponseDto<any>>(`${environment.apiSeguridad}/auth/login`, credentials).pipe(
             switchMap(res => {
+                const exitoso = isSuccess(res);
                 const authRes: AuthResponse = {
-                    exitoso: !!res.exitoso,
+                    exitoso,
                     mensaje: res.mensaje,
                     datos: res.datos
                 };
-                if (res.exitoso && res.datos?.accessToken) {
+                if (exitoso && res.datos?.accessToken) {
                     this.saveToken(res.datos.accessToken);
                     if (res.datos?.refreshToken) {
                         this.saveRefreshToken(res.datos.refreshToken);
@@ -135,6 +136,14 @@ export class AuthRepositoryImpl implements AuthRepository {
     }
 
     logout(): void {
+        const token = this.getToken();
+
+        if (token) {
+            this.http.post(`${environment.apiSeguridad}/auth/logout`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).pipe(catchError(() => of(null))).subscribe();
+        }
+
         localStorage.removeItem(this.TOKEN_KEY);
         localStorage.removeItem(this.REFRESH_TOKEN_KEY);
         localStorage.removeItem(this.PERMISSIONS_KEY);
@@ -167,7 +176,8 @@ export class AuthRepositoryImpl implements AuthRepository {
             { refreshToken }
         ).pipe(
             map(res => {
-                if (res.exitoso && res.datos?.accessToken) {
+                const exitoso = isSuccess(res);
+                if (exitoso && res.datos?.accessToken) {
                     this.saveToken(res.datos.accessToken);
                     if (res.datos?.refreshToken) {
                         this.saveRefreshToken(res.datos.refreshToken);
@@ -240,7 +250,9 @@ export class AuthRepositoryImpl implements AuthRepository {
 
         const allRoles = extractRoles(payload);
         return {
+            id: payload.sub ? Number(payload.sub) : 0,
             name: payload.given_name || payload.unique_name || payload.name || 'Usuario',
+            apellidoPaterno: payload.family_name ?? '',
             email: payload.email ?? '',
             role: allRoles.length > 0 ? allRoles[0] : '',
             roles: allRoles
