@@ -9,13 +9,15 @@ import { NoObjecion, NoObjecionBalance } from '../../domain/models/no-objecion.m
 import { NoObjecionProgrammedItem } from '../../domain/models/no-objecion-programmed-item.model';
 import { NoObjecionMapper } from '../mappers/no-objecion.mapper';
 
+import { FileStorageService } from '../../shared/services/file-storage.service';
+
 @Injectable({
     providedIn: 'root'
 })
 export class NoObjecionRepositoryImpl extends NoObjecionRepository {
-    private apiUrl = `${environment.apiEjecucion}/NoObjecion`;
+    private apiUrl = `${environment.apiEjecucion}/no-objeciones`;
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private fileStorageService: FileStorageService) {
         super();
     }
 
@@ -91,15 +93,11 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
     }
 
     override uploadFile(file: File): Observable<{ fileUrl: string }> {
-        const formData = new FormData();
-        formData.append('file', file);
-        return this.http.post<{ fileUrl: string }>(`${this.apiUrl}/upload`, formData);
+        return this.fileStorageService.uploadFile(file, 'no-objeciones');
     }
 
     override downloadFile(fileUrl: string): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/download?fileUrl=${encodeURIComponent(fileUrl)}`, {
-            responseType: 'blob'
-        });
+        return this.fileStorageService.downloadFile(fileUrl);
     }
 
     override getBandejaAprobacion(estado: string, offset = 0, limit = 10): Observable<{ items: any[], total: number }> {
@@ -108,7 +106,7 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
             .set('offset', offset.toString())
             .set('limit', limit.toString());
 
-        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/bandeja-aprobacion`, { params }).pipe(
+        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/bandeja-aprobaciones`, { params }).pipe(
             map(res => ({
                 items: res.datos || [],
                 total: res.total || 0
@@ -117,6 +115,6 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
     }
 
     override evaluar(id: number, estado: string, observacion: string): Observable<any> {
-        return this.http.post<ResponseDto>(`${this.apiUrl}/${id}/evaluar`, { estado, observacion });
+        return this.http.post<ResponseDto>(`${this.apiUrl}/${id}/evaluaciones`, { estado, observacion });
     }
 }

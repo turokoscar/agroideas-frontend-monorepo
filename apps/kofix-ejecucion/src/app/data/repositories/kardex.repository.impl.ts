@@ -95,7 +95,7 @@ export class KardexRepositoryImpl extends KardexRepository {
     }
 
     override getCierres(): Observable<any[]> {
-        return this.http.get<ResponseDto<any[]>>(`${environment.apiEjecucion}/cierre`).pipe(
+        return this.http.get<ResponseDto<any[]>>(`${environment.apiEjecucion}/cierres`).pipe(
             map(res => res.datos || [])
         );
     }

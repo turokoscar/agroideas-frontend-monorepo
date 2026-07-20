@@ -11,7 +11,7 @@ import { ConvenioMapper, ConvenioDto } from '../mappers/convenio.mapper';
     providedIn: 'root'
 })
 export class ConvenioRepositoryImpl extends ConvenioRepository {
-    private apiUrl = `${environment.apiEjecucion}/convenio`;
+    private apiUrl = `${environment.apiEjecucion}/convenios`;
 
     constructor(private http: HttpClient) {
         super();

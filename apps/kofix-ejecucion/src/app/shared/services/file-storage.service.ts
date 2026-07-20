@@ -13,7 +13,7 @@ export interface FileUploadResult {
     providedIn: 'root'
 })
 export class FileStorageService {
-    private apiUrl = `${environment.apiEjecucion}/archivos`;
+    private apiUrl = `${environment.apiArchivos}/archivos`;
 
     private readonly MAX_FILE_SIZE_MB = 10;
     private readonly ALLOWED_MIME_TYPE = 'application/pdf';
@@ -28,20 +28,40 @@ export class FileStorageService {
         }
 
         const formData = new FormData();
-        formData.append('file', file);
-        return this.http.post<ResponseDto<FileUploadResult>>(`${this.apiUrl}/upload/${subDirectory}`, formData).pipe(
-            map(res => res.datos!)
+        formData.append('archivo', file);
+        formData.append('codSistema', 'KOFIX');
+        
+        let codProceso = 'GENERAL';
+        if (subDirectory === 'no-objeciones') {
+            codProceso = 'NO_OBJECIONES';
+        } else if (subDirectory === 'rendiciones') {
+            codProceso = 'RENDICIONES';
+        }
+        formData.append('codProceso', codProceso);
+
+        return this.http.post<{ ideArchivo: string }>(`${this.apiUrl}`, formData).pipe(
+            map(res => ({ fileUrl: res.ideArchivo }))
         );
     }
 
     downloadFile(fileUrl: string): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/download/${encodeURIComponent(fileUrl)}`, {
+        const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fileUrl);
+        if (isGuid) {
+            return this.http.get(`${this.apiUrl}/${fileUrl}/descarga`, {
+                responseType: 'blob'
+            });
+        }
+        return this.http.get(`${environment.apiEjecucion}/archivos/download/${encodeURIComponent(fileUrl)}`, {
             responseType: 'blob'
         });
     }
 
-    deleteFile(fileUrl: string): Observable<ResponseDto> {
-        return this.http.delete<ResponseDto>(`${this.apiUrl}/delete/${encodeURIComponent(fileUrl)}`);
+    deleteFile(fileUrl: string): Observable<any> {
+        const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fileUrl);
+        if (isGuid) {
+            return this.http.delete<any>(`${this.apiUrl}/${fileUrl}`);
+        }
+        return this.http.delete<any>(`${environment.apiEjecucion}/archivos/delete/${encodeURIComponent(fileUrl)}`);
     }
 
     validateFile(file: File): { valid: boolean; error?: string } {

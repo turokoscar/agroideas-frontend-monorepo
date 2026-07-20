@@ -11,7 +11,7 @@ import { CatalogoItem } from '../../domain/models/catalogo.model';
     providedIn: 'root'
 })
 export class CatalogoRepositoryImpl extends CatalogoRepository {
-    private apiUrl = `${environment.apiEjecucion}/Catalogo`;
+    private apiUrl = `${environment.apiEjecucion}/catalogos`;
 
     constructor(private http: HttpClient) {
         super();

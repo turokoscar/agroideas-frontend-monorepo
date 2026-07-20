@@ -11,7 +11,7 @@ import { ProgramacionItem, ProgramacionListResponse } from '../../domain/models/
     providedIn: 'root'
 })
 export class ProgramacionRepositoryImpl extends ProgramacionRepository {
-    private apiUrl = `${environment.apiEjecucion}/programacion`;
+    private apiUrl = `${environment.apiEjecucion}/programaciones`;
 
     constructor(private http: HttpClient) {
         super();

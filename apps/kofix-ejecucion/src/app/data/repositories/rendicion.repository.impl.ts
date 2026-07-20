@@ -7,13 +7,15 @@ import { RendicionRepository } from '../../domain/repositories/rendicion.reposit
 import { RendicionRequest, RendicionListResponse } from '../../domain/models/rendicion.model';
 import { RendicionMapper } from '../mappers/rendicion.mapper';
 
+import { FileStorageService } from '../../shared/services/file-storage.service';
+
 @Injectable({
     providedIn: 'root'
 })
 export class RendicionRepositoryImpl extends RendicionRepository {
-    private apiUrl = `${environment.apiEjecucion}/rendicion`;
+    private apiUrl = `${environment.apiEjecucion}/rendiciones`;
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private fileStorageService: FileStorageService) {
         super();
     }
 
@@ -51,11 +53,7 @@ export class RendicionRepositoryImpl extends RendicionRepository {
     }
 
     override uploadFile(file: File): Observable<{ fileUrl: string }> {
-        const formData = new FormData();
-        formData.append('file', file);
-        return this.http.post<ResponseDto<{ fileUrl: string }>>(`${environment.apiEjecucion}/filestorage/upload`, formData).pipe(
-            map(res => res.datos!)
-        );
+        return this.fileStorageService.uploadFile(file, 'rendiciones');
     }
 
     override getPendientes(postulanteId: number): Observable<any[]> {

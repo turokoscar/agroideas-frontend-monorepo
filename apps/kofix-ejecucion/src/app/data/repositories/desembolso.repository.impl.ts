@@ -54,13 +54,13 @@ export class DesembolsoRepositoryImpl extends DesembolsoRepository {
     }
 
     override activarCheque(desembolsoId: number): Observable<any> {
-        return this.http.post<ResponseDto>(`${this.apiUrl}/activar-cheque/${desembolsoId}`, {});
+        return this.http.post<ResponseDto>(`${this.apiUrl}/${desembolsoId}/activacion-cheque`, {});
     }
 
     override ejecutarCierreContable(mes: number, anio: number): Observable<any> {
         const params = new HttpParams()
             .set('mes', mes.toString())
             .set('anio', anio.toString());
-        return this.http.post<ResponseDto>(`${this.apiUrl}/cierre-contable`, {}, { params });
+        return this.http.post<ResponseDto>(`${this.apiUrl}/cierres-contables`, {}, { params });
     }
 }

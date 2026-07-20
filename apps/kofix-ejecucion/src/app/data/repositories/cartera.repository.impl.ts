@@ -11,8 +11,7 @@ import { CarteraItem } from '../../domain/models/cartera.model';
     providedIn: 'root'
 })
 export class CarteraRepositoryImpl extends CarteraRepository {
-    private apiUrl = `${environment.apiGeneral}`;
-    private carteraUrl = `${environment.apiEjecucion}/cartera`;
+    private carteraUrl = `${environment.apiEjecucion}/carteras`;
 
     constructor(private http: HttpClient) {
         super();
@@ -44,7 +43,7 @@ export class CarteraRepositoryImpl extends CarteraRepository {
 
     override reasignar(request: ReasignarRequest): Observable<{ exitoso: boolean; mensaje: string }> {
         return this.http.post<ResponseDto<any>>(
-            `${this.carteraUrl}/${request.postulanteId}/reasignar`,
+            `${this.carteraUrl}/${request.postulanteId}/reasignaciones`,
             { nuevoEspecialistaId: Number(request.nuevoEspecialistaId), observacion: request.observacion }
         ).pipe(
             map(res => ({ exitoso: isSuccess(res), mensaje: res.mensaje || '' }))

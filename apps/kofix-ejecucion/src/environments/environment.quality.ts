@@ -1,6 +1,6 @@
 export const environment = {
     production: true,
-    apiSeguridad: 'https://api-seguridad.oscar-pazos.com/api',
+    apiSeguridad: 'https://test.agroideas.gob.pe/api-seguridad/api',
     apiEjecucion: 'https://api-kofix.oscar-pazos.com/api',
-    apiGeneral: 'https://api-general.oscar-pazos.com/api/v2'
+    apiArchivos: 'https://api-archivos.oscar-pazos.com'
 };
