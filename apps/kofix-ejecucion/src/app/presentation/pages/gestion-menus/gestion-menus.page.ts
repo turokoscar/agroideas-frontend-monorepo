@@ -69,7 +69,7 @@ export class GestionMenusPageComponent implements OnInit {
 
   // Gestión de Roles por Menú
   menuRoles = signal<string[]>([]);
-  availableRoles = ['Administrador del sistema', 'Jefe de Unidad de Negocios', 'Supervisor de Monitoreo', 'Especialista de Monitoreo'];
+  availableRoles = ['Administrador del sistema', 'Jefe de Unidad de Negocios', 'Unidad de Negocios'];
 
   columns: TableColumn[] = [
     { field: 'id', header: 'ID', width: '80px', align: 'center' },

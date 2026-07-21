@@ -23,8 +23,8 @@ export interface UserDto {
 
 export enum Role {
     JEFE = 'Jefe de Unidad de Negocios',
-    SUPERVISOR = 'Supervisor de Monitoreo',
-    ESPECIALISTA = 'Especialista de Monitoreo'
+    SUPERVISOR = 'Jefe de Unidad de Negocios', // Jefe acts as Supervisor now
+    ESPECIALISTA = 'Unidad de Negocios'         // Unidad de Negocios is the Specialist
 }
 
 export interface AuthResponse {
