@@ -164,14 +164,14 @@
           severity="danger"
           label="Rechazar"
           icon="close"
-          [disabled]="!observacionSupervisor.trim()"
+          [disabled]="!observacionSupervisor().trim()"
           (onClick)="procesarEvaluacion('RECHAZADO')">
         </ui-button>
         <ui-button
           severity="success"
           label="Aprobar & Abrir Saldo"
           icon="check"
-          [disabled]="!observacionSupervisor.trim()"
+          [disabled]="!observacionSupervisor().trim()"
           (onClick)="procesarEvaluacion('APROBADO')">
         </ui-button>
       </div>

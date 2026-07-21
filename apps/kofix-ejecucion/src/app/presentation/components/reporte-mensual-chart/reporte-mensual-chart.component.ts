@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, computed, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter, computed, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -13,7 +13,8 @@ export interface ReporteMensualItem {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './reporte-mensual-chart.component.html',
-  styleUrls: ['./reporte-mensual-chart.component.sass']
+  styleUrls: ['./reporte-mensual-chart.component.sass'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReporteMensualChartComponent {
   data = input.required<ReporteMensualItem[]>();

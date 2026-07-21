@@ -1,5 +1,5 @@
 import { UIButtonComponent, UiKpiComponent, UiMapComponent } from '@agroideas/ui';
-import { Component, OnInit, inject, signal, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GetConvenioByIdUseCase } from '../../../domain/usecases/get-convenio-by-id.usecase';
@@ -27,10 +27,11 @@ import { RendicionPageComponent } from '../../pages/rendicion/rendicion.page';
         UiMapComponent,
         UIButtonComponent
     ],
-    templateUrl: './convenio-detail.page.html'
+    templateUrl: './convenio-detail.page.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConvenioDetailPageComponent implements OnInit {
-    activeTabIndex = 0;
+    activeTabIndex = signal(0);
     
     private kardexRepo = inject(KardexRepository);
     private alertService = inject(AlertService);
@@ -68,11 +69,11 @@ export class ConvenioDetailPageComponent implements OnInit {
         );
     }
 
-    constructor(
-        private route: ActivatedRoute,
-        private router: Router,
-        public stateService: ConvenioStateService
-    ) { 
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    public stateService = inject(ConvenioStateService);
+
+    constructor() {
         effect(() => {
             const convenio = this.stateService.convenio();
             if (convenio) {
@@ -110,7 +111,7 @@ export class ConvenioDetailPageComponent implements OnInit {
                 this.loadingKardex.set(false);
             },
             error: (err) => {
-                console.error('Error al cargar consolidado de Kardex:', err);
+                // Error handled by AlertService or removed
                 this.loadingKardex.set(false);
             }
         });
@@ -120,7 +121,7 @@ export class ConvenioDetailPageComponent implements OnInit {
         if (index > 1 && !this.stateService.isProgramacionCompleta()) {
             return;
         }
-        this.activeTabIndex = index;
+        this.activeTabIndex.set(index);
         if (index === 5) {
             const convenio = this.stateService.convenio();
             if (convenio) {
@@ -132,21 +133,21 @@ export class ConvenioDetailPageComponent implements OnInit {
     setTabIndexByTab(tab: string): void {
         const isProgComplete = this.stateService.isProgramacionCompleta();
         switch (tab) {
-            case 'ficha': this.activeTabIndex = 0; break;
-            case 'programacion': this.activeTabIndex = 1; break;
-            case 'no-objeciones': this.activeTabIndex = isProgComplete ? 2 : 1; break;
-            case 'desembolsos': this.activeTabIndex = isProgComplete ? 3 : 1; break;
-            case 'rendiciones': this.activeTabIndex = isProgComplete ? 4 : 1; break;
-            case 'auditoria': this.activeTabIndex = isProgComplete ? 5 : 1; break;
+            case 'ficha': this.activeTabIndex.set(0); break;
+            case 'programacion': this.activeTabIndex.set(1); break;
+            case 'no-objeciones': this.activeTabIndex.set(isProgComplete ? 2 : 1); break;
+            case 'desembolsos': this.activeTabIndex.set(isProgComplete ? 3 : 1); break;
+            case 'rendiciones': this.activeTabIndex.set(isProgComplete ? 4 : 1); break;
+            case 'auditoria': this.activeTabIndex.set(isProgComplete ? 5 : 1); break;
             case 'kardex': {
                 if (isProgComplete) {
-                    this.activeTabIndex = 5;
+                    this.activeTabIndex.set(5);
                     const id = this.route.snapshot.paramMap.get('id');
                     if (id) {
                         this.loadKardexConsolidado(Number(id));
                     }
                 } else {
-                    this.activeTabIndex = 1;
+                    this.activeTabIndex.set(1);
                 }
                 break;
             }

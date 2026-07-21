@@ -1,5 +1,5 @@
 import { UIButtonComponent, UICardComponent, UIModalComponent } from '@agroideas/ui';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
 
 @Component({
@@ -59,25 +59,26 @@ import { Component } from '@angular/core';
             <section class="mb-12">
                 <h2 class="text-xl font-medium text-slate-700 mb-6 border-b pb-2">Modales (ui-modal)</h2>
                 <ui-card title="Control de Diálogos">
-                    <ui-button severity="primary" (onClick)="showModal = true">Abrir Modal de Ejemplo</ui-button>
+                    <ui-button severity="primary" (onClick)="showModal.set(true)">Abrir Modal de Ejemplo</ui-button>
                     
                     <app-ui-modal 
-                        [visible]="showModal" 
+                        [visible]="showModal()" 
                         header="Confirmación de Acción" 
-                        (onClose)="showModal = false"
+                        (onClose)="showModal.set(false)"
                         (onConfirm)="handleConfirm()">
                         <p class="text-slate-600">¿Está seguro que desea procesar esta solicitud? Esta acción es irreversible.</p>
                     </app-ui-modal>
                 </ui-card>
             </section>
         </div>
-    `
+    `,
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StyleguidePageComponent {
-    showModal = false;
+    showModal = signal(false);
 
     handleConfirm() {
-        this.showModal = false;
+        this.showModal.set(false);
     }
 }
 

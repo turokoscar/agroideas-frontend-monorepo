@@ -94,7 +94,26 @@ export const routes: Routes = [
                 canActivate: [permissionGuard],
                 data: { permission: PERMISSIONS.GESTION_CARTERA },
                 loadComponent: () => import('./presentation/pages/gestion-menus/gestion-menus.page').then(m => m.GestionMenusPageComponent)
-            }
+            },
+            {
+                path: 'no-objeciones',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/no-objecion/no-objecion.page').then(m => m.NoObjecionPageComponent)
+            },
+            {
+                path: 'desembolsos',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/desembolso/desembolso.page').then(m => m.DesembolsoPageComponent)
+            },
+            {
+                path: 'rendiciones',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/rendicion/rendicion.page').then(m => m.RendicionPageComponent)
+            },
+            { path: '**', redirectTo: 'home' }
         ]
     },
     { path: 'dashboard', redirectTo: 'main', pathMatch: 'full' } // Redirección por compatibilidad

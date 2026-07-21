@@ -1,6 +1,6 @@
 import { AlertService } from '@agroideas/feedback';
 import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
-import { Component, Input, OnInit, Output, EventEmitter, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
@@ -13,6 +13,7 @@ import { NoObjecionBalance } from '../../../domain/models/no-objecion.model';
 @Component({
     selector: 'app-no-objecion-modal',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CommonModule, ReactiveFormsModule, DecimalPipe, UIModalComponent, UIButtonComponent],
     templateUrl: './no-objecion-modal.component.html',
     styleUrls: ['./no-objecion-modal.component.sass']
@@ -29,14 +30,14 @@ export class NoObjecionModalComponent implements OnInit {
     private catalogoRepo = inject(CatalogoRepository);
     private fileStorageService = inject(FileStorageService);
 
-    visible = true;
+    visible = signal(true);
     noObjecionForm: FormGroup;
-    selectedFile: File | null = null;
-    isSubmitting = false;
-    loadingItems = false;
-    programmedItems: NoObjecionProgrammedItem[] = [];
-    tiposDocumento: CatalogoItem[] = [];
-    balances: Record<string, NoObjecionBalance> = {};
+    selectedFile = signal<File | null>(null);
+    isSubmitting = signal(false);
+    loadingItems = signal(false);
+    programmedItems = signal<NoObjecionProgrammedItem[]>([]);
+    tiposDocumento = signal<CatalogoItem[]>([]);
+    balances = signal<Record<string, NoObjecionBalance>>({});
 
     constructor() {
         this.noObjecionForm = this.fb.group({
@@ -100,7 +101,7 @@ export class NoObjecionModalComponent implements OnInit {
                 razonSocialProveedor: [det.razonSocialProveedor, Validators.required]
             });
 
-            const itemObj = this.programmedItems.find(i => i.id == det.itemMlId);
+            const itemObj = this.programmedItems().find(i => i.id == det.itemMlId);
             if (itemObj) {
                 itemForm.get('itemNombre')?.setValue(itemObj.nombre);
             } else if (det.itemNombre) {
@@ -125,80 +126,33 @@ export class NoObjecionModalComponent implements OnInit {
                 resolve();
                 return;
             }
-            this.loadingItems = true;
+            this.loadingItems.set(true);
             this.noObjecionRepo.getProgrammedItemsWithBalance(this.convenioId, includeItemIds).subscribe({
                 next: (items) => {
-                    this.programmedItems = items;
+                    this.programmedItems.set(items);
+                    const currentBalances = { ...this.balances() };
                     items.forEach(it => {
-                        this.balances[it.id] = {
+                        currentBalances[it.id] = {
                             montoComprometido: it.montoComprometido,
                             cantidadComprometida: it.cantidadComprometida
                         };
                     });
-                    this.loadingItems = false;
+                    this.balances.set(currentBalances);
+                    this.loadingItems.set(false);
                     resolve();
                 },
                 error: () => {
-                    this.loadingItems = false;
+                    this.loadingItems.set(false);
                     resolve();
                 }
             });
         });
     }
 
-    loadNoObjecionData() {
-        if (!this.noObjecionId) return;
-
-        this.noObjecionRepo.getById(this.noObjecionId).subscribe({
-            next: (data) => {
-                this.noObjecionForm.patchValue({
-                    tipoDocumento: data.tipoDocumentoId,
-                    numeroDocumento: data.numeroDocumento,
-                    fechaDocumento: typeof data.fechaDocumento === 'string' ? data.fechaDocumento.split('T')[0] : data.fechaDocumento,
-                    archivoUrl: data.archivoUrl,
-                    observacion: data.observacion
-                });
-
-                const itemsArray = this.items;
-                while (itemsArray.length !== 0) {
-                    itemsArray.removeAt(0);
-                }
-
-                data.detalles.forEach((det: any) => {
-                    const itemForm = this.fb.group({
-                        itemId: [det.itemMlId, Validators.required],
-                        itemNombre: [{ value: '', disabled: true }],
-                        cantidad: [det.cantidad, [Validators.required, Validators.min(0.00001)]],
-                        montoAdjudicado: [det.montoAdjudicado, [Validators.required, Validators.min(0.01)]],
-                        rucProveedor: [det.rucProveedor, [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
-                        razonSocialProveedor: [det.razonSocialProveedor, Validators.required]
-                    });
-
-                    const itemObj = this.programmedItems.find(i => i.id == det.itemMlId);
-                    if (itemObj) {
-                        itemForm.get('itemNombre')?.setValue(itemObj.nombre);
-                    } else if (det.itemNombre) {
-                        itemForm.get('itemNombre')?.setValue(det.itemNombre);
-                    }
-
-                    if (this.mode === 'view') {
-                        itemForm.disable();
-                    }
-
-                    itemsArray.push(itemForm);
-                });
-
-                if (this.mode === 'view') {
-                    this.noObjecionForm.disable();
-                }
-            }
-        });
-    }
-
     loadCatalogos() {
         this.catalogoRepo.getByGrupo('TIPO_DOCUMENTO').subscribe({
             next: (res) => {
-                this.tiposDocumento = res;
+                this.tiposDocumento.set(res);
             }
         });
     }
@@ -210,7 +164,7 @@ export class NoObjecionModalComponent implements OnInit {
             .map((c, idx) => idx !== currentIndex ? c.get('itemId')?.value : null)
             .filter(id => id);
 
-        return this.programmedItems.filter(item => {
+        return this.programmedItems().filter(item => {
             if (item.id == selectedItemId) return true;
             if (otherSelectedIds.includes(item.id)) return true;
             const saldoFisico = item.saldoFisico ?? 0;
@@ -244,7 +198,7 @@ export class NoObjecionModalComponent implements OnInit {
     onItemChange(index: number) {
         const control = this.items.at(index);
         const selectedId = control.get('itemId')?.value;
-        const itemObj = this.programmedItems.find(i => i.id == selectedId);
+        const itemObj = this.programmedItems().find(i => i.id == selectedId);
 
         if (itemObj) {
             control.patchValue({
@@ -258,7 +212,7 @@ export class NoObjecionModalComponent implements OnInit {
     onCantidadChange(index: number) {
         const control = this.items.at(index);
         const selectedId = control.get('itemId')?.value;
-        const itemObj = this.programmedItems.find(i => i.id == selectedId);
+        const itemObj = this.programmedItems().find(i => i.id == selectedId);
         const newCantidad = control.get('cantidad')?.value || 0;
 
         if (itemObj && itemObj.metaFisica > 0) {
@@ -275,12 +229,12 @@ export class NoObjecionModalComponent implements OnInit {
     }
 
     getProgrammedItem(id: any): NoObjecionProgrammedItem | undefined {
-        return this.programmedItems.find(p => p.id == id);
+        return this.programmedItems().find(p => p.id == id);
     }
 
     getViewItems(): NoObjecionProgrammedItem[] {
         const usedIds = this.items.controls.map(c => c.get('itemId')?.value).filter(id => id);
-        const result = this.programmedItems.filter(p => usedIds.includes(p.id));
+        const result = this.programmedItems().filter(p => usedIds.includes(p.id));
         const missingIds = usedIds.filter((id: any) => !result.some(r => r.id == id));
         missingIds.forEach((id: any) => {
             const ctrl = this.items.controls.find(c => c.get('itemId')?.value == id);
@@ -314,7 +268,7 @@ export class NoObjecionModalComponent implements OnInit {
             this.alertService.show('Archivo inválido', validation.error!, 'error');
             return;
         }
-        this.selectedFile = file;
+        this.selectedFile.set(file);
     }
 
     calculateTotal(): number {
@@ -325,7 +279,7 @@ export class NoObjecionModalComponent implements OnInit {
     }
 
     close(refresh = false) {
-        this.visible = false;
+        this.visible.set(false);
         this.onClose.emit(refresh);
     }
 
@@ -347,13 +301,13 @@ export class NoObjecionModalComponent implements OnInit {
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
-            const progItem = this.programmedItems.find(p => p.id == item.itemId);
+            const progItem = this.programmedItems().find(p => p.id == item.itemId);
             if (progItem) {
                 if (item.cantidad <= 0 || item.montoAdjudicado <= 0) {
                     this.alertService.toast(`Valores inválidos en el ítem [${progItem.codigo}].`, 'warning');
                     return;
                 }
-                const bal = this.balances[item.itemId] || { montoComprometido: 0, cantidadComprometida: 0 };
+                const bal = this.balances()[item.itemId] || { montoComprometido: 0, cantidadComprometida: 0 };
                 const metaFisica = progItem.metaFisica;
                 const montoAprobado = progItem.aporteAgroideas;
                 if (this.mode === 'create') {
@@ -369,15 +323,15 @@ export class NoObjecionModalComponent implements OnInit {
             }
         }
 
-        this.isSubmitting = true;
-        if (this.selectedFile) {
-            this.fileStorageService.uploadFile(this.selectedFile, 'no-objeciones').subscribe({
+        this.isSubmitting.set(true);
+        if (this.selectedFile()) {
+            this.fileStorageService.uploadFile(this.selectedFile()!, 'no-objeciones').subscribe({
                 next: (res) => {
                     this.noObjecionForm.patchValue({ archivoUrl: res.fileUrl });
                     this.submitForm();
                 },
                 error: (err) => {
-                    this.isSubmitting = false;
+                    this.isSubmitting.set(false);
                     const msg = err.message || 'Error al subir el archivo de No Objeción.';
                     this.alertService.show('Error', msg, 'error');
                 }
@@ -412,12 +366,12 @@ export class NoObjecionModalComponent implements OnInit {
 
         obs.subscribe({
             next: () => {
-                this.isSubmitting = false;
+                this.isSubmitting.set(false);
                 this.alertService.toast(`No Objeción ${this.mode === 'edit' ? 'actualizada' : 'registrada'} exitosamente.`);
                 this.close(true);
             },
             error: (err) => {
-                this.isSubmitting = false;
+                this.isSubmitting.set(false);
                 const msg = err.error?.mensaje || 'Error al procesar la No Objeción.';
                 this.alertService.show('Error', msg, 'error');
             }

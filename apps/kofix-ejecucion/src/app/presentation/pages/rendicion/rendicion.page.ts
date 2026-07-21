@@ -1,12 +1,11 @@
 import { TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
-import { Component, OnInit, inject, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GetRendicionesByConvenioUseCase } from '../../../domain/usecases/rendicion/get-rendiciones.usecase';
 import { Rendicion } from '../../../domain/models/rendicion.model';
 import { RendicionModalComponent } from '../../components/rendicion-modal/rendicion-modal.component';
 import { FormsModule } from '@angular/forms';
-import { DeleteRendicionUseCase } from '../../../domain/usecases/rendicion/delete-rendicion.usecase';
+import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { finalize } from 'rxjs';
 
@@ -22,14 +21,14 @@ import { finalize } from 'rxjs';
     FormsModule,
     UIButtonComponent
   ],
-  templateUrl: './rendicion.page.html'
+  templateUrl: './rendicion.page.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RendicionPageComponent implements OnInit {
   convenioId = input.required<number>();
   readOnly = input<boolean>(false);
 
-  private getRendicionesUseCase = inject(GetRendicionesByConvenioUseCase);
-  private deleteRendicionUseCase = inject(DeleteRendicionUseCase);
+  private rendicionRepo = inject(RendicionRepository);
   private catalogoRepo = inject(CatalogoRepository);
   private alertService = inject(AlertService);
 
@@ -71,7 +70,7 @@ export class RendicionPageComponent implements OnInit {
     if (!cid) return;
 
     this.loading.set(true);
-    this.getRendicionesUseCase.execute(cid, this.offset(), this.limit(), this.filterTipoCp(), this.filterNumero())
+    this.rendicionRepo.getByConvenio(cid, this.offset(), this.limit(), this.filterTipoCp(), this.filterNumero())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (res) => {
@@ -113,7 +112,7 @@ export class RendicionPageComponent implements OnInit {
     if (!confirmed.isConfirmed) return;
 
     this.loading.set(true);
-    this.deleteRendicionUseCase.execute(id).pipe(
+    this.rendicionRepo.delete(id).pipe(
         finalize(() => this.loading.set(false))
     ).subscribe({
         next: () => {

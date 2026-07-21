@@ -7,7 +7,7 @@
         [actionsTemplate]="itemActions"
         [rowTemplate]="alertaTemplate"
         [totalRecords]="totalRecords()"
-        [rows]="pageSize"
+        [rows]="pageSize()"
         [lazy]="true"
         (onLazyLoad)="onPageChange($event)"
         icon="account_tree"

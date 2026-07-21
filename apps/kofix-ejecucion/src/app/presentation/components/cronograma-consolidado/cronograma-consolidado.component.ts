@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { UIButtonComponent } from '@agroideas/ui';
@@ -9,7 +9,8 @@ import { AlertService } from '@agroideas/feedback';
   standalone: true,
   imports: [CommonModule, UIButtonComponent],
   templateUrl: './cronograma-consolidado.component.html',
-  styleUrls: ['./cronograma-consolidado.component.sass']
+  styleUrls: ['./cronograma-consolidado.component.sass'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CronogramaConsolidadoComponent implements OnInit {
   convenioId = input.required<number>();
@@ -67,7 +68,7 @@ export class CronogramaConsolidadoComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        console.error('Error al cargar cronograma consolidado del backend:', err);
+        // Error handled by AlertService or removed
         this.loading.set(false);
       }
     });

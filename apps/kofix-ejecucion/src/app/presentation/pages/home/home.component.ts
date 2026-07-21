@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
@@ -16,7 +16,8 @@ import { ReporteMensualDonutComponent } from '../../components/reporte-mensual-d
         ReporteMensualDonutComponent
     ],
     templateUrl: './home.component.html',
-    styleUrls: ['./home.component.sass']
+    styleUrls: ['./home.component.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent implements OnInit, OnDestroy {
     private convenioRepo = inject(ConvenioRepository);
@@ -53,7 +54,7 @@ export class HomeComponent implements OnInit, OnDestroy {
                 this.loadingResumen.set(false);
             },
             error: (err) => {
-                console.error('Error al cargar resumen ejecutivo del home:', err);
+                // Error handled by AlertService or removed
                 this.loadingResumen.set(false);
             }
         });
@@ -69,7 +70,7 @@ export class HomeComponent implements OnInit, OnDestroy {
                 this.loadingChart.set(false);
             },
             error: (err) => {
-                console.error('Error al cargar reporte mensual:', err);
+                // Error handled by AlertService or removed
                 this.loadingChart.set(false);
             }
         });

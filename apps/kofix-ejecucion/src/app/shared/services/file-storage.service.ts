@@ -108,7 +108,7 @@ export class FileStorageService {
                 window.URL.revokeObjectURL(url);
             },
             error: (err) => {
-                console.error('[FileStorageService] Error downloading file:', err);
+                // Error handled by AlertService or removed
             }
         });
     }

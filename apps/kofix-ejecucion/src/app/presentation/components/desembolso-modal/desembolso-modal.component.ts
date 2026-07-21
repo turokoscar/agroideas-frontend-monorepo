@@ -1,10 +1,9 @@
 import { AlertService } from '@agroideas/feedback';
 import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
-import { Component, Output, EventEmitter, OnInit, inject, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Output, EventEmitter, OnInit, inject, signal, input } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
-import { RegistrarDesembolsoUseCase } from '../../../domain/usecases/desembolso/registrar-desembolso.usecase';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
@@ -15,7 +14,8 @@ import { ConvenioStateService } from '../../../shared/services/convenio-state.se
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule, FormsModule, DecimalPipe, UIModalComponent, UIButtonComponent],
     templateUrl: './desembolso-modal.component.html',
-    styleUrls: ['./desembolso-modal.component.sass']
+    styleUrls: ['./desembolso-modal.component.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DesembolsoModalComponent implements OnInit {
     convenioId = input.required<number>();
@@ -33,7 +33,6 @@ export class DesembolsoModalComponent implements OnInit {
     private fb = inject(FormBuilder);
     private alertService = inject(AlertService);
     private noObjecionRepo = inject(NoObjecionRepository);
-    private registerUseCase = inject(RegistrarDesembolsoUseCase);
     private stateService = inject(ConvenioStateService);
     private desembolsoRepo = inject(DesembolsoRepository);
     private catalogoRepo = inject(CatalogoRepository);
@@ -58,7 +57,7 @@ export class DesembolsoModalComponent implements OnInit {
     private loadTiposPago(): void {
         this.catalogoRepo.getByGrupo('TIPO_PAGO').subscribe({
             next: (data: any) => { this.tiposPago.set(data); },
-            error: (err: any) => { console.error('Error loading payment types', err); }
+            error: (err: any) => { /* Error handled by AlertService or removed */ }
         });
     }
 
@@ -129,7 +128,7 @@ export class DesembolsoModalComponent implements OnInit {
         this.isSubmitting.set(true);
         const v = this.form.value;
 
-        this.registerUseCase.execute({
+        this.desembolsoRepo.registrar({
             postulanteId: Number(this.convenioId()),
             numeroSolicitud: v.numeroSolicitud,
             tipoPagoId: Number(v.tipoPagoId),

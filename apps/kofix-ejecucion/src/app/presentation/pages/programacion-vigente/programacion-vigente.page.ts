@@ -1,9 +1,10 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { GetVigenteConveniosUseCase } from '../../../domain/usecases/get-vigente-convenios.usecase';
+import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { finalize } from 'rxjs/operators';
 
 interface LazyLoadEvent {
     first?: number;
@@ -15,10 +16,11 @@ interface LazyLoadEvent {
     standalone: true,
     imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UIButtonComponent],
     templateUrl: './programacion-vigente.page.html',
-    styleUrls: ['./programacion-vigente.page.sass']
+    styleUrls: ['./programacion-vigente.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProgramacionVigentePageComponent implements OnInit {
-    private getVigenteConveniosUseCase = inject(GetVigenteConveniosUseCase);
+    private convenioRepo = inject(ConvenioRepository);
     private router = inject(Router);
 
     Math = Math;
@@ -26,9 +28,9 @@ export class ProgramacionVigentePageComponent implements OnInit {
     convenios = signal<any[]>([]);
     loading = signal(false);
     totalRecords = signal(0);
-    pageSize = 10;
+    pageSize = signal(10);
 
-    search = '';
+    search = signal('');
 
     columns: TableColumn[] = [
         { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
@@ -40,28 +42,25 @@ export class ProgramacionVigentePageComponent implements OnInit {
     ];
 
     ngOnInit(): void {
-        this.loadData({ first: 0, rows: this.pageSize });
+        this.loadData({ first: 0, rows: this.pageSize() });
     }
 
     loadData(event: LazyLoadEvent): void {
         this.loading.set(true);
-        const page = event.first ? Math.floor(event.first / (event.rows ?? this.pageSize)) + 1 : 1;
-        const size = event.rows ?? this.pageSize;
+        const page = event.first ? Math.floor(event.first / (event.rows ?? this.pageSize())) + 1 : 1;
+        const size = event.rows ?? this.pageSize();
 
-        this.getVigenteConveniosUseCase.execute(page, size, this.search).subscribe({
+        this.convenioRepo.getVigente(page, size, this.search()).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res: { datos: any[], total: number }) => {
                 this.convenios.set(res.datos);
                 this.totalRecords.set(res.total);
-                this.loading.set(false);
             },
-            error: () => {
-                this.loading.set(false);
-            }
+            error: () => {}
         });
     }
 
     onSearch(): void {
-        this.loadData({ first: 0, rows: this.pageSize } as LazyLoadEvent);
+        this.loadData({ first: 0, rows: this.pageSize() } as LazyLoadEvent);
     }
 
     getPorcentajeProgramado(item: any): number {

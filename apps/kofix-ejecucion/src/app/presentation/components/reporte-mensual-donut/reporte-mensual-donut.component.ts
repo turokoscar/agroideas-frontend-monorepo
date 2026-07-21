@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface DonutData {
@@ -12,7 +12,8 @@ export interface DonutData {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './reporte-mensual-donut.component.html',
-  styleUrls: ['./reporte-mensual-donut.component.sass']
+  styleUrls: ['./reporte-mensual-donut.component.sass'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReporteMensualDonutComponent {
   data = input.required<DonutData>();

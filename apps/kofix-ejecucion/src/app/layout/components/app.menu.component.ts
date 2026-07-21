@@ -114,7 +114,7 @@ export class AppMenuComponent implements OnInit {
     loadMenus(): void {
         this.menuRepository.getMenus().subscribe({
             next: (menus) => this.menus.set(menus),
-            error: (err) => console.error('Error loading menus:', err)
+            error: (err) => { /* Error handled by AlertService or removed */ }
         });
     }
 

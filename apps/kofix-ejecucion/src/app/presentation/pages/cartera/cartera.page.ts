@@ -1,11 +1,12 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { HasPermissionDirective } from '@agroideas/security';
 import { PERMISSIONS } from '@agroideas/utils';
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CarteraRepository, Especialista, ReasignarRequest } from '../../../domain/repositories/cartera.repository';
+import { finalize } from 'rxjs/operators';
 import { CarteraItem } from '../../../domain/models/cartera.model';
 import { AlertService } from '@agroideas/feedback';
 
@@ -22,7 +23,8 @@ import { AlertService } from '@agroideas/feedback';
         UIButtonComponent
     ],
     templateUrl: './cartera.page.html',
-    styleUrls: ['./cartera.page.sass']
+    styleUrls: ['./cartera.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CarteraPageComponent implements OnInit {
     private carteraRepo = inject(CarteraRepository);
@@ -61,21 +63,18 @@ export class CarteraPageComponent implements OnInit {
         const offset = event?.first || 0;
         const limit = event?.rows || 10;
 
-        setTimeout(() => this.loading.set(true));
+        this.loading.set(true);
 
         this.carteraRepo.getCartera(
             this.search(),
             offset,
             limit
-        ).subscribe({
+        ).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res) => {
                 this.cartera.set(res.items);
                 this.totalRecords.set(res.total);
-                this.loading.set(false);
             },
-            error: () => {
-                this.loading.set(false);
-            }
+            error: () => {}
         });
     }
 

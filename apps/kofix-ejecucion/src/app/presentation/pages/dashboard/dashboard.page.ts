@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { AuthRepository } from '../../../domain/repositories/auth.repository';
@@ -11,12 +11,13 @@ import { DashboardHeaderComponent } from '../../components/dashboard-header/dash
     standalone: true,
     imports: [RouterModule, SidebarComponent, DashboardHeaderComponent],
     templateUrl: './dashboard.page.html',
-    styleUrls: ['./dashboard.page.sass']
+    styleUrls: ['./dashboard.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardPageComponent {
     private authRepository = inject(AuthRepository);
 
-    isSidebarOpen = true;
+    isSidebarOpen = signal(true);
     user = this.authRepository.user$;
 
     menuItems = [
@@ -38,7 +39,7 @@ export class DashboardPageComponent {
 
 
     toggleSidebar() {
-        this.isSidebarOpen = !this.isSidebarOpen;
+        this.isSidebarOpen.update(v => !v);
     }
 
     logout() {

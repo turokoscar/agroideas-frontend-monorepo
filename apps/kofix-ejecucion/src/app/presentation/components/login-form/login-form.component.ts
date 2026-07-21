@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UIButtonComponent } from '@agroideas/ui';
@@ -6,6 +6,7 @@ import { UIButtonComponent } from '@agroideas/ui';
 @Component({
     selector: 'app-login-form',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,
         UIButtonComponent

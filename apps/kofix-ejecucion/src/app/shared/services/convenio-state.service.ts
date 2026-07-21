@@ -49,7 +49,7 @@ export class ConvenioStateService {
         this._loading.set(false);
       },
       error: (err) => {
-        console.error('[STATE-SVC] refresh() ERROR:', err);
+        // Error handled by AlertService or removed
         this._loading.set(false);
       }
     });

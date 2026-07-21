@@ -44,7 +44,7 @@
     [columns]="columns"
     [loading]="loading()"
     [totalRecords]="totalRecords()"
-    [rows]="pageSize"
+    [rows]="pageSize()"
     [paginator]="true"
     [lazy]="true"
     [hasActions]="true"
@@ -102,8 +102,8 @@
     <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="download"
       ariaLabel="Descargar convenio físico" (onClick)="$event.stopPropagation(); downloadConvenioFisico(row.id, formatConvenioNumber(row))" />
     <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="receipt_long"
-      ariaLabel="Descargar Kardex resumen" (onClick)="$event.stopPropagation(); downloadKardexResumen(row.id, formatConvenioNumber(row))" />
+      ariaLabel="Descargar Kardex resumen" (onClick)="$event.stopPropagation(); exportService.exportKardexConsolidado(row.id, formatConvenioNumber(row))" />
     <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="table_view"
-      ariaLabel="Descargar reporte de programación" (onClick)="$event.stopPropagation(); downloadReporteProgramacion(row.id, formatConvenioNumber(row))" />
+      ariaLabel="Descargar reporte de programación" (onClick)="$event.stopPropagation(); exportService.exportProgramacionReporte(row.id, formatConvenioNumber(row))" />
   </div>
 </ng-template>

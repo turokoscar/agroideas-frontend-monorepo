@@ -1,10 +1,11 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '@agroideas/feedback';
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent, UIModalComponent } from '@agroideas/ui';
 import { formatCurrency } from '@agroideas/utils';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
+import { finalize } from 'rxjs/operators';
 
 @Component({
     selector: 'app-bandeja-aprobacion-page',
@@ -19,7 +20,8 @@ import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.r
     ],
     providers: [DecimalPipe],
     templateUrl: './bandeja-aprobacion.page.html',
-    styleUrls: ['./bandeja-aprobacion.page.sass']
+    styleUrls: ['./bandeja-aprobacion.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BandejaAprobacionPageComponent implements OnInit {
     private noObjecionRepo = inject(NoObjecionRepository);
@@ -33,7 +35,7 @@ export class BandejaAprobacionPageComponent implements OnInit {
     // Modal de evaluación
     showEvalModal = signal(false);
     selectedItem = signal<any | null>(null);
-    observacionSupervisor = '';
+    observacionSupervisor = signal('');
     isSubmitting = signal(false);
 
     columns: TableColumn[] = [
@@ -70,17 +72,14 @@ export class BandejaAprobacionPageComponent implements OnInit {
         const offset = event?.first || 0;
         const limit = event?.rows || 10;
 
-        setTimeout(() => this.loading.set(true));
+        this.loading.set(true);
 
-        this.noObjecionRepo.getBandejaAprobacion(this.activeTab(), offset, limit).subscribe({
+        this.noObjecionRepo.getBandejaAprobacion(this.activeTab(), offset, limit).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res) => {
                 this.items.set(res.items);
                 this.totalRecords.set(res.total);
-                this.loading.set(false);
             },
-            error: () => {
-                this.loading.set(false);
-            }
+            error: () => {}
         });
     }
 
@@ -113,7 +112,7 @@ export class BandejaAprobacionPageComponent implements OnInit {
 
     openEvaluarModal(item: any): void {
         this.selectedItem.set(item);
-        this.observacionSupervisor = '';
+        this.observacionSupervisor.set('');
         this.showEvalModal.set(true);
     }
 
@@ -126,7 +125,7 @@ export class BandejaAprobacionPageComponent implements OnInit {
         const item = this.selectedItem();
         if (!item) return;
 
-        if (!this.observacionSupervisor.trim()) {
+        if (!this.observacionSupervisor().trim()) {
             this.alertService.toast('Debe ingresar un sustento u observación obligatoriamente.', 'warning');
             return;
         }
@@ -138,7 +137,7 @@ export class BandejaAprobacionPageComponent implements OnInit {
         ).then((result: any) => {
             if (result.isConfirmed) {
                 this.isSubmitting.set(true);
-                this.noObjecionRepo.evaluar(item.id, estado, this.observacionSupervisor).subscribe({
+                this.noObjecionRepo.evaluar(item.id, estado, this.observacionSupervisor()).subscribe({
                     next: (res: any) => {
                         this.isSubmitting.set(false);
                         this.alertService.show('Éxito', res.mensaje || `No Objeción evaluada correctamente.`, 'success');

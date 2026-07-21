@@ -2,15 +2,15 @@ import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFil
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { PERMISSIONS } from '@agroideas/utils';
-import { Component, OnInit, inject, input, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GetDesembolsosByConvenioUseCase } from '../../../domain/usecases/desembolso/get-desembolsos.usecase';
 import { Desembolso } from '../../../domain/models/desembolso.model';
 import { DesembolsoModalComponent } from '../../components/desembolso-modal/desembolso-modal.component';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-desembolso-page',
@@ -25,7 +25,8 @@ import { DesembolsoRepository } from '../../../domain/repositories/desembolso.re
     UIButtonComponent
   ],
   templateUrl: './desembolso.page.html',
-  styleUrls: ['./desembolso.page.sass']
+  styleUrls: ['./desembolso.page.sass'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DesembolsoPageComponent implements OnInit {
   convenioId = input.required<number>();
@@ -67,12 +68,8 @@ export class DesembolsoPageComponent implements OnInit {
   private permissionService = inject(PermissionService);
   protected readonly puedeActivarCheque = computed(() => this.permissionService.hasPermission(PERMISSIONS.ACTIVAR_CHEQUES));
   private desembolsoRepo = inject(DesembolsoRepository);
-
-  constructor(
-    private getDesembolsosUseCase: GetDesembolsosByConvenioUseCase,
-    private catalogoRepository: CatalogoRepository,
-    private alertService: AlertService
-  ) { }
+  private catalogoRepository = inject(CatalogoRepository);
+  private alertService = inject(AlertService);
 
   onSearch(): void {
     this.loadDesembolsos(0, 10);
@@ -95,9 +92,9 @@ export class DesembolsoPageComponent implements OnInit {
 
   loadDesembolsos(offset = 0, limit = 10): void {
     if (!this.convenioId()) return;
-    setTimeout(() => this.loading.set(true));
+    this.loading.set(true);
 
-    this.getDesembolsosUseCase.execute(
+    this.desembolsoRepo.getByPostulante(
         this.convenioId(),
         this.filterNumero(),
         this.filterTipoPago(),
@@ -105,15 +102,13 @@ export class DesembolsoPageComponent implements OnInit {
         this.filterFechaFin(),
         offset,
         limit
-    ).subscribe({
+    ).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (result) => {
         this.desembolsos.set(result.items);
         this.totalRecords.set(result.total);
-        this.loading.set(false);
       },
       error: (err) => {
-        console.error('Error al cargar Desembolsos:', err);
-        this.loading.set(false);
+        // Error handled by AlertService or removed
       }
     });
   }
@@ -130,14 +125,12 @@ export class DesembolsoPageComponent implements OnInit {
       ).then((result: any) => {
           if (result.isConfirmed) {
               this.loading.set(true);
-              this.desembolsoRepo.activarCheque(id).subscribe({
+              this.desembolsoRepo.activarCheque(id).pipe(finalize(() => this.loading.set(false))).subscribe({
                   next: () => {
-                      this.loading.set(false);
                       this.alertService.show('Éxito', 'El cheque ha sido activado y efectivizado contablemente.', 'success');
                       this.loadDesembolsos();
                   },
                   error: (err) => {
-                      this.loading.set(false);
                       this.alertService.show('Error', err.error?.mensaje || 'No se pudo activar el cheque.', 'error');
                   }
               });

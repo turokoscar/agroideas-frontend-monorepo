@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { 
@@ -11,13 +11,8 @@ import {
 } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { MenuItem } from '../../../domain/models/menu/menu.model';
-import { GetMenusListUseCase } from '../../../domain/usecases/menu/get-menus-list.usecase';
-import { CreateMenuUseCase } from '../../../domain/usecases/menu/create-menu.usecase';
-import { UpdateMenuUseCase } from '../../../domain/usecases/menu/update-menu.usecase';
-import { DeleteMenuUseCase } from '../../../domain/usecases/menu/delete-menu.usecase';
-import { GetMenuRolesUseCase } from '../../../domain/usecases/menu/get-menu-roles.usecase';
-import { AssignMenuRoleUseCase } from '../../../domain/usecases/menu/assign-menu-role.usecase';
-import { RemoveMenuRoleUseCase } from '../../../domain/usecases/menu/remove-menu-role.usecase';
+import { MenuRepository } from '../../../domain/repositories/menu.repository';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-gestion-menus-page',
@@ -33,16 +28,11 @@ import { RemoveMenuRoleUseCase } from '../../../domain/usecases/menu/remove-menu
     UIModalComponent
   ],
   templateUrl: './gestion-menus.page.html',
-  styleUrls: ['./gestion-menus.page.sass']
+  styleUrls: ['./gestion-menus.page.sass'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GestionMenusPageComponent implements OnInit {
-  private getMenusListUseCase = inject(GetMenusListUseCase);
-  private createMenuUseCase = inject(CreateMenuUseCase);
-  private updateMenuUseCase = inject(UpdateMenuUseCase);
-  private deleteMenuUseCase = inject(DeleteMenuUseCase);
-  private getMenuRolesUseCase = inject(GetMenuRolesUseCase);
-  private assignMenuRoleUseCase = inject(AssignMenuRoleUseCase);
-  private removeMenuRoleUseCase = inject(RemoveMenuRoleUseCase);
+  private menuRepo = inject(MenuRepository);
   private alertService = inject(AlertService);
   private fb = inject(FormBuilder);
 
@@ -52,7 +42,7 @@ export class GestionMenusPageComponent implements OnInit {
   isSubmitting = signal(false);
 
   // Filtros
-  search = '';
+  search = signal('');
 
   // Formulario y Modal
   isModalOpen = signal(false);
@@ -91,7 +81,7 @@ export class GestionMenusPageComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(150)]],
       descripcion: ['', [Validators.maxLength(250)]],
       icono: ['circle', [Validators.maxLength(100)]],
-      ruta: ['', [Validators.maxLength(250)]],
+      ruta: ['', [Validators.maxLength(250), Validators.pattern(/^\/main\/[a-z][a-z0-9-]*$/)]],
       menuPadreId: [null],
       orden: [1, [Validators.required, Validators.min(1)]]
     });
@@ -99,22 +89,20 @@ export class GestionMenusPageComponent implements OnInit {
 
   loadMenus(): void {
     this.loading.set(true);
-    this.getMenusListUseCase.execute().subscribe({
+    this.menuRepo.getMenusList().pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (data) => {
         this.menus.set(data);
         this.applyFilter();
-        this.loading.set(false);
       },
       error: (err) => {
-        console.error('Error al cargar menús:', err);
+        // Error handled by AlertService or removed
         this.alertService.show('Error', 'No se pudieron recuperar los menús.', 'error');
-        this.loading.set(false);
       }
     });
   }
 
   applyFilter(): void {
-    const term = this.search.toLowerCase().trim();
+    const term = this.search().toLowerCase().trim();
     if (!term) {
       this.filteredMenus.set(this.menus());
     } else {
@@ -167,8 +155,8 @@ export class GestionMenusPageComponent implements OnInit {
 
     const isEdit = !!this.selectedMenu();
     const action$ = isEdit 
-      ? this.updateMenuUseCase.execute(payload.id, payload)
-      : this.createMenuUseCase.execute(payload);
+      ? this.menuRepo.updateMenu(payload.id, payload)
+      : this.menuRepo.createMenu(payload);
 
     this.isSubmitting.set(true);
     action$.subscribe({
@@ -192,7 +180,7 @@ export class GestionMenusPageComponent implements OnInit {
   deleteMenu(menu: MenuItem): void {
     this.alertService.confirm('¿Confirmar eliminación?', `¿Desea eliminar lógicamente el menú "${menu.nombre}"? Sus hijos también se desactivarán.`).then((confirmed) => {
       if (confirmed.isConfirmed) {
-        this.deleteMenuUseCase.execute(menu.id).subscribe({
+        this.menuRepo.deleteMenu(menu.id).subscribe({
           next: (res) => {
             if (res.exitoso) {
               this.alertService.show('Eliminado', 'El menú ha sido desactivado.', 'success');
@@ -218,7 +206,7 @@ export class GestionMenusPageComponent implements OnInit {
   }
 
   loadMenuRoles(menuId: number): void {
-    this.getMenuRolesUseCase.execute(menuId).subscribe({
+    this.menuRepo.getRolesByMenuId(menuId).subscribe({
       next: (res) => {
         if (res.exitoso) {
           this.menuRoles.set(res.datos || []);
@@ -237,7 +225,7 @@ export class GestionMenusPageComponent implements OnInit {
     if (!menuId) return;
 
     if (checkbox.checked) {
-      this.assignMenuRoleUseCase.execute(menuId, rol).subscribe({
+      this.menuRepo.assignRoleToMenu(menuId, rol).subscribe({
         next: (res) => {
           if (res.exitoso) {
             this.loadMenuRoles(menuId);
@@ -252,7 +240,7 @@ export class GestionMenusPageComponent implements OnInit {
         }
       });
     } else {
-      this.removeMenuRoleUseCase.execute(menuId, rol).subscribe({
+      this.menuRepo.removeRoleFromMenu(menuId, rol).subscribe({
         next: (res) => {
           if (res.exitoso) {
             this.loadMenuRoles(menuId);

@@ -1,5 +1,5 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent } from '@agroideas/ui';
-import { Component, Input, OnInit, inject, signal, input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal, input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProgramacionRepository, ProgramacionItemsResponse } from '../../../domain/repositories/programacion.repository';
 import { ProgramacionItem } from '../../../domain/models/programacion.model';
@@ -9,6 +9,7 @@ import { ConvenioStateService } from '../../../shared/services/convenio-state.se
 @Component({
     selector: 'app-programacion-items',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CommonModule, UiDataTableComponent, UiStatusPillComponent, ProgramacionCronogramaModalComponent, UIButtonComponent],
     templateUrl: './programacion-items.component.html',
     styleUrls: ['./programacion-items.component.sass']
@@ -26,8 +27,8 @@ export class ProgramacionItemsComponent implements OnInit {
     totalRecords = signal(0);
     loading = signal(false);
     selectedItem = signal<ProgramacionItem | null>(null);
-    pageSize = 10;
-    currentPage = 1;
+    pageSize = signal(10);
+    currentPage = signal(1);
 
     columns: TableColumn[] = [
         { field: 'orden', header: 'Código', width: '70px', align: 'center' },
@@ -42,7 +43,7 @@ export class ProgramacionItemsComponent implements OnInit {
     ];
 
     ngOnInit(): void {
-        this.loadItems(this.currentPage, this.pageSize);
+        this.loadItems(this.currentPage(), this.pageSize());
     }
 
     loadItems(page: number, pageSize: number): void {
@@ -54,15 +55,15 @@ export class ProgramacionItemsComponent implements OnInit {
                 this.loading.set(false);
             },
             error: (e) => {
-                console.error('[PROG-ITEMS] loadItems() ERROR:', e);
+                // Error handled by AlertService or removed
                 this.loading.set(false);
             }
         });
     }
 
     onPageChange(event: any): void {
-        this.currentPage = (event.first / event.rows) + 1;
-        this.loadItems(this.currentPage, this.pageSize);
+        this.currentPage.set((event.first / event.rows) + 1);
+        this.loadItems(this.currentPage(), this.pageSize());
     }
 
     openCronograma(item: ProgramacionItem): void {
@@ -70,7 +71,7 @@ export class ProgramacionItemsComponent implements OnInit {
     }
 
     onSaved(): void {
-        this.loadItems(this.currentPage, this.pageSize);
+        this.loadItems(this.currentPage(), this.pageSize());
         // Refrescar los tiles de la ficha del convenio
         this.stateService.refresh(this.convenioId());
     }

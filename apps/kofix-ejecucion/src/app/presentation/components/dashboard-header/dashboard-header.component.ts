@@ -1,11 +1,12 @@
 import { UIButtonComponent } from '@agroideas/ui';
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { User } from '../../../domain/models/auth/auth.model';
 
 @Component({
     selector: 'app-dashboard-header',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [UIButtonComponent],
     templateUrl: './dashboard-header.component.html',
     styleUrls: ['./dashboard-header.component.sass']

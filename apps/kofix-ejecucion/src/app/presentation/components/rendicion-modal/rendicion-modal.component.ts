@@ -1,13 +1,10 @@
 import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
-import { Component, input, output, signal, inject, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormArray, FormGroup } from '@angular/forms';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
-import { RegistrarRendicionUseCase } from '../../../domain/usecases/rendicion/registrar-rendicion.usecase';
-import { UpdateRendicionUseCase } from '../../../domain/usecases/rendicion/update-rendicion.usecase';
-import { GetPendientesRendicionUseCase } from '../../../domain/usecases/rendicion/get-pendientes-rendicion.usecase';
-import { UploadFileUseCase } from '../../../domain/usecases/rendicion/upload-file.usecase';
+import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
 import { Rendicion } from '../../../domain/models/rendicion.model';
 import { finalize } from 'rxjs';
 
@@ -15,7 +12,8 @@ import { finalize } from 'rxjs';
   selector: 'app-rendicion-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, UIModalComponent, FormsModule, UIButtonComponent],
-  templateUrl: './rendicion-modal.component.html'
+  templateUrl: './rendicion-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RendicionModalComponent implements OnInit {
   visible = input.required<boolean>();
@@ -26,10 +24,7 @@ export class RendicionModalComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private catalogoRepo = inject(CatalogoRepository);
-  private registrarRendicionUseCase = inject(RegistrarRendicionUseCase);
-  private updateRendicionUseCase = inject(UpdateRendicionUseCase);
-  private getPendientesRendicionUseCase = inject(GetPendientesRendicionUseCase);
-  private uploadFileUseCase = inject(UploadFileUseCase);
+  private rendicionRepo = inject(RendicionRepository);
   private alertService = inject(AlertService);
 
   isEdit = computed(() => !!this.rendicion());
@@ -70,8 +65,6 @@ export class RendicionModalComponent implements OnInit {
     const total = this.form.get('totalComprobante')?.value || 0;
     return Math.abs(this.totalDistribuido - total) < 0.01;
   }
-
-  constructor() {}
 
   ngOnInit(): void {
     this.loadCatalogs();
@@ -135,7 +128,7 @@ export class RendicionModalComponent implements OnInit {
 
   loadDesembolsos(): void {
     if (this.convenioId()) {
-      this.getPendientesRendicionUseCase.execute(this.convenioId()).subscribe(data => {
+      this.rendicionRepo.getPendientes(this.convenioId()).subscribe(data => {
         this.desembolsosPendientes.set(data);
       });
     }
@@ -180,7 +173,7 @@ export class RendicionModalComponent implements OnInit {
 
   uploadFile(file: File): void {
     this.uploadingFile.set(true);
-    this.uploadFileUseCase.execute(file).pipe(
+    this.rendicionRepo.uploadFile(file).pipe(
       finalize(() => this.uploadingFile.set(false))
     ).subscribe({
       next: (res) => {
@@ -239,8 +232,8 @@ export class RendicionModalComponent implements OnInit {
     };
 
     const obs$ = this.isEdit()
-        ? this.updateRendicionUseCase.execute(this.rendicion()!.id, request as any)
-        : this.registrarRendicionUseCase.execute(request as any);
+        ? this.rendicionRepo.update(this.rendicion()!.id, request as any)
+        : this.rendicionRepo.create(request as any);
 
     obs$.pipe(
       finalize(() => this.isSubmitting.set(false))

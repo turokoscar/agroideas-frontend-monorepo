@@ -1,5 +1,5 @@
 import { UIButtonComponent, UICardComponent, UiKpiComponent } from '@agroideas/ui';
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -21,7 +21,8 @@ export interface ReporteOption {
         UIButtonComponent
     ],
     templateUrl: './reportes.page.html',
-    styleUrls: ['./reportes.page.sass']
+    styleUrls: ['./reportes.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReportesPageComponent {
     loading = signal(false);
@@ -65,10 +66,10 @@ export class ReportesPageComponent {
         }
     ];
 
-    selectedReporteValue: string | null = null;
+    selectedReporteValue = signal<string | null>(null);
     selectedReporte = signal<ReporteOption | null>(null);
-    fechaInicio: Date | null = null;
-    fechaFin: Date | null = null;
+    fechaInicio = signal<Date | null>(null);
+    fechaFin = signal<Date | null>(null);
 
     onReporteChange(event: any): void {
         const val = event.value as string;
@@ -79,7 +80,7 @@ export class ReportesPageComponent {
     generarReporte(): void {
         if (!this.selectedReporte()) return;
         this.loading.set(true);
-        setTimeout(() => this.loading.set(false), 1500);
+        this.loading.set(false);
     }
 
     exportarExcel(): void {

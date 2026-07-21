@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { Router } from '@angular/router';
-import { LoginUseCase } from '../../../domain/usecases/auth/login.usecase';
+import { AuthRepository } from '../../../domain/repositories/auth.repository';
+import { finalize } from 'rxjs/operators';
 import { LoginFormComponent } from '../../components/login-form/login-form.component';
 
 @Component({
@@ -9,30 +10,29 @@ import { LoginFormComponent } from '../../components/login-form/login-form.compo
     standalone: true,
     imports: [LoginFormComponent],
     templateUrl: './login.page.html',
-    styleUrls: ['./login.page.sass']
+    styleUrls: ['./login.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginPageComponent {
-    private loginUseCase = inject(LoginUseCase);
+    private authRepo = inject(AuthRepository);
     private router = inject(Router);
 
-    loading = false;
-    errorMessage = '';
+    loading = signal(false);
+    errorMessage = signal('');
 
     handleLogin(credentials: any) {
-        this.loading = true;
-        this.errorMessage = '';
-        this.loginUseCase.execute(credentials).subscribe({
+        this.loading.set(true);
+        this.errorMessage.set('');
+        this.authRepo.login(credentials).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res) => {
                 if (res.exitoso) {
                     this.router.navigate(['/main']);
                 } else {
-                    this.errorMessage = res.mensaje || 'Credenciales inválidas';
-                    this.loading = false;
+                    this.errorMessage.set(res.mensaje || 'Credenciales inválidas');
                 }
             },
             error: (err) => {
-                this.errorMessage = 'No se pudo conectar con el servidor de seguridad';
-                this.loading = false;
+                this.errorMessage.set('No se pudo conectar con el servidor de seguridad');
             }
         });
     }

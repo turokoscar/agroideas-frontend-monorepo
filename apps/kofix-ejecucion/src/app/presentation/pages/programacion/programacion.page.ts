@@ -1,10 +1,11 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
-import { Component, signal, inject, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { GetProgramacionResumenUseCase } from '../../../domain/usecases/programacion/get-programacion-resumen.usecase';
 import { ProgramacionResumen } from '../../../domain/models/programacion.model';
+import { ProgramacionRepository } from '../../../domain/repositories/programacion.repository';
+import { finalize } from 'rxjs/operators';
 
 interface LazyLoadEvent {
     first?: number;
@@ -16,12 +17,13 @@ interface LazyLoadEvent {
     standalone: true,
     imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UIButtonComponent],
     templateUrl: './programacion.page.html',
-    styleUrls: ['./programacion.page.sass']
+    styleUrls: ['./programacion.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProgramacionPageComponent {
     @Input() convenio: any;
 
-    private getProgramacionResumenUseCase = inject(GetProgramacionResumenUseCase);
+    private programacionRepo = inject(ProgramacionRepository);
     private router = inject(Router);
 
     Math = Math;
@@ -29,10 +31,10 @@ export class ProgramacionPageComponent {
     programaciones = signal<ProgramacionResumen[]>([]);
     loading = signal(false);
     totalRecords = signal(0);
-    pageSize = 10;
+    pageSize = signal(10);
 
-    search = '';
-    estadoFilter = '';
+    search = signal('');
+    estadoFilter = signal('');
 
     columns: TableColumn[] = [
         { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
@@ -45,23 +47,20 @@ export class ProgramacionPageComponent {
 
     loadData(event: LazyLoadEvent): void {
         this.loading.set(true);
-        const page = event.first ? Math.floor(event.first / (event.rows ?? this.pageSize)) + 1 : 1;
-        const size = event.rows ?? this.pageSize;
+        const page = event.first ? Math.floor(event.first / (event.rows ?? this.pageSize())) + 1 : 1;
+        const size = event.rows ?? this.pageSize();
 
-        this.getProgramacionResumenUseCase.execute(page, size, this.search, this.estadoFilter).subscribe({
+        this.programacionRepo.getResumen(page, size, this.search(), this.estadoFilter()).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res: { items: ProgramacionResumen[]; total: number }) => {
                 this.programaciones.set(res.items);
                 this.totalRecords.set(res.total);
-                this.loading.set(false);
             },
-            error: () => {
-                this.loading.set(false);
-            }
+            error: () => {}
         });
     }
 
     onSearch(): void {
-        this.loadData({ first: 0, rows: this.pageSize } as LazyLoadEvent);
+        this.loadData({ first: 0, rows: this.pageSize() } as LazyLoadEvent);
     }
 
     formatConvenioNumber(row: ProgramacionResumen): string {

@@ -6,6 +6,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { routes } from './app.routes';
+import { retryInterceptor } from './retry.interceptor';
 
 import { AuthRepository } from './domain/repositories/auth.repository';
 import { AuthRepositoryImpl } from './data/repositories/auth.repository.impl';
@@ -27,6 +28,8 @@ import { CarteraRepository } from './domain/repositories/cartera.repository';
 import { CarteraRepositoryImpl } from './data/repositories/cartera.repository.impl';
 import { KardexRepository } from './domain/repositories/kardex.repository';
 import { KardexRepositoryImpl } from './data/repositories/kardex.repository.impl';
+import { AlertaRepository } from './domain/repositories/alerta.repository';
+import { AlertaRepositoryImpl } from './data/repositories/alerta.repository.impl';
 
 import { USER_PERMISSIONS_PROVIDER } from '@agroideas/security';
 import { AUTH_LOGOUT_HANDLER } from '@agroideas/auth';
@@ -54,13 +57,14 @@ export const repositoryProviders: Provider[] = [
   { provide: MenuRepository, useExisting: MenuRepositoryImpl },
   { provide: CarteraRepository, useExisting: CarteraRepositoryImpl },
   { provide: KardexRepository, useExisting: KardexRepositoryImpl },
+  { provide: AlertaRepository, useExisting: AlertaRepositoryImpl },
 ];
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, retryInterceptor])),
     provideAnimations(),
     ...repositoryProviders,
     {

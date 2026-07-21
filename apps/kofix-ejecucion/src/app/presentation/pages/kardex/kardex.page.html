@@ -58,6 +58,7 @@
     </app-ui-filter-bar>
 
     <!-- Table -->
+    @defer (on viewport) {
     <app-ui-data-table
         [columns]="columns"
         [data]="movimientos()"
@@ -92,4 +93,9 @@
       </ng-template>
 
     </app-ui-data-table>
+    } @placeholder (minimum 500ms) {
+      <div class="flex items-center justify-center p-8">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+    }
 </div>

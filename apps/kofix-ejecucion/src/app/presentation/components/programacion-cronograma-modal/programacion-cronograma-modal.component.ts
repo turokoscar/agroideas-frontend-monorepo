@@ -1,11 +1,10 @@
 import { UIModalComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
-import { Component, Output, EventEmitter, OnInit, inject, signal, input, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Output, EventEmitter, OnInit, inject, signal, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ProgramacionRepository } from '../../../domain/repositories/programacion.repository';
-import { SaveProgramacionUseCase } from '../../../domain/usecases/programacion/save-programacion.usecase';
 import { ProgramacionItem, DetalleCronograma } from '../../../domain/models/programacion.model';
 
 /**
@@ -28,7 +27,8 @@ import { ProgramacionItem, DetalleCronograma } from '../../../domain/models/prog
     selector: 'app-programacion-cronograma-modal',
     standalone: true,
     imports: [CommonModule, FormsModule, UIModalComponent],
-    templateUrl: './programacion-cronograma-modal.component.html'
+    templateUrl: './programacion-cronograma-modal.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProgramacionCronogramaModalComponent implements OnInit {
     item = input.required<ProgramacionItem>();
@@ -39,7 +39,6 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
     @Output() saved = new EventEmitter<void>();
 
     private alertService = inject(AlertService);
-    private saveUseCase = inject(SaveProgramacionUseCase);
     private programacionRepo = inject(ProgramacionRepository);
 
     visible = signal(true);
@@ -156,7 +155,7 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
         }
 
         this.saving.set(true);
-        this.saveUseCase.execute({
+        this.programacionRepo.saveCronograma({
             marcoLogicoId: it.id,
             postulanteId: it.postulanteID!,
             detalles: this.meses()

@@ -2,12 +2,13 @@ import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFil
 import { PERMISSIONS, formatCurrency } from '@agroideas/utils';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { KardexRepository } from '../../../domain/repositories/kardex.repository';
 import { KardexMovimiento, KardexSummary } from '../../../domain/models/kardex.model';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
+import { finalize } from 'rxjs/operators';
 
 interface TipoOption {
     label: string;
@@ -32,7 +33,8 @@ interface EstadoOption {
         UIButtonComponent
     ],
     templateUrl: './kardex.page.html',
-    styleUrls: ['./kardex.page.sass']
+    styleUrls: ['./kardex.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KardexPageComponent implements OnInit {
     private kardexRepo = inject(KardexRepository);
@@ -80,8 +82,8 @@ export class KardexPageComponent implements OnInit {
         { label: 'Rechazado', value: 'Rechazado' }
     ];
 
-    selectedTipo = 'all';
-    selectedEstado = 'all';
+    selectedTipo = signal('all');
+    selectedEstado = signal('all');
 
     columns: TableColumn[] = [
         { field: 'fecha', header: 'Fecha', width: '110px' },
@@ -118,23 +120,20 @@ export class KardexPageComponent implements OnInit {
         const offset = event?.first || 0;
         const limit = event?.rows || 10;
 
-        setTimeout(() => this.loading.set(true));
+        this.loading.set(true);
 
         this.kardexRepo.getMovimientos(
-            this.selectedTipo,
-            this.selectedEstado,
+            this.selectedTipo(),
+            this.selectedEstado(),
             offset,
             limit
-        ).subscribe({
+        ).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res) => {
                 this.movimientos.set(res.items);
                 this.totalRecords.set(res.total);
                 this.summary.set(res.summary);
-                this.loading.set(false);
             },
-            error: () => {
-                this.loading.set(false);
-            }
+            error: () => {}
         });
     }
 
@@ -202,15 +201,13 @@ export class KardexPageComponent implements OnInit {
         ).then((result: any) => {
             if (result.isConfirmed) {
                 this.loading.set(true);
-                this.desembolsoRepo.ejecutarCierreContable(mes, anio).subscribe({
+                this.desembolsoRepo.ejecutarCierreContable(mes, anio).pipe(finalize(() => this.loading.set(false))).subscribe({
                     next: () => {
-                        this.loading.set(false);
                         this.alertService.show('Éxito', `Cierre contable ejecutado correctamente para el mes ${mes}/${anio}.`, 'success');
                         this.loadCierres();
                         this.loadData();
                     },
                     error: (err) => {
-                        this.loading.set(false);
                         this.alertService.show('Error', err.error?.mensaje || 'No se pudo ejecutar el cierre contable.', 'error');
                     }
                 });

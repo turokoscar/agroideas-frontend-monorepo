@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface ResumenEjecutivoData {
@@ -12,6 +12,7 @@ export interface ResumenEjecutivoData {
 @Component({
   selector: 'app-resumen-ejecutivo',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   templateUrl: './resumen-ejecutivo.component.html',
   styleUrls: ['./resumen-ejecutivo.component.sass']

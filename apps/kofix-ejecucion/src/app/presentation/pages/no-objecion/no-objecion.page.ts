@@ -1,12 +1,12 @@
 import { AlertService } from '@agroideas/feedback';
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
-import { Component, Input, OnInit, inject, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-objecion-modal.component';
-import { GetNoObjecionesByConvenioUseCase } from '../../../domain/usecases/no-objecion/get-no-objeciones.usecase';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
+import { finalize } from 'rxjs/operators';
 
 @Component({
     selector: 'app-no-objecion-page',
@@ -21,13 +21,13 @@ import { NoObjecion } from '../../../domain/models/no-objecion.model';
         UIButtonComponent
     ],
     templateUrl: './no-objecion.page.html',
-    styleUrls: ['./no-objecion.page.sass']
+    styleUrls: ['./no-objecion.page.sass'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NoObjecionPageComponent implements OnInit {
     convenioId = input.required<number>();
     readOnly = input<boolean>(false);
 
-    private getUseCase = inject(GetNoObjecionesByConvenioUseCase);
     private noObjecionRepo = inject(NoObjecionRepository);
     private alertService = inject(AlertService);
 
@@ -90,15 +90,14 @@ export class NoObjecionPageComponent implements OnInit {
         const id = this.convenioId();
         if (!id) return;
         
-        setTimeout(() => this.loading.set(true));
+        this.loading.set(true);
         
-        this.getUseCase.execute(id, offset, limit, this.searchTerm(), this.fechaInicio(), this.fechaFin()).subscribe({
+        this.noObjecionRepo.getByPostulante(id, offset, limit, this.searchTerm(), this.fechaInicio(), this.fechaFin()).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (result) => {
                 this.noObjeciones.set(result.items);
                 this.totalRecords.set(result.total);
-                this.loading.set(false);
             },
-            error: () => this.loading.set(false)
+            error: () => {}
         });
     }
 
@@ -149,7 +148,7 @@ export class NoObjecionPageComponent implements OnInit {
                         this.loadNoObjeciones();
                     },
                     error: (err) => {
-                        console.error('Error al eliminar:', err);
+                        // Error handled by AlertService or removed
                         this.alertService.show('Error', 'No se pudo eliminar el registro.', 'error');
                     }
                 });
@@ -175,7 +174,7 @@ export class NoObjecionPageComponent implements OnInit {
                 document.body.removeChild(a);
             },
             error: (err) => {
-                console.error('Error al descargar:', err);
+                // Error handled by AlertService or removed
                 this.alertService.show('Error', 'No se pudo descargar el archivo del servidor.', 'error');
             }
         });
