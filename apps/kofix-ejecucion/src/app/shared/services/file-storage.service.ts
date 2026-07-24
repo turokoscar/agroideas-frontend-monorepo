@@ -39,8 +39,8 @@ export class FileStorageService {
         }
         formData.append('codProceso', codProceso);
 
-        return this.http.post<{ ideArchivo: string }>(`${this.apiUrl}`, formData).pipe(
-            map(res => ({ fileUrl: res.ideArchivo }))
+        return this.http.post<ResponseDto<{ ideArchivo: string }>>(`${this.apiUrl}`, formData).pipe(
+            map(res => ({ fileUrl: res.datos!.ideArchivo }))
         );
     }
 

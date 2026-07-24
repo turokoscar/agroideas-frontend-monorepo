@@ -82,8 +82,9 @@ export class ConvenioDetailPageComponent implements OnInit {
                     this.setTabIndexByTab(tab);
                 }
             }
-        });
+        }, { allowSignalWrites: true });
     }
+
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id');
