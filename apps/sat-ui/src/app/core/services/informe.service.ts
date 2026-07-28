@@ -52,6 +52,7 @@ export interface InformeDetalle {
   txt_recomendaciones: string;
   txt_metas: string;
   txt_rutaPdf: string;
+  ideArchivo?: string;
   flg_exportadoPdf: boolean;
   actividades: ActividadReporte[];
   resumenHashes: {
@@ -133,5 +134,11 @@ export class InformeService {
       `${this.apiUrl}/informes/${ideInforme}/pdf-firmado`,
       formData
     );
+  }
+
+  descargarPdfFirmado(ideInforme: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/informes/${ideInforme}/pdf-firmado/descarga`, {
+      responseType: 'blob'
+    });
   }
 }

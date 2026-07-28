@@ -64,37 +64,24 @@
       </select>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label for="regionBusqueda" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Buscar organización</label>
-        <input id="regionBusqueda" type="text" placeholder="Número o razón social"
-          [value]="regionBusqueda()" (input)="onSearchChange($any($event.target).value)"
-          class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary" />
-      </div>
-      <div>
-        <label for="regionSeleccionada" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Región</label>
-        <select id="regionSeleccionada" [value]="regionSeleccionada()" (change)="onRegionChange($any($event.target).value)"
-          class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
-          <option value="">Todas las regiones</option>
-          @for (r of regiones(); track r) {
-            <option [value]="r">{{ r }}</option>
-          }
-        </select>
-      </div>
-    </div>
     <div>
       <label for="ideOrganizacion" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Organización</label>
-      <select id="ideOrganizacion" formControlName="ideOrganizacion" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm outline-none focus:border-primary">
-        <option value="">Seleccionar organización</option>
-        @for (o of organizaciones(); track o.ideOrganizacion) {
-          <option [value]="o.ideOrganizacion">
-            {{ o.numeroConvenio }} - {{ o.txtNombre }}
-            @if (o.txtDepartamento) {
-              ({{ o.txtDepartamento }} - {{ o.txtProvincia }} - {{ o.txtDistrito }})
-            }
-          </option>
-        }
-      </select>
+      <lib-ui-select-search
+        id="ideOrganizacion"
+        formControlName="ideOrganizacion"
+        [options]="organizaciones()"
+        optionLabel="txtNombreCompleto"
+        optionValue="ideOrganizacion"
+        placeholder="Buscar y seleccionar organización"
+        filterPlaceholder="RUC, razón social o número de convenio"
+        [emptyMessage]="mensajeListaVacia()"
+        [loading]="loadingOrganizaciones()"
+        (filterChange)="onFilterOrganizaciones($event)"
+      >
+      </lib-ui-select-search>
+      @if (asignacionForm.get('ideOrganizacion')?.invalid && asignacionForm.get('ideOrganizacion')?.touched) {
+        <p class="text-xs text-red-500 mt-1">Seleccione una organización</p>
+      }
     </div>
   </div>
 </app-ui-modal>

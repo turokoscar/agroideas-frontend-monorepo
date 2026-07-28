@@ -40,7 +40,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 **Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
 
-**Watch out:** `sigec-cierre` has `tags: []` (empty — breaks boundary checks; needs `scope:kofix,type:app`). `@agroideas/menu` has unexported models/repository classes in `lib/` not exposed via `index.ts`.
+**Watch out:** `sigec-cierre` has `tags: []` (empty — breaks boundary checks; needs `scope:kofix,type:app`). `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
 
 ## App architectures
 
@@ -59,7 +59,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 | `security` | done | `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
 | `auth` | done | `authInterceptor` (HttpInterceptorFn), `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY` injection tokens |
 | `feedback` | done | `AlertService` (SweetAlert2 wrapper) — methods: `show`, `toast`, `showResponse`, `confirm` |
-| `menu` | done | Exports stub component + `MenuModel`. Real models in `lib/` (`MenuItem`, `MenuAgrupado`, `MenuRepository`) but **not** exported via `index.ts`. |
+| `menu` | done | Exports stub component + `MenuItem`/`MenuAgrupado`. `MenuRepository` (in `domain/repositories/`) is not exported via `index.ts`. |
 | `http` | scaffold | Only re-exports `ResponseDto` from `@agroideas/utils`; no own code |
 
 ## Gotchas

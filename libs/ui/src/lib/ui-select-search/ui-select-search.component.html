@@ -1,0 +1,43 @@
+<p-dropdown
+  [options]="options"
+  [(ngModel)]="value"
+  [optionLabel]="optionLabel"
+  [optionValue]="optionValue"
+  [filter]="false"
+  [placeholder]="placeholder"
+  [showClear]="showClear"
+  [disabled]="disabled"
+  [styleClass]="'w-full ' + styleClass"
+  (onChange)="onValueChange($event)"
+  appendTo="body"
+  panelStyleClass="sat-dropdown-panel"
+  [emptyMessage]="emptyMessage"
+  [loading]="loading"
+>
+  <!-- Custom Header with Enter-to-search filter input -->
+  <ng-template pTemplate="header">
+    <div 
+      class="p-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2"
+      (click)="$event.stopPropagation()"
+      (mousedown)="$event.stopPropagation()"
+      (wheel)="$event.stopPropagation()"
+    >
+      <div class="relative flex-1">
+        <input
+          #filterInput
+          type="text"
+          [placeholder]="filterPlaceholder"
+          class="w-full px-3 py-1.5 pr-8 border border-slate-200 rounded-md text-xs bg-white outline-none focus:border-primary transition-colors"
+          (keyup.enter)="onSearch(filterInput.value)"
+        />
+        <span 
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs cursor-pointer hover:text-primary material-symbols-outlined"
+          (click)="onSearch(filterInput.value)"
+          style="font-size: 16px; user-select: none;"
+        >
+          search
+        </span>
+      </div>
+    </div>
+  </ng-template>
+</p-dropdown>

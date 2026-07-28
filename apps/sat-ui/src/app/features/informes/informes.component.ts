@@ -316,6 +316,31 @@ export class InformesComponent implements OnInit {
     });
   }
 
+  descargarPdfFirmado() {
+    const detalle = this.selectedDetalle();
+    if (!detalle) return;
+
+    this.informeService.descargarPdfFirmado(detalle.ide_informe)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `InformeFirmado_${detalle.ide_informe}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          this.alertService.toast('PDF firmado descargado correctamente');
+        },
+        error: (err) => {
+          console.error('Error al descargar PDF firmado:', err);
+          this.alertService.toast('Error al descargar el PDF firmado', 'error');
+        }
+      });
+  }
+
   openUploadPdfModal() {
     this.showUploadPdfModal.set(true);
   }

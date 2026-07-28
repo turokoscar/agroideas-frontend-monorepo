@@ -1,0 +1,23 @@
+:host ::ng-deep {
+  .p-dropdown {
+    @apply border border-slate-200 rounded-lg text-sm bg-white shadow-none transition-colors duration-150 flex items-center justify-between w-full;
+    max-width: 100%;
+    
+    &:not(.p-disabled).p-focus {
+      @apply border-primary ring-2 ring-primary/10;
+    }
+    
+    .p-dropdown-label {
+      @apply text-slate-700 text-sm py-2 px-3 flex-1 bg-transparent border-0 outline-none truncate;
+      max-width: calc(100% - 32px);
+      
+      &.p-placeholder {
+        @apply text-slate-400;
+      }
+    }
+    
+    .p-dropdown-trigger {
+      @apply text-slate-400 px-3 cursor-pointer flex items-center;
+    }
+  }
+}

@@ -49,7 +49,7 @@ import { FormatDatePipe } from '@agroideas/utils';
             <ui-button label="PDF Borrador" icon="download" appearance="soft" severity="primary" size="sm" (onClick)="descargarPdf.emit()"></ui-button>
             <ui-button label="Adjuntar Firmado" icon="upload" appearance="soft" severity="secondary" size="sm" (onClick)="openUploadPdf.emit()"></ui-button>
             @if (detalle()!.flg_exportadoPdf) {
-              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Firmado</span>
+              <ui-button label="PDF Firmado" icon="download" appearance="soft" severity="success" size="sm" (onClick)="descargarPdfFirmado.emit()"></ui-button>
             }
           </div>
         </div>
@@ -261,7 +261,7 @@ import { FormatDatePipe } from '@agroideas/utils';
                 <div class="mt-4 pt-4 border-t border-emerald-500/10">
                   <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Hash SHA-256 del Informe</p>
                   <code class="text-xs font-mono bg-emerald-500/10 text-emerald-800 px-3 py-1.5 rounded-md block mt-1.5 break-all select-all font-bold">
-                    {{ detalle()!.resumenHashes.hashes[0]?.txt_hash || '7d2e8f1a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e' }}
+                    {{ detalle()!.resumenHashes.hashes[0]!.txt_hash || '7d2e8f1a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e' }}
                   </code>
                 </div>
               </div>
@@ -307,6 +307,7 @@ export class InformeDetalleModalComponent {
   @Output() save = new EventEmitter<void>();
   @Output() toggleEdit = new EventEmitter<void>();
   @Output() descargarPdf = new EventEmitter<void>();
+  @Output() descargarPdfFirmado = new EventEmitter<void>();
   @Output() openUploadPdf = new EventEmitter<void>();
 
   activeTab = signal<'narrative' | 'activities' | 'integrity'>('narrative');

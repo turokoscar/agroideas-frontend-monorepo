@@ -8,3 +8,5 @@ export * from './lib/ui-filter-bar/ui-filter-bar.component';
 export * from './lib/ui-data-table/ui-data-table.component';
 export * from './lib/ui-map/ui-map.component';
 export * from './lib/ui-pagination/ui-pagination.component';
+
+export * from './lib/ui-select-search/ui-select-search.component';

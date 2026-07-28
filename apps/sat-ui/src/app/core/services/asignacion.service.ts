@@ -8,7 +8,7 @@ export interface Asignacion {
   ideAsignacion: number;
   ideAsistente: string;
   txtAsistente: string;
-  ideOrganizacion: string;
+  ideOrganizacion: number;
   txtOrganizacion: string;
   flgActivo: boolean;
   fecRegistro: string;
@@ -16,7 +16,7 @@ export interface Asignacion {
 
 export interface AsignacionPayload {
   ideAsistente: string;
-  ideOrganizacion: string;
+  ideOrganizacion: number;
   ideAsignacion?: number | null;
   flgActivo?: boolean;
 }

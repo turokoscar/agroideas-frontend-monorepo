@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { ResponseDto } from '@agroideas/utils';
 
 export interface Organizacion {
-  ideOrganizacion: string;
+  ideOrganizacion: number;
   txtNombre: string;
   numeroConvenio: string;
   codUbigeo?: string;
@@ -16,7 +16,6 @@ export interface Organizacion {
 
 export interface OrganizacionFiltro {
   busqueda?: string;
-  region?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -30,7 +29,6 @@ export class OrganizacionService {
   private construirParams(filtro: OrganizacionFiltro): HttpParams {
     let params = new HttpParams();
     if (filtro.busqueda) params = params.set('busqueda', filtro.busqueda);
-    if (filtro.region) params = params.set('region', filtro.region);
     return params;
   }
 

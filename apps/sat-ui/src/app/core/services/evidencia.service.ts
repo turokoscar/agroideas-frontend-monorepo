@@ -9,7 +9,7 @@ export interface EvidenciaFiltro {
   ideAsistente?: string;
   fecInicio?: string;
   fecFin?: string;
-  ideOrganizacion?: string;
+  ideOrganizacion?: number;
   ideTipoActividad?: number;
   pagina?: number;
   tamanioPagina?: number;
@@ -28,6 +28,7 @@ export interface EvidenciaListadoItem {
   txtAsistente: string;
   txtOrganizacion: string;
   txtTipoActividad: string;
+  ideArchivo?: string;
 }
 
 export interface EvidenciaDetalle extends EvidenciaListadoItem {
@@ -81,7 +82,7 @@ export class EvidenciaService {
     if (filtro.ideAsistente) params = params.set('ideAsistente', filtro.ideAsistente);
     if (filtro.fecInicio) params = params.set('fecInicio', filtro.fecInicio);
     if (filtro.fecFin) params = params.set('fecFin', filtro.fecFin);
-    if (filtro.ideOrganizacion) params = params.set('ideOrganizacion', filtro.ideOrganizacion);
+    if (filtro.ideOrganizacion) params = params.set('ideOrganizacion', filtro.ideOrganizacion.toString());
     if (filtro.ideTipoActividad) params = params.set('ideTipoActividad', filtro.ideTipoActividad.toString());
     params = params.set('pagina', (filtro.pagina ?? 1).toString());
     params = params.set('tamanioPagina', (filtro.tamanioPagina ?? 20).toString());

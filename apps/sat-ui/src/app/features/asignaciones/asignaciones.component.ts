@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent } from '@agroideas/ui';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
+import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent, UiSelectSearchComponent } from '@agroideas/ui';
 import type { TableColumn } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { AsignacionService, Asignacion } from '../../core/services/asignacion.service';
 import { AsistenteService, Asistente } from '../../core/services/asistente.service';
 import { OrganizacionService, Organizacion } from '../../core/services/organizacion.service';
-import { debounceTime, distinctUntilChanged, skip } from 'rxjs';
+import { debounceTime, distinctUntilChanged, skip, finalize } from 'rxjs';
 
 @Component({
   selector: 'app-asignaciones',
   standalone: true,
-  imports: [ReactiveFormsModule, UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent],
+  imports: [ReactiveFormsModule, UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTableComponent, UiSelectSearchComponent],
   templateUrl: './asignaciones.component.html',
   styleUrl: './asignaciones.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,19 +27,24 @@ export class AsignacionesComponent implements OnInit {
 
   asignaciones = signal<Asignacion[]>([]);
   asistentes = signal<Asistente[]>([]);
-  organizaciones = signal<Organizacion[]>([]);
+  organizaciones = signal<(Organizacion & { txtNombreCompleto?: string })[]>([]);
 
-  regionBusqueda = signal('');
-  regionSeleccionada = signal('');
-  regiones = signal<string[]>([]);
+  busquedaOrganizacion = new FormControl('', { nonNullable: true });
+  busquedaRealizada = signal(false);
+  mensajeListaVacia = computed(() => 
+    this.busquedaRealizada() 
+      ? 'No se encontraron resultados para esta consulta' 
+      : 'Escriba y presione Enter para buscar...'
+  );
 
   loading = signal(false);
+  loadingOrganizaciones = signal(false);
   showModal = signal(false);
   editingId = signal<number | null>(null);
 
   asignacionForm = this.fb.group({
     ideAsistente: ['', [Validators.required]],
-    ideOrganizacion: ['', [Validators.required]]
+    ideOrganizacion: [null as number | null, [Validators.required]]
   });
 
   columns: TableColumn[] = [
@@ -59,9 +64,8 @@ export class AsignacionesComponent implements OnInit {
   ngOnInit() {
     this.loadAsignaciones();
     this.loadAsistentes();
-    this.loadOrganizaciones(true);
 
-    toObservable(this.regionBusqueda)
+    this.busquedaOrganizacion.valueChanges
       .pipe(
         skip(1),
         debounceTime(300),
@@ -96,45 +100,51 @@ export class AsignacionesComponent implements OnInit {
     });
   }
 
-  loadOrganizaciones(extraerRegiones = false) {
+  loadOrganizaciones() {
+    const busqueda = this.busquedaOrganizacion.value || undefined;
+    this.loadingOrganizaciones.set(true);
     this.organizacionService
-      .listar({ busqueda: this.regionBusqueda(), region: this.regionSeleccionada() })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .listar({ busqueda })
+      .pipe(
+        finalize(() => this.loadingOrganizaciones.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: (datos) => {
-          this.organizaciones.set(datos);
-          if (extraerRegiones) {
-            const unique = [...new Set(datos.map(o => o.txtDepartamento).filter(Boolean))].sort();
-            this.regiones.set(unique as string[]);
+          this.organizaciones.set(
+            datos.map(o => ({ ...o, txtNombreCompleto: `${o.numeroConvenio} - ${o.txtNombre}` }))
+          );
+          if (busqueda) {
+            this.busquedaRealizada.set(true);
           }
         },
         error: () => console.error('Error cargando organizaciones')
       });
   }
 
-  onSearchChange(value: string) {
-    this.regionBusqueda.set(value);
-  }
-
-  onRegionChange(value: string) {
-    this.regionSeleccionada.set(value);
-    this.loadOrganizaciones();
-  }
-
   openModal(asignacion?: Asignacion) {
+    this.busquedaRealizada.set(false);
     if (asignacion) {
       this.editingId.set(asignacion.ideAsignacion);
+      this.organizaciones.set([{
+        ideOrganizacion: asignacion.ideOrganizacion,
+        txtNombre: asignacion.txtOrganizacion,
+        numeroConvenio: '',
+        txtNombreCompleto: asignacion.txtOrganizacion
+      }]);
       this.asignacionForm.patchValue({
         ideAsistente: asignacion.ideAsistente,
         ideOrganizacion: asignacion.ideOrganizacion
       });
     } else {
       this.editingId.set(null);
+      this.organizaciones.set([]);
       this.asignacionForm.reset({
         ideAsistente: '',
-        ideOrganizacion: ''
+        ideOrganizacion: null
       });
     }
+    this.busquedaOrganizacion.setValue('');
     this.showModal.set(true);
   }
 
@@ -142,6 +152,7 @@ export class AsignacionesComponent implements OnInit {
     this.showModal.set(false);
     this.editingId.set(null);
     this.asignacionForm.reset();
+    this.busquedaOrganizacion.setValue('');
   }
 
   save() {
@@ -158,7 +169,7 @@ export class AsignacionesComponent implements OnInit {
       this.asignacionService
         .actualizar({
           ideAsistente: formValue.ideAsistente || '',
-          ideOrganizacion: formValue.ideOrganizacion || '',
+          ideOrganizacion: formValue.ideOrganizacion!,
           ideAsignacion: editingId,
           flgActivo: true
         })
@@ -178,7 +189,7 @@ export class AsignacionesComponent implements OnInit {
       this.asignacionService
         .crear({
           ideAsistente: formValue.ideAsistente || '',
-          ideOrganizacion: formValue.ideOrganizacion || ''
+          ideOrganizacion: formValue.ideOrganizacion!
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -223,10 +234,12 @@ export class AsignacionesComponent implements OnInit {
     });
   }
 
-
-
   getAsistenteNombre(ide: string): string {
     const a = this.asistentes().find(x => x.ideAsistente === ide);
     return a ? `${a.txtNombres} ${a.txtApellidoPaterno}` : ide;
+  }
+
+  onFilterOrganizaciones(termino: string) {
+    this.busquedaOrganizacion.setValue(termino);
   }
 }
