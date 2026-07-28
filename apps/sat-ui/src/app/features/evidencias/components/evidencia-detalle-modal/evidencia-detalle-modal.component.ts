@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { EvidenciaListadoItem, EvidenciaService, EvidenciaValidacion } from '../../../../core/services/evidencia.service';
 import { FormatDatePipe } from '@agroideas/utils';
 import { UIButtonComponent } from '@agroideas/ui';
+import { AuthImgDirective } from '../../../../core/directives/auth-img.directive';
 
 @Component({
   selector: 'app-evidencia-detalle-modal',
   standalone: true,
-  imports: [CommonModule, FormatDatePipe, UIButtonComponent],
+  imports: [CommonModule, FormatDatePipe, UIButtonComponent, AuthImgDirective],
   template: `
     @if (ev()) {
       <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="cerrar.emit()">
@@ -23,7 +24,7 @@ import { UIButtonComponent } from '@agroideas/ui';
               <!-- Imagen -->
               <div class="space-y-4">
                 <div class="aspect-square bg-slate-100 rounded-xl overflow-hidden">
-                  <img [src]="getImageUrl(ev()!.ideEvidencia)" alt="Evidencia" 
+                  <img [authImg]="ev()!.ideEvidencia" alt="Evidencia" 
                     class="w-full h-full object-contain"/>
                 </div>
                 <div class="flex gap-2">
@@ -33,10 +34,10 @@ import { UIButtonComponent } from '@agroideas/ui';
                     class="flex-1"
                     (onClick)="validar.emit()"
                   />
-                  <a [href]="getImageUrl(ev()!.ideEvidencia)" target="_blank"
+                  <button (click)="abrirImagen()"
                     class="px-4 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">open_in_new</span>
-                  </a>
+                  </button>
                 </div>
               </div>
               
@@ -123,7 +124,15 @@ export class EvidenciaDetalleModalComponent {
   @Output() cerrar = new EventEmitter<void>();
   @Output() validar = new EventEmitter<void>();
 
-  getImageUrl(id: string): string {
-    return this.evidenciaService.obtenerUrlArchivo(id);
+  abrirImagen() {
+    const item = this.ev();
+    if (!item) return;
+    this.evidenciaService.descargarArchivo(item.ideEvidencia).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }
+    });
   }
 }

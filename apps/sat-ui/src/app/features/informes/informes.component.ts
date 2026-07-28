@@ -102,7 +102,7 @@ export class InformesComponent implements OnInit {
 
   processedData = computed(() =>
     this.informes().map(i => {
-      const evidenciasCount = i.cantidad_evidecias ?? i.cantidad_evidencias ?? 0;
+      const evidenciasCount = i.cantidad_evidencias ?? 0;
 
       let statusValue: StatusType = 'Pendiente';
       const estadoRaw = (i.txt_estadoInforme || '').toLowerCase();

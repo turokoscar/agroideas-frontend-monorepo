@@ -1,0 +1,62 @@
+<div class="p-6 lg:p-8 space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="font-display text-2xl font-bold text-foreground">Organizaciones</h1>
+      <p class="text-sm text-muted-foreground">Catálogo de Organizaciones Agrarias y Convenios Vigentes</p>
+    </div>
+    <ui-button 
+      label="Sincronizar desde SEL" 
+      icon="sync" 
+      [loading]="loading()"
+      (onClick)="sincronizar()"
+    />
+  </div>
+
+  <div class="relative max-w-sm">
+    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+    <input 
+      type="text" 
+      [formControl]="busquedaControl"
+      placeholder="Buscar organización, convenio o región..." 
+      class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg w-full outline-none focus:border-primary ring-2 ring-transparent focus:ring-primary/10 transition-colors duration-150 bg-white"
+    />
+  </div>
+
+  <app-ui-data-table
+    [data]="organizaciones()"
+    [columns]="columns"
+    [loading]="loading()"
+    [lazy]="true"
+    [totalRecords]="totalRecords()"
+    [rows]="tamanioPagina"
+    [first]="(pagina() - 1) * tamanioPagina"
+    icon="corporate_fare"
+    title="Listado de Organizaciones"
+    subtitle="Convenios vigentes disponibles para asignación"
+    emptyIcon="folder_off"
+    emptyMessage="No se encontraron organizaciones"
+    emptySubMessage="Intente ajustar los filtros de búsqueda o ejecute la sincronización manual"
+    [rowTemplate]="rowTemplate"
+    (onLazyLoad)="onLazyLoad($event)"
+  >
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'txtNombre') {
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-lg">corporate_fare</span>
+          <span class="font-medium text-slate-800">{{ row.txtNombre }}</span>
+        </div>
+      }
+      @if (col.field === 'cantidadVisitas') {
+        <span class="inline-flex items-center justify-center bg-slate-100 text-slate-800 font-semibold px-2.5 py-0.5 rounded-full text-xs min-w-[24px]">
+          {{ row.cantidadVisitas || 0 }}
+        </span>
+      }
+      @if (col.field === 'estado') {
+        <app-ui-status-pill 
+          [status]="row.flgEstado ? 'Activo' : 'Suspendido'" 
+          [text]="row.flgEstado ? 'Activa' : 'Inactiva'" 
+        />
+      }
+    </ng-template>
+  </app-ui-data-table>
+</div>

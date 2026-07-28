@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
-import { ResponseDto, STORAGE_KEYS } from '@agroideas/utils';
+import { ResponseDto } from '@agroideas/utils';
 
 export interface EvidenciaFiltro {
   ideAsistente?: string;
@@ -69,12 +69,8 @@ export class EvidenciaService {
   private _loading = signal(false);
   loading = this._loading.asReadonly();
 
-  obtenerUrlArchivo(id: string): string {
-    const token = localStorage.getItem(STORAGE_KEYS.SAT_TOKEN);
-    if (token) {
-      return `${this.apiUrl}/evidencias/${id}/archivo?token=${encodeURIComponent(token)}`;
-    }
-    return `${this.apiUrl}/evidencias/${id}/archivo`;
+  descargarArchivo(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/evidencias/${id}/archivo`, { responseType: 'blob' });
   }
 
   private construirParams(filtro: EvidenciaFiltro): HttpParams {
@@ -125,7 +121,7 @@ export class EvidenciaService {
   }
 
   validarIntegridad(id: string): Observable<EvidenciaValidacion | null> {
-    return this.http.get<ResponseDto>(`${this.apiUrl}/evidencias/${id}/validar`).pipe(
+    return this.http.get<ResponseDto>(`${this.apiUrl}/evidencias/${id}/validacion`).pipe(
       map(res => res.respuesta === 'OK' ? res.datos as EvidenciaValidacion : null)
     );
   }

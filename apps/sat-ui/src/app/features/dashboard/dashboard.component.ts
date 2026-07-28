@@ -1,11 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService } from '../../core/services/data.service';
+import { DashboardService, ActividadReciente, SyncLogResumen } from '../../core/services/dashboard.service';
 import { UiKpiComponent, UICardComponent, UiStatusPillComponent, StatusType } from '@agroideas/ui';
-import { TipoIntervencion } from '../../shared/models/sat-data.model';
 import { FormatDatePipe } from '@agroideas/utils';
 import { getSyncStatus } from '../../shared/utils/estado-labels';
-
 
 @Component({
   selector: 'app-dashboard',
@@ -15,50 +13,48 @@ import { getSyncStatus } from '../../shared/utils/estado-labels';
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardComponent {
-  private dataService = inject(DataService);
+export class DashboardComponent implements OnInit {
+  private dashboardService = inject(DashboardService);
 
-  asistentes = this.dataService.asistentes;
-  actividades = this.dataService.actividades;
-  evidencias = this.dataService.evidencias;
-  informes = this.dataService.informes;
-  syncLogsList = this.dataService.syncLogs;
+  asistentesCount = signal(0);
+  activosCount = signal(0);
+  totalEvidencias = signal(0);
+  pendientesCount = signal(0);
+  modificadasCount = signal(0);
+  actividadesCount = signal(0);
+  sincronizadasCount = signal(0);
+  informesCount = signal(0);
+  generadosCount = signal(0);
 
-  activosCount = computed(() => this.asistentes().filter(a => a.activo).length);
-  totalEvidencias = computed(() => this.evidencias().length);
-  pendientesCount = computed(() => this.evidencias().filter(e => e.estadoSync === 'pendiente').length);
-  modificadasCount = computed(() => this.evidencias().filter(e => e.estadoIntegridad === 'modificada').length);
+  recentActividades = signal<ActividadReciente[]>([]);
+  latestSyncs = signal<SyncLogResumen[]>([]);
 
-  sincronizadasCount = computed(() => 
-    this.actividades().filter(a => a.estadoSync === 'sincronizado').length
-  );
-
-  generadosCount = computed(() => 
-    this.informes().filter(i => i.estado === 'generado').length
-  );
-
-  recentActividades = computed(() => 
-    [...this.actividades()]
-      .sort((a, b) => b.fecha.localeCompare(a.fecha))
-      .slice(0, 5)
-  );
-
-  latestSyncs = computed(() => 
-    [...this.syncLogsList()]
-      .reverse()
-      .slice(0, 5)
-  );
-
-  getOrganizacionNombre(id: string) {
-    return this.dataService.getOrganizacionNombre(id);
+  ngOnInit() {
+    this.dashboardService.obtenerResumen().subscribe({
+      next: (res) => {
+        this.asistentesCount.set(res.totalAsistentes);
+        this.activosCount.set(res.activosCount);
+        this.totalEvidencias.set(res.totalEvidencias);
+        this.pendientesCount.set(res.pendientesCount);
+        this.modificadasCount.set(res.modificadasCount);
+        this.actividadesCount.set(res.totalActividades);
+        this.sincronizadasCount.set(res.sincronizadasCount);
+        this.informesCount.set(res.totalInformes);
+        this.generadosCount.set(res.generadosCount);
+        this.recentActividades.set(res.actividadesRecientes);
+        this.latestSyncs.set(res.ultimasSincronizaciones);
+      },
+      error: (err) => console.error('Error cargando resumen de dashboard', err)
+    });
   }
 
-  getAsistenteNombre(id: string) {
-    return this.dataService.getAsistenteNombre(id);
-  }
-
-  getTipoIntervencionLabel(t: TipoIntervencion): string {
-    return this.dataService.getTipoIntervencionLabel(t);
+  getTipoIntervencionLabel(t: string): string {
+    const map: Record<string, string> = {
+      capacitacion: 'Capacitación',
+      visita_tecnica: 'Visita Técnica',
+      seguimiento: 'Seguimiento',
+    };
+    return map[t] || t;
   }
 
   getSyncStatus(estado: string): { status: StatusType, text: string } {

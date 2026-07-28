@@ -17,8 +17,6 @@ export interface Informe {
   txt_conclusion: string;
   cantidad_actividades: number;
   cantidad_evidencias: number;
-  /** @deprecated Typo del backend legacy. Eliminar cuando se corrija a `cantidad_evidencias`. */
-  cantidad_evidecias?: number;
   fec_registro: string;
   txt_rutaPdf: string;
   flg_exportadoPdf: boolean;
@@ -107,7 +105,7 @@ export class InformeService {
   }
 
   generar(payload: GenerarInformePayload): Observable<ResponseDto<unknown>> {
-    return this.http.post<ResponseDto<unknown>>(`${this.apiUrl}/informes/generar`, payload);
+    return this.http.post<ResponseDto<unknown>>(`${this.apiUrl}/informes/generacion`, payload);
   }
 
   obtenerDetalle(ideInforme: number): Observable<InformeDetalle | null> {

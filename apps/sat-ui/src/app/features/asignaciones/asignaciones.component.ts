@@ -112,7 +112,7 @@ export class AsignacionesComponent implements OnInit {
       .subscribe({
         next: (datos) => {
           this.organizaciones.set(
-            datos.map(o => ({ ...o, txtNombreCompleto: `${o.numeroConvenio} - ${o.txtNombre}` }))
+            datos.map(o => ({ ...o, txtNombreCompleto: `${o.numConvenio} - ${o.txtNombre}` }))
           );
           if (busqueda) {
             this.busquedaRealizada.set(true);
@@ -129,7 +129,7 @@ export class AsignacionesComponent implements OnInit {
       this.organizaciones.set([{
         ideOrganizacion: asignacion.ideOrganizacion,
         txtNombre: asignacion.txtOrganizacion,
-        numeroConvenio: '',
+        numConvenio: '',
         txtNombreCompleto: asignacion.txtOrganizacion
       }]);
       this.asignacionForm.patchValue({

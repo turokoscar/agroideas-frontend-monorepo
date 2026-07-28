@@ -63,7 +63,7 @@ export class SyncService {
   obtenerHistorial(filtro: SyncLogFiltro = {}): Observable<SyncLogPaginacion> {
     this._loading.set(true);
     const params = this.construirParams(filtro);
-    return this.http.get<ResponseDto>(`${this.apiUrl}/sync/logs`, { params }).pipe(
+    return this.http.get<ResponseDto>(`${this.apiUrl}/sincronizaciones/logs`, { params }).pipe(
       map(res => {
         this._loading.set(false);
         if (res.respuesta === 'OK' && res.datos) {

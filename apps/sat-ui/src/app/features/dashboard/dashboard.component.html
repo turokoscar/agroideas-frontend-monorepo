@@ -9,7 +9,7 @@
       icon="people" 
       label="Asistentes activos" 
       [value]="activosCount().toString()" 
-      [subtitle]="asistentes().length + ' registrados'"
+      [subtitle]="asistentesCount() + ' registrados'"
       variant="glass"
     />
     <app-ui-kpi 
@@ -22,14 +22,14 @@
     <app-ui-kpi 
       icon="assessment" 
       label="Actividades" 
-      [value]="actividades().length.toString()" 
+      [value]="actividadesCount().toString()" 
       [subtitle]="sincronizadasCount() + ' sincronizadas'"
       variant="glass"
     />
     <app-ui-kpi 
       icon="description" 
       label="Informes" 
-      [value]="informes().length.toString()" 
+      [value]="informesCount().toString()" 
       [subtitle]="generadosCount() + ' generados'"
       variant="glass"
     />
@@ -53,9 +53,9 @@
         @for (act of recentActividades(); track act.id) {
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
             <div>
-              <p class="text-sm font-semibold text-slate-800">{{ getOrganizacionNombre(act.organizacionId) }}</p>
+              <p class="text-sm font-semibold text-slate-800">{{ act.organizacionNombre }}</p>
               <p class="text-xs text-slate-500">
-                {{ getAsistenteNombre(act.asistenteId) }} · {{ getTipoIntervencionLabel(act.tipoIntervencion) }} · {{ act.fecha }}
+                {{ act.asistenteNombre }} · {{ getTipoIntervencionLabel(act.tipoIntervencion) }} · {{ act.fecha }}
               </p>
             </div>
             <app-ui-status-pill [status]="getSyncStatus(act.estadoSync).status" [text]="getSyncStatus(act.estadoSync).text" />
@@ -69,7 +69,7 @@
         @for (log of latestSyncs(); track log.id) {
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0">
             <div>
-              <p class="text-sm font-semibold text-slate-800">{{ getAsistenteNombre(log.asistenteId) }}</p>
+              <p class="text-sm font-semibold text-slate-800">{{ log.asistenteNombre }}</p>
               <p class="text-xs text-slate-500">
                 {{ log.dispositivoId }} · {{ log.registrosEnviados }} registros · {{ log.fechaHora | formatDate }}
               </p>
