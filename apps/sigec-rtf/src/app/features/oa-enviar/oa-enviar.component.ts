@@ -139,9 +139,20 @@ export class OaEnviarComponent {
 
   onSubmit() {
     if (this.fileName) {
-      // Transition state to Sent
-      this.rtfService.rtfStatus.set('Enviado');
-      this.router.navigate(['/rtf/dashboard']);
+      const rtfId = this.rtfService.rtfId();
+      if (rtfId) {
+        this.rtfService.enviarRtf(rtfId).subscribe({
+          next: () => {
+            this.router.navigate(['/rtf/dashboard']);
+          },
+          error: (err) => {
+            console.error('Error al enviar RTF', err);
+          }
+        });
+      } else {
+        this.rtfService.rtfStatus.set('Enviado');
+        this.router.navigate(['/rtf/dashboard']);
+      }
     }
   }
 }

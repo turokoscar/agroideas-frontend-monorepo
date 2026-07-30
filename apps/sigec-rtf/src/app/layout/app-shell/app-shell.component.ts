@@ -36,6 +36,16 @@ import { AuthService } from '../../core/services/auth.service';
                 Inicio / Dashboard
               </a>
 
+              <!-- Bandeja OA -->
+              <a
+                routerLink="/rtf/bandeja"
+                routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
+              >
+                <span class="material-symbols-outlined text-[20px]">inbox</span>
+                Bandeja RTF
+              </a>
+
               <!-- Pasos Críticos Collapsible -->
               <div class="space-y-1">
                 <button
@@ -157,6 +167,14 @@ import { AuthService } from '../../core/services/auth.service';
             }
 
             @if (user()?.role === 'UN' || user()?.role === 'DE' || user()?.role === 'UAJ' || user()?.role === 'USE') {
+              <a
+                routerLink="/rtf/dashboard-un"
+                routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
+              >
+                <span class="material-symbols-outlined text-[20px]">monitoring</span>
+                Dashboard UN
+              </a>
               <a
                 routerLink="/rtf/evaluacion-gabinete"
                 routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"

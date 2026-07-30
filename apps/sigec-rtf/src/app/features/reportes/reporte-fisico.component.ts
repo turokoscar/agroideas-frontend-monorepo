@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RtfService, MetaFisica } from '../../core/services/rtf.service';
+import { RtfService, MetaFisicaDto } from '../../core/services/rtf.service';
 
 @Component({
   selector: 'app-reporte-fisico',
@@ -120,11 +120,11 @@ import { RtfService, MetaFisica } from '../../core/services/rtf.service';
             </thead>
             <tbody class="divide-y divide-border text-foreground">
               <tr *ngFor="let m of rtfService.metas()" class="hover:bg-surface-container/5 transition-colors">
-                <td class="px-5 py-3.5 font-medium">{{ m.activity }}</td>
-                <td class="px-5 py-3.5 text-center text-muted-foreground">{{ m.unit }}</td>
-                <td class="px-5 py-3.5 text-center font-semibold">{{ m.programmed }}</td>
+                <td class="px-5 py-3.5 font-medium">{{ m.actividad }}</td>
+                <td class="px-5 py-3.5 text-center text-muted-foreground">{{ m.unidad }}</td>
+                <td class="px-5 py-3.5 text-center font-semibold">{{ m.canProgramada }}</td>
                 <td class="px-5 py-3.5 text-center font-semibold">
-                  {{ m.executed !== null ? m.executed : '0' }}
+                  {{ m.canEjecutada !== null ? m.canEjecutada : '0' }}
                 </td>
                 <td class="px-5 py-3.5">
                   <div class="flex items-center justify-center gap-2">
@@ -145,8 +145,8 @@ import { RtfService, MetaFisica } from '../../core/services/rtf.service';
 export class ReporteFisicoComponent {
   rtfService = inject(RtfService);
 
-  getPercent(m: MetaFisica): number {
-    if (m.executed == null) return 0;
-    return Math.round((m.executed / m.programmed) * 100);
+  getPercent(m: MetaFisicaDto): number {
+    if (m.canEjecutada == null) return 0;
+    return Math.round((m.canEjecutada / m.canProgramada) * 100);
   }
 }

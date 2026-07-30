@@ -31,7 +31,7 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
     } else {
       // Redirect to base screen depending on user's role
       if (user?.role === 'POSTULANTE') {
-        router.navigate(['/rtf/registrar']);
+        router.navigate(['/rtf/dashboard']);
       } else if (user?.role === 'UR') {
         router.navigate(['/rtf/auditoria-regional']);
       } else {

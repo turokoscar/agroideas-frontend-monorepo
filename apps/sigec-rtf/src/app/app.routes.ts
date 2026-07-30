@@ -9,6 +9,8 @@ import { ReporteFisicoComponent } from './features/reportes/reporte-fisico.compo
 import { ReporteFinancieroComponent } from './features/reportes/reporte-financiero.component';
 import { UrAuditoriaComponent } from './features/ur-auditoria/ur-auditoria.component';
 import { UnGabineteComponent } from './features/un-gabinete/un-gabinete.component';
+import { BandejaOAComponent } from './features/bandeja-oa/bandeja-oa.component';
+import { UnDashboardComponent } from './features/un-dashboard/un-dashboard.component';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
 
 export const appRoutes: Route[] = [
@@ -28,6 +30,11 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'rtf/pasos-criticos/registrar',
+        component: OaRegistroComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
+        path: 'rtf/pasos-criticos/:idpc/registrar',
         component: OaRegistroComponent,
         canActivate: [roleGuard(['POSTULANTE'])]
       },
@@ -52,6 +59,11 @@ export const appRoutes: Route[] = [
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
+        path: 'rtf/bandeja',
+        component: BandejaOAComponent,
+        canActivate: [roleGuard(['POSTULANTE'])]
+      },
+      {
         path: 'rtf/auditoria-regional',
         component: UrAuditoriaComponent,
         canActivate: [roleGuard(['UR'])]
@@ -59,6 +71,11 @@ export const appRoutes: Route[] = [
       {
         path: 'rtf/evaluacion-gabinete',
         component: UnGabineteComponent,
+        canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]
+      },
+      {
+        path: 'rtf/dashboard-un',
+        component: UnDashboardComponent,
         canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]
       },
       {
