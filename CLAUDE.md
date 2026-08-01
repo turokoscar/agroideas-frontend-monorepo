@@ -43,12 +43,28 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
 - `libs/{theme,ui,auth,http,feedback,security,utils}` — all `scope:shared`, imported as `@agroideas/*`.
 - Every `project.json` carries `scope:*` + `type:*` tags. `@nx/enforce-module-boundaries`
   (root `eslint.config.js`) enforces direction:
-  - `scope:kofix|sat` → `scope:shared` only.
+  - `scope:kofix|sat|sigec` → `scope:shared` only.
   - `type:app|feature` → `feature | ui | data-access | util`.
   - `type:ui` → `ui | util`; `type:data-access` → `data-access | util`; `type:util` → `util`.
+  - `apps/sigec-cierre` is `scope:sigec`; `sigec-rtf` and `kofix-ejecucion` still carry no
+    tags (untagged projects skip the constraint — an empty `tags: []` does **not**, it blocks
+    every lib import).
 - Apps **must not** import `primeng`, `@angular/material`/`@angular/cdk`, `bootstrap`,
   `sweetalert2`, `leaflet` directly — those are banned in `apps/**` and must be consumed
   through `@agroideas/*` libs. (Exception below: kofix-ejecucion during migration.)
+
+### Shared shell & auth mapping
+- `UiAppShellComponent` (`libs/ui/src/lib/ui-app-shell/`) owns the responsive sidebar:
+  static at `md+`, off-canvas with backdrop below it, closes on `NavigationEnd` and `Escape`.
+  It has no inputs — one single shape for every app. Apps fill the
+  `[shell-brand] [shell-nav] [shell-user] [shell-header]` slots and pass the page through
+  the default slot. `sigec-rtf`, `sigec-cierre` and `sat-ui` are laid out identically this
+  way (one layout component each, no separate sidebar component). `kofix-ejecucion` keeps
+  its PrimeNG `LayoutService` — it was already responsive.
+- `libs/auth/src/lib/sel-usuario.mapper.ts` is the single source of truth for the
+  `sel-api-seguridad` login contract (port 7101, fields `nombres` / `apellidoPaterno` /
+  `apellidoMaterno`). `sigec-rtf` and `sigec-cierre` map their session through it; `sat-ui`
+  talks to a different backend (7081, `txtNombres`) and is not a consumer.
 
 ### Design system flow (`@agroideas/theme`)
 Single source of truth for the MIDAGRI/INIA brand. **No brand hex exists outside this lib.**

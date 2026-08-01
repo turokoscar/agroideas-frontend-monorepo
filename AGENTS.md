@@ -40,14 +40,18 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 **Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
 
-**Watch out:** `sigec-cierre` has `tags: []` (empty — breaks boundary checks; needs `scope:kofix,type:app`). `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
+**Watch out:** `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
+
+**Shared layout:** `UiAppShellComponent` (`@agroideas/ui`) provides the responsive sidebar (static at `md+`, off-canvas + backdrop below, closes on navigation and `Escape`); apps plug their menu into the `[shell-brand] [shell-nav] [shell-user] [shell-header]` slots. No inputs — every app renders the same shape. `sigec-rtf`, `sigec-cierre` and `sat-ui` all use it from a single layout component. `kofix-ejecucion` keeps its own PrimeNG `LayoutService`.
+
+**Shared auth mapping:** `sel-usuario.mapper.ts` (`@agroideas/auth`) is the only place that knows the `sel-api-seguridad` login shape (`nombres`/`apellidoPaterno`/`apellidoMaterno`) — used by `sigec-rtf` and `sigec-cierre`.
 
 ## App architectures
 
 - **kofix-ejecucion** (:7100, `scope:kofix`): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. `inlineStyleLanguage: "css"` (global, but most components use `.sass`). Auth via shared `@agroideas/auth` interceptor. Real backend permission provider. Talks to three .NET APIs (`apiSeguridad`, `apiEjecucion`, `apiGeneral`). Needs `@angular/localize/init` polyfill. Allows `sweetalert2` and `leaflet` as CommonJS deps.
-- **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards, interceptors), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth via local `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth` interceptor, though it imports `AUTH_LOGOUT_HANDLER` from that lib). Permissions provider is a stub (`of([])`).
-- **sigec-rtf** (:4300, `scope:kofix`): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure.
-- **sigec-cierre** (:4400, tags empty): Feature-based with `core/` and `features/` (login, cierre-registro). Same structure as sigec-rtf but **tags are missing** — add `scope:kofix,type:app`.
+- **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards, interceptors), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth via local `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth` interceptor, though it imports `AUTH_LOGOUT_HANDLER` from that lib). Permissions provider is a stub (`of([])`). Its backend is a different one (:7081, `txtNombres`/`codUsuario`), so it does not use the `sel-usuario` mapper — only `inicialesDeNombre`.
+- **sigec-rtf** (:4300, untagged): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure. Session comes from `sel-api-seguridad` (:7101) via the shared mapper.
+- **sigec-cierre** (:4400, `scope:sigec`, `type:app`): Feature-based with `core/` and `features/` (login, cierre-registro). Same structure and same auth backend as sigec-rtf. The `scope:sigec` constraint lives in root `eslint.config.js`.
 
 ## Lib state
 

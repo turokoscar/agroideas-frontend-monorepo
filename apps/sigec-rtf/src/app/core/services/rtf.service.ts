@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { of, throwError } from 'rxjs';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
 
 export interface PasoCritico {
   id: number;
@@ -11,7 +11,7 @@ export interface PasoCritico {
   endMonth: number;
   start: Date;
   end: Date;
-  status: 'Aprobado' | 'Activo' | 'Pendiente' | 'Validado' | 'Vencido';
+  status: 'Aprobado' | 'Activo' | 'Pendiente' | 'Validado' | 'Vencido' | 'Rechazado';
   rtfId?: number;
 }
 
@@ -212,6 +212,7 @@ export class RtfService {
 
   // State signals
   loading = signal(false);
+  postulanteId = signal<number | null>(null);
   rtfId = signal<number | null>(null);
   rtfStatus = signal<string>('PENDIENTE');
   rtfStatusLabel = computed(() => {
@@ -290,13 +291,28 @@ export class RtfService {
 
   private apiUrl = environment.apiUrl;
 
-  resolvePostulanteId(usuarioId: number) {
+  /** El postulante se resuelve del usuario del token, no hace falta pasarlo. */
+  resolvePostulanteId() {
     return this.http.get<ApiResponse<{ postulanteId: number }>>(`${this.apiUrl}/rtfs/postulante/mi-id`).pipe(
       map(res => res.datos.postulanteId),
+      tap(postulanteId => this.postulanteId.set(postulanteId)),
       catchError(err => {
         console.error('Error resolving postulanteId', err);
         return throwError(() => err);
       })
+    );
+  }
+
+  /**
+   * Carga los pasos críticos del postulante autenticado. La usa el menú lateral,
+   * que necesita la lista en cualquier ruta y no solo en el dashboard.
+   */
+  cargarPasosCriticosDelUsuario() {
+    const id = this.postulanteId();
+    const postulante$ = id ? of(id) : this.resolvePostulanteId();
+    return postulante$.pipe(
+      switchMap(postulanteId => this.loadPasosCriticos(postulanteId)),
+      map(() => this.pasos())
     );
   }
 

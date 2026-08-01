@@ -335,7 +335,7 @@ export class OaDashboardComponent implements OnInit {
       return;
     }
 
-    this.rtfService.resolvePostulanteId(usuarioId).pipe(
+    this.rtfService.resolvePostulanteId().pipe(
       switchMap(postulanteId => this.rtfService.loadDashboard(postulanteId)),
       switchMap(() => this.rtfService.loadActividadReciente())
     ).subscribe({

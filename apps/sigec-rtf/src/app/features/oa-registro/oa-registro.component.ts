@@ -973,7 +973,7 @@ export class OaRegistroComponent implements OnInit {
         // En caso de F5 / recarga, recuperar postulanteId y cargar dashboard para rellenar los tiles
         const usuarioId = Number(this.authService.user()?.id);
         if (usuarioId) {
-          this.rtfService.resolvePostulanteId(usuarioId).subscribe({
+          this.rtfService.resolvePostulanteId().subscribe({
             next: (postulanteId) => {
               this.rtfService.loadDashboard(postulanteId).subscribe({
                 next: (dashData) => {

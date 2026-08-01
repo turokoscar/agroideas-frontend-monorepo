@@ -1,3 +1,4 @@
+export * from './lib/ui-app-shell/ui-app-shell.component';
 export * from './lib/ui-button/ui-button.component';
 export * from './lib/ui-card/ui-card.component';
 export * from './lib/ui-status-pill/ui-status-pill.component';

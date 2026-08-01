@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { AuthUser, UserRole } from '../../shared/models/auth.model';
 import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
+import { inicialesDeNombre } from '@agroideas/auth';
 
 interface LoginResponse {
   respuesta: string;
@@ -59,9 +60,11 @@ export class AuthService {
       map(res => {
         if (res && res.respuesta === 'OK' && res.datos) {
           const data = res.datos;
+          const nombre = `${data.txtNombres} ${data.txtApellidoPaterno} ${data.txtApellidoMaterno || ''}`.trim();
           const user: AuthUser = {
             id: data.ideAsistente || 'asis-001',
-            nombre: `${data.txtNombres} ${data.txtApellidoPaterno} ${data.txtApellidoMaterno || ''}`.trim(),
+            nombre,
+            iniciales: inicialesDeNombre(nombre),
             usuario: data.codUsuario,
             role: (data.txtRol as UserRole) || 'TECNICO'
           };

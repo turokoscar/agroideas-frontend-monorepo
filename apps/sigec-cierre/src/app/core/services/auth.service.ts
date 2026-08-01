@@ -4,37 +4,18 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
+import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
 
 export type UserRole = 'POSTULANTE' | 'UR' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO';
 
 export interface AuthUser {
   id: string;
   nombre: string;
+  iniciales: string;
   usuario: string;
+  email: string;
+  sigla: string;
   role: UserRole;
-}
-
-interface LoginResponse {
-  respuesta: 'OK' | 'ERROR';
-  mensaje: string;
-  datos: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    user: {
-      id: number;
-      dni: string;
-      name: string;
-      paterno: string;
-      materno: string;
-      telefono: string;
-      usuario: string;
-      email: string;
-      estado: number;
-      sigla: string;
-      roles: string[];
-    };
-  };
 }
 
 @Injectable({
@@ -52,10 +33,14 @@ export class AuthService {
     const userStr = localStorage.getItem(STORAGE_KEYS.SAT_USER_SESSION);
     if (token && userStr) {
       try {
-        const user = JSON.parse(userStr);
-        this._user.set(user);
+        const user = JSON.parse(userStr) as AuthUser;
+        if (esSesionVigente(user)) {
+          this._user.set(user);
+        } else {
+          this.limpiarSesion();
+        }
       } catch {
-        this.logout();
+        this.limpiarSesion();
       }
     }
   }
@@ -69,7 +54,7 @@ export class AuthService {
   }
 
   login(usuario: string, password: string): Observable<boolean> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, {
+    return this.http.post<SelLoginResponse>(`${this.apiUrl}/login`, {
       email: usuario,
       password: password,
       deviceId: 'web-admin'
@@ -77,25 +62,18 @@ export class AuthService {
       map(res => {
         if (res && res.respuesta === 'OK' && res.datos) {
           const data = res.datos;
-          const apiUser = data.user;
-          
-          let role: UserRole = 'POSTULANTE';
-          if (apiUser.roles && apiUser.roles.length > 0) {
-            const rawRole = apiUser.roles[0].toUpperCase();
-            if (rawRole === 'OA' || rawRole === 'POSTULANTE') {
-              role = 'POSTULANTE';
-            } else {
-              role = rawRole as UserRole;
-            }
-          }
-          
+          const sesion = mapSelUsuario(data.user);
+
           const user: AuthUser = {
-            id: apiUser.id.toString(),
-            nombre: `${apiUser.name} ${apiUser.paterno} ${apiUser.materno || ''}`.trim(),
-            usuario: apiUser.usuario,
-            role: role
+            id: sesion.id,
+            nombre: sesion.nombre,
+            iniciales: sesion.iniciales,
+            usuario: sesion.usuario,
+            email: sesion.email,
+            sigla: sesion.sigla,
+            role: sesion.rol as UserRole
           };
-          
+
           localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, data.accessToken);
           localStorage.setItem(STORAGE_KEYS.SAT_USER_SESSION, JSON.stringify(user));
           this._user.set(user);
@@ -107,8 +85,21 @@ export class AuthService {
   }
 
   logout(): void {
+    this.limpiarSesion();
+  }
+
+  private limpiarSesion(): void {
     localStorage.removeItem(STORAGE_KEYS.SAT_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.SAT_USER_SESSION);
     this._user.set(null);
   }
+}
+
+/**
+ * Descarta las sesiones guardadas con el mapeo antiguo, que no tenían `email`
+ * y almacenaban el nombre como "undefined undefined". Obliga a un único
+ * re-login en lugar de arrastrar el dato roto.
+ */
+function esSesionVigente(user: AuthUser | null): boolean {
+  return !!user?.email && !!user.nombre && !user.nombre.includes('undefined');
 }

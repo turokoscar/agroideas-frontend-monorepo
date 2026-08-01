@@ -74,6 +74,17 @@
             }
           ]
         },
+        "local": {
+          "fileReplacements": [
+            {
+              "replace": "apps/kofix-ejecucion/src/environments/environment.ts",
+              "with": "apps/kofix-ejecucion/src/environments/environment.local.ts"
+            }
+          ],
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        },
         "development": {
           "optimization": false,
           "extractLicenses": false,
@@ -93,9 +104,12 @@
         },
         "development": {
           "buildTarget": "kofix-ejecucion:build:development"
+        },
+        "local": {
+          "buildTarget": "kofix-ejecucion:build:local"
         }
       },
-      "defaultConfiguration": "development"
+      "defaultConfiguration": "local"
     },
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",

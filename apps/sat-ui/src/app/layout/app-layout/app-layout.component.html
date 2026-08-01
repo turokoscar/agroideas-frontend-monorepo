@@ -1,6 +1,64 @@
-<div class="flex h-screen overflow-hidden">
-  <app-sidebar />
-  <main class="flex-1 overflow-y-auto bg-background">
-    <router-outlet />
-  </main>
-</div>
+<!-- El comportamiento responsive del menú vive en @agroideas/ui -->
+<app-ui-app-shell>
+  <!-- Marca -->
+  <div shell-brand class="flex items-center gap-3">
+    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+      <span class="material-symbols-outlined text-[20px]">eco</span>
+    </div>
+    <div>
+      <span class="font-bold tracking-wider text-sm block uppercase">Yachachiq</span>
+      <span class="text-[9px] text-sidebar-foreground/70 uppercase tracking-widest font-semibold">AGROIDEAS · MIDAGRI</span>
+    </div>
+  </div>
+
+  <!-- Navigation Links -->
+  <nav shell-nav class="p-3 space-y-1">
+    @for (link of links(); track link.to) {
+      <a
+        [routerLink]="link.to"
+        routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
+      >
+        <span class="material-symbols-outlined text-[20px]">{{ link.icon }}</span>
+        {{ link.label }}
+      </a>
+    }
+  </nav>
+
+  <!-- User Information & Logout -->
+  <div shell-user>
+    <div class="flex items-center gap-3">
+      <div class="h-9 w-9 shrink-0 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground flex items-center justify-center font-bold uppercase text-xs">
+        {{ user()?.iniciales }}
+      </div>
+      <div class="min-w-0 flex-1">
+        <span class="font-semibold text-xs block truncate text-sidebar-foreground">{{ user()?.nombre }}</span>
+        <span class="text-[8px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest">{{ user()?.role }}</span>
+      </div>
+    </div>
+    <button
+      (click)="logout()"
+      class="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors"
+    >
+      <span class="material-symbols-outlined text-[18px]">logout</span>
+      Cerrar sesión
+    </button>
+  </div>
+
+  <!-- Header -->
+  <div shell-header class="flex flex-1 items-center justify-between gap-4 min-w-0">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SAT</span>
+      <span class="text-xs text-surface-400">/</span>
+      <span class="text-xs text-foreground font-medium truncate">Plataforma de Asistencia Técnica</span>
+    </div>
+    <div class="hidden sm:flex items-center gap-1.5 bg-success-soft border border-success/20 text-success text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0">
+      <span class="h-1.5 w-1.5 rounded-full bg-success animate-pulse"></span>
+      Servicio Activo
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <router-outlet />
+</app-ui-app-shell>

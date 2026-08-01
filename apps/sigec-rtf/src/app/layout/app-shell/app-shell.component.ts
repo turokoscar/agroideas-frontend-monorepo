@@ -1,30 +1,30 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { UiAppShellComponent } from '@agroideas/ui';
 import { AuthService } from '../../core/services/auth.service';
+import { PasoCritico, RtfService } from '../../core/services/rtf.service';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UiAppShellComponent],
   template: `
-    <div class="flex h-screen bg-background text-foreground font-sans overflow-hidden">
-      <!-- Sidebar - Verde oscuro institucional -->
-      <aside class="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col justify-between shrink-0">
+    <!-- El comportamiento responsive del menú vive en @agroideas/ui -->
+    <app-ui-app-shell>
+      <!-- Marca -->
+      <div shell-brand class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-lg bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground">
+          <span class="material-symbols-outlined text-[20px]">eco</span>
+        </div>
         <div>
-          <!-- Header Logo -->
-          <div class="h-16 px-5 flex items-center gap-3 border-b border-sidebar-border bg-sidebar-border/10">
-            <div class="h-9 w-9 rounded-lg bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground">
-              <span class="material-symbols-outlined text-[20px]">eco</span>
-            </div>
-            <div>
-              <span class="font-bold tracking-wider text-sm block uppercase">SIGEC</span>
-              <span class="text-[9px] text-sidebar-foreground/70 uppercase tracking-widest font-semibold">Reporte RTF</span>
-            </div>
-          </div>
+          <span class="font-bold tracking-wider text-sm block uppercase">SIGEC</span>
+          <span class="text-[9px] text-sidebar-foreground/70 uppercase tracking-widest font-semibold">Reporte RTF</span>
+        </div>
+      </div>
 
-          <!-- Navigation Links -->
-          <nav class="p-3 space-y-1">
+      <!-- Navigation Links -->
+      <nav shell-nav class="p-3 space-y-1">
             @if (user()?.role === 'POSTULANTE') {
               <!-- Dashboard -->
               <a
@@ -62,55 +62,37 @@ import { AuthService } from '../../core/services/auth.service';
                 </button>
 
                 @if (isStepsExpanded()) {
-                  <div class="pl-4 space-y-1 transition-all">
-                    <!-- Paso 1 (Disabled) -->
-                    <div class="flex items-center justify-between px-3 py-1.5 text-xs text-sidebar-foreground/40 font-medium">
-                      <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[14px]">lock_open</span>
-                        PC 1 (Aprobado)
-                      </div>
-                    </div>
-                    
-                    <!-- Paso 2 (Vigente / Active) -->
-                    <div class="space-y-0.5 border-l border-primary/20 pl-2">
-                      <div class="px-3 py-1 text-xs text-primary font-bold flex items-center gap-1.5">
-                        <span class="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
-                        PC 2 (Vigente)
-                      </div>
-                      
-                      <a
-                        routerLink="/rtf/pasos-criticos/registrar"
-                        routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
-                        class="flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
-                      >
-                        <span class="material-symbols-outlined text-[14px]">edit_note</span>
-                        a. Registrar avance
-                      </a>
-                      <a
-                        routerLink="/rtf/pasos-criticos/enviar"
-                        routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
-                        class="flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
-                      >
-                        <span class="material-symbols-outlined text-[14px]">send</span>
-                        b. Enviar PC
-                      </a>
-                      <a
-                        routerLink="/rtf/pasos-criticos/observaciones"
-                        routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
-                        class="flex items-center gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
-                      >
-                        <span class="material-symbols-outlined text-[14px]">feedback</span>
-                        c. Levantar Observaciones
-                      </a>
-                    </div>
-
-                    <!-- Pasos 3 to 6 (Disabled) -->
-                    @for (step of [3,4,5,6]; track step) {
-                      <div class="flex items-center justify-between px-3 py-1.5 text-xs text-sidebar-foreground/30 font-medium">
-                        <div class="flex items-center gap-2">
-                          <span class="material-symbols-outlined text-[14px]">lock</span>
-                          PC {{ step }} (Pendiente)
+                  <div class="pl-4 space-y-0.5 transition-all">
+                    @for (paso of pasos(); track paso.id) {
+                      @if (esNavegable(paso)) {
+                        <a
+                          [routerLink]="['/rtf/pasos-criticos', paso.id, 'registrar']"
+                          routerLinkActive="bg-sidebar-accent/30 text-primary font-medium"
+                          class="flex items-center justify-between gap-2 px-3 py-1.5 rounded text-[11px] text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-all"
+                        >
+                          <span class="flex items-center gap-2 min-w-0">
+                            <span class="material-symbols-outlined text-[14px]">{{ iconoPaso(paso.status) }}</span>
+                            <span class="truncate">{{ paso.label }}</span>
+                          </span>
+                          <span class="text-[9px] uppercase tracking-wider shrink-0" [class]="colorEstado(paso.status)">
+                            {{ paso.status }}
+                          </span>
+                        </a>
+                      } @else {
+                        <div
+                          class="flex items-center justify-between gap-2 px-3 py-1.5 text-[11px] text-sidebar-foreground/30 cursor-not-allowed"
+                          [title]="paso.label + ': aún no habilitado, no tiene reporte iniciado.'"
+                        >
+                          <span class="flex items-center gap-2 min-w-0">
+                            <span class="material-symbols-outlined text-[14px]">lock</span>
+                            <span class="truncate">{{ paso.label }}</span>
+                          </span>
+                          <span class="text-[9px] uppercase tracking-wider shrink-0">{{ paso.status }}</span>
                         </div>
+                      }
+                    } @empty {
+                      <div class="px-3 py-1.5 text-[11px] text-sidebar-foreground/40">
+                        {{ pasosCargando() ? 'Cargando pasos críticos…' : 'Sin pasos críticos programados.' }}
                       </div>
                     }
                   </div>
@@ -184,63 +166,104 @@ import { AuthService } from '../../core/services/auth.service';
                 Evaluación Gabinete
               </a>
             }
-          </nav>
-        </div>
+      </nav>
 
-        <!-- User Information & Logout -->
-        <div class="border-t border-sidebar-border px-4 py-4 space-y-3">
-          <div class="flex items-center gap-3">
-            <div class="h-9 w-9 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground flex items-center justify-center font-bold uppercase text-xs">
-              {{ user()?.nombre?.substring(0,2) }}
-            </div>
-            <div class="min-w-0 flex-1">
-              <span class="font-semibold text-xs block truncate text-sidebar-foreground">{{ user()?.nombre }}</span>
-              <span class="text-[8px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest">{{ user()?.role }}</span>
-            </div>
+      <!-- User Information & Logout -->
+      <div shell-user>
+        <div class="flex items-center gap-3">
+          <div class="h-9 w-9 shrink-0 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground flex items-center justify-center font-bold uppercase text-xs">
+            {{ user()?.iniciales }}
           </div>
-          <button
-            (click)="onLogout()"
-            class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[18px]">logout</span>
-            Cerrar Sesión
-          </button>
+          <div class="min-w-0 flex-1">
+            <span class="font-semibold text-xs block truncate text-sidebar-foreground">{{ user()?.nombre }}</span>
+            <span class="text-[10px] block truncate text-sidebar-foreground/60">{{ user()?.email }}</span>
+            <span class="text-[8px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest">{{ user()?.role }}</span>
+          </div>
         </div>
-      </aside>
+        <button
+          (click)="onLogout()"
+          class="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-colors"
+        >
+          <span class="material-symbols-outlined text-[18px]">logout</span>
+          Cerrar Sesión
+        </button>
+      </div>
 
-      <!-- Main Panel -->
-      <main class="flex-1 flex flex-col min-w-0 bg-background">
-        <!-- Header -->
-        <header class="h-16 px-8 border-b border-border flex items-center justify-between shrink-0 bg-surface-container-lowest">
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SIGEC</span>
-            <span class="text-xs text-surface-400">/</span>
-            <span class="text-xs text-foreground font-medium">Plataforma de Reporte y Validación</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-1.5 bg-success-soft border border-success/20 text-success text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-              <span class="h-1.5 w-1.5 rounded-full bg-success animate-pulse"></span>
-              Servicio Activo
-            </div>
-          </div>
-        </header>
-
-        <!-- Page Content -->
-        <div class="flex-1 overflow-y-auto p-8">
-          <router-outlet></router-outlet>
+      <!-- Header -->
+      <div shell-header class="flex flex-1 items-center justify-between gap-4 min-w-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SIGEC</span>
+          <span class="text-xs text-surface-400">/</span>
+          <span class="text-xs text-foreground font-medium truncate">Plataforma de Reporte y Validación</span>
         </div>
-      </main>
-    </div>
+        <div class="hidden sm:flex items-center gap-1.5 bg-success-soft border border-success/20 text-success text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0">
+          <span class="h-1.5 w-1.5 rounded-full bg-success animate-pulse"></span>
+          Servicio Activo
+        </div>
+      </div>
+
+      <!-- Page Content -->
+      <router-outlet></router-outlet>
+    </app-ui-app-shell>
   `
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnInit {
   private authService = inject(AuthService);
+  private rtfService = inject(RtfService);
   private router = inject(Router);
 
   user = this.authService.user;
 
+  /** Pasos críticos reales del convenio; alimentan el submenú. */
+  pasos = this.rtfService.pasos;
+  pasosCargando = signal(false);
+
   isStepsExpanded = signal(true);
   isReportsExpanded = signal(true);
+
+  ngOnInit() {
+    // Solo la OA navega por pasos críticos; UR y UN trabajan desde sus bandejas.
+    if (this.user()?.role !== 'POSTULANTE') return;
+
+    this.pasosCargando.set(true);
+    this.rtfService.cargarPasosCriticosDelUsuario().subscribe({
+      next: () => this.pasosCargando.set(false),
+      error: (err) => {
+        console.error('No se pudieron cargar los pasos críticos del menú', err);
+        this.pasosCargando.set(false);
+      }
+    });
+  }
+
+  /**
+   * Un paso se abre cuando tiene reporte iniciado o es el habilitado. Los
+   * `Pendiente` no tienen RTF todavía, así que no hay nada que mostrar.
+   */
+  esNavegable(paso: PasoCritico): boolean {
+    return paso.status !== 'Pendiente';
+  }
+
+  iconoPaso(status: PasoCritico['status']): string {
+    switch (status) {
+      case 'Activo': return 'edit_note';
+      case 'Aprobado':
+      case 'Validado': return 'task_alt';
+      case 'Rechazado': return 'cancel';
+      case 'Vencido': return 'schedule';
+      default: return 'lock';
+    }
+  }
+
+  colorEstado(status: PasoCritico['status']): string {
+    switch (status) {
+      case 'Activo': return 'text-primary font-bold';
+      case 'Aprobado':
+      case 'Validado': return 'text-success';
+      case 'Rechazado':
+      case 'Vencido': return 'text-danger';
+      default: return 'text-sidebar-foreground/40';
+    }
+  }
 
   toggleSteps() {
     this.isStepsExpanded.update(v => !v);

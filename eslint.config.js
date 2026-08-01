@@ -36,6 +36,10 @@ module.exports = [
               sourceTag: 'scope:sat',
               onlyDependOnLibsWithTags: ['scope:sat', 'scope:shared'],
             },
+            {
+              sourceTag: 'scope:sigec',
+              onlyDependOnLibsWithTags: ['scope:sigec', 'scope:shared'],
+            },
             // --- por type ---
             {
               sourceTag: 'type:app',
