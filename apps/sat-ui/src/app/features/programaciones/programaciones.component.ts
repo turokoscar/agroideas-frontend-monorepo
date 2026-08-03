@@ -8,7 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ProgramacionService, Programacion } from '../../core/services/programacion.service';
 import { AsignacionService, Asignacion } from '../../core/services/asignacion.service';
 import { AsistenteService, TipoActividad } from '../../core/services/asistente.service';
-import { formatDate } from '@agroideas/utils';
+import { formatDate, mensajeParaUsuario } from '@agroideas/utils';
 
 
 @Component({
@@ -288,7 +288,7 @@ export class ProgramacionesComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast(err.error?.mensaje || 'Error al programar visita técnica.', 'error');
+        this.alertService.toast(mensajeParaUsuario(err, 'Error al programar visita técnica.'), 'error');
       },
       complete: () => this.submitting.set(false)
     });
@@ -310,7 +310,7 @@ export class ProgramacionesComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast(err.error?.mensaje || 'Error al cancelar la visita técnica.', 'error');
+        this.alertService.toast(mensajeParaUsuario(err, 'Error al cancelar la visita técnica.'), 'error');
       }
     });
   }

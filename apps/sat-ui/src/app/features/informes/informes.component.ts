@@ -16,7 +16,7 @@ import {
   GenerarInformePayload
 } from '../../core/services/informe.service';
 import { AsistenteService, Asistente } from '../../core/services/asistente.service';
-import { formatDate, FormatDatePipe } from '@agroideas/utils';
+import { formatDate, FormatDatePipe, mensajeParaUsuario } from '@agroideas/utils';
 import { getEstadoClass, getEstadoLabel } from '../../shared/utils/estado-labels';
 import { InformeDetalleModalComponent } from './components/informe-detalle-modal/informe-detalle-modal.component';
 import { InformeUploadPdfModalComponent } from './components/informe-upload-pdf-modal/informe-upload-pdf-modal.component';
@@ -217,7 +217,7 @@ export class InformesComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast(err.error?.mensaje || 'Error al generar reporte', 'error');
+        this.alertService.toast(mensajeParaUsuario(err, 'Error al generar reporte'), 'error');
       },
       complete: () => this.generating.set(false)
     });
@@ -284,7 +284,7 @@ export class InformesComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast(err.error?.mensaje || 'Error al guardar secciones', 'error');
+        this.alertService.toast(mensajeParaUsuario(err, 'Error al guardar secciones'), 'error');
       },
       complete: () => this.saving.set(false)
     });
@@ -366,7 +366,7 @@ export class InformesComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast(err.error?.mensaje || 'Error al adjuntar PDF firmado', 'error');
+        this.alertService.toast(mensajeParaUsuario(err, 'Error al adjuntar PDF firmado'), 'error');
       },
       complete: () => this.uploadingPdf.set(false)
     });

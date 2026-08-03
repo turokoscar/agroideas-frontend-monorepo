@@ -4,6 +4,7 @@ export * from './lib/permissions';
 export * from './lib/jwt.util';
 export * from './lib/cn';
 export * from './lib/response.dto';
+export * from './lib/error-message';
 export * from './lib/date-formatter';
 export * from './lib/pipes/format-date.pipe';
 export * from './lib/roles';

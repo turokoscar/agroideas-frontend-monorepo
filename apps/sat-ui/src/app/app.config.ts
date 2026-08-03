@@ -5,16 +5,15 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
 import { appRoutes } from './app.routes';
-import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { AuthService } from './core/services/auth.service';
 import { USER_PERMISSIONS_PROVIDER } from '@agroideas/security';
-import { AUTH_LOGOUT_HANDLER } from '@agroideas/auth';
+import { authInterceptor, AUTH_LOGOUT_HANDLER } from '@agroideas/auth';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
-    provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
     {
       provide: USER_PERMISSIONS_PROVIDER,

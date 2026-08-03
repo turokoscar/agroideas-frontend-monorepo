@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { UIButtonComponent } from '@agroideas/ui';
+import { mensajeParaUsuario } from '@agroideas/utils';
 
 @Component({
   selector: 'app-login',
@@ -56,7 +57,7 @@ export class LoginComponent {
         },
         error: (err) => {
           console.error('Login error:', err);
-          const errorMsg = err?.error?.mensaje || 'Error de conexión con el servidor.';
+          const errorMsg = mensajeParaUsuario(err, 'Error de conexión con el servidor.');
           this.error.set(errorMsg);
           this.loading.set(false);
         }

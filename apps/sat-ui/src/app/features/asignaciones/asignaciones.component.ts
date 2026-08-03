@@ -8,6 +8,7 @@ import { AsignacionService, Asignacion } from '../../core/services/asignacion.se
 import { AsistenteService, Asistente } from '../../core/services/asistente.service';
 import { OrganizacionService, Organizacion } from '../../core/services/organizacion.service';
 import { debounceTime, distinctUntilChanged, skip, finalize } from 'rxjs';
+import { mensajeParaUsuario } from '@agroideas/utils';
 
 @Component({
   selector: 'app-asignaciones',
@@ -182,7 +183,7 @@ export class AsignacionesComponent implements OnInit {
           },
           error: (err) => {
             console.error(err);
-            this.alertService.toast(err.error?.mensaje || 'Error al actualizar', 'error');
+            this.alertService.toast(mensajeParaUsuario(err, 'Error al actualizar'), 'error');
           }
         });
     } else {
@@ -200,7 +201,7 @@ export class AsignacionesComponent implements OnInit {
           },
           error: (err) => {
             console.error(err);
-            this.alertService.toast(err.error?.mensaje || 'Error al crear', 'error');
+            this.alertService.toast(mensajeParaUsuario(err, 'Error al crear'), 'error');
           }
         });
     }

@@ -5,7 +5,7 @@ import { UIButtonComponent, UiStatusPillComponent, UIModalComponent, UiDataTable
 import type { TableColumn } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { AsistenteService, Asistente, AsistentePayload } from '../../core/services/asistente.service';
-import { formatDate } from '@agroideas/utils';
+import { formatDate, mensajeParaUsuario } from '@agroideas/utils';
 
 
 @Component({
@@ -158,7 +158,7 @@ export class AsistentesComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.alertService.toast(err.error?.mensaje || 'Error al actualizar asistente.', 'error');
+          this.alertService.toast(mensajeParaUsuario(err, 'Error al actualizar asistente.'), 'error');
         }
       });
     } else {
@@ -172,7 +172,7 @@ export class AsistentesComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.alertService.toast(err.error?.mensaje || 'Error al registrar asistente.', 'error');
+          this.alertService.toast(mensajeParaUsuario(err, 'Error al registrar asistente.'), 'error');
         }
       });
     }
@@ -196,7 +196,7 @@ export class AsistentesComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.alertService.toast(err.error?.mensaje || 'Error al cambiar el estado del asistente.', 'error');
+        this.alertService.toast(mensajeParaUsuario(err, 'Error al cambiar el estado del asistente.'), 'error');
       }
     });
   }
