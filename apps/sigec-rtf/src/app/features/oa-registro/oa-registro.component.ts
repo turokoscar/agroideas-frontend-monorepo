@@ -108,16 +108,18 @@ export class OaRegistroComponent implements OnInit {
         if (usuarioId) {
           this.rtfService.resolvePostulanteId().subscribe({
             next: (postulanteId) => {
-              this.rtfService.loadDashboard(postulanteId).subscribe({
-                next: (dashData) => {
-                  const pasos = dashData.pasos || [];
-                  const pc = pasos.find((p: any) => p.id === pasoCriticoId);
-                  if (pc?.rtfId) {
-                    this.rtfService.rtfId.set(pc.rtfId);
-                    initializeRtfAndHeader(pc.rtfId);
+              if (postulanteId) {
+                this.rtfService.loadDashboard(postulanteId).subscribe({
+                  next: (dashData) => {
+                    const pasos = dashData?.pasos || [];
+                    const pc = pasos.find((p: any) => p.id === pasoCriticoId);
+                    if (pc?.rtfId) {
+                      this.rtfService.rtfId.set(pc.rtfId);
+                      initializeRtfAndHeader(pc.rtfId);
+                    }
                   }
-                }
-              });
+                });
+              }
             }
           });
         }

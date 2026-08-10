@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-oa-dashboard',
@@ -41,7 +42,10 @@ export class OaDashboardComponent implements OnInit {
     }
 
     this.rtfService.resolvePostulanteId().pipe(
-      switchMap(postulanteId => this.rtfService.loadDashboard(postulanteId)),
+      switchMap(postulanteId => {
+        if (!postulanteId) return of(null);
+        return this.rtfService.loadDashboard(postulanteId);
+      }),
       switchMap(() => this.rtfService.loadActividadReciente())
     ).subscribe({
       next: () => this.isLoading.set(false),
