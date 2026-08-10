@@ -8,6 +8,6 @@
  */
 export const environment = {
   production: true,
-  apiAuth: 'https://localhost:7081/api/Auth',
-  apiUrl: 'https://localhost:7081/api'
+  apiAuth: 'https://api-yachachiq.oscar-pazos.com/api/Auth',
+  apiUrl: 'https://api-yachachiq.oscar-pazos.com/api'
 };

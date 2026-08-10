@@ -139,4 +139,14 @@ export class InformeService {
       responseType: 'blob'
     });
   }
+
+  descargarWord(ideInforme: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/informes/${ideInforme}/word`, {
+      responseType: 'blob'
+    });
+  }
+
+  obtenerValidacion(ideInforme: number): Observable<ResponseDto<{ esValido: boolean; erroresBloqueantes: string[]; advertencias: string[] }>> {
+    return this.http.get<ResponseDto<{ esValido: boolean; erroresBloqueantes: string[]; advertencias: string[] }>>(`${this.apiUrl}/informes/${ideInforme}/validacion`);
+  }
 }
