@@ -61,11 +61,15 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
 ### Shared shell & auth mapping
 - `UiAppShellComponent` (`libs/ui/src/lib/ui-app-shell/`) owns the responsive sidebar:
   static at `md+`, off-canvas with backdrop below it, closes on `NavigationEnd` and `Escape`.
-  It has no inputs — one single shape for every app. Apps fill the
+  Its only input is `colapsadoEscritorio` (default `false`) — an optional desktop icon-only
+  collapse; the shell just applies the width, the host app owns the signal and decides what
+  to hide inside its projected slots. Apps fill the
   `[shell-brand] [shell-nav] [shell-user] [shell-header]` slots and pass the page through
-  the default slot. `sigec-rtf`, `sigec-cierre` and `sat-ui` are laid out identically this
-  way (one layout component each, no separate sidebar component). `kofix-ejecucion` keeps
-  its PrimeNG `LayoutService` — it was already responsive.
+  the default slot. `sigec-rtf`, `sigec-cierre`, `sat-ui`, and now `kofix-ejecucion` are all
+  laid out this way (one layout component each, no separate sidebar component).
+  `kofix-ejecucion` migrated off its own PrimeNG `LayoutService`/`AppTopbarComponent`/
+  `AppSidebarComponent` onto this shared shell (`apps/kofix-ejecucion/src/app/layout/`);
+  that also retired the last hardcoded sidebar hex (`#008F49`) in favor of theme tokens.
 - `libs/auth/src/lib/sel-usuario.mapper.ts` is the single source of truth for the
   `sel-api-seguridad` login contract (port 7101, fields `nombres` / `apellidoPaterno` /
   `apellidoMaterno`). `sigec-rtf` and `sigec-cierre` map their session through it; `sat-ui`
@@ -99,7 +103,8 @@ it requires reading across these layers:
   directive, and the `jwt`/`currency`/`storage-keys`/`permissions` utils have all moved to
   `@agroideas/feedback`, `@agroideas/security`, and `@agroideas/utils` respectively — don't
   recreate them here.
-- `layout/` — app shell (sidebar + topbar).
+- `layout/` — `AppLayoutComponent` fills `UiAppShellComponent`'s slots (see above); `app.menu.component.ts` renders the nav from `MenuRepository`. Both have specs now
+  (`app.layout.component.spec.ts`, `app.menu.component.spec.ts`).
 - **Composition root:** `app.config.ts` binds each abstract repository to its impl with
   `{ provide: XRepository, useExisting: XRepositoryImpl }`. Don't re-provide these elsewhere.
 

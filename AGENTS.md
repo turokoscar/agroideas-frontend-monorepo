@@ -42,7 +42,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 **Watch out:** `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
 
-**Shared layout:** `UiAppShellComponent` (`@agroideas/ui`) provides the responsive sidebar (static at `md+`, off-canvas + backdrop below, closes on navigation and `Escape`); apps plug their menu into the `[shell-brand] [shell-nav] [shell-user] [shell-header]` slots. No inputs — every app renders the same shape. `sigec-rtf`, `sigec-cierre` and `sat-ui` all use it from a single layout component. `kofix-ejecucion` keeps its own PrimeNG `LayoutService`.
+**Shared layout:** `UiAppShellComponent` (`@agroideas/ui`) provides the responsive sidebar (static at `md+`, off-canvas + backdrop below, closes on navigation and `Escape`); apps plug their menu into the `[shell-brand] [shell-nav] [shell-user] [shell-header]` slots. Its only input is `colapsadoEscritorio` (optional desktop icon-only collapse, owned by the host app). `sigec-rtf`, `sigec-cierre`, `sat-ui`, and now `kofix-ejecucion` all use it from a single layout component — kofix migrated off its own PrimeNG `LayoutService`.
 
 **Shared auth mapping:** `sel-usuario.mapper.ts` (`@agroideas/auth`) is the only place that knows the `sel-api-seguridad` login shape (`nombres`/`apellidoPaterno`/`apellidoMaterno`) — used by `sigec-rtf` and `sigec-cierre`.
 
