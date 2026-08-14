@@ -1,0 +1,143 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
+import { ConvenioListPageComponent } from './convenio-list.page';
+import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { ExportService } from '../../../shared/services/export.service';
+import { Convenio } from '../../../domain/models/convenio.model';
+
+describe('ConvenioListPageComponent', () => {
+    let component: ConvenioListPageComponent;
+    let fixture: ComponentFixture<ConvenioListPageComponent>;
+    let mockConvenioRepo: jest.Mocked<Partial<ConvenioRepository>>;
+    let mockPermissionService: jest.Mocked<Partial<PermissionService>>;
+    let mockAlert: jest.Mocked<Partial<AlertService>>;
+    let router: Router;
+
+    const buildConvenio = (overrides: Partial<Convenio> = {}): Convenio => ({
+        id: 1,
+        numeroConvenio: '12',
+        ruc: '20100000001',
+        razonSocial: 'Asociación',
+        region: 'Cusco',
+        estado: 'VIGENTE',
+        fechaInicio: '2026-03-01',
+        fechaFin: '2026-12-31',
+        montoAprobado: 1000,
+        montoProgramado: 500,
+        montoEjecutado: 400,
+        saldoPorProgramar: 500,
+        saldoPorEjecutar: 600,
+        programacionAcumulada: 500,
+        ejecucionAcumulada: 400,
+        saldoDisponible: 600,
+        asignadoA: 'Juan Pérez',
+        email: 'juan@test.com',
+        periodo: 2026,
+        duracion: 12,
+        ...overrides
+    });
+
+    beforeEach(async () => {
+        mockConvenioRepo = {
+            getTodos: jest.fn().mockReturnValue(of({ datos: [], total: 0 })),
+            getAsignados: jest.fn().mockReturnValue(of({ datos: [], total: 0 }))
+        };
+        mockPermissionService = { hasPermission: jest.fn().mockReturnValue(false) };
+        mockAlert = { show: jest.fn() };
+
+        await TestBed.configureTestingModule({
+            imports: [ConvenioListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ConvenioRepository, useValue: mockConvenioRepo },
+                { provide: PermissionService, useValue: mockPermissionService },
+                { provide: AlertService, useValue: mockAlert },
+                { provide: ExportService, useValue: {} }
+            ]
+        }).compileComponents();
+
+        fixture = TestBed.createComponent(ConvenioListPageComponent);
+        component = fixture.componentInstance;
+        router = TestBed.inject(Router);
+        jest.spyOn(router, 'navigate').mockResolvedValue(true);
+    });
+
+    it('should use getAsignados by default (no VER_TODOS_CONVENIOS permission)', () => {
+        fixture.detectChanges();
+
+        expect(mockConvenioRepo.getAsignados).toHaveBeenCalledWith(1, 10, '');
+        expect(mockConvenioRepo.getTodos).not.toHaveBeenCalled();
+    });
+
+    it('should use getTodos when the user has VER_TODOS_CONVENIOS', () => {
+        mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
+
+        fixture.detectChanges();
+
+        expect(mockConvenioRepo.getTodos).toHaveBeenCalledWith(1, 10, '');
+    });
+
+    it('should filter the results client-side by estado when a filter is set', () => {
+        mockConvenioRepo.getAsignados = jest.fn().mockReturnValue(
+            of({ datos: [buildConvenio({ id: 1, estado: 'VIGENTE' }), buildConvenio({ id: 2, estado: 'FINALIZADO' })], total: 2 })
+        );
+        component.estadoFilter.set('VIGENTE');
+
+        fixture.detectChanges();
+
+        expect(component.convenios()).toHaveLength(1);
+        expect(component.convenios()[0].id).toBe(1);
+    });
+
+    describe('formatConvenioNumber', () => {
+        it('should show a dash when there is no numeroConvenio', () => {
+            expect(component.formatConvenioNumber(buildConvenio({ numeroConvenio: '' }))).toBe('-');
+        });
+
+        it('should pass through a number that already carries the -ST suffix', () => {
+            expect(component.formatConvenioNumber(buildConvenio({ numeroConvenio: '0012-2026-ST' }))).toBe('0012-2026-ST');
+        });
+
+        it('should pad and append year + ST suffix otherwise', () => {
+            expect(component.formatConvenioNumber(buildConvenio({ numeroConvenio: '12', fechaInicio: '2025-06-01' }))).toBe('0012-2025-ST');
+        });
+    });
+
+    it('should compute the saldo, preferring saldoPorEjecutar', () => {
+        expect(component.getSaldo(buildConvenio({ saldoPorEjecutar: 300 }))).toBe(300);
+        expect(component.getSaldo(buildConvenio({ saldoPorEjecutar: undefined as any, montoAprobado: 1000, montoEjecutado: 700 }))).toBe(300);
+    });
+
+    it('should classify riesgo by remaining balance percentage', () => {
+        expect(component.getRiesgo(buildConvenio({ saldoPorEjecutar: 600, montoAprobado: 1000 }))).toBe('success');
+        expect(component.getRiesgo(buildConvenio({ saldoPorEjecutar: 200, montoAprobado: 1000 }))).toBe('warning');
+        expect(component.getRiesgo(buildConvenio({ saldoPorEjecutar: 50, montoAprobado: 1000 }))).toBe('danger');
+    });
+
+    it('should compute the execution percentage, guarding against a missing montoAprobado', () => {
+        expect(component.getPorcentajeEjecucion(buildConvenio({ montoAprobado: 1000, montoEjecutado: 250 }))).toBe(25);
+        expect(component.getPorcentajeEjecucion(buildConvenio({ montoAprobado: 0, montoEjecutado: 250 }))).toBe(0);
+    });
+
+    it('should navigate to the convenio detail, and to specific tabs', () => {
+        component.goToDetail(3);
+        expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 3]);
+
+        component.goToProgramacion(3);
+        expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 3], { queryParams: { tab: 'programacion' } });
+
+        component.goToKardex(3);
+        expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 3], { queryParams: { tab: 'kardex' } });
+    });
+
+    it('should map estado codes to status type, label, and semaphore class, defaulting unknown ones', () => {
+        expect(component.getStatusType('VIGENTE')).toBe('Activo');
+        expect(component.getStatusType('X')).toBe('Finalizado');
+        expect(component.getStatusLabel('SUSPENDIDO')).toBe('Suspendido');
+        expect(component.getSemaphoreClass('VIGENTE')).toBe('semaforo--green');
+        expect(component.getSemaphoreClass('X')).toBe('semaforo--gray');
+    });
+});
