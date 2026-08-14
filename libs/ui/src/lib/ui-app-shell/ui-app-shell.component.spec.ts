@@ -8,7 +8,7 @@ import { UiAppShellComponent } from './ui-app-shell.component';
     standalone: true,
     imports: [UiAppShellComponent],
     template: `
-        <app-ui-app-shell>
+        <app-ui-app-shell [colapsadoEscritorio]="colapsado">
             <div shell-brand>Marca</div>
             <nav shell-nav>Navegación</nav>
             <div shell-user>Usuario</div>
@@ -17,7 +17,9 @@ import { UiAppShellComponent } from './ui-app-shell.component';
         </app-ui-app-shell>
     `
 })
-class AnfitrionComponent {}
+class AnfitrionComponent {
+    colapsado = false;
+}
 
 describe('UiAppShellComponent', () => {
     let fixture: ComponentFixture<AnfitrionComponent>;
@@ -35,8 +37,9 @@ describe('UiAppShellComponent', () => {
     const shell = () => fixture.debugElement.children[0].componentInstance as UiAppShellComponent;
     const boton = (): HTMLButtonElement | null => fixture.nativeElement.querySelector('button[aria-controls]');
     const backdrop = () => fixture.nativeElement.querySelector('div.fixed.inset-0');
+    const aside = (): HTMLElement | null => fixture.nativeElement.querySelector('aside');
 
-    const crear = (esMovil = true) => {
+    const crear = (esMovil = true, colapsado = false) => {
         simularAncho(esMovil);
         eventosRouter = new Subject<NavigationEnd>();
 
@@ -46,6 +49,7 @@ describe('UiAppShellComponent', () => {
         });
 
         fixture = TestBed.createComponent(AnfitrionComponent);
+        fixture.componentInstance.colapsado = colapsado;
         fixture.detectChanges();
     };
 
@@ -109,5 +113,27 @@ describe('UiAppShellComponent', () => {
         expect(shell().esMovil()).toBe(false);
         expect(shell().menuAbierto()).toBe(false);
         expect(boton()?.className).toContain('md:hidden');
+    });
+
+    it('por defecto no colapsa el sidebar en escritorio', () => {
+        crear(false);
+        expect(shell().colapsadoEscritorio()).toBe(false);
+        expect(aside()?.className).toContain('md:w-64');
+        expect(aside()?.className).not.toContain('md:w-[72px]');
+    });
+
+    it('colapsa el sidebar a solo-íconos cuando la app lo pide', () => {
+        crear(false, true);
+        expect(shell().colapsadoEscritorio()).toBe(true);
+        expect(aside()?.className).toContain('md:w-[72px]');
+        expect(aside()?.className).not.toContain('md:w-64');
+    });
+
+    it('reduce el padding de marca y usuario cuando colapsa, para que no desborden el riel de 72px', () => {
+        crear(false, true);
+        const marca = fixture.nativeElement.querySelector('aside > div > div');
+        const usuario = fixture.nativeElement.querySelector('aside > div:last-child');
+        expect(marca?.className).toContain('md:px-2');
+        expect(usuario?.className).toContain('md:px-2');
     });
 });

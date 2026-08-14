@@ -4,6 +4,7 @@ import {
     DestroyRef,
     ElementRef,
     inject,
+    input,
     signal,
     viewChild
 } from '@angular/core';
@@ -19,9 +20,13 @@ import { filter } from 'rxjs';
  * cabecera en manos de cada app a través de slots, para que ninguna pierda su
  * menú ni sus reglas de rol al adoptarlo.
  *
+ * El colapso a solo-íconos en escritorio es opcional y lo gobierna la app
+ * anfitriona: el shell solo aplica el ancho, el contenido proyectado decide
+ * qué ocultar leyendo la misma señal que le pasa al input.
+ *
  * Uso:
  * ```html
- * <app-ui-app-shell>
+ * <app-ui-app-shell [colapsadoEscritorio]="menuColapsado()">
  *   <div shell-brand>…</div>
  *   <nav shell-nav>…</nav>
  *   <div shell-user>…</div>
@@ -52,20 +57,25 @@ import { filter } from 'rxjs';
                 id="ui-app-shell-menu"
                 class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col justify-between shrink-0
                        bg-sidebar text-sidebar-foreground border-r border-sidebar-border
-                       transition-transform duration-200 ease-out motion-reduce:transition-none
+                       transition-[transform,width] duration-200 ease-out motion-reduce:transition-none
                        md:static md:translate-x-0"
                 [class.translate-x-0]="menuAbierto()"
                 [class.-translate-x-full]="!menuAbierto()"
+                [class.md:w-[72px]]="colapsadoEscritorio()"
+                [class.md:w-64]="!colapsadoEscritorio()"
                 [attr.aria-hidden]="esMovil() && !menuAbierto() ? 'true' : null"
             >
                 <div class="min-h-0 flex-1 overflow-y-auto">
-                    <div class="h-16 px-5 flex items-center gap-3 border-b border-sidebar-border bg-sidebar-border/10">
+                    <div
+                        class="h-16 px-5 flex items-center gap-3 border-b border-sidebar-border bg-sidebar-border/10 transition-[padding] duration-200"
+                        [class.md:px-2]="colapsadoEscritorio()"
+                    >
                         <ng-content select="[shell-brand]"></ng-content>
                     </div>
                     <ng-content select="[shell-nav]"></ng-content>
                 </div>
 
-                <div class="border-t border-sidebar-border px-4 py-4">
+                <div class="border-t border-sidebar-border px-4 py-4 transition-[padding] duration-200" [class.md:px-2]="colapsadoEscritorio()">
                     <ng-content select="[shell-user]"></ng-content>
                 </div>
             </aside>
@@ -104,6 +114,9 @@ export class UiAppShellComponent {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly botonMenu = viewChild<ElementRef<HTMLButtonElement>>('botonMenu');
+
+    /** Colapsa el sidebar a solo-íconos en escritorio. La app dueña del estado decide cuándo. */
+    readonly colapsadoEscritorio = input(false);
 
     private readonly _menuAbierto = signal(false);
     private readonly _esMovil = signal(false);
