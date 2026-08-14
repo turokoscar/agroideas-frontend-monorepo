@@ -3,13 +3,14 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
+import { FormatConvenioPipe } from '../../core/pipes/format-convenio.pipe';
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-oa-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, RouterModule],
+  imports: [CommonModule, DecimalPipe, RouterModule, FormatConvenioPipe],
   providers: [DecimalPipe],
   templateUrl: './oa-dashboard.component.html'
 })

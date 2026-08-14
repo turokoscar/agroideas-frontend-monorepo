@@ -11,8 +11,11 @@ design system. It supersedes two legacy single-repo UIs being migrated in:
 
 Migration is phased (see `docs/adr/0001-*.md` and `docs/plan-implementacion-monorepo.md`).
 **Done:** Fase 0 (foundation), Fase 1 (`@agroideas/theme`), Fase 2 (KOFIX imported).
-**Next:** Fase 3 — extract shared libs (`ui`, `auth`, `http`, `feedback`, `security`,
-`utils`) out of KOFIX and have apps consume them.
+**In progress (Fase 3):** `ui`, `auth`, `feedback`, `security`, `utils` are populated and
+consumed by both `kofix-ejecucion` and `sat-ui` — neither app imports PrimeNG/SweetAlert2/
+Leaflet/Material/CDK/Bootstrap directly anymore (enforced as `error` by `no-restricted-imports`
+in root `eslint.config.js`). **Still pending:** `@agroideas/http` is unused Nx scaffolding
+(its `index.ts` only re-exports `ResponseDto` from `@agroideas/utils`) — no app consumes it yet.
 
 ## Commands
 
@@ -50,8 +53,10 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
     tags (untagged projects skip the constraint — an empty `tags: []` does **not**, it blocks
     every lib import).
 - Apps **must not** import `primeng`, `@angular/material`/`@angular/cdk`, `bootstrap`,
-  `sweetalert2`, `leaflet` directly — those are banned in `apps/**` and must be consumed
-  through `@agroideas/*` libs. (Exception below: kofix-ejecucion during migration.)
+  `sweetalert2`, `leaflet` directly — those are banned as `error` in `apps/**` via
+  `no-restricted-imports` in root `eslint.config.js` and must be consumed through
+  `@agroideas/*` libs. `kofix-ejecucion` fully complies (0 direct imports left); its
+  transitional ESLint override (see below) only relaxes style/a11y rules, not this one.
 
 ### Shared shell & auth mapping
 - `UiAppShellComponent` (`libs/ui/src/lib/ui-app-shell/`) owns the responsive sidebar:
@@ -89,8 +94,11 @@ it requires reading across these layers:
 - `data/` — `repositories/` concrete impls (HttpClient + `environments/environment.ts`
   endpoints) and `mappers/` (API DTO → domain model).
 - `presentation/` — `pages/` (routed, lazy via `loadComponent`) and `components/`.
-- `shared/` — `services/` (`AlertService` over SweetAlert2, `PermissionService`),
-  `directives/` (`has-permission`), `utils/` (`jwt`, `currency`, `storage-keys`, `permissions`).
+- `shared/services/` — now only app-specific state, not cross-cutting concerns: `file-storage`,
+  `convenio-state`, `export`. `AlertService`, `PermissionService`, the `has-permission`
+  directive, and the `jwt`/`currency`/`storage-keys`/`permissions` utils have all moved to
+  `@agroideas/feedback`, `@agroideas/security`, and `@agroideas/utils` respectively — don't
+  recreate them here.
 - `layout/` — app shell (sidebar + topbar).
 - **Composition root:** `app.config.ts` binds each abstract repository to its impl with
   `{ provide: XRepository, useExisting: XRepositoryImpl }`. Don't re-provide these elsewhere.
@@ -114,18 +122,24 @@ it requires reading across these layers:
 - **No `postcss.config.js`** — Tailwind is wired through the Angular build; do not add one.
 - In Angular templates, a literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).
 - **kofix-ejecucion has a transitional ESLint override** (`apps/kofix-ejecucion/eslint.config.js`):
-  it allows direct provider imports and downgrades inherited style/a11y rules to `warn`. This is
-  deliberate for the lift-and-shift and must be reverted in Fase 3 once code moves into `@agroideas/ui`.
-  kofix lint passes with 0 errors but ~270 warnings (tracked debt).
+  it downgrades inherited style/a11y rules (`no-explicit-any`, `no-unused-vars`,
+  `no-non-null-assertion`, a11y label/click-events rules, etc.) to `warn`. It does **not**
+  touch `no-restricted-imports` — direct PrimeNG/SweetAlert2/Leaflet imports are still an
+  `error` and kofix has none. kofix lint passes with 0 errors but 319 warnings (tracked debt,
+  to shrink as this code moves into `@agroideas/ui`/`@agroideas/utils`).
 - KOFIX specs were converted Jasmine→Jest (`toBeTrue()`→`toBe(true)`, `jasmine.createSpy`→
   `jest.fn`, `jasmine.objectContaining`→`expect.objectContaining`). Keep new specs Jest-native.
 - All components are `standalone: true` (no NgModules). `kofix-ejecucion` needs the
   `@angular/localize/init` polyfill (in its build `polyfills`) — do not remove it.
 
-## State of the libs (as of Fase 2)
-`@agroideas/theme` is implemented and consumed by both apps. `ui`, `auth`, `http`, `feedback`,
-`security` are still Nx scaffolding (a placeholder component); `@agroideas/utils` is a stub.
-Populating them is Fase 3.
+## State of the libs (Fase 3 in progress)
+`@agroideas/theme` is implemented and consumed by both apps. `ui`, `auth`, `feedback`,
+`security`, and `utils` are populated with real code and consumed by both `kofix-ejecucion`
+and `sat-ui` (e.g. `authInterceptor`/`AUTH_TOKEN_KEY` from `auth`, `permissionGuard` from
+`security`, `AlertService` from `feedback`, and `ui-modal`/`ui-button`/`ui-select-search`/
+`ui-map` from `ui` wrapping PrimeNG/Leaflet so apps never touch the provider directly).
+`@agroideas/http` is still Nx scaffolding (an unused placeholder component) — nothing
+depends on it yet.
 
 ## Key references
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — decisions + implementation log.

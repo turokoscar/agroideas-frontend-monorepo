@@ -1,6 +1,6 @@
 # AGROIDEAS Frontend Monorepo — Agent Guide
 
-**Canonical instruction file.** `CLAUDE.md` is stale — says libs are scaffolding (they are not — see table below) and omits SIGEC apps.
+**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (SIGEC apps, lib export tables) — kept in sync as of 2026-08-14.
 
 ## Commands (use `npx nx` — no npm scripts)
 
@@ -58,7 +58,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 | Lib | Status | Exports |
 |-----|--------|---------|
 | `theme` | done | `tokens.css` (HSL vars), `tailwind-preset.js`, `base.css`, `theme.ts` |
-| `ui` | done | 10 standalone components: button, card, kpi, modal, data-table, status-pill, progress-bar, filter-bar, map, pagination |
+| `ui` | done | 16 standalone components — `ui-app-shell`, `ui-button`, `ui-card`, `ui-status-pill`, `ui-kpi`, `ui-progress-bar`, `ui-modal`, `ui-filter-bar`, `ui-data-table`, `ui-map` (Leaflet wrapper), `ui-pagination`, `ui-select-search`, `ui-countdown`, `ui-dropzone`, `ui-file-chip`, `ui-pdf-viewer` — plus `ToastService` |
 | `utils` | done | `cn`, `currency`, `date-formatter`, `jwt.util`, `permissions`, `response.dto`, `storage-keys`, `format-date` pipe, `roles` |
 | `security` | done | `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
 | `auth` | done | `authInterceptor` (HttpInterceptorFn), `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY` injection tokens |
@@ -71,7 +71,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - **ESLint stack pinned** — `eslint 9.14.0` + `typescript-eslint 8.13.0` + `angular-eslint 18.4.3` must be upgraded together (enforced via `overrides` in `package.json`). Mismatches crash linting.
 - `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto Angular templates).
 - **Design system chain:** `libs/theme/src/styles/tokens.css` (HSL CSS vars) → `tailwind-preset.js` → `base.css`. No brand hex outside this lib. Apps wire `base.css` in `project.json` `styles` array (NOT `@import` in `.scss` — that leaves `@tailwind` unprocessed). No `postcss.config.js` (managed via Angular build).
-- **kofix-ejecucion lint** passes with 0 errors but ~270 warnings (intentional Fase 2 debt). Its `eslint.config.js` has transitional overrides downgrading rules to `warn` and allowing direct provider imports.
+- **kofix-ejecucion lint** passes with 0 errors but 319 warnings (intentional Fase 2 debt). Its `eslint.config.js` has transitional overrides downgrading style/a11y rules to `warn` — it does **not** relax `no-restricted-imports`; direct provider imports (PrimeNG/SweetAlert2/Leaflet) are still an error and kofix has none.
 - **sat-ui** uses a local `jwt.interceptor.ts`, NOT the shared `@agroideas/auth` interceptor. Its permissions provider is not connected to backend.
 - **All components** are `standalone: true` (no NgModules).
 - **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names.
