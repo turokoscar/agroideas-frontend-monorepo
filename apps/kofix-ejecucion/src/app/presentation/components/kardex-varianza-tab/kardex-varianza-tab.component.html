@@ -1,0 +1,185 @@
+<div class="animate-in fade-in duration-300 space-y-8">
+  <!-- Header section of Kardex & Varianza -->
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-4 gap-4">
+    <div>
+      <h4 class="text-lg font-bold text-slate-800 dark:text-slate-100">Consolidado del Ciclo Financiero</h4>
+      <p class="text-xs text-slate-500">Monitoreo multianual de programación vs ejecución real del Kardex Ledger</p>
+    </div>
+
+    <!-- Budget Variance Alert Badge & Help Button -->
+    <div class="flex flex-wrap items-center gap-3">
+      <ui-button
+        severity="secondary"
+        size="sm"
+        icon="help"
+        label="Glosario Financiero"
+        (onClick)="showHelpGuide.set(!showHelpGuide())">
+      </ui-button>
+
+      @if ((convenio().programacionAcumulada || 0) >= (convenio().ejecucionAcumulada || 0)) {
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-700 dark:text-emerald-400">
+          <span class="material-symbols-outlined text-xl animate-bounce">check_circle</span>
+          <div class="text-left">
+            <p class="text-[10px] font-black uppercase tracking-wider leading-none">Varianza Controlada</p>
+            <p class="text-xs font-bold leading-tight">Dentro del presupuesto ({{ formatCurrency((convenio().programacionAcumulada || 0) - (convenio().ejecucionAcumulada || 0)) }})</p>
+          </div>
+        </div>
+      } @else {
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-xl text-rose-700 dark:text-rose-400 animate-pulse">
+          <span class="material-symbols-outlined text-xl">warning</span>
+          <div class="text-left">
+            <p class="text-[10px] font-black uppercase tracking-wider leading-none">Desviación Presupuestal</p>
+            <p class="text-xs font-bold leading-tight">Varianza Excedida ({{ formatCurrency((convenio().programacionAcumulada || 0) - (convenio().ejecucionAcumulada || 0)) }})</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Quick Help / Concept Guide -->
+  @if (showHelpGuide()) {
+    <div class="animate-in slide-in-from-top-4 duration-300 bg-slate-50/70 dark:bg-zinc-900/30 border border-slate-200/60 dark:border-zinc-800/80 rounded-2xl p-6 shadow-inner">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-2">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-xl">menu_book</span>
+          <h5 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Guía Rápida de Glosario Financiero</h5>
+        </div>
+        <ui-button
+          severity="ghost"
+          iconOnly
+          size="sm"
+          icon="close"
+          ariaLabel="Cerrar"
+          (onClick)="showHelpGuide.set(false)">
+        </ui-button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs text-slate-600 dark:text-slate-400">
+        <!-- Term 1: Programado -->
+        <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
+          <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 mb-1">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            Programado
+          </div>
+          <p class="leading-relaxed">Presupuesto total planificado multianualmente para la meta física o el bien seleccionado.</p>
+        </div>
+        <!-- Term 2: Comprometido (N.O.) -->
+        <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
+          <div class="flex items-center gap-2 font-bold text-indigo-600 dark:text-indigo-400 mb-1">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            Comprometido (N.O.)
+          </div>
+          <p class="leading-relaxed">Monto aprobado mediante No Objeciones del especialista. Indica el presupuesto asignado y reservado para compra.</p>
+        </div>
+        <!-- Term 3: Ejecutado (Kardex) -->
+        <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
+          <div class="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400 mb-1">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            Ejecutado (Kardex)
+          </div>
+          <p class="leading-relaxed">Fondos reales que han sido desembolsados y efectivamente pagados mediante cheques o transferencias bancarias.</p>
+        </div>
+        <!-- Term 4: Rendido -->
+        <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
+          <div class="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Rendido
+          </div>
+          <p class="leading-relaxed">Porción del presupuesto ejecutado que ha sido sustentado formalmente con facturas y comprobantes aceptados.</p>
+        </div>
+        <!-- Term 5: Saldo Disponible -->
+        <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
+          <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white mb-1">
+            <span class="w-2 h-2 rounded-full bg-slate-900 dark:bg-white"></span>
+            Saldo Disponible
+          </div>
+          <p class="leading-relaxed">Presupuesto remanente disponible para ejecución real, calculado de forma contable (`Programado - Ejecutado`).</p>
+        </div>
+        <!-- Term 6: Varianza -->
+        <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
+          <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 mb-1">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            Varianza
+          </div>
+          <p class="leading-relaxed">Desviación matemática (`Programado - Ejecutado`). Un saldo positivo indica presupuesto bajo control; negativo alerta sobregastos.</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tabla Kardex (ADR 0008 Fase 3.1: unificada con app-ui-data-table) -->
+  <app-ui-data-table
+    [columns]="kardexColumns"
+    [data]="kardexConsolidado()"
+    [loading]="loadingKardex()"
+    [paginator]="false"
+    [showIndex]="false"
+    [hasActions]="false"
+    emptyIcon="account_balance_wallet"
+    emptyMessage="Sin movimientos contables registrados"
+    emptySubMessage="Este convenio aún no cuenta con programación de metas financieras ni transacciones efectivizadas en el Kardex Ledger."
+    [rowTemplate]="kardexRowTemplate">
+  </app-ui-data-table>
+
+  <ng-template #kardexRowTemplate let-item let-col="col">
+    @switch (col.field) {
+      @case ('itemDescripcion') {
+        <div class="flex flex-col gap-1.5">
+          <span class="font-bold text-slate-900 dark:text-white" [ngClass]="item.saldo <= 0 ? 'text-slate-400 dark:text-zinc-500 line-through font-normal' : ''">
+            {{ item.itemDescripcion }}
+          </span>
+          <!-- Horizontal Execution Progress Bar -->
+          <div class="flex items-center gap-2 mt-0.5">
+            <div class="w-24 bg-slate-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300"
+                   [ngClass]="item.saldo <= 0 ? 'bg-slate-300 dark:bg-zinc-700' : 'bg-primary'"
+                   [style.width.%]="calculateExecutionPercentage(item.montoEfectivizado, item.montoProgramado)">
+              </div>
+            </div>
+            <span class="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold whitespace-nowrap">
+              {{ calculateExecutionPercentage(item.montoEfectivizado, item.montoProgramado) }}% ejecutado
+            </span>
+          </div>
+        </div>
+      }
+      @case ('montoProgramado') {
+        <span class="font-semibold">{{ formatCurrency(item.montoProgramado) }}</span>
+      }
+      @case ('montoComprometido') {
+        <span class="text-slate-500">{{ formatCurrency(item.montoComprometido) }}</span>
+      }
+      @case ('montoEfectivizado') {
+        <span class="text-amber-600 dark:text-amber-500 font-semibold">{{ formatCurrency(item.montoEfectivizado) }}</span>
+      }
+      @case ('montoRendido') {
+        <span class="text-emerald-600 dark:text-emerald-500">{{ formatCurrency(item.montoRendido) }}</span>
+      }
+      @case ('saldo') {
+        <span class="font-bold text-slate-800 dark:text-slate-200">{{ formatCurrency(item.saldo) }}</span>
+      }
+      @case ('estado') {
+        @if (item.saldo > 0) {
+          <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Con Saldo
+          </span>
+        } @else {
+          <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-zinc-800/80 px-2.5 py-1 text-[11px] font-bold text-slate-500 dark:text-zinc-400">
+            <span class="material-symbols-outlined text-[10px] font-black leading-none">lock</span>
+            Ejecutado 100%
+          </span>
+        }
+      }
+      @case ('varianza') {
+        @if (item.montoProgramado >= item.montoEfectivizado) {
+          <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            +{{ formatCurrency(item.montoProgramado - item.montoEfectivizado) }}
+          </span>
+        } @else {
+          <span class="inline-flex items-center rounded-full bg-rose-50 dark:bg-rose-950/20 px-2.5 py-0.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+            {{ formatCurrency(item.montoProgramado - item.montoEfectivizado) }}
+          </span>
+        }
+      }
+    }
+  </ng-template>
+</div>

@@ -4,24 +4,24 @@
     [showAdd]="!readOnly()" addLabel="Nueva Rendición" (onAdd)="openModal()">
 
     <div class="filter-group">
-      <label class="filter-label">N° Solicitud Origen</label>
-      <input type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
+      <label class="filter-label" for="rendicion-filter-numero">N° Solicitud Origen</label>
+      <input id="rendicion-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
         class="filter-input" (keyup.enter)="onSearch()" />
     </div>
 
     <div class="filter-group">
-      <label class="filter-label">Fecha Inicio</label>
-      <input type="date" [ngModel]="filterFechaInicio()" (ngModelChange)="filterFechaInicio.set($event); onSearch()" class="filter-input" />
+      <label class="filter-label" for="rendicion-filter-fecha-inicio">Fecha Inicio</label>
+      <input id="rendicion-filter-fecha-inicio" type="date" [ngModel]="filterFechaInicio()" (ngModelChange)="filterFechaInicio.set($event); onSearch()" class="filter-input" />
     </div>
 
     <div class="filter-group">
-      <label class="filter-label">Fecha Fin</label>
-      <input type="date" [ngModel]="filterFechaFin()" (ngModelChange)="filterFechaFin.set($event); onSearch()" class="filter-input" />
+      <label class="filter-label" for="rendicion-filter-fecha-fin">Fecha Fin</label>
+      <input id="rendicion-filter-fecha-fin" type="date" [ngModel]="filterFechaFin()" (ngModelChange)="filterFechaFin.set($event); onSearch()" class="filter-input" />
     </div>
 
     <div class="filter-group">
-      <label class="filter-label">Tipo de CP</label>
-      <select [ngModel]="filterTipoCp()" (ngModelChange)="filterTipoCp.set($event); onSearch()" class="filter-input">
+      <label class="filter-label" for="rendicion-filter-tipo-cp">Tipo de CP</label>
+      <select id="rendicion-filter-tipo-cp" [ngModel]="filterTipoCp()" (ngModelChange)="filterTipoCp.set($event); onSearch()" class="filter-input">
         <option [ngValue]="undefined">TODOS</option>
         @for (tipo of tiposCpe(); track tipo.id) {
           <option [ngValue]="tipo.id">{{ tipo.descripcion }}</option>

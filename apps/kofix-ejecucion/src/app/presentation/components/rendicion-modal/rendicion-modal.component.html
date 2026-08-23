@@ -1,20 +1,21 @@
 <app-ui-modal
   [visible]="visible()"
   [title]="modalTitle()"
+  [subtitle]="convenioSubtitle()"
   icon="account_balance_wallet"
   [isSubmitting]="isSubmitting()"
   [saveLabel]="isEdit() ? 'Actualizar Rendición' : 'Guardar Rendición'"
   [saveDisabled]="form.invalid || isSubmitting() || (!isEdit() && !fileUrl()) || !isDistribucionCuadrada"
   (onHide)="hide()"
   (onSave)="save()"
-  maxWidth="950px"
+  maxWidth="800px"
 >
   <div class="space-y-6" [formGroup]="form">
     <!-- Asociación con Desembolso -->
     <div class="form-card-flat" [ngClass]="{'opacity-60 pointer-events-none': isEdit()}">
       <div class="form-field">
-        <label class="form-label font-semibold text-primary/70">Seleccionar Solicitud de Desembolso Pendiente</label>
-        <select formControlName="solicitudDesembolsoId" class="form-select">
+        <label class="form-label font-semibold text-primary/70" for="rendicion-solicitud-desembolso">Seleccionar Solicitud de Desembolso Pendiente</label>
+        <select id="rendicion-solicitud-desembolso" formControlName="solicitudDesembolsoId" class="form-select">
           <option [ngValue]="null">Seleccionar solicitud de desembolso para rendir...</option>
           @for (item of desembolsosPendientes(); track item.id) {
             <option [ngValue]="item.id">[{{ item.numeroSolicitud }}] — Monto Desembolsado: S/ {{ item.monto | number:'1.2-2' }}</option>
@@ -23,15 +24,23 @@
       </div>
     </div>
 
+    @if (!selectedDesembolso() && !isEdit()) {
+      <p class="text-xs text-slate-400 flex items-center gap-1.5 -mt-2">
+        <span class="material-symbols-outlined text-sm">arrow_upward</span>
+        Selecciona una solicitud de desembolso para habilitar los datos del comprobante.
+      </p>
+    }
+
     <!-- Datos del Comprobante -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-200"
+      [ngClass]="{'opacity-40 pointer-events-none': !selectedDesembolso() && !isEdit()}">
       <!-- Izquierda: Formulario -->
       <div class="space-y-4">
         <h4 class="form-section-title">Detalles del Comprobante (CPE)</h4>
         
         <div class="form-field">
-          <label class="form-label">Tipo de Comprobante</label>
-          <select formControlName="sunatCpeId" class="form-select">
+          <label class="form-label" for="rendicion-tipo-comprobante">Tipo de Comprobante</label>
+          <select id="rendicion-tipo-comprobante" formControlName="sunatCpeId" class="form-select">
             <option [ngValue]="null">Seleccionar...</option>
             @for (tipo of tiposCpe(); track tipo.id) {
               <option [ngValue]="tipo.id">{{ tipo.descripcion }}</option>
@@ -41,27 +50,27 @@
 
         <div class="grid grid-cols-2 gap-4">
           <div class="form-field">
-            <label class="form-label">Serie</label>
-            <input type="text" formControlName="serie" placeholder="Ej: F001" maxlength="10" class="form-input uppercase font-semibold">
+            <label class="form-label" for="rendicion-serie">Serie</label>
+            <input id="rendicion-serie" type="text" formControlName="serie" placeholder="Ej: F001" maxlength="10" class="form-input uppercase font-semibold">
           </div>
           <div class="form-field">
-            <label class="form-label">Número</label>
-            <input type="text" formControlName="numero" placeholder="Ej: 000123" maxlength="20" class="form-input">
+            <label class="form-label" for="rendicion-numero">Número</label>
+            <input id="rendicion-numero" type="text" formControlName="numero" placeholder="Ej: 000123" maxlength="20" class="form-input">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div class="form-field">
-            <label class="form-label">Fecha Emisión</label>
-            <input type="date" formControlName="fechaEmision" class="form-input">
+            <label class="form-label" for="rendicion-fecha-emision">Fecha Emisión</label>
+            <input id="rendicion-fecha-emision" type="date" formControlName="fechaEmision" class="form-input">
           </div>
           <div class="form-field">
-            <label class="form-label">Monto Total Factura</label>
+            <label class="form-label" for="rendicion-total-comprobante">Monto Total Factura</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">S/</span>
-              <input type="number" formControlName="totalComprobante"
+              <input id="rendicion-total-comprobante" type="number" formControlName="totalComprobante"
                 class="form-input pl-7 font-semibold"
-                [ngClass]="form.get('totalComprobante')?.invalid ? 'border-red-200 bg-red-50 text-red-600' : ''">
+                [ngClass]="form.get('totalComprobante')?.invalid && form.get('totalComprobante')?.touched ? 'border-red-200 bg-red-50 text-red-600' : ''">
             </div>
           </div>
         </div>
@@ -69,49 +78,40 @@
 
       <!-- Derecha: Documento de Sustento -->
       <div class="space-y-4">
-        <h4 class="form-section-title">Sustento (Archivo PDF)</h4>
-        
-        <div class="form-file-upload group flex-col items-center justify-center p-6 min-h-[140px] text-center"
-             (click)="fileInput.click()">
-          <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="application/pdf">
-          
-          @if (!fileUrl() && !uploadingFile()) {
-            <span class="material-symbols-outlined text-slate-400 text-3xl mb-2 group-hover:scale-105 transition-transform">cloud_upload</span>
-            <p class="text-xs font-semibold text-slate-600">Haz clic para subir el comprobante</p>
-            <p class="text-[9px] text-slate-400 tracking-wider mt-0.5">Solo PDF máx. 10MB</p>
-          }
+        <h4 class="form-section-title flex items-center gap-1.5">
+          Sustento (Archivo PDF)
+          <span class="material-symbols-outlined text-slate-400 text-sm normal-case tracking-normal cursor-help"
+            title="Nota de auditoría: documento sujeto a verificación por el área de liquidaciones. Asegúrese de que el PDF sea legible.">info</span>
+        </h4>
 
-          @if (uploadingFile()) {
-            <div class="flex flex-col items-center">
-              <span class="material-symbols-outlined animate-spin text-primary text-3xl mb-2">progress_activity</span>
-              <p class="text-xs font-semibold text-primary animate-pulse">Subiendo archivo...</p>
-            </div>
-          }
+        <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="application/pdf">
 
-          @if (fileUrl()) {
-            <div class="flex flex-col items-center gap-1.5">
-              <span class="material-symbols-outlined text-green-500 text-3xl">check_circle</span>
-              <p class="text-xs font-semibold text-slate-700 truncate max-w-[240px]">{{ selectedFile()?.name || 'Archivo Cargado' }}</p>
-              <ui-button severity="danger" appearance="soft" size="sm" label="Eliminar archivo"
-                (onClick)="$event.stopPropagation(); selectedFile.set(null); fileUrl.set(null)" />
-            </div>
-          }
-          
-          @if (isEdit() && !fileUrl()) {
-            <div class="flex flex-col items-center opacity-40">
+        @if (fileUrl()) {
+          <ui-file-chip [name]="selectedFile()?.name || 'Archivo Cargado'" [size]="selectedFile()?.size || 0"
+            (onRemove)="selectedFile.set(null); fileUrl.set(null)" />
+        } @else if (uploadingFile()) {
+          <div class="form-file-upload flex-col items-center justify-center p-5 min-h-[100px] text-center">
+            <span class="material-symbols-outlined animate-spin text-primary text-3xl mb-2">progress_activity</span>
+            <p class="text-xs font-semibold text-primary animate-pulse">Subiendo archivo...</p>
+          </div>
+        } @else {
+          <div class="form-file-upload group flex-col items-center justify-center p-5 min-h-[100px] text-center"
+               role="button"
+               tabindex="0"
+               aria-label="Subir comprobante de sustento en PDF"
+               (click)="fileInput.click()"
+               (keydown.enter)="fileInput.click()"
+               (keydown.space)="$event.preventDefault(); fileInput.click()">
+            @if (isEdit()) {
               <span class="material-symbols-outlined text-slate-400 text-3xl mb-2">description</span>
               <p class="text-[10px] font-semibold text-slate-500 leading-normal text-center">Archivo existente conservado.<br>Haz clic para reemplazar.</p>
-            </div>
-          }
-        </div>
-
-        <div class="bg-amber-50/50 p-3 rounded-lg border border-amber-100/50 flex gap-3">
-          <span class="material-symbols-outlined text-amber-500 text-base">warning</span>
-          <div class="space-y-0.5">
-            <p class="text-[10px] font-semibold text-amber-700 uppercase">Nota de auditoría</p>
-            <p class="text-[9px] text-amber-600/80 leading-normal font-medium italic">Documento sujeto a verificación por el área de liquidaciones. Asegúrese de que el PDF sea legible.</p>
+            } @else {
+              <span class="material-symbols-outlined text-slate-400 text-3xl mb-2 group-hover:scale-105 transition-transform">cloud_upload</span>
+              <p class="text-xs font-semibold text-slate-600">Haz clic para subir el comprobante</p>
+              <p class="text-[9px] text-slate-400 tracking-wider mt-0.5">Solo PDF máx. 10MB</p>
+            }
           </div>
-        </div>
+        }
       </div>
     </div>
 
@@ -145,11 +145,11 @@
           <table class="w-full text-left border-collapse">
             <thead class="bg-slate-50 border-b border-slate-200">
               <tr class="text-xs font-semibold text-slate-500">
-                <th class="py-3 px-4 w-16 text-center">Incluir</th>
-                <th class="py-3 px-4">Ítem / Componente</th>
-                <th class="py-3 px-4 text-right w-40">Monto Desemb.</th>
-                <th class="py-3 px-4 text-right w-40">Saldo Disponible</th>
-                <th class="py-3 px-4 w-44 text-right">Imputación a Factura</th>
+                <th class="py-3 px-3 w-14 text-center">Incluir</th>
+                <th class="py-3 px-3">Ítem / Componente</th>
+                <th class="py-3 px-3 text-right w-28">Monto Desemb.</th>
+                <th class="py-3 px-3 text-right w-28">Saldo Disponible</th>
+                <th class="py-3 px-3 w-32 text-right">Imputación</th>
               </tr>
             </thead>
             <tbody formArrayName="detalles">
@@ -223,8 +223,8 @@
 
     <!-- Observación Adicional -->
     <div class="form-field">
-      <label class="form-label">Observaciones Finales</label>
-      <textarea formControlName="observacion" rows="2" class="form-textarea"
+      <label class="form-label" for="rendicion-observacion">Observaciones Finales</label>
+      <textarea id="rendicion-observacion" formControlName="observacion" rows="2" class="form-textarea"
         placeholder="Algún detalle relevante sobre el gasto rendido..."></textarea>
     </div>
   </div>

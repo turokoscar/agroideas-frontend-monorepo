@@ -4,13 +4,13 @@
   <app-ui-filter-bar (onSearch)="onSearch()" [showSearch]="true"
     [showAdd]="!readOnly()" addLabel="Nueva Solicitud" (onAdd)="showModal.set(true)">
     <div class="filter-group">
-      <label class="filter-label">N° Desembolso</label>
-      <input type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
+      <label class="filter-label" for="desembolso-filter-numero">N° Desembolso</label>
+      <input id="desembolso-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
         class="filter-input" (keyup.enter)="onSearch()" />
     </div>
     <div class="filter-group">
-      <label class="filter-label">Tipo de Pago</label>
-      <select [ngModel]="filterTipoPago()" (ngModelChange)="filterTipoPago.set($event); onSearch()" class="filter-input">
+      <label class="filter-label" for="desembolso-filter-tipo-pago">Tipo de Pago</label>
+      <select id="desembolso-filter-tipo-pago" [ngModel]="filterTipoPago()" (ngModelChange)="filterTipoPago.set($event); onSearch()" class="filter-input">
         <option [ngValue]="undefined">Todos los tipos</option>
         @for (tipo of tiposPago(); track tipo) {
           <option [value]="tipo.id">{{ tipo.descripcion }}</option>
@@ -18,12 +18,12 @@
       </select>
     </div>
     <div class="filter-group">
-      <label class="filter-label">Fecha Inicio</label>
-      <input type="date" [ngModel]="filterFechaInicio()" (ngModelChange)="filterFechaInicio.set($event); onSearch()" class="filter-input" />
+      <label class="filter-label" for="desembolso-filter-fecha-inicio">Fecha Inicio</label>
+      <input id="desembolso-filter-fecha-inicio" type="date" [ngModel]="filterFechaInicio()" (ngModelChange)="filterFechaInicio.set($event); onSearch()" class="filter-input" />
     </div>
     <div class="filter-group">
-      <label class="filter-label">Fecha Fin</label>
-      <input type="date" [ngModel]="filterFechaFin()" (ngModelChange)="filterFechaFin.set($event); onSearch()" class="filter-input" />
+      <label class="filter-label" for="desembolso-filter-fecha-fin">Fecha Fin</label>
+      <input id="desembolso-filter-fecha-fin" type="date" [ngModel]="filterFechaFin()" (ngModelChange)="filterFechaFin.set($event); onSearch()" class="filter-input" />
     </div>
   </app-ui-filter-bar>
 

@@ -1,17 +1,19 @@
-import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
+import { formatConvenioNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, input, output, signal, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormArray, FormGroup } from '@angular/forms';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
 import { Rendicion } from '../../../domain/models/rendicion.model';
+import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-rendicion-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UIModalComponent, FormsModule, UIButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule, UIModalComponent, FormsModule, UIButtonComponent, UiFileChipComponent],
   templateUrl: './rendicion-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -26,9 +28,15 @@ export class RendicionModalComponent implements OnInit {
   private catalogoRepo = inject(CatalogoRepository);
   private rendicionRepo = inject(RendicionRepository);
   private alertService = inject(AlertService);
+  private convenioStateService = inject(ConvenioStateService);
 
   isEdit = computed(() => !!this.rendicion());
   modalTitle = computed(() => this.isEdit() ? 'Editar Rendición' : 'Nueva Rendición');
+  convenioSubtitle = computed(() => {
+    const c = this.convenioStateService.convenio();
+    if (!c) return '';
+    return `${formatConvenioNumber(c.numeroConvenio, c.fechaInicio)} · ${c.razonSocial}`;
+  });
 
   isSubmitting = signal(false);
   tiposCpe = signal<any[]>([]);

@@ -6,6 +6,7 @@ import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.r
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { FileStorageService } from '../../../shared/services/file-storage.service';
 import { NoObjecionProgrammedItem } from '../../../domain/models/no-objecion-programmed-item.model';
+import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 
 describe('NoObjecionModalComponent', () => {
     let component: NoObjecionModalComponent;
@@ -14,6 +15,7 @@ describe('NoObjecionModalComponent', () => {
     let mockCatalogoRepo: jest.Mocked<Partial<CatalogoRepository>>;
     let mockFileStorage: jest.Mocked<Partial<FileStorageService>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
+    let mockStateService: jest.Mocked<Partial<ConvenioStateService>>;
 
     const buildItem = (overrides: Partial<NoObjecionProgrammedItem> = {}): NoObjecionProgrammedItem => ({
         id: 1,
@@ -38,6 +40,7 @@ describe('NoObjecionModalComponent', () => {
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockFileStorage = { validateFile: jest.fn(), uploadFile: jest.fn() };
         mockAlert = { show: jest.fn(), toast: jest.fn() };
+        mockStateService = { convenio: jest.fn().mockReturnValue(null) as unknown as ConvenioStateService['convenio'] };
 
         await TestBed.configureTestingModule({
             imports: [NoObjecionModalComponent],
@@ -45,7 +48,8 @@ describe('NoObjecionModalComponent', () => {
                 { provide: NoObjecionRepository, useValue: mockNoObjecionRepo },
                 { provide: CatalogoRepository, useValue: mockCatalogoRepo },
                 { provide: FileStorageService, useValue: mockFileStorage },
-                { provide: AlertService, useValue: mockAlert }
+                { provide: AlertService, useValue: mockAlert },
+                { provide: ConvenioStateService, useValue: mockStateService }
             ]
         }).compileComponents();
 

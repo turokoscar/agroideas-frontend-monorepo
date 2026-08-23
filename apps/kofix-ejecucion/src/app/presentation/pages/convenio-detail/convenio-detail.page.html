@@ -23,7 +23,7 @@
         </div>
       </div>
       <span
-        class="inline-flex items-center self-start md:self-center rounded-full bg-midagri-blue-light/10 px-4 py-1.5 text-xs font-bold text-midagri-blue-dark border border-midagri-blue-light/30 uppercase tracking-widest whitespace-nowrap">
+        class="inline-flex items-center self-start md:self-center rounded-full bg-info/10 px-4 py-1.5 text-xs font-bold text-info border border-info/30 uppercase tracking-widest whitespace-nowrap">
         CONVENIO FIRMADO
       </span>
     </div>
@@ -64,126 +64,21 @@
     <!-- Detailed Sections (Tabs) -->
     <div
       class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-      <!-- Custom Tab Bar -->
-      <div class="border-b border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 px-4 md:px-6 overflow-x-auto scrollbar-hide">
-        <nav class="flex gap-6 md:gap-8 min-w-max">
-          <button (click)="setActiveTab(0)" class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="activeTabIndex() === 0 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
-            Ficha Técnica
-            @if (activeTabIndex() === 0) {
-              <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
-            }
-          </button>
-          <button (click)="setActiveTab(1)" class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="activeTabIndex() === 1 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
-            Programación
-            @if (activeTabIndex() === 1) {
-              <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
-            }
-          </button>
-          <button (click)="setActiveTab(2)" 
-            [disabled]="!stateService.isProgramacionCompleta()"
-            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex() === 2 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
-            No Objeciones
-            @if (activeTabIndex() === 2) {
-              <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
-            }
-          </button>
-          <button (click)="setActiveTab(3)" 
-            [disabled]="!stateService.isProgramacionCompleta()"
-            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex() === 3 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
-            Desembolsos
-            @if (activeTabIndex() === 3) {
-              <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
-            }
-          </button>
-          <button (click)="setActiveTab(4)" 
-            [disabled]="!stateService.isProgramacionCompleta()"
-            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex() === 4 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
-            Rendiciones
-            @if (activeTabIndex() === 4) {
-              <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
-            }
-          </button>
-          <button (click)="setActiveTab(5)" 
-            [disabled]="!stateService.isProgramacionCompleta()"
-            class="py-4 text-xs md:text-sm font-bold uppercase tracking-wide transition-all relative whitespace-nowrap"
-            [ngClass]="!stateService.isProgramacionCompleta() ? 'text-slate-400 opacity-50 cursor-not-allowed' : (activeTabIndex() === 5 ? 'text-primary' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')">
-            Kardex & Varianza
-            @if (activeTabIndex() === 5) {
-              <span class="absolute bottom-0 left-0 h-1 w-full bg-primary rounded-t-full"></span>
-            }
-          </button>
-        </nav>
-      </div>
+      <!-- Tab Bar (ADR 0008 Fase 4.1) -->
+      <app-convenio-detail-tabs
+        [tabs]="tabs()"
+        [activeIndex]="activeTabIndex()"
+        (tabChange)="setActiveTab($event)">
+      </app-convenio-detail-tabs>
       <!-- Tab Content -->
       <div class="p-8">
         @if (activeTabIndex() === 0) {
-          <div class="animate-in fade-in duration-300">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div class="space-y-6">
-                <h4
-                  class="text-xs font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 pb-2">
-                Información de Ubicación</h4>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase">Región</p>
-                  <p class="font-bold text-slate-700 dark:text-slate-300">{{ convenio.region }}</p>
-                </div>
-                <h4
-                  class="text-xs font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 pb-2">
-                Vigencia</h4>
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Inicio</p>
-                    <p class="font-bold text-slate-700 dark:text-slate-300">{{
-                    formatDate(convenio.fechaInicio) }}</p>
-                  </div>
-                  <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Fin</p>
-                    <p class="font-bold text-slate-700 dark:text-slate-300">{{ formatDate(convenio.fechaFin)
-                    }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Specialist Info -->
-              <div class="space-y-6">
-                <h4
-                  class="text-xs font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 pb-2">
-                Especialista Asignado</h4>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase">Nombre</p>
-                  <p class="font-bold text-slate-700 dark:text-slate-300">{{ convenio.asignadoA || 'No asignado' }}</p>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase">Email</p>
-                  <p class="font-bold text-primary">{{ convenio.email || '-' }}</p>
-                </div>
-                
-                <div class="pt-6">
-                  <h4 class="text-xs font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 pb-2 mb-3">
-                    Formatos y Descargas
-                  </h4>
-                  <div class="flex flex-col gap-2.5">
-                    <ui-button severity="secondary" size="sm" icon="download" label="Descargar Convenio Físico" (onClick)="downloadConvenioFisico()"></ui-button>
-                    <ui-button severity="secondary" size="sm" icon="receipt_long" label="Descargar Kardex Resumen" (onClick)="downloadKardexResumen()"></ui-button>
-                    <ui-button severity="secondary" size="sm" icon="table_view" label="Descargar Reporte 36 Meses" (onClick)="downloadReporteProgramacion()"></ui-button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Map Section -->
-            <div class="mt-8">
-              <h4 class="text-xs font-black uppercase text-slate-400 tracking-widest border-b border-slate-100 pb-2 mb-4">
-                Mapa de Ubicación
-              </h4>
-              <app-ui-map [query]="convenio.region + ', Perú'" [label]="convenio.razonSocial"></app-ui-map>
-            </div>
-          </div>
+          <app-convenio-ficha-tecnica-tab
+            [convenio]="convenio"
+            (downloadConvenioFisico)="downloadConvenioFisico()"
+            (downloadKardexResumen)="downloadKardexResumen()"
+            (downloadReporteProgramacion)="downloadReporteProgramacion()">
+          </app-convenio-ficha-tecnica-tab>
         }
         @if (activeTabIndex() === 1) {
           <div>
@@ -211,205 +106,11 @@
           </div>
         }
         @if (activeTabIndex() === 5) {
-          <div class="animate-in fade-in duration-300 space-y-8">
-            <!-- Header section of Kardex & Varianza -->
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-4 gap-4">
-              <div>
-                <h4 class="text-lg font-bold text-slate-800 dark:text-slate-100">Consolidado del Ciclo Financiero</h4>
-                <p class="text-xs text-slate-500">Monitoreo multianual de programación vs ejecución real del Kardex Ledger</p>
-              </div>
-
-              <!-- Budget Variance Alert Badge & Help Button -->
-              <div class="flex flex-wrap items-center gap-3">
-                <ui-button
-                  severity="secondary"
-                  size="sm"
-                  icon="help"
-                  label="Glosario Financiero"
-                  (onClick)="showHelpGuide.set(!showHelpGuide())">
-                </ui-button>
-
-                @if ((convenio.programacionAcumulada || 0) >= (convenio.ejecucionAcumulada || 0)) {
-                  <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-700 dark:text-emerald-400">
-                    <span class="material-symbols-outlined text-xl animate-bounce">check_circle</span>
-                    <div class="text-left">
-                      <p class="text-[10px] font-black uppercase tracking-wider leading-none">Varianza Controlada</p>
-                      <p class="text-xs font-bold leading-tight">Dentro del presupuesto ({{ formatCurrency((convenio.programacionAcumulada || 0) - (convenio.ejecucionAcumulada || 0)) }})</p>
-                    </div>
-                  </div>
-                } @else {
-                  <div class="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-xl text-rose-700 dark:text-rose-400 animate-pulse">
-                    <span class="material-symbols-outlined text-xl">warning</span>
-                    <div class="text-left">
-                      <p class="text-[10px] font-black uppercase tracking-wider leading-none">Desviación Presupuestal</p>
-                      <p class="text-xs font-bold leading-tight">Varianza Excedida ({{ formatCurrency((convenio.programacionAcumulada || 0) - (convenio.ejecucionAcumulada || 0)) }})</p>
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Quick Help / Concept Guide -->
-            @if (showHelpGuide()) {
-              <div class="animate-in slide-in-from-top-4 duration-300 bg-slate-50/70 dark:bg-zinc-900/30 border border-slate-200/60 dark:border-zinc-800/80 rounded-2xl p-6 shadow-inner">
-                <div class="flex items-center justify-between mb-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-2">
-                  <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-xl">menu_book</span>
-                    <h5 class="text-xs font-black text-slate-800 dark:text-slate-250 uppercase tracking-wider">Guía Rápida de Glosario Financiero</h5>
-                  </div>
-                  <ui-button
-                    severity="ghost"
-                    iconOnly
-                    size="sm"
-                    icon="close"
-                    ariaLabel="Cerrar"
-                    (onClick)="showHelpGuide.set(false)">
-                  </ui-button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs text-slate-600 dark:text-slate-400">
-                  <!-- Term 1: Programado -->
-                  <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 mb-1">
-                      <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                      Programado
-                    </div>
-                    <p class="leading-relaxed">Presupuesto total planificado multianualmente para la meta física o el bien seleccionado.</p>
-                  </div>
-                  <!-- Term 2: Comprometido (N.O.) -->
-                  <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 font-bold text-indigo-650 dark:text-indigo-400 mb-1">
-                      <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                      Comprometido (N.O.)
-                    </div>
-                    <p class="leading-relaxed">Monto aprobado mediante No Objeciones del especialista. Indica el presupuesto asignado y reservado para compra.</p>
-                  </div>
-                  <!-- Term 3: Ejecutado (Kardex) -->
-                  <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400 mb-1">
-                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                      Ejecutado (Kardex)
-                    </div>
-                    <p class="leading-relaxed">Fondos reales que han sido desembolsados y efectivamente pagados mediante cheques o transferencias bancarias.</p>
-                  </div>
-                  <!-- Term 4: Rendido -->
-                  <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      Rendido
-                    </div>
-                    <p class="leading-relaxed">Porción del presupuesto ejecutado que ha sido sustentado formalmente con facturas y comprobantes aceptados.</p>
-                  </div>
-                  <!-- Term 5: Saldo Disponible -->
-                  <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white mb-1">
-                      <span class="w-2 h-2 rounded-full bg-slate-900 dark:bg-white"></span>
-                      Saldo Disponible
-                    </div>
-                    <p class="leading-relaxed">Presupuesto remanente disponible para ejecución real, calculado de forma contable (`Programado - Ejecutado`).</p>
-                  </div>
-                  <!-- Term 6: Varianza -->
-                  <div class="space-y-1 p-3.5 bg-white dark:bg-zinc-950 border border-slate-200/40 dark:border-zinc-900 rounded-xl shadow-sm">
-                    <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 mb-1">
-                      <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                      Varianza
-                    </div>
-                    <p class="leading-relaxed">Desviación matemática (`Programado - Ejecutado`). Un saldo positivo indica presupuesto bajo control; negativo alerta sobregastos.</p>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- Loading Spinner -->
-            @if (loadingKardex()) {
-              <div class="flex flex-col items-center justify-center py-16 space-y-4">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Cargando Kardex Contable...</p>
-              </div>
-            } @else {
-              @if (kardexConsolidado().length === 0) {
-                <div class="text-center py-16 bg-slate-50/50 dark:bg-zinc-900/30 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
-                  <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-zinc-700 mb-2">account_balance_wallet</span>
-                  <p class="text-sm font-bold text-slate-500">Sin movimientos contables registrados</p>
-                  <p class="text-xs text-slate-400 max-w-sm mx-auto mt-1">Este convenio aún no cuenta con programación de metas financieras ni transacciones efectivizadas en el Kardex Ledger.</p>
-                </div>
-              } @else {
-                <!-- Responsive Grid/Table of Items -->
-                <div class="overflow-hidden border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm bg-white dark:bg-zinc-950">
-                  <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                      <thead>
-                        <tr class="bg-slate-50/70 dark:bg-zinc-900/40 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 border-b border-slate-200 dark:border-zinc-800">
-                          <th class="py-4 px-6">Metas Financieras (Item/Bien)</th>
-                          <th class="py-4 px-4 text-right">Programado</th>
-                          <th class="py-4 px-4 text-right">Comprometido (N.O.)</th>
-                          <th class="py-4 px-4 text-right">Ejecutado (Kardex)</th>
-                          <th class="py-4 px-4 text-right">Rendido</th>
-                          <th class="py-4 px-4 text-right">Saldo Disponible</th>
-                          <th class="py-4 px-4 text-center">Estado</th>
-                          <th class="py-4 px-6 text-center">Varianza</th>
-                        </tr>
-                      </thead>
-                      <tbody class="divide-y divide-slate-100 dark:divide-zinc-800/50 text-xs font-medium text-slate-700 dark:text-slate-300">
-                        @for (item of kardexConsolidado(); track item.itemMlId) {
-                          <tr class="hover:bg-slate-50/40 dark:hover:bg-zinc-900/20 transition-all duration-100"
-                              [ngClass]="item.saldo <= 0 ? 'bg-slate-50/20 dark:bg-zinc-900/10' : ''">
-                            <td class="py-4 px-6 font-bold text-slate-900 dark:text-white">
-                              <div class="flex flex-col gap-1.5">
-                                <span [ngClass]="item.saldo <= 0 ? 'text-slate-400 dark:text-zinc-500 line-through font-normal' : ''">
-                                  {{ item.itemDescripcion }}
-                                </span>
-                                <!-- Horizontal Execution Progress Bar -->
-                                <div class="flex items-center gap-2 mt-0.5">
-                                  <div class="w-24 bg-slate-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-300"
-                                         [ngClass]="item.saldo <= 0 ? 'bg-slate-300 dark:bg-zinc-700' : 'bg-primary'"
-                                         [style.width.%]="calculateExecutionPercentage(item.montoEfectivizado, item.montoProgramado)">
-                                    </div>
-                                  </div>
-                                  <span class="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold whitespace-nowrap">
-                                    {{ calculateExecutionPercentage(item.montoEfectivizado, item.montoProgramado) }}% ejecutado
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td class="py-4 px-4 text-right font-semibold">{{ formatCurrency(item.montoProgramado) }}</td>
-                            <td class="py-4 px-4 text-right text-slate-500">{{ formatCurrency(item.montoComprometido) }}</td>
-                            <td class="py-4 px-4 text-right text-amber-600 dark:text-amber-500 font-semibold">{{ formatCurrency(item.montoEfectivizado) }}</td>
-                            <td class="py-4 px-4 text-right text-emerald-600 dark:text-emerald-500">{{ formatCurrency(item.montoRendido) }}</td>
-                            <td class="py-4 px-4 text-right font-bold text-slate-800 dark:text-slate-200">{{ formatCurrency(item.saldo) }}</td>
-                            <td class="py-4 px-4 text-center">
-                              @if (item.saldo > 0) {
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                  Con Saldo
-                                </span>
-                              } @else {
-                                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-zinc-800/80 px-2.5 py-1 text-[11px] font-bold text-slate-500 dark:text-zinc-400">
-                                  <span class="material-symbols-outlined text-[10px] font-black leading-none">lock</span>
-                                  Ejecutado 100%
-                                </span>
-                              }
-                            </td>
-                            <td class="py-4 px-6 text-center font-bold">
-                              @if (item.montoProgramado >= item.montoEfectivizado) {
-                                <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                  +{{ formatCurrency(item.montoProgramado - item.montoEfectivizado) }}
-                                </span>
-                              } @else {
-                                <span class="inline-flex items-center rounded-full bg-rose-50 dark:bg-rose-950/20 px-2.5 py-0.5 text-xs font-bold text-rose-600 dark:text-rose-400">
-                                  {{ formatCurrency(item.montoProgramado - item.montoEfectivizado) }}
-                                </span>
-                              }
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              }
-            }
-          </div>
+          <app-kardex-varianza-tab
+            [convenio]="convenio"
+            [kardexConsolidado]="kardexConsolidado()"
+            [loadingKardex]="loadingKardex()">
+          </app-kardex-varianza-tab>
         }
       </div>
     </div>

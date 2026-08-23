@@ -11,10 +11,10 @@
   <!-- Filtros -->
   <app-ui-filter-bar (onSearch)="applyFilter()" [showAdd]="false">
     <div class="filter-group filter-group--search">
-      <label class="filter-label">Buscar menú</label>
+      <label class="filter-label" for="gestion-menus-search">Buscar menú</label>
       <div class="filter-search-wrap">
         <span class="material-symbols-outlined filter-search-icon">search</span>
-        <input type="text"
+        <input id="gestion-menus-search" type="text"
           class="filter-input filter-input--search"
           placeholder="Buscar por nombre o ruta..."
           [(ngModel)]="search"
@@ -76,8 +76,8 @@
     
     <div [formGroup]="menuForm" class="space-y-4">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-slate-700">Nombre del Menú <span class="text-red-500">*</span></label>
-        <input type="text" formControlName="nombre" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        <label class="text-sm font-medium text-slate-700" for="gestion-menus-nombre">Nombre del Menú <span class="text-red-500">*</span></label>
+        <input id="gestion-menus-nombre" type="text" formControlName="nombre" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40" />
         @if (menuForm.get('nombre')?.touched && menuForm.get('nombre')?.invalid) {
           <span class="text-xs text-red-500">
             El nombre es obligatorio (máx. 150 caracteres).
@@ -86,29 +86,29 @@
       </div>
 
     <div class="flex flex-col gap-1">
-      <label class="text-sm font-medium text-slate-700">Descripción</label>
-      <input type="text" formControlName="descripcion" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+      <label class="text-sm font-medium text-slate-700" for="gestion-menus-descripcion">Descripción</label>
+      <input id="gestion-menus-descripcion" type="text" formControlName="descripcion" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-slate-700">Icono (Google Material Icon)</label>
-        <input type="text" formControlName="icono" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+        <label class="text-sm font-medium text-slate-700" for="gestion-menus-icono">Icono (Google Material Icon)</label>
+        <input id="gestion-menus-icono" type="text" formControlName="icono" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-slate-700">Orden de Visualización <span class="text-red-500">*</span></label>
-        <input type="number" formControlName="orden" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
+        <label class="text-sm font-medium text-slate-700" for="gestion-menus-orden">Orden de Visualización <span class="text-red-500">*</span></label>
+        <input id="gestion-menus-orden" type="number" formControlName="orden" class="w-full px-3 py-2 border rounded-md focus:outline-none" />
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-slate-700">Ruta de Navegación</label>
-        <input type="text" formControlName="ruta" class="w-full px-3 py-2 border rounded-md focus:outline-none" placeholder="/main/..." />
+        <label class="text-sm font-medium text-slate-700" for="gestion-menus-ruta">Ruta de Navegación</label>
+        <input id="gestion-menus-ruta" type="text" formControlName="ruta" class="w-full px-3 py-2 border rounded-md focus:outline-none" placeholder="/main/..." />
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-slate-700">Menú Padre (Opcional)</label>
-        <select formControlName="menuPadreId" class="w-full px-3 py-2 border rounded-md focus:outline-none bg-white font-medium text-slate-700">
+        <label class="text-sm font-medium text-slate-700" for="gestion-menus-padre">Menú Padre (Opcional)</label>
+        <select id="gestion-menus-padre" formControlName="menuPadreId" class="w-full px-3 py-2 border rounded-md focus:outline-none bg-white font-medium text-slate-700">
           <option [ngValue]="null">Ninguno (Menú Raíz)</option>
           @for (m of parentMenus(); track m.id) {
             <option [ngValue]="m.id">{{ m.nombre }} (ID: {{ m.id }})</option>

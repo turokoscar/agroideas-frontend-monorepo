@@ -127,11 +127,14 @@ it requires reading across these layers:
 - **No `postcss.config.js`** — Tailwind is wired through the Angular build; do not add one.
 - In Angular templates, a literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).
 - **kofix-ejecucion has a transitional ESLint override** (`apps/kofix-ejecucion/eslint.config.js`):
-  it downgrades inherited style/a11y rules (`no-explicit-any`, `no-unused-vars`,
-  `no-non-null-assertion`, a11y label/click-events rules, etc.) to `warn`. It does **not**
+  it downgrades inherited style rules (`no-explicit-any`, `no-unused-vars`,
+  `no-non-null-assertion`, etc.) to `warn`. It does **not**
   touch `no-restricted-imports` — direct PrimeNG/SweetAlert2/Leaflet imports are still an
-  `error` and kofix has none. kofix lint passes with 0 errors but 319 warnings (tracked debt,
-  to shrink as this code moves into `@agroideas/ui`/`@agroideas/utils`).
+  `error` and kofix has none. kofix lint passes with 0 errors but 251 warnings (tracked debt,
+  to shrink as this code moves into `@agroideas/ui`/`@agroideas/utils`; mostly
+  `no-explicit-any`/`no-unused-vars` now — the a11y template rules (`label-has-associated-control`,
+  `interactive-supports-focus`, `click-events-have-key-events`) were fully resolved under
+  [ADR 0008](docs/adr/0008-remediacion-ui-kofix-ejecucion.md) Fase 2 and no longer occur).
 - KOFIX specs were converted Jasmine→Jest (`toBeTrue()`→`toBe(true)`, `jasmine.createSpy`→
   `jest.fn`, `jasmine.objectContaining`→`expect.objectContaining`). Keep new specs Jest-native.
 - All components are `standalone: true` (no NgModules). `kofix-ejecucion` needs the

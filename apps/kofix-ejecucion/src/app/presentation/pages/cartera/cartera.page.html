@@ -9,10 +9,10 @@
     <app-ui-filter-bar
         (onSearch)="onSearch()">
         <div class="filter-group filter-group--search flex-1">
-            <label class="filter-label">Búsqueda</label>
+            <label class="filter-label" for="cartera-search">Búsqueda</label>
             <div class="filter-search-wrap">
                 <span class="material-symbols-outlined filter-search-icon">search</span>
-                <input type="text" class="filter-input filter-input--search"
+                <input id="cartera-search" type="text" class="filter-input filter-input--search"
                     placeholder="Organización, RUC o especialista..."
                     [(ngModel)]="search"
                     (keyup.enter)="onSearch()" />
@@ -45,7 +45,11 @@
         <ng-template #rowTemplate let-row let-col="col">
             @if (col.field === 'numeroConvenio') {
                 <span class="font-bold text-primary cursor-pointer hover:underline"
-                    (click)="goToDetail(row.postulanteId)">
+                    role="link"
+                    tabindex="0"
+                    [attr.aria-label]="'Ver detalle del convenio ' + row.numeroConvenio"
+                    (click)="goToDetail(row.postulanteId)"
+                    (keydown.enter)="goToDetail(row.postulanteId)">
                     {{ row.numeroConvenio }}
                 </span>
             }
@@ -90,7 +94,13 @@
 
 <!-- Modal de Reasignación -->
 @if (showReasignModal()) {
-    <div class="modal-overlay" (click)="cerrarReasignar()">
+    <!-- El overlay envuelve controles interactivos reales (select, textarea, ui-button), por lo
+         que no puede convertirse en <button> ni recibir role="button"/tabindex sin crear una
+         jerarquía de controles anidados inválida. El cierre por teclado ya está cubierto por
+         (keydown.escape) aquí y por los botones visibles "Cerrar" (X) y "Cancelar" de abajo. -->
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+    <div class="modal-overlay" (click)="cerrarReasignar()" (keydown.escape)="cerrarReasignar()">
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
         <div class="modal-content" (click)="$event.stopPropagation()">
             <div class="modal-header">
                 <h2 class="text-xl font-bold">Reasignar Especialista</h2>
@@ -101,21 +111,21 @@
             @if (reasignItem(); as item) {
                 <div class="modal-body">
                     <div class="info-group">
-                        <label class="info-label">Convenio:</label>
+                        <span class="info-label">Convenio:</span>
                         <span class="info-value font-bold">{{ item.numeroConvenio }}</span>
                     </div>
                     <div class="info-group">
-                        <label class="info-label">Organización:</label>
+                        <span class="info-label">Organización:</span>
                         <span class="info-value">{{ item.razonSocial }}</span>
                     </div>
                     <div class="info-group">
-                        <label class="info-label">Especialista Actual:</label>
+                        <span class="info-label">Especialista Actual:</span>
                         <span class="info-value">{{ item.nombresCompletos }}</span>
                     </div>
 
                     <div class="form-group mt-4">
-                        <label class="form-label">Nuevo Especialista *</label>
-                        <select class="form-select" [(ngModel)]="selectedEspecialistaId">
+                        <label class="form-label" for="cartera-nuevo-especialista">Nuevo Especialista *</label>
+                        <select id="cartera-nuevo-especialista" class="form-select" [(ngModel)]="selectedEspecialistaId">
                             <option [ngValue]="null">-- Seleccionar --</option>
                             @for (esp of especialistas(); track esp.id) {
                                 <option [ngValue]="esp.id">{{ esp.nombresCompletos }} ({{ esp.rol }})</option>
@@ -124,8 +134,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Observación</label>
-                        <textarea class="form-textarea" rows="3" [(ngModel)]="observacion"
+                        <label class="form-label" for="cartera-observacion">Observación</label>
+                        <textarea id="cartera-observacion" class="form-textarea" rows="3" [(ngModel)]="observacion"
                             placeholder="Motivo de la reasignación (opcional)"></textarea>
                     </div>
                 </div>

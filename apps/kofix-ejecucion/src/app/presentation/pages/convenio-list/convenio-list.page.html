@@ -15,10 +15,11 @@
     (onSearch)="onSearch()">
 
     <div class="filter-group filter-group--search">
-      <label class="filter-label">Filtro Rápido</label>
+      <label class="filter-label" for="convenio-list-search">Filtro Rápido</label>
       <div class="filter-search-wrap">
         <span class="material-symbols-outlined filter-search-icon">search</span>
         <input
+          id="convenio-list-search"
           type="text"
           class="filter-input filter-input--search"
           placeholder="Organización, N° convenio, región..."
@@ -28,8 +29,8 @@
     </div>
 
     <div class="filter-group">
-      <label class="filter-label">Estado</label>
-      <select class="filter-input" [(ngModel)]="estadoFilter" (change)="onSearch()">
+      <label class="filter-label" for="convenio-list-estado">Estado</label>
+      <select id="convenio-list-estado" class="filter-input" [(ngModel)]="estadoFilter" (change)="onSearch()">
         <option value="">Todos los estados</option>
         <option value="VIGENTE">Activo</option>
         <option value="POR_INICIAR">Por Iniciar</option>

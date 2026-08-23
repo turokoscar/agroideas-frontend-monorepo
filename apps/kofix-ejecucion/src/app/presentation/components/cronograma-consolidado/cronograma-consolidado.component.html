@@ -74,7 +74,7 @@
             <td *ngFor="let mes of mesesArray" class="p-1 text-center">
               <div 
                 *ngIf="row.meses[mes].financiera > 0"
-                class="w-full py-2.5 rounded-md bg-midagri-blue-light/20 text-midagri-blue-dark border border-midagri-blue-light/50 font-black text-[8px] flex flex-col justify-center items-center shadow-sm select-none cursor-help hover:scale-105 hover:bg-midagri-blue-light/35 transition-transform"
+                class="w-full py-2.5 rounded-md bg-info/20 text-info border border-info/50 font-black text-[8px] flex flex-col justify-center items-center shadow-sm select-none cursor-help hover:scale-105 hover:bg-info/35 transition-transform"
                 [title]="row.item + '\nMes ' + mes + ': ' + formatCurrency(row.meses[mes].financiera)">
                 M{{ mes }}
               </div>

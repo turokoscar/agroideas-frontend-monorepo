@@ -5,6 +5,7 @@ import { RendicionModalComponent } from './rendicion-modal.component';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
 import { Rendicion } from '../../../domain/models/rendicion.model';
+import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 
 describe('RendicionModalComponent', () => {
     let component: RendicionModalComponent;
@@ -12,6 +13,7 @@ describe('RendicionModalComponent', () => {
     let mockCatalogoRepo: jest.Mocked<Partial<CatalogoRepository>>;
     let mockRendicionRepo: jest.Mocked<Partial<RendicionRepository>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
+    let mockStateService: jest.Mocked<Partial<ConvenioStateService>>;
 
     const pendiente = {
         id: 1,
@@ -36,13 +38,15 @@ describe('RendicionModalComponent', () => {
             update: jest.fn()
         };
         mockAlert = { show: jest.fn(), toast: jest.fn() };
+        mockStateService = { convenio: jest.fn().mockReturnValue(null) as unknown as ConvenioStateService['convenio'] };
 
         await TestBed.configureTestingModule({
             imports: [RendicionModalComponent],
             providers: [
                 { provide: CatalogoRepository, useValue: mockCatalogoRepo },
                 { provide: RendicionRepository, useValue: mockRendicionRepo },
-                { provide: AlertService, useValue: mockAlert }
+                { provide: AlertService, useValue: mockAlert },
+                { provide: ConvenioStateService, useValue: mockStateService }
             ]
         }).compileComponents();
 

@@ -1,5 +1,6 @@
-import { UIButtonComponent, UiKpiComponent, UiMapComponent } from '@agroideas/ui';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal, effect } from '@angular/core';
+import { UIButtonComponent, UiKpiComponent } from '@agroideas/ui';
+import { formatConvenioNumber, formatCurrency } from '@agroideas/utils';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GetConvenioByIdUseCase } from '../../../domain/usecases/get-convenio-by-id.usecase';
@@ -13,6 +14,9 @@ import { ProgramacionItemsComponent } from '../../components/programacion-items/
 import { NoObjecionPageComponent } from '../../pages/no-objecion/no-objecion.page';
 import { DesembolsoPageComponent } from '../../pages/desembolso/desembolso.page';
 import { RendicionPageComponent } from '../../pages/rendicion/rendicion.page';
+import { ConvenioDetailTab, ConvenioDetailTabsComponent } from '../../components/convenio-detail-tabs/convenio-detail-tabs.component';
+import { KardexVarianzaTabComponent } from '../../components/kardex-varianza-tab/kardex-varianza-tab.component';
+import { ConvenioFichaTecnicaTabComponent } from '../../components/convenio-ficha-tecnica-tab/convenio-ficha-tecnica-tab.component';
 
 @Component({
     selector: 'app-convenio-detail-page',
@@ -24,8 +28,10 @@ import { RendicionPageComponent } from '../../pages/rendicion/rendicion.page';
         DesembolsoPageComponent,
         RendicionPageComponent,
         UiKpiComponent,
-        UiMapComponent,
-        UIButtonComponent
+        UIButtonComponent,
+        ConvenioDetailTabsComponent,
+        KardexVarianzaTabComponent,
+        ConvenioFichaTecnicaTabComponent
     ],
     templateUrl: './convenio-detail.page.html',
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -37,7 +43,6 @@ export class ConvenioDetailPageComponent implements OnInit {
     private alertService = inject(AlertService);
     kardexConsolidado = signal<KardexConsolidado[]>([]);
     loadingKardex = signal<boolean>(false);
-    showHelpGuide = signal<boolean>(false);
 
     downloadConvenioFisico(): void {
         const c = this.stateService.convenio();
@@ -72,6 +77,18 @@ export class ConvenioDetailPageComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     public stateService = inject(ConvenioStateService);
+
+    readonly tabs = computed<ConvenioDetailTab[]>(() => {
+        const disabled = !this.stateService.isProgramacionCompleta();
+        return [
+            { label: 'Ficha Técnica' },
+            { label: 'Programación' },
+            { label: 'No Objeciones', disabled },
+            { label: 'Desembolsos', disabled },
+            { label: 'Rendiciones', disabled },
+            { label: 'Kardex & Varianza', disabled }
+        ];
+    });
 
     constructor() {
         effect(() => {
@@ -161,27 +178,11 @@ export class ConvenioDetailPageComponent implements OnInit {
 
     formatCurrency(value?: number): string {
         if (value === undefined) return '-';
-        return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(value);
+        return formatCurrency(value);
     }
 
     formatConvenioNumber(convenio?: Convenio): string {
-        if (!convenio || !convenio.numeroConvenio) return '-';
-        if (convenio.numeroConvenio.includes('-ST')) {
-            return convenio.numeroConvenio;
-        }
-        const padded = convenio.numeroConvenio.toString().padStart(4, '0');
-        const year = convenio.fechaInicio ? new Date(convenio.fechaInicio).getFullYear() : 'XXXX';
-        return `${padded}-${year}-ST`;
-    }
-
-    formatDate(date?: string): string {
-        if (!date) return '-';
-        return new Date(date).toLocaleDateString('es-PE');
-    }
-
-    calculateExecutionPercentage(efectivizado: number, programado: number): number {
-        if (!programado || programado <= 0) return 0;
-        const percentage = (efectivizado / programado) * 100;
-        return Math.min(Math.round(percentage), 100);
+        if (!convenio) return '-';
+        return formatConvenioNumber(convenio.numeroConvenio, convenio.fechaInicio);
     }
 }

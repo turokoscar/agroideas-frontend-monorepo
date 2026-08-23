@@ -9,10 +9,10 @@
   <!-- Filtros -->
   <app-ui-filter-bar (onSearch)="onSearch()" [showAdd]="false">
     <div class="filter-group filter-group--search">
-      <label class="filter-label">Buscar</label>
+      <label class="filter-label" for="programacion-vigente-search">Buscar</label>
       <div class="filter-search-wrap">
         <span class="material-symbols-outlined filter-search-icon">search</span>
-        <input type="text"
+        <input id="programacion-vigente-search" type="text"
           class="filter-input filter-input--search"
           placeholder="Organización o N° convenio..."
           [(ngModel)]="search"

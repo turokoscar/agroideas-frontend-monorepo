@@ -1,6 +1,7 @@
 import { AlertService } from '@agroideas/feedback';
-import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
-import { ChangeDetectionStrategy, Component, Input, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
+import { UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
+import { formatConvenioNumber } from '@agroideas/utils';
+import { ChangeDetectionStrategy, Component, Input, OnInit, Output, EventEmitter, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
@@ -9,12 +10,13 @@ import { FileStorageService } from '../../../shared/services/file-storage.servic
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { NoObjecionProgrammedItem } from '../../../domain/models/no-objecion-programmed-item.model';
 import { NoObjecionBalance } from '../../../domain/models/no-objecion.model';
+import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 
 @Component({
     selector: 'app-no-objecion-modal',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, ReactiveFormsModule, DecimalPipe, UIModalComponent, UIButtonComponent],
+    imports: [CommonModule, ReactiveFormsModule, DecimalPipe, UIModalComponent, UIButtonComponent, UiFileChipComponent],
     templateUrl: './no-objecion-modal.component.html',
     styleUrls: ['./no-objecion-modal.component.sass']
 })
@@ -29,6 +31,13 @@ export class NoObjecionModalComponent implements OnInit {
     private noObjecionRepo = inject(NoObjecionRepository);
     private catalogoRepo = inject(CatalogoRepository);
     private fileStorageService = inject(FileStorageService);
+    private convenioStateService = inject(ConvenioStateService);
+
+    readonly convenioSubtitle = computed(() => {
+        const c = this.convenioStateService.convenio();
+        if (!c) return '';
+        return `${formatConvenioNumber(c.numeroConvenio, c.fechaInicio)} · ${c.razonSocial}`;
+    });
 
     visible = signal(true);
     noObjecionForm: FormGroup;

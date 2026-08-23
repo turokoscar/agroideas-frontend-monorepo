@@ -4,20 +4,20 @@
   <app-ui-filter-bar (onSearch)="applyFilters()" [showSearch]="true"
     [showAdd]="!readOnly()" addLabel="Nueva No Objeción" (onAdd)="openRegisterModal()">
     <div class="filter-group filter-group--search">
-      <label class="filter-label">Buscar</label>
+      <label class="filter-label" for="no-objecion-search">Buscar</label>
       <div class="filter-search-wrap">
         <span class="material-symbols-outlined filter-search-icon">search</span>
-        <input type="text" class="filter-input filter-input--search"
+        <input id="no-objecion-search" type="text" class="filter-input filter-input--search"
           placeholder="N° No Objeción..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" (keyup.enter)="applyFilters()" />
       </div>
     </div>
     <div class="filter-group">
-      <label class="filter-label">Fecha Inicio</label>
-      <input type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)" class="filter-input" (keyup.enter)="applyFilters()" />
+      <label class="filter-label" for="no-objecion-fecha-inicio">Fecha Inicio</label>
+      <input id="no-objecion-fecha-inicio" type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)" class="filter-input" (keyup.enter)="applyFilters()" />
     </div>
     <div class="filter-group">
-      <label class="filter-label">Fecha Fin</label>
-      <input type="date" [ngModel]="fechaFin()" (ngModelChange)="fechaFin.set($event)" class="filter-input" (keyup.enter)="applyFilters()" />
+      <label class="filter-label" for="no-objecion-fecha-fin">Fecha Fin</label>
+      <input id="no-objecion-fecha-fin" type="date" [ngModel]="fechaFin()" (ngModelChange)="fechaFin.set($event)" class="filter-input" (keyup.enter)="applyFilters()" />
     </div>
   </app-ui-filter-bar>
 

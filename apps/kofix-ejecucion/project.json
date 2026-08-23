@@ -120,6 +120,12 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
+    "check-tailwind-tokens": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash apps/kofix-ejecucion/scripts/check-tailwind-tokens.sh"
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": [

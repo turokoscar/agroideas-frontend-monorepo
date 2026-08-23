@@ -19,8 +19,8 @@
     <!-- Filtros usando app-ui-filter-bar (sin duplicar p-dropdowns externos) -->
     <app-ui-filter-bar [showSearch]="false" [showAdd]="false">
       <div class="filter-group">
-        <label class="filter-label">Tipo de Alerta</label>
-        <select class="filter-input" [(ngModel)]="selectedTipoValue" (change)="onFilter()">
+        <label class="filter-label" for="alertas-tipo">Tipo de Alerta</label>
+        <select id="alertas-tipo" class="filter-input" [(ngModel)]="selectedTipoValue" (change)="onFilter()">
           <option value="">Todos</option>
           @for (opt of tipoOptions; track opt.label) {
             <option [value]="opt.value">{{ opt.label }}</option>
@@ -28,8 +28,8 @@
         </select>
       </div>
       <div class="filter-group">
-        <label class="filter-label">Severidad</label>
-        <select class="filter-input" [(ngModel)]="selectedSeveridadValue" (change)="onFilter()">
+        <label class="filter-label" for="alertas-severidad">Severidad</label>
+        <select id="alertas-severidad" class="filter-input" [(ngModel)]="selectedSeveridadValue" (change)="onFilter()">
           <option value="">Todas</option>
           @for (opt of severidadOptions; track opt.label) {
             <option [value]="opt.value">{{ opt.label }}</option>

@@ -40,16 +40,16 @@
     <!-- Filtros usando app-ui-filter-bar -->
     <app-ui-filter-bar [showSearch]="false" [showAdd]="false">
       <div class="filter-group">
-        <label class="filter-label">Tipo</label>
-        <select class="filter-input" [(ngModel)]="selectedTipo" (change)="loadData()">
+        <label class="filter-label" for="kardex-tipo">Tipo</label>
+        <select id="kardex-tipo" class="filter-input" [(ngModel)]="selectedTipo" (change)="loadData()">
           @for (opt of tipoOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
           }
         </select>
       </div>
       <div class="filter-group">
-        <label class="filter-label">Estado</label>
-        <select class="filter-input" [(ngModel)]="selectedEstado" (change)="loadData()">
+        <label class="filter-label" for="kardex-estado">Estado</label>
+        <select id="kardex-estado" class="filter-input" [(ngModel)]="selectedEstado" (change)="loadData()">
           @for (opt of estadoOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
           }

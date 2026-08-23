@@ -166,17 +166,9 @@ describe('ConvenioDetailPageComponent', () => {
         });
     });
 
-    it('should clamp the execution percentage to 100 and guard a missing programado', () => {
-        createComponent('5');
-        expect(component.calculateExecutionPercentage(1500, 1000)).toBe(100);
-        expect(component.calculateExecutionPercentage(250, 1000)).toBe(25);
-        expect(component.calculateExecutionPercentage(250, 0)).toBe(0);
-    });
-
-    it('should format currency and dates, defaulting missing values to a dash', () => {
+    it('should format currency, defaulting missing values to a dash', () => {
         createComponent('5');
         expect(component.formatCurrency(undefined)).toBe('-');
         expect(component.formatCurrency(1000)).toContain('1,000');
-        expect(component.formatDate(undefined)).toBe('-');
     });
 });

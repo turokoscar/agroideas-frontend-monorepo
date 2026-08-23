@@ -61,11 +61,11 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
                 <ui-card title="Control de Diálogos">
                     <ui-button severity="primary" (onClick)="showModal.set(true)">Abrir Modal de Ejemplo</ui-button>
                     
-                    <app-ui-modal 
-                        [visible]="showModal()" 
-                        header="Confirmación de Acción" 
-                        (onClose)="showModal.set(false)"
-                        (onConfirm)="handleConfirm()">
+                    <app-ui-modal
+                        [visible]="showModal()"
+                        title="Confirmación de Acción"
+                        (onHide)="showModal.set(false)"
+                        (onSave)="handleConfirm()">
                         <p class="text-slate-600">¿Está seguro que desea procesar esta solicitud? Esta acción es irreversible.</p>
                     </app-ui-modal>
                 </ui-card>

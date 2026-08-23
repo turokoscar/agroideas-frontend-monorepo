@@ -1,6 +1,7 @@
 import { AlertService } from '@agroideas/feedback';
 import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
-import { ChangeDetectionStrategy, Component, Output, EventEmitter, OnInit, inject, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Output, EventEmitter, OnInit, computed, inject, signal, input } from '@angular/core';
+import { formatConvenioNumber } from '@agroideas/utils';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
@@ -36,6 +37,12 @@ export class DesembolsoModalComponent implements OnInit {
     private stateService = inject(ConvenioStateService);
     private desembolsoRepo = inject(DesembolsoRepository);
     private catalogoRepo = inject(CatalogoRepository);
+
+    readonly convenioSubtitle = computed(() => {
+        const c = this.stateService.convenio();
+        if (!c) return '';
+        return `${formatConvenioNumber(c.numeroConvenio, c.fechaInicio)} · ${c.razonSocial}`;
+    });
 
     form: FormGroup = this.fb.group({
         numeroSolicitud: ['', Validators.required],

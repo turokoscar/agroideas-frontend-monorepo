@@ -9,8 +9,9 @@
             <ui-card [title]="'Parámetros'">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Reporte</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1" for="reportes-tipo">Tipo de Reporte</label>
                         <select
+                            id="reportes-tipo"
                             class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                             [(ngModel)]="selectedReporteValue"
                             (change)="onReporteChange($event)">
@@ -21,15 +22,17 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Inicio</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1" for="reportes-fecha-inicio">Fecha Inicio</label>
                         <input
+                            id="reportes-fecha-inicio"
                             type="date"
                             [(ngModel)]="fechaInicio"
                             class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Fin</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1" for="reportes-fecha-fin">Fecha Fin</label>
                         <input
+                            id="reportes-fecha-fin"
                             type="date"
                             [(ngModel)]="fechaFin"
                             class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all">

@@ -30,7 +30,7 @@ describe('DesembolsoModalComponent', () => {
         mockDesembolsoRepo = { registrar: jest.fn() };
         mockNoObjecionRepo = { getItemsParaDesembolso: jest.fn().mockReturnValue(of([itemDisponible])) };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
-        mockStateService = { refresh: jest.fn() };
+        mockStateService = { refresh: jest.fn(), convenio: jest.fn().mockReturnValue(null) as unknown as ConvenioStateService['convenio'] };
         mockAlert = { show: jest.fn(), toast: jest.fn(), showResponse: jest.fn() };
 
         await TestBed.configureTestingModule({
