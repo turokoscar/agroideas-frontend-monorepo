@@ -50,7 +50,7 @@ export class NoObjecionPageComponent implements OnInit {
         { field: 'tipoDocumentoNombre', header: 'Tipo Doc.', width: '130px' },
         { field: 'fechaDocumento', header: 'Fecha', type: 'date', width: '110px', align: 'center' },
         { field: 'totalMonto', header: 'Total Adjudicado', type: 'currency', align: 'right', width: '150px' },
-        { field: 'estadoNombre', header: 'Estado', type: 'badge', width: '120px', align: 'center' },
+        { field: 'estadoNombre', header: 'Estado', type: 'custom', width: '120px', align: 'center' },
         { field: 'observacion', header: 'Observación' },
     ];
 

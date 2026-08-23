@@ -26,9 +26,28 @@ describe('DesembolsoModalComponent', () => {
         saldoDisponible: 400
     };
 
+    const otroItemDisponible = {
+        id: 2,
+        idTipoItem: 1,
+        noObjecionCodigo: 'NO-002',
+        proveedorNombre: 'Otro Proveedor SAC',
+        itemNombre: 'Semillas',
+        montoAdjudicado: 500,
+        saldoDisponible: 250
+    };
+
+    /** Añade una fila vacía y simula la selección de `item` en ella, como haría el usuario en el dropdown de la fila. */
+    const addAndSelectItem = (item: { id: number }) => {
+        component.addItem();
+        const index = component.itemsFormArray.length - 1;
+        component.itemsFormArray.at(index).get('itemAdjudicadoId')?.setValue(item.id);
+        component.onItemChange(index);
+        return index;
+    };
+
     beforeEach(async () => {
         mockDesembolsoRepo = { registrar: jest.fn() };
-        mockNoObjecionRepo = { getItemsParaDesembolso: jest.fn().mockReturnValue(of([itemDisponible])) };
+        mockNoObjecionRepo = { getItemsParaDesembolso: jest.fn().mockReturnValue(of([itemDisponible, otroItemDisponible])) };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockStateService = { refresh: jest.fn(), convenio: jest.fn().mockReturnValue(null) as unknown as ConvenioStateService['convenio'] };
         mockAlert = { show: jest.fn(), toast: jest.fn(), showResponse: jest.fn() };
@@ -54,7 +73,7 @@ describe('DesembolsoModalComponent', () => {
 
         expect(mockNoObjecionRepo.getItemsParaDesembolso).toHaveBeenCalledWith(5);
         expect(mockCatalogoRepo.getByGrupo).toHaveBeenCalledWith('TIPO_PAGO');
-        expect(component.itemsDisponibles()).toEqual([itemDisponible]);
+        expect(component.itemsDisponibles()).toEqual([itemDisponible, otroItemDisponible]);
     });
 
     it('should filter items by tipo when a filter other than "todos" is set', () => {
@@ -71,44 +90,71 @@ describe('DesembolsoModalComponent', () => {
     });
 
     describe('addItem', () => {
-        it('should do nothing without a selected item', () => {
+        it('should append an empty row that requires selecting an item', () => {
             fixture.detectChanges();
-
-            component.addItem();
-
-            expect(component.itemsFormArray.length).toBe(0);
-        });
-
-        it('should add the selected item, defaulting montoSolicitado to its saldoDisponible', () => {
-            fixture.detectChanges();
-            component.selectedItemToAdd.set(itemDisponible);
 
             component.addItem();
 
             expect(component.itemsFormArray.length).toBe(1);
-            expect(component.itemsFormArray.at(0).get('montoSolicitado')?.value).toBe(400);
-            expect(component.selectedItemToAdd()).toBeNull();
+            expect(component.itemsFormArray.at(0).get('itemAdjudicadoId')?.value).toBe('');
+            expect(component.itemsFormArray.at(0).invalid).toBe(true);
+        });
+    });
+
+    describe('onItemChange', () => {
+        it('should populate the row and default montoSolicitado to the item saldoDisponible', () => {
+            fixture.detectChanges();
+
+            addAndSelectItem(itemDisponible);
+
+            const row = component.itemsFormArray.at(0);
+            expect(row.get('proveedorNombre')?.value).toBe('Proveedor SAC');
+            expect(row.get('montoTotal')?.value).toBe(1000);
+            expect(row.get('saldoDisponible')?.value).toBe(400);
+            expect(row.get('montoSolicitado')?.value).toBe(400);
         });
 
-        it('should reject adding the same item twice', () => {
+        it('should reset montoSolicitado and its max validator when the item is swapped for another', () => {
             fixture.detectChanges();
-            component.selectedItemToAdd.set(itemDisponible);
-            component.addItem();
-            component.selectedItemToAdd.set(itemDisponible);
+            addAndSelectItem(itemDisponible);
+            component.itemsFormArray.at(0).get('montoSolicitado')?.setValue(999);
 
+            component.itemsFormArray.at(0).get('itemAdjudicadoId')?.setValue(otroItemDisponible.id);
+            component.onItemChange(0);
+
+            const row = component.itemsFormArray.at(0);
+            expect(row.get('montoSolicitado')?.value).toBe(250);
+            row.get('montoSolicitado')?.setValue(251);
+            expect(row.get('montoSolicitado')?.hasError('max')).toBe(true);
+        });
+    });
+
+    describe('getAvailableItems', () => {
+        it('should exclude items already selected in other rows', () => {
+            fixture.detectChanges();
+            addAndSelectItem(itemDisponible);
             component.addItem();
 
-            expect(component.itemsFormArray.length).toBe(1);
-            expect(mockAlert.toast).toHaveBeenCalledWith('Este ítem ya ha sido agregado a la solicitud.');
+            const optionsForSecondRow = component.getAvailableItems(1);
+
+            expect(optionsForSecondRow.find(i => i.id === itemDisponible.id)).toBeUndefined();
+            expect(optionsForSecondRow.find(i => i.id === otroItemDisponible.id)).toBeDefined();
+        });
+
+        it('should keep the currently selected item available for its own row', () => {
+            fixture.detectChanges();
+            addAndSelectItem(itemDisponible);
+
+            const optionsForFirstRow = component.getAvailableItems(0);
+
+            expect(optionsForFirstRow.find(i => i.id === itemDisponible.id)).toBeDefined();
         });
     });
 
     it('should sum montoSolicitado across added items', () => {
         fixture.detectChanges();
-        component.selectedItemToAdd.set(itemDisponible);
-        component.addItem();
-        component.selectedItemToAdd.set({ ...itemDisponible, id: 2, saldoDisponible: 250 });
-        component.addItem();
+        addAndSelectItem(itemDisponible);
+        addAndSelectItem(otroItemDisponible);
 
         expect(component.totalSolicitado()).toBe(650);
     });
@@ -126,8 +172,7 @@ describe('DesembolsoModalComponent', () => {
         it('should register the solicitud, refresh state, and close on success', () => {
             fixture.detectChanges();
             component.form.patchValue({ numeroSolicitud: 'SOL-1', tipoPagoId: 2 });
-            component.selectedItemToAdd.set(itemDisponible);
-            component.addItem();
+            addAndSelectItem(itemDisponible);
             mockDesembolsoRepo.registrar = jest.fn().mockReturnValue(of({ exitoso: true }));
             let closedWith: boolean | undefined;
             component.onClose.subscribe((v) => (closedWith = v));
@@ -150,8 +195,7 @@ describe('DesembolsoModalComponent', () => {
         it('should show the server response when it logically fails', () => {
             fixture.detectChanges();
             component.form.patchValue({ numeroSolicitud: 'SOL-1', tipoPagoId: 2 });
-            component.selectedItemToAdd.set(itemDisponible);
-            component.addItem();
+            addAndSelectItem(itemDisponible);
             mockDesembolsoRepo.registrar = jest.fn().mockReturnValue(of({ exitoso: false, mensaje: 'No autorizado' }));
 
             component.save();
@@ -163,8 +207,7 @@ describe('DesembolsoModalComponent', () => {
         it('should extract FluentValidation-style errors from the response body', () => {
             fixture.detectChanges();
             component.form.patchValue({ numeroSolicitud: 'SOL-1', tipoPagoId: 2 });
-            component.selectedItemToAdd.set(itemDisponible);
-            component.addItem();
+            addAndSelectItem(itemDisponible);
             mockDesembolsoRepo.registrar = jest.fn().mockReturnValue(
                 throwError(() => ({ error: { errors: { NumeroSolicitud: ['Ya existe'] } } }))
             );

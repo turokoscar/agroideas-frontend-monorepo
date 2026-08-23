@@ -90,10 +90,19 @@ export class ConvenioDetailPageComponent implements OnInit {
         ];
     });
 
+    /**
+     * `stateService.convenio()` se recarga después de guardar un desembolso/rendición/etc.
+     * (ver `desembolso-modal.save()`), no solo en la carga inicial. Sin esta bandera, el
+     * effect de abajo se repetiría en cada recarga y devolvería al usuario a la pestaña del
+     * deep-link original, pisando la pestaña que haya elegido manualmente mientras tanto.
+     */
+    private initialTabRestored = false;
+
     constructor() {
         effect(() => {
             const convenio = this.stateService.convenio();
-            if (convenio) {
+            if (convenio && !this.initialTabRestored) {
+                this.initialTabRestored = true;
                 const tab = this.route.snapshot.queryParamMap.get('tab');
                 if (tab) {
                     this.setTabIndexByTab(tab);

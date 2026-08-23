@@ -5,6 +5,7 @@ import { PermissionService } from '@agroideas/security';
 import { DesembolsoPageComponent } from './desembolso.page';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
+import { Desembolso } from '../../../domain/models/desembolso.model';
 
 describe('DesembolsoPageComponent', () => {
     let component: DesembolsoPageComponent;
@@ -57,6 +58,14 @@ describe('DesembolsoPageComponent', () => {
         fixture.detectChanges();
 
         expect((component as unknown as { puedeActivarCheque: () => boolean }).puedeActivarCheque()).toBe(true);
+    });
+
+    it('should format the numeroSolicitud padded to 4 digits plus the year of fechaSolicitud', () => {
+        expect(component.formatSolicitudNumber({ numeroSolicitud: '55', fechaSolicitud: '2026-03-10' } as Desembolso)).toBe('0055-2026');
+    });
+
+    it('should show a dash when numeroSolicitud is missing', () => {
+        expect(component.formatSolicitudNumber({ fechaSolicitud: '2026-03-10' } as Desembolso)).toBe('-');
     });
 
     it('should map estado codes to their badge status, defaulting unknown ones to Pendiente', () => {

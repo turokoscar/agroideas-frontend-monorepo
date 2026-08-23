@@ -1,7 +1,7 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
-import { PERMISSIONS } from '@agroideas/utils';
+import { PERMISSIONS, formatSolicitudNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -46,13 +46,17 @@ export class DesembolsoPageComponent implements OnInit {
   tiposPago = signal<CatalogoItem[]>([]);
 
   columns: TableColumn[] = [
-    { field: 'numeroSolicitud', header: 'N° Solicitud', width: '130px' },
+    { field: 'numeroSolicitud', header: 'N° Solicitud', type: 'custom', width: '130px' },
     { field: 'fechaSolicitud', header: 'Fecha', type: 'date', width: '110px', align: 'center' },
     { field: 'tipoPagoNombre', header: 'Tipo de Pago', width: '140px' },
     { field: 'montoTotalDesembolsado', header: 'Monto Total', type: 'currency', align: 'right', width: '140px' },
-    { field: 'estadoNombre', header: 'Estado', type: 'badge', width: '120px', align: 'center' },
+    { field: 'estadoNombre', header: 'Estado', type: 'custom', width: '120px', align: 'center' },
     { field: 'observacion', header: 'Observación' },
   ];
+
+  formatSolicitudNumber(row: Desembolso): string {
+    return formatSolicitudNumber(row.numeroSolicitud, row.fechaSolicitud);
+  }
 
   private badgeMap: Record<string, StatusType> = {
     'PENDIENTE':  'Pendiente',

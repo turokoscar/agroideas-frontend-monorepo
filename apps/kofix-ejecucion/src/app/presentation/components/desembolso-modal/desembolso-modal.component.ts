@@ -2,7 +2,7 @@ import { AlertService } from '@agroideas/feedback';
 import { UIButtonComponent, UIModalComponent } from '@agroideas/ui';
 import { ChangeDetectionStrategy, Component, Output, EventEmitter, OnInit, computed, inject, signal, input } from '@angular/core';
 import { formatConvenioNumber } from '@agroideas/utils';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
@@ -13,7 +13,7 @@ import { ConvenioStateService } from '../../../shared/services/convenio-state.se
 @Component({
     selector: 'app-desembolso-modal',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FormsModule, DecimalPipe, UIModalComponent, UIButtonComponent],
+    imports: [CommonModule, ReactiveFormsModule, DecimalPipe, UIModalComponent, UIButtonComponent],
     templateUrl: './desembolso-modal.component.html',
     styleUrls: ['./desembolso-modal.component.sass'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -29,7 +29,6 @@ export class DesembolsoModalComponent implements OnInit {
     originalItemsDisponibles = signal<any[]>([]);
     filterTipoItem = signal<number>(0); // 0: Todos, 1: Bien, 2: Servicio
     tiposPago = signal<CatalogoItem[]>([]);
-    selectedItemToAdd = signal<any>(null);
 
     private fb = inject(FormBuilder);
     private alertService = inject(AlertService);
@@ -90,29 +89,49 @@ export class DesembolsoModalComponent implements OnInit {
     }
 
     addItem(): void {
-        const item = this.selectedItemToAdd();
-        if (!item) return;
-
-        // Verificar si ya existe en la lista para no duplicar
-        const exists = this.itemsFormArray.controls.some(c => c.value.itemAdjudicadoId === item.id);
-        if (exists) {
-            this.alertService.toast('Este ítem ya ha sido agregado a la solicitud.');
-            return;
-        }
-
         const itemGroup = this.fb.group({
-            itemAdjudicadoId: [item.id],
-            noObjecionCodigo: [item.noObjecionCodigo],
-            proveedorNombre: [item.proveedorNombre],
-            itemNombre: [item.itemNombre],
-            montoTotal: [item.montoAdjudicado],
-            saldoDisponible: [item.saldoDisponible],
-            montoSolicitado: [item.saldoDisponible, [Validators.required, Validators.min(0.01), Validators.max(item.saldoDisponible)]],
+            itemAdjudicadoId: ['', Validators.required],
+            noObjecionCodigo: [''],
+            proveedorNombre: [''],
+            itemNombre: [''],
+            montoTotal: [0],
+            saldoDisponible: [0],
+            montoSolicitado: [0, [Validators.required, Validators.min(0.01)]],
             observacion: ['']
         });
 
         this.itemsFormArray.push(itemGroup);
-        this.selectedItemToAdd.set(null);
+    }
+
+    /** Ítems disponibles para el dropdown de la fila `currentIndex`: excluye los ya elegidos en otras filas. */
+    getAvailableItems(currentIndex: number): any[] {
+        const currentControl = this.itemsFormArray.at(currentIndex);
+        const selectedId = currentControl.get('itemAdjudicadoId')?.value;
+        const otherSelectedIds = this.itemsFormArray.controls
+            .map((c, idx) => idx !== currentIndex ? c.get('itemAdjudicadoId')?.value : null)
+            .filter(id => id);
+
+        return this.itemsDisponibles().filter(item => item.id == selectedId || !otherSelectedIds.some(id => id == item.id));
+    }
+
+    onItemChange(index: number): void {
+        const control = this.itemsFormArray.at(index);
+        const selectedId = control.get('itemAdjudicadoId')?.value;
+        const item = this.itemsDisponibles().find(i => i.id == selectedId);
+        if (!item) return;
+
+        control.patchValue({
+            noObjecionCodigo: item.noObjecionCodigo,
+            proveedorNombre: item.proveedorNombre,
+            itemNombre: item.itemNombre,
+            montoTotal: item.montoAdjudicado,
+            saldoDisponible: item.saldoDisponible,
+            montoSolicitado: item.saldoDisponible
+        });
+
+        const montoControl = control.get('montoSolicitado');
+        montoControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(item.saldoDisponible)]);
+        montoControl?.updateValueAndValidity();
     }
 
     removeItem(index: number): void {

@@ -47,6 +47,9 @@
 
     <!-- Template para columnas custom (estado con badge) -->
     <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'numeroSolicitud') {
+        {{ formatSolicitudNumber(row) }}
+      }
       @if (col.field === 'estadoNombre') {
         <app-ui-status-pill [status]="getBadgeStatus(row.estadoNombre)" [text]="row.estadoNombre"></app-ui-status-pill>
       }
