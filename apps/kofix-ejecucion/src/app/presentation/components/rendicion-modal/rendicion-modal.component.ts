@@ -1,6 +1,6 @@
 import { UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
-import { formatConvenioNumber } from '@agroideas/utils';
+import { formatConvenioNumber, formatSolicitudNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, input, output, signal, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormArray, FormGroup } from '@angular/forms';
@@ -42,6 +42,10 @@ export class RendicionModalComponent implements OnInit {
   tiposCpe = signal<any[]>([]);
   desembolsosPendientes = signal<any[]>([]);
   selectedDesembolso = signal<any>(null);
+
+  formatSolicitudNumber(item: { numeroSolicitud?: string; fechaSolicitud?: string }): string {
+    return formatSolicitudNumber(item.numeroSolicitud, item.fechaSolicitud);
+  }
 
   // File Upload State
   selectedFile = signal<File | null>(null);

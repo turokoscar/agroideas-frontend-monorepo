@@ -61,6 +61,10 @@ describe('RendicionModalComponent', () => {
         expect(mockRendicionRepo.getPendientes).toHaveBeenCalledWith(5);
     });
 
+    it('should format the solicitud number padded to 4 digits plus the year of fechaSolicitud', () => {
+        expect(component.formatSolicitudNumber({ numeroSolicitud: '23', fechaSolicitud: '2026-01-10' })).toBe('0023-2026');
+    });
+
     it('should populate the detalles form array when a solicitud is selected', () => {
         setInputs();
         fixture.detectChanges();

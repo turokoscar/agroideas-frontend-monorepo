@@ -13,14 +13,23 @@
   <div class="space-y-6" [formGroup]="form">
     <!-- Asociación con Desembolso -->
     <div class="form-card-flat" [ngClass]="{'opacity-60 pointer-events-none': isEdit()}">
-      <div class="form-field">
-        <label class="form-label font-semibold text-primary/70" for="rendicion-solicitud-desembolso">Seleccionar Solicitud de Desembolso Pendiente</label>
-        <select id="rendicion-solicitud-desembolso" formControlName="solicitudDesembolsoId" class="form-select">
-          <option [ngValue]="null">Seleccionar solicitud de desembolso para rendir...</option>
-          @for (item of desembolsosPendientes(); track item.id) {
-            <option [ngValue]="item.id">[{{ item.numeroSolicitud }}] — Monto Desembolsado: S/ {{ item.monto | number:'1.2-2' }}</option>
-          }
-        </select>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+        <div class="form-field">
+          <label class="form-label font-semibold text-primary/70" for="rendicion-solicitud-desembolso">Solicitud de Desembolso</label>
+          <select id="rendicion-solicitud-desembolso" formControlName="solicitudDesembolsoId" class="form-select">
+            <option [ngValue]="null">Seleccionar...</option>
+            @for (item of desembolsosPendientes(); track item.id) {
+              <option [ngValue]="item.id">{{ formatSolicitudNumber(item) }}</option>
+            }
+          </select>
+        </div>
+
+        @if (selectedDesembolso(); as sol) {
+          <div class="flex flex-col pb-0.5">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Monto Desembolsado</span>
+            <span class="text-sm font-bold text-slate-800">S/ {{ sol.monto | number:'1.2-2' }}</span>
+          </div>
+        }
       </div>
     </div>
 
