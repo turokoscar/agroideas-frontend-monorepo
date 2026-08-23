@@ -53,6 +53,9 @@
       @if (col.field === 'estadoNombre') {
         <app-ui-status-pill [status]="getBadgeStatus(row.estadoNombre)" [text]="row.estadoNombre"></app-ui-status-pill>
       }
+      @if (col.field === 'estadoRendicion') {
+        <app-ui-status-pill [status]="getEstadoRendicion(row).status" [text]="getEstadoRendicion(row).text"></app-ui-status-pill>
+      }
     </ng-template>
 
   </app-ui-data-table>

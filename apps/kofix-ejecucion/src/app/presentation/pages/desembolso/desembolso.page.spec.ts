@@ -74,6 +74,21 @@ describe('DesembolsoPageComponent', () => {
         expect(component.getBadgeStatus('DESCONOCIDO')).toBe('Pendiente');
     });
 
+    it('should mark a desembolso as Pendiente de Rendir when nothing has been rendered yet', () => {
+        expect(component.getEstadoRendicion({ montoTotalDesembolsado: 1000, montoRendido: 0 } as Desembolso))
+            .toEqual({ status: 'Pendiente', text: 'Pendiente de Rendir' });
+    });
+
+    it('should mark a desembolso as Rendido Parcial when only part of the amount was rendered', () => {
+        expect(component.getEstadoRendicion({ montoTotalDesembolsado: 1000, montoRendido: 400 } as Desembolso))
+            .toEqual({ status: 'Media', text: 'Rendido Parcial' });
+    });
+
+    it('should mark a desembolso as Rendido when the full amount was rendered', () => {
+        expect(component.getEstadoRendicion({ montoTotalDesembolsado: 1000, montoRendido: 1000 } as Desembolso))
+            .toEqual({ status: 'Aprobado', text: 'Rendido' });
+    });
+
     it('should not activate the cheque when the confirmation is dismissed', async () => {
         mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: false });
 

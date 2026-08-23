@@ -51,6 +51,7 @@ export class DesembolsoPageComponent implements OnInit {
     { field: 'tipoPagoNombre', header: 'Tipo de Pago', width: '140px' },
     { field: 'montoTotalDesembolsado', header: 'Monto Total', type: 'currency', align: 'right', width: '140px' },
     { field: 'estadoNombre', header: 'Estado', type: 'custom', width: '120px', align: 'center' },
+    { field: 'estadoRendicion', header: 'Rendición', type: 'custom', width: '140px', align: 'center' },
     { field: 'observacion', header: 'Observación' },
   ];
 
@@ -67,6 +68,19 @@ export class DesembolsoPageComponent implements OnInit {
 
   getBadgeStatus(value: string): StatusType {
     return this.badgeMap[value] ?? 'Pendiente';
+  }
+
+  getEstadoRendicion(row: Desembolso): { status: StatusType; text: string } {
+    const total = row.montoTotalDesembolsado || 0;
+    const rendido = row.montoRendido || 0;
+
+    if (rendido <= 0) {
+      return { status: 'Pendiente', text: 'Pendiente de Rendir' };
+    }
+    if (rendido >= total - 0.01) {
+      return { status: 'Aprobado', text: 'Rendido' };
+    }
+    return { status: 'Media', text: 'Rendido Parcial' };
   }
 
   private permissionService = inject(PermissionService);
