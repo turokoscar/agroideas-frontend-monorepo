@@ -84,8 +84,7 @@ export class ReporteMensualChartComponent {
     return vals.map((d, i) => `${i === 0 ? 'M' : 'L'} ${this.getX(i)} ${this.getY(d.ejecutado)}`).join(' ');
   });
 
-  onYearSelect(event: any): void {
-    const year = Number(event.target.value);
+  onYearSelect(year: number): void {
     this.onYearChange.emit(year);
   }
 

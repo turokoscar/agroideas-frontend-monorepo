@@ -48,7 +48,7 @@ describe('ReporteMensualChartComponent', () => {
         const spy = jest.fn();
         component.onYearChange.subscribe(spy);
 
-        component.onYearSelect({ target: { value: '2025' } } as unknown as Event);
+        component.onYearSelect(2025);
 
         expect(spy).toHaveBeenCalledWith(2025);
     });

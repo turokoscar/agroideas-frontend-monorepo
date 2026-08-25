@@ -21,9 +21,9 @@
       <!-- Year Selector -->
       <div class="year-selector">
         <label for="yearSelect" class="sr-only">Año Fiscal</label>
-        <select id="yearSelect" [value]="selectedYear()" (change)="onYearSelect($event)" class="year-select-input">
+        <select id="yearSelect" [ngModel]="selectedYear()" (ngModelChange)="onYearSelect($event)" class="year-select-input">
           @for (year of availableYears(); track year) {
-            <option [value]="year">Año {{ year }}</option>
+            <option [ngValue]="year">Año {{ year }}</option>
           }
         </select>
       </div>
