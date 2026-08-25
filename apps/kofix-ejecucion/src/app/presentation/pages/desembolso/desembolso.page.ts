@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Desembolso } from '../../../domain/models/desembolso.model';
 import { DesembolsoModalComponent } from '../../components/desembolso-modal/desembolso-modal.component';
+import { DesembolsoItemsModalComponent } from '../../components/desembolso-items-modal/desembolso-items-modal.component';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
@@ -22,6 +23,7 @@ import { finalize } from 'rxjs/operators';
     UiFilterBarComponent,
     UiStatusPillComponent,
     DesembolsoModalComponent,
+    DesembolsoItemsModalComponent,
     UIButtonComponent
   ],
   templateUrl: './desembolso.page.html',
@@ -36,6 +38,11 @@ export class DesembolsoPageComponent implements OnInit {
   loading = signal<boolean>(false);
   totalRecords = signal<number>(0);
   showModal = signal<boolean>(false);
+  modalMode = signal<'create' | 'edit'>('create');
+  editingDesembolso = signal<Desembolso | undefined>(undefined);
+
+  showItemsModal = signal<boolean>(false);
+  viewingDesembolso = signal<Desembolso | undefined>(undefined);
 
   // Filtros
   filterNumero = signal<string | undefined>(undefined);
@@ -131,6 +138,12 @@ export class DesembolsoPageComponent implements OnInit {
     });
   }
 
+  openCreateModal(): void {
+    this.modalMode.set('create');
+    this.editingDesembolso.set(undefined);
+    this.showModal.set(true);
+  }
+
   handleModalClose(refresh: boolean): void {
     this.showModal.set(false);
     if (refresh) this.loadDesembolsos();
@@ -156,18 +169,42 @@ export class DesembolsoPageComponent implements OnInit {
       });
   }
 
-  viewDesembolso(id: number): void {
-      this.alertService.show('Información', 'La vista de solicitud de desembolso está en construcción y estará disponible pronto.', 'info');
+  viewDesembolso(row: Desembolso): void {
+      this.viewingDesembolso.set(row);
+      this.showItemsModal.set(true);
   }
 
-  editDesembolso(id: number): void {
-      this.alertService.show('Información', 'La edición de solicitud de desembolso está en construcción.', 'info');
+  handleItemsModalClose(): void {
+      this.showItemsModal.set(false);
   }
-  
-  deleteDesembolso(id: number): void {
-      this.alertService.confirm('¿Eliminar Solicitud?', 'Esta acción no se puede deshacer.').then((result: any) => {
+
+  editDesembolso(row: Desembolso): void {
+      if ((row.montoRendido || 0) > 0) {
+          this.alertService.show('Acción no permitida', 'No se puede modificar una solicitud que ya tiene una rendición registrada.', 'warning');
+          return;
+      }
+      this.modalMode.set('edit');
+      this.editingDesembolso.set(row);
+      this.showModal.set(true);
+  }
+
+  deleteDesembolso(row: Desembolso): void {
+      if ((row.montoRendido || 0) > 0) {
+          this.alertService.show('Acción no permitida', 'No se puede anular una solicitud que ya tiene una rendición registrada.', 'warning');
+          return;
+      }
+      this.alertService.confirm('¿Anular Solicitud?', 'Esta acción no se puede deshacer.').then((result: any) => {
         if (result.isConfirmed) {
-            this.alertService.show('Aviso', 'El borrado aún no está habilitado.', 'info');
+            this.loading.set(true);
+            this.desembolsoRepo.anular(row.id).pipe(finalize(() => this.loading.set(false))).subscribe({
+                next: () => {
+                    this.alertService.toast('Solicitud anulada con éxito.');
+                    this.loadDesembolsos();
+                },
+                error: (err) => {
+                    this.alertService.show('Error', err.error?.mensaje || 'No se pudo anular la solicitud.', 'error');
+                }
+            });
         }
       });
   }

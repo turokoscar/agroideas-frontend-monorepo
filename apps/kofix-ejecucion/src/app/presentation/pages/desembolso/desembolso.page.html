@@ -2,7 +2,7 @@
 
   <!-- Filtros -->
   <app-ui-filter-bar (onSearch)="onSearch()" [showSearch]="true"
-    [showAdd]="!readOnly()" addLabel="Nueva Solicitud" (onAdd)="showModal.set(true)">
+    [showAdd]="!readOnly()" addLabel="Nueva Solicitud" (onAdd)="openCreateModal()">
     <div class="filter-group">
       <label class="filter-label" for="desembolso-filter-numero">N° Desembolso</label>
       <input id="desembolso-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
@@ -66,16 +66,20 @@
 <ng-template #desembolsoActions let-row>
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
-      ariaLabel="Ver detalle" (onClick)="viewDesembolso(row.id)" />
+      ariaLabel="Ver ítems de la solicitud" (onClick)="viewDesembolso(row)" />
     @if (!readOnly()) {
       @if (puedeActivarCheque() && row.tipoPagoNombre === 'CHEQUE' && row.estadoNombre === 'PENDIENTE') {
         <ui-button iconOnly appearance="soft" severity="success" size="sm" icon="verified"
           ariaLabel="Activar y Efectivizar Cheque" (onClick)="activarCheque(row.id)" />
       }
       <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
-        ariaLabel="Editar" (onClick)="editDesembolso(row.id)" />
+        [ariaLabel]="row.montoRendido > 0 ? 'No se puede editar: tiene rendición asociada' : 'Editar'"
+        [disabled]="row.montoRendido > 0"
+        (onClick)="editDesembolso(row)" />
       <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
-        ariaLabel="Eliminar" (onClick)="deleteDesembolso(row.id)" />
+        [ariaLabel]="row.montoRendido > 0 ? 'No se puede anular: tiene rendición asociada' : 'Anular'"
+        [disabled]="row.montoRendido > 0"
+        (onClick)="deleteDesembolso(row)" />
     }
   </div>
 </ng-template>
@@ -84,6 +88,16 @@
 @if (showModal()) {
   <app-desembolso-modal
     [convenioId]="convenioId()"
+    [mode]="modalMode()"
+    [desembolso]="editingDesembolso()"
     (onClose)="handleModalClose($event)">
   </app-desembolso-modal>
+}
+
+<!-- Modal ligero de solo lectura -->
+@if (showItemsModal()) {
+  <app-desembolso-items-modal
+    [desembolso]="viewingDesembolso()!"
+    (close)="handleItemsModalClose()">
+  </app-desembolso-items-modal>
 }

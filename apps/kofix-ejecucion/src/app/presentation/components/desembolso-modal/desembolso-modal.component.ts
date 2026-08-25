@@ -8,6 +8,7 @@ import { DesembolsoRepository } from '../../../domain/repositories/desembolso.re
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
+import { Desembolso, DesembolsoDetalleItem } from '../../../domain/models/desembolso.model';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 
 @Component({
@@ -20,6 +21,9 @@ import { ConvenioStateService } from '../../../shared/services/convenio-state.se
 })
 export class DesembolsoModalComponent implements OnInit {
     convenioId = input.required<number>();
+    mode = input<'create' | 'edit'>('create');
+    /** Cabecera de la solicitud a editar (fila ya cargada en la lista). Requerida cuando mode() === 'edit'. */
+    desembolso = input<Desembolso | undefined>(undefined);
     @Output() onClose = new EventEmitter<boolean>();
 
     visible = signal(true);
@@ -56,8 +60,81 @@ export class DesembolsoModalComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.loadItemsDisponibles();
         this.loadTiposPago();
+        if (this.mode() === 'edit' && this.desembolso()) {
+            this.loadForEdit();
+        } else {
+            this.loadItemsDisponibles();
+        }
+    }
+
+    private loadForEdit(): void {
+        this.loadingItems.set(true);
+        this.desembolsoRepo.getDetalle(this.desembolso()!.id).subscribe({
+            next: (detalle) => {
+                this.noObjecionRepo.getItemsParaDesembolso(this.convenioId()).subscribe({
+                    next: (data) => {
+                        this.originalItemsDisponibles.set(data);
+                        this.populateFormForEdit(detalle);
+                        this.applyFilters();
+                        this.loadingItems.set(false);
+                    },
+                    error: () => { this.loadingItems.set(false); }
+                });
+            },
+            error: () => { this.loadingItems.set(false); }
+        });
+    }
+
+    private populateFormForEdit(detalle: DesembolsoDetalleItem[]): void {
+        const d = this.desembolso()!;
+        this.form.patchValue({
+            numeroSolicitud: d.numeroSolicitud,
+            tipoPagoId: detalle[0]?.tipoPagoId ?? '',
+            fechaDesembolso: typeof d.fechaSolicitud === 'string' ? d.fechaSolicitud.split('T')[0] : d.fechaSolicitud,
+            observacion: d.observacion || ''
+        });
+
+        while (this.itemsFormArray.length !== 0) {
+            this.itemsFormArray.removeAt(0);
+        }
+
+        const disponibles = [...this.originalItemsDisponibles()];
+
+        detalle.forEach(det => {
+            // Reincorpora al saldo disponible el monto ya comprometido por esta misma solicitud
+            // (se va a reemplazar al guardar), para no bloquear editar sin cambiar el monto.
+            let original = disponibles.find(i => i.id == det.noObjecionDetId);
+            if (!original) {
+                // El ítem ya no aparece en items-desembolso (saldo consumido por completo):
+                // se reconstruye una entrada mínima para que siga apareciendo en el dropdown.
+                original = {
+                    id: det.noObjecionDetId,
+                    idTipoItem: 0,
+                    noObjecionCodigo: det.noObjecionCodigo || '',
+                    proveedorNombre: det.proveedorNombre || '',
+                    itemNombre: det.itemNombre || '',
+                    montoAdjudicado: det.montoSolicitado,
+                    saldoDisponible: 0
+                };
+                disponibles.push(original);
+            }
+
+            const saldoEfectivo = (original.saldoDisponible ?? 0) + det.montoSolicitado;
+            const itemGroup = this.fb.group({
+                itemAdjudicadoId: [det.noObjecionDetId, Validators.required],
+                noObjecionCodigo: [original.noObjecionCodigo],
+                proveedorNombre: [original.proveedorNombre],
+                itemNombre: [original.itemNombre],
+                montoTotal: [original.montoAdjudicado],
+                saldoDisponible: [saldoEfectivo],
+                montoSolicitado: [det.montoSolicitado, [Validators.required, Validators.min(0.01), Validators.max(saldoEfectivo)]],
+                observacion: [det.observacion || '']
+            });
+            this.itemsFormArray.push(itemGroup);
+        });
+
+        this.originalItemsDisponibles.set(disponibles);
     }
 
     private loadTiposPago(): void {
@@ -153,8 +230,7 @@ export class DesembolsoModalComponent implements OnInit {
 
         this.isSubmitting.set(true);
         const v = this.form.value;
-
-        this.desembolsoRepo.registrar({
+        const payload = {
             postulanteId: Number(this.convenioId()),
             numeroSolicitud: v.numeroSolicitud,
             tipoPagoId: Number(v.tipoPagoId),
@@ -165,12 +241,18 @@ export class DesembolsoModalComponent implements OnInit {
                 montoSolicitado: i.montoSolicitado,
                 observacion: i.observacion
             }))
-        }).subscribe({
+        };
+
+        const request$ = this.mode() === 'edit'
+            ? this.desembolsoRepo.actualizar(this.desembolso()!.id, payload)
+            : this.desembolsoRepo.registrar(payload);
+
+        request$.subscribe({
             next: (res: any) => {
                 this.isSubmitting.set(false);
                 if (res?.exitoso !== false) {
                     this.stateService.refresh(this.convenioId());
-                    this.alertService.toast('Solicitud de desembolso registrada correctamente.');
+                    this.alertService.toast(this.mode() === 'edit' ? 'Solicitud de desembolso actualizada correctamente.' : 'Solicitud de desembolso registrada correctamente.');
                     this.onHide(true);
                 } else {
                     this.alertService.showResponse(res);

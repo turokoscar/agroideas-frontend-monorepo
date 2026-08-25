@@ -22,7 +22,7 @@ describe('DesembolsoRepositoryImpl', () => {
     it('should only add the optional filters when provided', () => {
         service.getByPostulante(3).subscribe();
         const req1 = httpMock.expectOne((r) => r.url === `${baseUrl}/postulante/3`);
-        expect(req1.request.params.has('numero')).toBe(false);
+        expect(req1.request.params.has('numDesembolso')).toBe(false);
         expect(req1.request.params.has('tipoPagoId')).toBe(false);
         req1.flush({ datos: [], total: 0 });
 
@@ -31,7 +31,7 @@ describe('DesembolsoRepositoryImpl', () => {
             .expectOne(
                 (r) =>
                     r.url === `${baseUrl}/postulante/3` &&
-                    r.params.get('numero') === 'SOL-1' &&
+                    r.params.get('numDesembolso') === 'SOL-1' &&
                     r.params.get('tipoPagoId') === '2' &&
                     r.params.get('fechaInicio') === '2026-01-01' &&
                     r.params.get('fechaFin') === '2026-12-31'

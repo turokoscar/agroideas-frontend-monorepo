@@ -15,13 +15,27 @@ describe('DesembolsoPageComponent', () => {
     let mockAlert: jest.Mocked<Partial<AlertService>>;
     let mockPermissionService: jest.Mocked<Partial<PermissionService>>;
 
+    const buildDesembolso = (overrides: Partial<Desembolso> = {}): Desembolso => ({
+        id: 1,
+        fechaSolicitud: '2026-08-01',
+        estadoId: 1,
+        estadoNombre: 'PENDIENTE',
+        tipoPagoNombre: 'TRANSFERENCIA',
+        montoTotalDesembolsado: 500,
+        montoRendido: 0,
+        numeroNoObjecion: '0001-2026',
+        numeroSolicitud: '12',
+        ...overrides
+    });
+
     beforeEach(async () => {
         mockDesembolsoRepo = {
             getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
-            activarCheque: jest.fn()
+            activarCheque: jest.fn(),
+            anular: jest.fn()
         };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
-        mockAlert = { confirm: jest.fn(), show: jest.fn() };
+        mockAlert = { confirm: jest.fn(), show: jest.fn(), toast: jest.fn() };
         mockPermissionService = { hasPermission: jest.fn().mockReturnValue(false) };
 
         await TestBed.configureTestingModule({
@@ -128,5 +142,99 @@ describe('DesembolsoPageComponent', () => {
         component.handleModalClose(false);
 
         expect(mockDesembolsoRepo.getByPostulante).not.toHaveBeenCalled();
+    });
+
+    describe('openCreateModal', () => {
+        it('should show the modal in create mode without a preloaded desembolso', () => {
+            fixture.detectChanges();
+            component.editingDesembolso.set(buildDesembolso());
+            component.modalMode.set('edit');
+
+            component.openCreateModal();
+
+            expect(component.showModal()).toBe(true);
+            expect(component.modalMode()).toBe('create');
+            expect(component.editingDesembolso()).toBeUndefined();
+        });
+    });
+
+    describe('editDesembolso', () => {
+        it('should block editing a desembolso that already has a rendición', () => {
+            fixture.detectChanges();
+
+            component.editDesembolso(buildDesembolso({ montoRendido: 100 }));
+
+            expect(component.showModal()).toBe(false);
+            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.any(String), 'warning');
+        });
+
+        it('should open the edit modal when there is no rendición', () => {
+            fixture.detectChanges();
+            const row = buildDesembolso({ montoRendido: 0 });
+
+            component.editDesembolso(row);
+
+            expect(component.showModal()).toBe(true);
+            expect(component.modalMode()).toBe('edit');
+            expect(component.editingDesembolso()).toBe(row);
+        });
+    });
+
+    describe('deleteDesembolso', () => {
+        it('should block anular when the desembolso already has a rendición', () => {
+            fixture.detectChanges();
+
+            component.deleteDesembolso(buildDesembolso({ montoRendido: 100 }));
+
+            expect(mockAlert.confirm).not.toHaveBeenCalled();
+            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.any(String), 'warning');
+        });
+
+        it('should not anular when the confirmation is dismissed', async () => {
+            mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: false });
+
+            component.deleteDesembolso(buildDesembolso({ montoRendido: 0 }));
+            await Promise.resolve();
+
+            expect(mockDesembolsoRepo.anular).not.toHaveBeenCalled();
+        });
+
+        it('should anular and reload the list when confirmed', async () => {
+            fixture.detectChanges();
+            jest.clearAllMocks();
+            mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: true });
+            mockDesembolsoRepo.anular = jest.fn().mockReturnValue(of(null));
+
+            component.deleteDesembolso(buildDesembolso({ id: 9, montoRendido: 0 }));
+            await Promise.resolve();
+
+            expect(mockDesembolsoRepo.anular).toHaveBeenCalledWith(9);
+            expect(mockAlert.toast).toHaveBeenCalledWith('Solicitud anulada con éxito.');
+            expect(mockDesembolsoRepo.getByPostulante).toHaveBeenCalled();
+        });
+    });
+
+    describe('viewDesembolso', () => {
+        it('should open the lightweight items modal with the selected row', () => {
+            fixture.detectChanges();
+            const row = buildDesembolso();
+
+            component.viewDesembolso(row);
+
+            expect(component.showItemsModal()).toBe(true);
+            expect(component.viewingDesembolso()).toBe(row);
+            expect(component.showModal()).toBe(false);
+        });
+
+        it('should close the items modal without reloading the list', () => {
+            fixture.detectChanges();
+            component.viewDesembolso(buildDesembolso());
+            jest.clearAllMocks();
+
+            component.handleItemsModalClose();
+
+            expect(component.showItemsModal()).toBe(false);
+            expect(mockDesembolsoRepo.getByPostulante).not.toHaveBeenCalled();
+        });
     });
 });

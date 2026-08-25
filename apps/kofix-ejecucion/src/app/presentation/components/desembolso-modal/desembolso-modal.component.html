@@ -1,5 +1,5 @@
-<app-ui-modal [visible]="visible()" title="Nueva Solicitud de Desembolso" [subtitle]="convenioSubtitle()" icon="payments"
-  [isSubmitting]="isSubmitting()" saveLabel="Registrar Solicitud"
+<app-ui-modal [visible]="visible()" [title]="mode() === 'edit' ? 'Editar Solicitud de Desembolso' : 'Nueva Solicitud de Desembolso'" [subtitle]="convenioSubtitle()" icon="payments"
+  [isSubmitting]="isSubmitting()" [saveLabel]="mode() === 'edit' ? 'Actualizar Solicitud' : 'Registrar Solicitud'"
   [saveDisabled]="form.invalid || itemsFormArray.length === 0" (onHide)="onHide()" (onSave)="save()" maxWidth="760px">
   <!-- Body -->
   <div class="space-y-6" [formGroup]="form">

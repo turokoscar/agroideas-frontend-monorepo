@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { DesembolsoRepository } from '../../domain/repositories/desembolso.repository';
-import { Desembolso, SettlementBalance } from '../../domain/models/desembolso.model';
+import { Desembolso, DesembolsoDetalleItem, SettlementBalance } from '../../domain/models/desembolso.model';
 import { DesembolsoMapper } from '../mappers/desembolso.mapper';
 
 @Injectable({
@@ -23,7 +23,7 @@ export class DesembolsoRepositoryImpl extends DesembolsoRepository {
             .set('offset', offset.toString())
             .set('limit', limit.toString());
 
-        if (numero) params = params.set('numero', numero);
+        if (numero) params = params.set('numDesembolso', numero);
         if (tipoPagoId) params = params.set('tipoPagoId', tipoPagoId.toString());
         if (fechaInicio) params = params.set('fechaInicio', fechaInicio);
         if (fechaFin) params = params.set('fechaFin', fechaFin);
@@ -47,6 +47,15 @@ export class DesembolsoRepositoryImpl extends DesembolsoRepository {
         return this.http.post<ResponseDto>(this.apiUrl, request);
     }
 
+    override actualizar(desembolsoId: number, desembolso: Partial<Desembolso>): Observable<ResponseDto> {
+        const request = DesembolsoMapper.toApiRequest(desembolso);
+        return this.http.put<ResponseDto>(`${this.apiUrl}/${desembolsoId}`, request);
+    }
+
+    override anular(desembolsoId: number): Observable<ResponseDto> {
+        return this.http.delete<ResponseDto>(`${this.apiUrl}/${desembolsoId}`);
+    }
+
     override getPendientesRendicion(postulanteId: number): Observable<any[]> {
         return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/postulante/${postulanteId}/pendientes-rendicion`).pipe(
             map(res => res.datos || [])
@@ -62,5 +71,11 @@ export class DesembolsoRepositoryImpl extends DesembolsoRepository {
             .set('mes', mes.toString())
             .set('anio', anio.toString());
         return this.http.post<ResponseDto>(`${this.apiUrl}/cierres-contables`, {}, { params });
+    }
+
+    override getDetalle(desembolsoId: number): Observable<DesembolsoDetalleItem[]> {
+        return this.http.get<ResponseDto<DesembolsoDetalleItem[]>>(`${this.apiUrl}/${desembolsoId}/detalle`).pipe(
+            map(res => res.datos || [])
+        );
     }
 }

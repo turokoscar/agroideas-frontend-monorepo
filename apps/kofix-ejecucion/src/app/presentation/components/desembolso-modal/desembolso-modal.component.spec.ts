@@ -46,7 +46,7 @@ describe('DesembolsoModalComponent', () => {
     };
 
     beforeEach(async () => {
-        mockDesembolsoRepo = { registrar: jest.fn() };
+        mockDesembolsoRepo = { registrar: jest.fn(), actualizar: jest.fn(), getDetalle: jest.fn() };
         mockNoObjecionRepo = { getItemsParaDesembolso: jest.fn().mockReturnValue(of([itemDisponible, otroItemDisponible])) };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockStateService = { refresh: jest.fn(), convenio: jest.fn().mockReturnValue(null) as unknown as ConvenioStateService['convenio'] };
@@ -215,6 +215,75 @@ describe('DesembolsoModalComponent', () => {
             component.save();
 
             expect(mockAlert.show).toHaveBeenCalledWith('Error', 'Ya existe', 'error');
+        });
+    });
+
+    describe('edit mode', () => {
+        const desembolso = {
+            id: 9,
+            fechaSolicitud: '2026-08-01',
+            estadoId: 1,
+            estadoNombre: 'PENDIENTE',
+            tipoPagoNombre: 'TRANSFERENCIA',
+            montoTotalDesembolsado: 400,
+            montoRendido: 0,
+            numeroNoObjecion: 'NO-001',
+            numeroSolicitud: '12',
+            observacion: 'Obs general'
+        };
+
+        const detalle = [
+            { id: 1, noObjecionDetId: itemDisponible.id, tipoPagoId: 12, noObjecionCodigo: itemDisponible.noObjecionCodigo, itemNombre: itemDisponible.itemNombre, proveedorNombre: itemDisponible.proveedorNombre, montoSolicitado: 300, observacion: '' }
+        ];
+
+        beforeEach(() => {
+            fixture.componentRef.setInput('mode', 'edit');
+            fixture.componentRef.setInput('desembolso', desembolso);
+            mockDesembolsoRepo.getDetalle = jest.fn().mockReturnValue(of(detalle));
+        });
+
+        it('should prefill the header fields and item rows from the existing detalle', () => {
+            fixture.detectChanges();
+
+            expect(mockDesembolsoRepo.getDetalle).toHaveBeenCalledWith(9);
+            expect(component.form.get('numeroSolicitud')?.value).toBe('12');
+            expect(component.form.get('tipoPagoId')?.value).toBe(12);
+            expect(component.form.get('observacion')?.value).toBe('Obs general');
+            expect(component.itemsFormArray.length).toBe(1);
+
+            const row = component.itemsFormArray.at(0);
+            expect(row.get('itemAdjudicadoId')?.value).toBe(itemDisponible.id);
+            expect(row.get('montoSolicitado')?.value).toBe(300);
+            // saldoDisponible (400) + lo ya comprometido por esta misma solicitud (300)
+            expect(row.get('saldoDisponible')?.value).toBe(700);
+        });
+
+        it('should reconstruct a synthetic item when it no longer appears in items-desembolso', () => {
+            mockNoObjecionRepo.getItemsParaDesembolso = jest.fn().mockReturnValue(of([otroItemDisponible]));
+            mockDesembolsoRepo.getDetalle = jest.fn().mockReturnValue(of([
+                { id: 1, noObjecionDetId: 999, tipoPagoId: 12, noObjecionCodigo: 'NO-999', itemNombre: 'Consumido', proveedorNombre: 'Prov X', montoSolicitado: 150, observacion: '' }
+            ]));
+
+            fixture.detectChanges();
+
+            const row = component.itemsFormArray.at(0);
+            expect(row.get('itemAdjudicadoId')?.value).toBe(999);
+            expect(row.get('montoSolicitado')?.value).toBe(150);
+            expect(row.get('saldoDisponible')?.value).toBe(150);
+        });
+
+        it('should call actualizar instead of registrar on save', () => {
+            fixture.detectChanges();
+            mockDesembolsoRepo.actualizar = jest.fn().mockReturnValue(of({ exitoso: true }));
+
+            component.save();
+
+            expect(mockDesembolsoRepo.actualizar).toHaveBeenCalledWith(
+                9,
+                expect.objectContaining({ numeroSolicitud: '12', tipoPagoId: 12 })
+            );
+            expect(mockDesembolsoRepo.registrar).not.toHaveBeenCalled();
+            expect(mockAlert.toast).toHaveBeenCalledWith('Solicitud de desembolso actualizada correctamente.');
         });
     });
 });

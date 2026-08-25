@@ -29,3 +29,14 @@ export interface SettlementBalance {
     desembolsado: number;
     saldoDisponible: number;
 }
+
+export interface DesembolsoDetalleItem {
+    id: number;
+    noObjecionDetId: number;
+    tipoPagoId?: number;
+    noObjecionCodigo?: string;
+    itemNombre?: string;
+    proveedorNombre?: string;
+    montoSolicitado: number;
+    observacion?: string;
+}
