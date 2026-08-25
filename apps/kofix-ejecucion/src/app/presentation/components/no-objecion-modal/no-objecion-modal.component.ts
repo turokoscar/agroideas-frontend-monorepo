@@ -22,7 +22,7 @@ import { ConvenioStateService } from '../../../shared/services/convenio-state.se
 })
 export class NoObjecionModalComponent implements OnInit {
     @Input() convenioId!: number;
-    @Input() mode: 'create' | 'edit' | 'view' = 'create';
+    @Input() mode: 'create' | 'edit' = 'create';
     @Input() noObjecionId?: number;
     @Output() onClose = new EventEmitter<boolean>();
 
@@ -64,7 +64,7 @@ export class NoObjecionModalComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadCatalogos();
-        if (this.mode === 'edit' || this.mode === 'view') {
+        if (this.mode === 'edit') {
             this.loadNoObjecionForEdit();
         } else {
             this.loadUnifiedItems().then(() => this.addItem());
@@ -117,16 +117,8 @@ export class NoObjecionModalComponent implements OnInit {
                 itemForm.get('itemNombre')?.setValue(det.itemNombre);
             }
 
-            if (this.mode === 'view') {
-                itemForm.disable();
-            }
-
             itemsArray.push(itemForm);
         });
-
-        if (this.mode === 'view') {
-            this.noObjecionForm.disable();
-        }
     }
 
     private loadUnifiedItems(includeItemIds?: number[]): Promise<void> {
@@ -233,35 +225,11 @@ export class NoObjecionModalComponent implements OnInit {
     }
 
     getDropdownItems(currentIndex: number): NoObjecionProgrammedItem[] {
-        if (this.mode === 'view') return this.getViewItems();
         return this.getAvailableItems(currentIndex);
     }
 
     getProgrammedItem(id: any): NoObjecionProgrammedItem | undefined {
         return this.programmedItems().find(p => p.id == id);
-    }
-
-    getViewItems(): NoObjecionProgrammedItem[] {
-        const usedIds = this.items.controls.map(c => c.get('itemId')?.value).filter(id => id);
-        const result = this.programmedItems().filter(p => usedIds.includes(p.id));
-        const missingIds = usedIds.filter((id: any) => !result.some(r => r.id == id));
-        missingIds.forEach((id: any) => {
-            const ctrl = this.items.controls.find(c => c.get('itemId')?.value == id);
-            if (ctrl) {
-                result.push({
-                    id: id,
-                    codigo: '',
-                    nombre: ctrl.get('itemNombre')?.value || `Ítem ${id}`,
-                    metaFisica: 0,
-                    aporteAgroideas: 0,
-                    cantidadComprometida: 0,
-                    montoComprometido: 0,
-                    saldoFisico: 0,
-                    saldoFinanciero: 0
-                });
-            }
-        });
-        return result;
     }
 
     removeItem(index: number) {

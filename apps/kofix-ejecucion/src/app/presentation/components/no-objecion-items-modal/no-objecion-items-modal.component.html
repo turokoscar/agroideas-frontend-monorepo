@@ -1,0 +1,63 @@
+<app-ui-modal
+  [visible]="visible()"
+  title="Ítems de la No Objeción"
+  [subtitle]="noObjecion()?.numeroDocumento ? ('N° ' + noObjecion()!.numeroDocumento) : ''"
+  icon="inventory_2"
+  [isLoading]="loading()"
+  [showSaveButton]="false"
+  (onHide)="onHide()"
+  maxWidth="680px"
+  >
+  <!-- Modal Body -->
+  <div class="space-y-4">
+    @if (noObjecion(); as no) {
+      <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+        <div class="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500">
+          <div class="grid grid-cols-12 gap-3 flex-1">
+            <span class="col-span-5">Ítem</span>
+            <span class="col-span-2 text-center">Cant.</span>
+            <span class="col-span-2 text-right">P. Unit.</span>
+            <span class="col-span-3 text-right">Adjudicado (S/)</span>
+          </div>
+        </div>
+        <div class="divide-y divide-slate-100">
+          @for (det of no.detalles; track det.itemMlId) {
+            <div class="p-4 hover:bg-slate-50/50 transition-all space-y-1.5">
+              <div class="grid grid-cols-12 gap-3 items-start">
+                <div class="col-span-5">
+                  <div class="text-xs font-semibold text-slate-700">{{ det.itemNombre || ('Ítem ' + det.itemMlId) }}</div>
+                  <div class="text-[10px] text-slate-400 font-medium mt-0.5">
+                    {{ det.itemCodigo }} · {{ tipoItemLabel(det.tipoItemRef) }}
+                  </div>
+                </div>
+                <div class="col-span-2 text-center text-xs font-medium text-slate-700 pt-0.5">{{ det.cantidad | number:'1.0-2' }}</div>
+                <div class="col-span-2 text-right text-xs font-medium text-slate-700 pt-0.5">{{ formatCurrency(det.precioAdjudicado) }}</div>
+                <div class="col-span-3 text-right text-xs font-bold text-primary pt-0.5">{{ formatCurrency(det.montoAdjudicado) }}</div>
+              </div>
+              <div class="text-[10px] text-slate-400 font-medium">
+                {{ det.rucProveedor }} · {{ det.razonSocialProveedor }}
+              </div>
+            </div>
+          }
+
+          @if (!no.detalles || no.detalles.length === 0) {
+            <div class="py-16 text-center">
+              <div class="flex flex-col items-center gap-2 opacity-25">
+                <span class="material-symbols-outlined text-5xl text-slate-400">inventory_2</span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sin ítems registrados</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer Start Slot -->
+  <div footer-start class="flex flex-col items-center md:items-start">
+    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Total Adjudicado</span>
+    <div class="flex items-baseline gap-2">
+      <span class="text-xl md:text-2xl font-bold text-slate-800 leading-none">{{ formatCurrency(total()) }}</span>
+    </div>
+  </div>
+</app-ui-modal>

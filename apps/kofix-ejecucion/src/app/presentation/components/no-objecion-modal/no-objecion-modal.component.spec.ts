@@ -213,25 +213,4 @@ describe('NoObjecionModalComponent', () => {
             expect(component.items.at(0).get('itemNombre')?.value).toBe('Fertilizante');
         });
     });
-
-    describe('view mode', () => {
-        it('should disable the whole form', async () => {
-            component.mode = 'view';
-            component.noObjecionId = 9;
-            mockNoObjecionRepo.getById = jest.fn().mockReturnValue(
-                of({
-                    numeroDocumento: '12',
-                    fechaDocumento: '2026-08-01',
-                    tipoDocumentoId: 1,
-                    observacion: '',
-                    detalles: [{ itemMlId: 1, cantidad: 10, montoAdjudicado: 100, rucProveedor: '12345678901', razonSocialProveedor: 'Prov' }]
-                })
-            );
-
-            fixture.detectChanges();
-            await fixture.whenStable();
-
-            expect(component.noObjecionForm.disabled).toBe(true);
-        });
-    });
 });

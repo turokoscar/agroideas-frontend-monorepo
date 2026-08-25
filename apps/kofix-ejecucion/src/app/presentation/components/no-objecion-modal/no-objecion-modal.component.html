@@ -1,11 +1,10 @@
 <app-ui-modal
   [visible]="visible()"
-  [title]="mode === 'view' ? 'Visualizar No Objeción' : (mode === 'edit' ? 'Editar No Objeción' : 'Registrar Nueva No Objeción')"
+  [title]="mode === 'edit' ? 'Editar No Objeción' : 'Registrar Nueva No Objeción'"
   [subtitle]="convenioSubtitle()"
   icon="verified"
   [isLoading]="loadingItems()"
   [isSubmitting]="isSubmitting()"
-  [showSaveButton]="mode !== 'view'"
   [saveLabel]="mode === 'edit' ? 'Actualizar' : 'Registrar No Objeción'"
   [saveDisabled]="noObjecionForm.invalid"
   (onHide)="close()"
@@ -60,7 +59,7 @@
       <input id="no-objecion-sustento-tecnico" #fileInput type="file" (change)="onFileSelected($event)" class="hidden" accept="application/pdf">
 
       @if (selectedFile(); as file) {
-        <ui-file-chip [name]="file.name" [size]="file.size" [removable]="mode !== 'view'" (onRemove)="selectedFile.set(null)" />
+        <ui-file-chip [name]="file.name" [size]="file.size" (onRemove)="selectedFile.set(null)" />
       } @else {
         <button type="button" (click)="fileInput.click()"
           class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-500 bg-white border border-dashed border-slate-200 rounded-md hover:border-primary hover:text-primary transition-all">
@@ -86,10 +85,8 @@
           <div class="h-4 w-px bg-slate-200"></div>
           <span class="text-xs font-semibold text-primary whitespace-nowrap">Total: {{ items.length }}</span>
         </div>
-        @if (mode !== 'view') {
-          <ui-button iconOnly shape="circle" severity="primary" icon="add" iconRotateOnHover
-            ariaLabel="Añadir Ítem" (onClick)="addItem()" />
-        }
+        <ui-button iconOnly shape="circle" severity="primary" icon="add" iconRotateOnHover
+          ariaLabel="Añadir Ítem" (onClick)="addItem()" />
       </div>
 
       <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
@@ -111,7 +108,6 @@
                 <div class="grid grid-cols-12 gap-3 flex-1">
                   <div class="col-span-6">
                     <select formControlName="itemId" (change)="onItemChange(i)"
-                      [attr.disabled]="mode === 'view' ? true : null"
                       class="w-full bg-white border-slate-200 rounded-lg text-xs p-2 focus:border-primary transition-all text-slate-700">
                       <option value="">Seleccione ítem...</option>
                       @for (p of getDropdownItems(i); track p) {
@@ -153,10 +149,8 @@
                   </div>
                 </div>
                 <div class="w-8 shrink-0 pt-1 flex justify-center">
-                  @if (mode !== 'view') {
-                    <ui-button iconOnly appearance="soft" severity="danger" size="sm"
-                      icon="delete" ariaLabel="Eliminar ítem" (onClick)="removeItem(i)" />
-                  }
+                  <ui-button iconOnly appearance="soft" severity="danger" size="sm"
+                    icon="delete" ariaLabel="Eliminar ítem" (onClick)="removeItem(i)" />
                 </div>
               </div>
 

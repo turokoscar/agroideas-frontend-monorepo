@@ -59,7 +59,7 @@
 <ng-template #noObjecionActions let-row>
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
-      ariaLabel="Ver detalle" (onClick)="viewNoObjecion(row.id)" />
+      ariaLabel="Ver ítems de la No Objeción" (onClick)="viewNoObjecion(row.id)" />
     <ui-button iconOnly appearance="soft" severity="info" size="sm" icon="download"
       [disabled]="!row.archivoUrl"
       [ariaLabel]="row.archivoUrl ? 'Descargar documento' : 'Sin documento adjunto'"
@@ -85,4 +85,12 @@
     [noObjecionId]="selectedNoObjecionId()"
     (onClose)="handleModalClose($event)">
   </app-no-objecion-modal>
+}
+
+<!-- Modal ligero de solo lectura -->
+@if (showItemsModal()) {
+  <app-no-objecion-items-modal
+    [noObjecionId]="viewingNoObjecionId()!"
+    (close)="handleItemsModalClose()">
+  </app-no-objecion-items-modal>
 }

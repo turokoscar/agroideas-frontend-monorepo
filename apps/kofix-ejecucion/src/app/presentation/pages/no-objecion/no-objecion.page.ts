@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal, inpu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-objecion-modal.component';
+import { NoObjecionItemsModalComponent } from '../../components/no-objecion-items-modal/no-objecion-items-modal.component';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
 import { finalize } from 'rxjs/operators';
@@ -18,6 +19,7 @@ import { finalize } from 'rxjs/operators';
         UiFilterBarComponent,
         UiStatusPillComponent,
         NoObjecionModalComponent,
+        NoObjecionItemsModalComponent,
         UIButtonComponent
     ],
     templateUrl: './no-objecion.page.html',
@@ -40,10 +42,14 @@ export class NoObjecionPageComponent implements OnInit {
     fechaInicio = signal('');
     fechaFin = signal('');
 
-    // Modal
+    // Modal de registro/edición
     showModal = signal(false);
-    modalMode = signal<'create' | 'edit' | 'view'>('create');
+    modalMode = signal<'create' | 'edit'>('create');
     selectedNoObjecionId = signal<number | undefined>(undefined);
+
+    // Modal ligero de solo lectura (ver ítems)
+    showItemsModal = signal(false);
+    viewingNoObjecionId = signal<number | undefined>(undefined);
 
     columns: TableColumn[] = [
         { field: 'numeroDocumento', header: 'N° Documento', type: 'custom', width: '140px' },
@@ -121,9 +127,8 @@ export class NoObjecionPageComponent implements OnInit {
     }
 
     viewNoObjecion(id: number): void {
-        this.modalMode.set('view');
-        this.selectedNoObjecionId.set(id);
-        this.showModal.set(true);
+        this.viewingNoObjecionId.set(id);
+        this.showItemsModal.set(true);
     }
 
     handleModalClose(refresh: boolean): void {
@@ -131,6 +136,10 @@ export class NoObjecionPageComponent implements OnInit {
         if (refresh) {
             this.loadNoObjeciones();
         }
+    }
+
+    handleItemsModalClose(): void {
+        this.showItemsModal.set(false);
     }
 
     deleteNoObjecion(id: number): void {

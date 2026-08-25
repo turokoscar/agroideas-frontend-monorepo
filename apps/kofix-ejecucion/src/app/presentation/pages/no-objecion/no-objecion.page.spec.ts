@@ -89,6 +89,29 @@ describe('NoObjecionPageComponent', () => {
         });
     });
 
+    describe('viewNoObjecion', () => {
+        it('should open the lightweight items modal without touching the registration modal', () => {
+            fixture.detectChanges();
+
+            component.viewNoObjecion(1);
+
+            expect(component.showItemsModal()).toBe(true);
+            expect(component.viewingNoObjecionId()).toBe(1);
+            expect(component.showModal()).toBe(false);
+        });
+
+        it('should close the items modal without reloading the list', () => {
+            fixture.detectChanges();
+            component.viewNoObjecion(1);
+            jest.clearAllMocks();
+
+            component.handleItemsModalClose();
+
+            expect(component.showItemsModal()).toBe(false);
+            expect(mockRepo.getByPostulante).not.toHaveBeenCalled();
+        });
+    });
+
     describe('deleteNoObjecion', () => {
         it('should block deleting a no-objecion that already has desembolsos', () => {
             fixture.detectChanges();
