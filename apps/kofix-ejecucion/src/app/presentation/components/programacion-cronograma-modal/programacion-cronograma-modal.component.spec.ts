@@ -22,12 +22,13 @@ describe('ProgramacionCronogramaModalComponent', () => {
         ...overrides
     });
 
-    const createComponent = (item = buildItem(), fechaInicio = '2026-01-15', fechaFin = '2026-12-15') => {
+    const createComponent = (item = buildItem(), fechaInicio = '2026-01-15', fechaFin = '2026-12-15', saldoDisponible: number | null = null) => {
         fixture = TestBed.createComponent(ProgramacionCronogramaModalComponent);
         component = fixture.componentInstance;
         fixture.componentRef.setInput('item', item);
         fixture.componentRef.setInput('fechaInicio', fechaInicio);
         fixture.componentRef.setInput('fechaFin', fechaFin);
+        fixture.componentRef.setInput('saldoDisponible', saldoDisponible);
         return fixture;
     };
 
@@ -173,6 +174,35 @@ describe('ProgramacionCronogramaModalComponent', () => {
 
             expect(mockAlert.showResponse).toHaveBeenCalledWith({ exitoso: false, mensaje: 'Error de negocio' });
             expect(component.saving()).toBe(false);
+        });
+    });
+
+    describe('saldoDisponible cap', () => {
+        it('should cap restanteFinanciero/canSave against saldoDisponible instead of montoAprobado when provided', () => {
+            createComponent(buildItem({ metaAprobada: 100, metaFisica: 100, montoAprobado: 1000 }), '2026-01-15', '2026-12-15', 200).detectChanges();
+
+            expect(component.montoLimite()).toBe(200);
+            expect(component.restanteFinanciero()).toBe(200);
+
+            component.meses.update((arr) => arr.map((m, i) => (i === 0 ? { ...m, metaFisica: 20, metaFinanciera: 200 } : m)));
+
+            expect(component.canSave()).toBe(true);
+        });
+
+        it('should block saving when the total exceeds saldoDisponible even though it is under montoAprobado', () => {
+            createComponent(buildItem({ metaAprobada: 100, metaFisica: 100, montoAprobado: 1000 }), '2026-01-15', '2026-12-15', 200).detectChanges();
+            component.meses.update((arr) => arr.map((m, i) => (i === 0 ? { ...m, metaFisica: 50, metaFinanciera: 500 } : m)));
+
+            component.save();
+
+            expect(mockAlert.show).toHaveBeenCalledWith('Límite Excedido', expect.stringContaining('saldo disponible'), 'warning');
+            expect(mockRepo.saveCronograma).not.toHaveBeenCalled();
+        });
+
+        it('should fall back to montoAprobado when saldoDisponible is not provided', () => {
+            createComponent(buildItem({ metaAprobada: 100, metaFisica: 100, montoAprobado: 1000 }), '2026-01-15', '2026-12-15').detectChanges();
+
+            expect(component.montoLimite()).toBe(1000);
         });
     });
 });

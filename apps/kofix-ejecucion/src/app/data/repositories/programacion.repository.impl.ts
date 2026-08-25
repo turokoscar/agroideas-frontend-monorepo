@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ProgramacionRepository, ProgramacionItemsResponse } from '../../domain/repositories/programacion.repository';
-import { ProgramacionItem, ProgramacionListResponse } from '../../domain/models/programacion.model';
+import { ProgramacionItem, ProgramacionListResponse, ProgramacionBloqueoResponse } from '../../domain/models/programacion.model';
 
 @Injectable({
     providedIn: 'root'
@@ -55,6 +55,12 @@ export class ProgramacionRepositoryImpl extends ProgramacionRepository {
 
     override delete(id: number): Observable<any> {
         return new Observable(obs => { obs.next(null); obs.complete(); });
+    }
+
+    override getEstadoBloqueo(postulanteId: number): Observable<ProgramacionBloqueoResponse> {
+        return this.http.get<ResponseDto<ProgramacionBloqueoResponse>>(`${this.apiUrl}/proyectos/${postulanteId}/estado-bloqueo`).pipe(
+            map(res => res.datos || { postulanteId, items: [], totalBloqueados: 0 })
+        );
     }
 }
 

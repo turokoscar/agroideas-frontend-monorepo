@@ -66,3 +66,19 @@ export interface ProgramacionListResponse {
     items: ProgramacionResumen[];
     total: number;
 }
+
+export interface ProgramacionBloqueoItem {
+    itemMlId: number;
+    nombre?: string;
+    programado: number;
+    ejecutado: number;
+    saldoDisponible: number;
+    bloqueado: boolean;
+    tieneExcepcion: boolean;
+}
+
+export interface ProgramacionBloqueoResponse {
+    postulanteId: number;
+    items: ProgramacionBloqueoItem[];
+    totalBloqueados: number;
+}

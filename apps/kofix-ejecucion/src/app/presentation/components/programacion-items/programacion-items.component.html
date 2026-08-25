@@ -23,9 +23,10 @@
 
 <ng-template #itemActions let-row>
     <div class="row-actions">
-        <ui-button iconOnly appearance="soft" severity="primary" size="sm"
-            [icon]="readOnly() ? 'visibility' : 'calendar_month'"
-            ariaLabel="Ver cronograma" (onClick)="openCronograma(row)" />
+        <ui-button iconOnly appearance="soft" [severity]="isBloqueado(row) ? 'secondary' : 'primary'" size="sm"
+            [icon]="readOnly() || isBloqueado(row) ? 'visibility' : 'calendar_month'"
+            [ariaLabel]="isBloqueado(row) ? 'Ver cronograma (sin saldo disponible para reprogramar)' : 'Ver cronograma'"
+            (onClick)="openCronograma(row)" />
     </div>
 </ng-template>
 
@@ -34,7 +35,8 @@
         [item]="selectedItem()!"
         [fechaInicio]="fechaInicio()"
         [fechaFin]="fechaFin()"
-        [readOnly]="readOnly()"
+        [readOnly]="readOnly() || isBloqueado(selectedItem()!)"
+        [saldoDisponible]="selectedItemBloqueo()?.saldoDisponible ?? null"
         (close)="selectedItem.set(null)"
         (saved)="onSaved()">
     </app-programacion-cronograma-modal>

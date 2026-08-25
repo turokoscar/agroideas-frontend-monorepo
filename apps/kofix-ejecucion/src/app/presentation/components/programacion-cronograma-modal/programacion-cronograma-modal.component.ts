@@ -35,6 +35,8 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
     fechaInicio = input.required<string>();
     fechaFin = input.required<string>();
     readOnly = input<boolean>(false);
+    /** Saldo aún no ejecutado disponible para reprogramar (montoAprobado - ejecutado). Si no se provee, se asume el monto aprobado completo. */
+    saldoDisponible = input<number | null>(null);
     @Output() close = new EventEmitter<void>();
     @Output() saved = new EventEmitter<void>();
 
@@ -55,13 +57,18 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
         this.meses().reduce((acc, m) => acc + (m.metaFinanciera || 0), 0)
     );
 
+    /** Techo real reprogramable: el saldo aún no ejecutado si se conoce, si no el monto aprobado completo. */
+    montoLimite = computed(() => {
+        const saldo = this.saldoDisponible();
+        return saldo !== null ? saldo : (this.item().montoAprobado ?? this.item().metaFinanciera);
+    });
+
     restanteFisico = computed(() => {
         const meta = this.item().metaAprobada ?? this.item().metaFisica;
         return meta - this.totalProgramadoFisico();
     });
     restanteFinanciero = computed(() => {
-        const monto = this.item().montoAprobado ?? this.item().metaFinanciera;
-        return monto - this.totalProgramadoFinanciero();
+        return this.montoLimite() - this.totalProgramadoFinanciero();
     });
 
     agroideasPrecioUnitario = computed(() => {
@@ -71,9 +78,9 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
         return meta > 0 ? monto / meta : 0;
     });
 
-    // Botón habilitado solo cuando el total programado == monto aprobado (con tolerancia)
+    // Botón habilitado solo cuando el total programado == el techo reprogramable (con tolerancia)
     canSave = computed(() => {
-        const monto = this.item().montoAprobado ?? this.item().metaFinanciera;
+        const monto = this.montoLimite();
         const programado = this.totalProgramadoFinanciero();
         return monto > 0 && Math.abs(programado - monto) <= monto * 0.00001;
     });
@@ -92,7 +99,7 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
 
         const initialMeses = Array.from({ length: monthsCount }, (_, i) => {
             const date = new Date(start);
-            date.setMonth(start.getMonth() + i + 1);
+            date.setMonth(start.getMonth() + i);
             return {
                 mes: i + 1,
                 metaFisica: 0,
@@ -144,13 +151,16 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
     save(): void {
         const it = this.item();
         const meta = it.metaAprobada ?? it.metaFisica;
-        const monto = it.montoAprobado ?? it.metaFinanciera;
+        const monto = this.montoLimite();
         if (this.totalProgramadoFisico() > meta * 1.00001) {
             this.alertService.show('Límite Excedido', 'La meta física total no puede exceder el límite del ítem.', 'warning');
             return;
         }
         if (this.totalProgramadoFinanciero() > monto * 1.00001) {
-            this.alertService.show('Límite Excedido', 'El monto financiero no puede exceder el aporte de AGROIDEAS.', 'warning');
+            const mensaje = this.saldoDisponible() !== null
+                ? 'El monto financiero no puede exceder el saldo disponible para reprogramar (ya se ejecutó parte del aporte de AGROIDEAS).'
+                : 'El monto financiero no puede exceder el aporte de AGROIDEAS.';
+            this.alertService.show('Límite Excedido', mensaje, 'warning');
             return;
         }
 

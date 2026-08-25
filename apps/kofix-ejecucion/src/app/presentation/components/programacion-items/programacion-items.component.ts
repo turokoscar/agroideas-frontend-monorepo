@@ -1,8 +1,8 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent } from '@agroideas/ui';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal, input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal, input, Output, EventEmitter, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProgramacionRepository, ProgramacionItemsResponse } from '../../../domain/repositories/programacion.repository';
-import { ProgramacionItem } from '../../../domain/models/programacion.model';
+import { ProgramacionBloqueoItem, ProgramacionItem } from '../../../domain/models/programacion.model';
 import { ProgramacionCronogramaModalComponent } from '../programacion-cronograma-modal/programacion-cronograma-modal.component';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 
@@ -30,6 +30,12 @@ export class ProgramacionItemsComponent implements OnInit {
     pageSize = signal(10);
     currentPage = signal(1);
 
+    private bloqueoMap = signal<Map<number, ProgramacionBloqueoItem>>(new Map());
+    selectedItemBloqueo = computed(() => {
+        const item = this.selectedItem();
+        return item ? this.bloqueoMap().get(item.id) : undefined;
+    });
+
     columns: TableColumn[] = [
         { field: 'orden', header: 'Código', width: '70px', align: 'center' },
         { field: 'descripcion', header: 'Descripción' },
@@ -44,6 +50,7 @@ export class ProgramacionItemsComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadItems(this.currentPage(), this.pageSize());
+        this.loadEstadoBloqueo();
     }
 
     loadItems(page: number, pageSize: number): void {
@@ -61,6 +68,25 @@ export class ProgramacionItemsComponent implements OnInit {
         });
     }
 
+    loadEstadoBloqueo(): void {
+        this.repo.getEstadoBloqueo(this.convenioId()).subscribe({
+            next: (res) => {
+                this.bloqueoMap.set(new Map(res.items.map(i => [i.itemMlId, i])));
+            },
+            error: () => {
+                // Sin estado de bloqueo, se asume sin restricciones adicionales
+            }
+        });
+    }
+
+    getBloqueoInfo(item: ProgramacionItem): ProgramacionBloqueoItem | undefined {
+        return this.bloqueoMap().get(item.id);
+    }
+
+    isBloqueado(item: ProgramacionItem): boolean {
+        return this.getBloqueoInfo(item)?.bloqueado ?? false;
+    }
+
     onPageChange(event: any): void {
         this.currentPage.set((event.first / event.rows) + 1);
         this.loadItems(this.currentPage(), this.pageSize());
@@ -72,11 +98,16 @@ export class ProgramacionItemsComponent implements OnInit {
 
     onSaved(): void {
         this.loadItems(this.currentPage(), this.pageSize());
+        this.loadEstadoBloqueo();
         // Refrescar los tiles de la ficha del convenio
         this.stateService.refresh(this.convenioId());
     }
 
     getAlertaStatus(item: ProgramacionItem): StatusType {
+        if (this.isBloqueado(item)) {
+            return 'Crítica';
+        }
+
         const montoProg = item.montoProgramado ?? 0;
         const montoAprob = item.montoAprobado ?? 0;
 
@@ -90,6 +121,10 @@ export class ProgramacionItemsComponent implements OnInit {
     }
 
     getAlertaLabel(item: ProgramacionItem): string {
+        if (this.isBloqueado(item)) {
+            return 'Bloqueado';
+        }
+
         const montoProg = item.montoProgramado ?? 0;
         const montoAprob = item.montoAprobado ?? 0;
 

@@ -22,7 +22,10 @@ describe('ProgramacionItemsComponent', () => {
     });
 
     beforeEach(async () => {
-        mockRepo = { getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })) };
+        mockRepo = {
+            getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
+            getEstadoBloqueo: jest.fn().mockReturnValue(of({ postulanteId: 5, items: [], totalBloqueados: 0 }))
+        };
         mockStateService = { refresh: jest.fn() };
 
         await TestBed.configureTestingModule({
@@ -91,6 +94,44 @@ describe('ProgramacionItemsComponent', () => {
             const item = buildItem({ montoProgramado: 400, montoAprobado: 1000 });
             expect(component.getAlertaStatus(item)).toBe('Pendiente');
             expect(component.getAlertaLabel(item)).toBe('Pendiente');
+        });
+    });
+
+    describe('estado de bloqueo', () => {
+        it('should flag an item as Crítica / Bloqueado when the backend reports it without saldo disponible', () => {
+            mockRepo.getEstadoBloqueo = jest.fn().mockReturnValue(of({
+                postulanteId: 5,
+                items: [{ itemMlId: 1, programado: 1000, ejecutado: 1000, saldoDisponible: 0, bloqueado: true, tieneExcepcion: false }],
+                totalBloqueados: 1
+            }));
+            fixture.detectChanges();
+            const item = buildItem({ id: 1, montoProgramado: 400, montoAprobado: 1000 });
+
+            expect(component.isBloqueado(item)).toBe(true);
+            expect(component.getAlertaStatus(item)).toBe('Crítica');
+            expect(component.getAlertaLabel(item)).toBe('Bloqueado');
+        });
+
+        it('should not flag items missing from the estado-bloqueo response', () => {
+            fixture.detectChanges();
+            const item = buildItem({ id: 1, montoProgramado: 400, montoAprobado: 1000 });
+
+            expect(component.isBloqueado(item)).toBe(false);
+            expect(component.getAlertaStatus(item)).toBe('Pendiente');
+        });
+
+        it('should expose the saldoDisponible of the currently selected item', () => {
+            mockRepo.getEstadoBloqueo = jest.fn().mockReturnValue(of({
+                postulanteId: 5,
+                items: [{ itemMlId: 1, programado: 400, ejecutado: 300, saldoDisponible: 700, bloqueado: false, tieneExcepcion: false }],
+                totalBloqueados: 0
+            }));
+            fixture.detectChanges();
+            const item = buildItem({ id: 1 });
+
+            component.openCronograma(item);
+
+            expect(component.selectedItemBloqueo()?.saldoDisponible).toBe(700);
         });
     });
 });
