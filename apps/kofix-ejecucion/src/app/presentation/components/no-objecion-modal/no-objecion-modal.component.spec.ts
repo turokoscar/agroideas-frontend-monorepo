@@ -1,9 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { Subject, of, throwError } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { NoObjecionModalComponent } from './no-objecion-modal.component';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
+import { SunatRepository } from '../../../domain/repositories/sunat.repository';
+import { ConsultaRuc } from '../../../domain/models/sunat.model';
 import { FileStorageService } from '../../../shared/services/file-storage.service';
 import { NoObjecionProgrammedItem } from '../../../domain/models/no-objecion-programmed-item.model';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
@@ -13,6 +15,7 @@ describe('NoObjecionModalComponent', () => {
     let fixture: ComponentFixture<NoObjecionModalComponent>;
     let mockNoObjecionRepo: jest.Mocked<Partial<NoObjecionRepository>>;
     let mockCatalogoRepo: jest.Mocked<Partial<CatalogoRepository>>;
+    let mockSunatRepo: jest.Mocked<Partial<SunatRepository>>;
     let mockFileStorage: jest.Mocked<Partial<FileStorageService>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
     let mockStateService: jest.Mocked<Partial<ConvenioStateService>>;
@@ -38,6 +41,7 @@ describe('NoObjecionModalComponent', () => {
             update: jest.fn()
         };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
+        mockSunatRepo = { consultarRuc: jest.fn().mockReturnValue(of({ ruc: '12345678901', razonSocial: 'Proveedor SUNAT SAC' } as ConsultaRuc)) };
         mockFileStorage = { validateFile: jest.fn(), uploadFile: jest.fn() };
         mockAlert = { show: jest.fn(), toast: jest.fn() };
         mockStateService = { convenio: jest.fn().mockReturnValue(null) as unknown as ConvenioStateService['convenio'] };
@@ -47,6 +51,7 @@ describe('NoObjecionModalComponent', () => {
             providers: [
                 { provide: NoObjecionRepository, useValue: mockNoObjecionRepo },
                 { provide: CatalogoRepository, useValue: mockCatalogoRepo },
+                { provide: SunatRepository, useValue: mockSunatRepo },
                 { provide: FileStorageService, useValue: mockFileStorage },
                 { provide: AlertService, useValue: mockAlert },
                 { provide: ConvenioStateService, useValue: mockStateService }
@@ -186,6 +191,73 @@ describe('NoObjecionModalComponent', () => {
 
             expect(component.calculateTotal()).toBe(500);
         });
+    });
+
+    describe('búsqueda de razón social por RUC (SUNAT)', () => {
+        beforeEach(() => {
+            component.mode = 'create';
+            fixture.detectChanges();
+        });
+
+        it('should look up the razón social and patch it when triggered manually with a valid RUC', () => {
+            component.items.at(0).patchValue({ rucProveedor: '12345678901' }, { emitEvent: false });
+
+            component.buscarRazonSocial(component.items.at(0));
+
+            expect(mockSunatRepo.consultarRuc).toHaveBeenCalledWith('12345678901');
+            expect(component.items.at(0).get('razonSocialProveedor')?.value).toBe('Proveedor SUNAT SAC');
+        });
+
+        it('should warn and not call the repository for an invalid RUC', () => {
+            component.items.at(0).patchValue({ rucProveedor: '123' }, { emitEvent: false });
+
+            component.buscarRazonSocial(component.items.at(0));
+
+            expect(mockSunatRepo.consultarRuc).not.toHaveBeenCalled();
+            expect(mockAlert.toast).toHaveBeenCalledWith(expect.stringContaining('RUC válido'), 'warning');
+        });
+
+        it('should toast the backend message and leave razonSocialProveedor untouched on error', () => {
+            mockSunatRepo.consultarRuc = jest.fn().mockReturnValue(throwError(() => ({ error: { mensaje: 'RUC no encontrado en SUNAT.' } })));
+            component.items.at(0).patchValue({ rucProveedor: '12345678901', razonSocialProveedor: '' }, { emitEvent: false });
+
+            component.buscarRazonSocial(component.items.at(0));
+
+            expect(mockAlert.toast).toHaveBeenCalledWith('RUC no encontrado en SUNAT.', 'warning');
+            expect(component.items.at(0).get('razonSocialProveedor')?.value).toBe('');
+        });
+
+        it('should track the loading state per row while the lookup is in flight', () => {
+            const subject = new Subject<ConsultaRuc>();
+            mockSunatRepo.consultarRuc = jest.fn().mockReturnValue(subject.asObservable());
+            component.items.at(0).patchValue({ rucProveedor: '12345678901' }, { emitEvent: false });
+
+            component.buscarRazonSocial(component.items.at(0));
+            expect(component.isBuscandoRuc(0)).toBe(true);
+
+            subject.next({ ruc: '12345678901', razonSocial: 'Proveedor SUNAT SAC' });
+            subject.complete();
+            expect(component.isBuscandoRuc(0)).toBe(false);
+        });
+
+        it('should auto-trigger the lookup once the RUC reaches 11 digits, debounced', fakeAsync(() => {
+            component.items.at(0).get('rucProveedor')?.setValue('12345678901');
+
+            tick(399);
+            expect(mockSunatRepo.consultarRuc).not.toHaveBeenCalled();
+
+            tick(1);
+            expect(mockSunatRepo.consultarRuc).toHaveBeenCalledWith('12345678901');
+            expect(component.items.at(0).get('razonSocialProveedor')?.value).toBe('Proveedor SUNAT SAC');
+        }));
+
+        it('should not auto-trigger for an incomplete RUC', fakeAsync(() => {
+            component.items.at(0).get('rucProveedor')?.setValue('123');
+
+            tick(500);
+
+            expect(mockSunatRepo.consultarRuc).not.toHaveBeenCalled();
+        }));
     });
 
     describe('edit mode', () => {

@@ -30,6 +30,8 @@ import { KardexRepository } from './domain/repositories/kardex.repository';
 import { KardexRepositoryImpl } from './data/repositories/kardex.repository.impl';
 import { AlertaRepository } from './domain/repositories/alerta.repository';
 import { AlertaRepositoryImpl } from './data/repositories/alerta.repository.impl';
+import { SunatRepository } from './domain/repositories/sunat.repository';
+import { SunatRepositoryImpl } from './data/repositories/sunat.repository.impl';
 
 import { USER_PERMISSIONS_PROVIDER } from '@agroideas/security';
 import { AUTH_LOGOUT_HANDLER } from '@agroideas/auth';
@@ -58,6 +60,7 @@ export const repositoryProviders: Provider[] = [
   { provide: CarteraRepository, useExisting: CarteraRepositoryImpl },
   { provide: KardexRepository, useExisting: KardexRepositoryImpl },
   { provide: AlertaRepository, useExisting: AlertaRepositoryImpl },
+  { provide: SunatRepository, useExisting: SunatRepositoryImpl },
 ];
 
 export const appConfig: ApplicationConfig = {

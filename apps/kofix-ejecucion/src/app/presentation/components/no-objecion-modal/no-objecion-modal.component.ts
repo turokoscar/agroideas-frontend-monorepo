@@ -4,8 +4,10 @@ import { formatConvenioNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, Input, OnInit, Output, EventEmitter, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
+import { SunatRepository } from '../../../domain/repositories/sunat.repository';
 import { FileStorageService } from '../../../shared/services/file-storage.service';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { NoObjecionProgrammedItem } from '../../../domain/models/no-objecion-programmed-item.model';
@@ -30,6 +32,7 @@ export class NoObjecionModalComponent implements OnInit {
     private fb = inject(FormBuilder);
     private noObjecionRepo = inject(NoObjecionRepository);
     private catalogoRepo = inject(CatalogoRepository);
+    private sunatRepo = inject(SunatRepository);
     private fileStorageService = inject(FileStorageService);
     private convenioStateService = inject(ConvenioStateService);
 
@@ -47,6 +50,8 @@ export class NoObjecionModalComponent implements OnInit {
     programmedItems = signal<NoObjecionProgrammedItem[]>([]);
     tiposDocumento = signal<CatalogoItem[]>([]);
     balances = signal<Record<string, NoObjecionBalance>>({});
+    /** Índices de `items` con una consulta de RUC a SUNAT en curso (para mostrar el spinner por fila). */
+    buscandoRucIndices = signal<Set<number>>(new Set());
 
     constructor() {
         this.noObjecionForm = this.fb.group({
@@ -117,6 +122,7 @@ export class NoObjecionModalComponent implements OnInit {
                 itemForm.get('itemNombre')?.setValue(det.itemNombre);
             }
 
+            this.attachRucLookup(itemForm);
             itemsArray.push(itemForm);
         });
     }
@@ -193,7 +199,62 @@ export class NoObjecionModalComponent implements OnInit {
             rucProveedor: ['', [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
             razonSocialProveedor: ['', Validators.required]
         });
+        this.attachRucLookup(itemForm);
         this.items.push(itemForm);
+    }
+
+    /**
+     * Autocompleta la razón social a partir del RUC (consulta a SUNAT vía sel-api-general).
+     * Se dispara solo(a): (a) automáticamente cuando el RUC llega a 11 dígitos, con debounce
+     * para no disparar una consulta por cada tecla, y (b) manualmente desde el botón de la fila
+     * (p. ej. para reintentar tras un error). La razón social sigue siendo editable: el
+     * autocompletado es una ayuda, no reemplaza la validación/corrección manual.
+     */
+    private attachRucLookup(itemForm: FormGroup): void {
+        itemForm.get('rucProveedor')?.valueChanges.pipe(
+            debounceTime(400),
+            distinctUntilChanged()
+        ).subscribe((ruc: string) => {
+            if (ruc && /^[0-9]{11}$/.test(ruc)) {
+                this.buscarRazonSocial(itemForm);
+            }
+        });
+    }
+
+    buscarRazonSocial(itemForm: AbstractControl): void {
+        const rucControl = itemForm.get('rucProveedor');
+        const ruc = rucControl?.value;
+        if (!ruc || !/^[0-9]{11}$/.test(ruc)) {
+            this.alertService.toast('Ingrese un RUC válido de 11 dígitos para buscar la razón social.', 'warning');
+            return;
+        }
+
+        const index = this.items.controls.indexOf(itemForm as FormGroup);
+        this.buscandoRucIndices.update(set => new Set(set).add(index));
+
+        this.sunatRepo.consultarRuc(ruc).subscribe({
+            next: (data) => {
+                itemForm.get('razonSocialProveedor')?.setValue(data.razonSocial);
+                this.buscandoRucIndices.update(set => {
+                    const next = new Set(set);
+                    next.delete(index);
+                    return next;
+                });
+            },
+            error: (err) => {
+                this.buscandoRucIndices.update(set => {
+                    const next = new Set(set);
+                    next.delete(index);
+                    return next;
+                });
+                const msg = err.error?.mensaje || 'No se pudo obtener la razón social para el RUC ingresado. Complétela manualmente.';
+                this.alertService.toast(msg, 'warning');
+            }
+        });
+    }
+
+    isBuscandoRuc(index: number): boolean {
+        return this.buscandoRucIndices().has(index);
     }
 
     onItemChange(index: number) {
