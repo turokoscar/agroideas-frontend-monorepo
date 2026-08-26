@@ -1,0 +1,99 @@
+<app-ui-modal
+  [visible]="visible()"
+  title="Detalle de la Rendición"
+  [subtitle]="'N° ' + formatSolicitudNumber()"
+  icon="receipt_long"
+  [isLoading]="loading()"
+  [showSaveButton]="false"
+  (onHide)="onHide()"
+  maxWidth="760px"
+  >
+  <!-- Modal Body -->
+  <div class="space-y-6">
+    <!-- Cabecera -->
+    <div class="form-card-flat grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="form-field">
+        <span class="form-label">Tipo de Comprobante</span>
+        <span class="text-sm font-semibold text-slate-800">{{ rendicion().tipoCpe }}</span>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Serie-Número</span>
+        <span class="text-sm font-semibold text-slate-800">{{ rendicion().serieNumero }}</span>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Fecha Emisión</span>
+        <span class="text-sm font-semibold text-slate-800">{{ rendicion().fechaEmision | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Estado</span>
+        <app-ui-status-pill [status]="badgeStatus" [text]="badgeText"></app-ui-status-pill>
+      </div>
+    </div>
+
+    @if (rendicion().observacion) {
+      <div class="form-field">
+        <span class="form-label">Observaciones</span>
+        <p class="text-xs text-slate-600">{{ rendicion().observacion }}</p>
+      </div>
+    }
+
+    <!-- Detalle de Ítems -->
+    @if (detalle(); as d) {
+      <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+        <div class="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500">
+          <div class="grid grid-cols-12 gap-3 flex-1">
+            <span class="col-span-6">Ítem / Componente</span>
+            <span class="col-span-3 text-right">Monto Desembolsado</span>
+            <span class="col-span-3 text-right">Monto Rendido</span>
+          </div>
+        </div>
+        <div class="divide-y divide-slate-100">
+          @for (item of d.detalles; track item.solicitudDesembolsoDetId) {
+            <div class="p-4 hover:bg-slate-50/50 transition-all">
+              <div class="grid grid-cols-12 gap-3 items-center">
+                <div class="col-span-6">
+                  <span class="text-xs font-semibold text-slate-700">{{ item.itemNombre }}</span>
+                </div>
+                <div class="col-span-3 text-right text-xs font-medium text-slate-500">{{ formatCurrency(item.montoDesembolsado) }}</div>
+                <div class="col-span-3 text-right text-xs font-bold text-primary">{{ formatCurrency(item.montoRendido) }}</div>
+              </div>
+            </div>
+          }
+
+          @if (d.detalles.length === 0) {
+            <div class="py-12 text-center">
+              <div class="flex flex-col items-center gap-2 opacity-25">
+                <span class="material-symbols-outlined text-4xl text-slate-400">inventory_2</span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sin ítems registrados</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Comprobante Adjunto -->
+      <div class="flex items-center justify-between form-card-flat">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-slate-400">description</span>
+          <span class="text-xs font-semibold text-slate-600">
+            {{ d.archivos.length > 0 ? 'Comprobante de sustento adjunto' : 'Sin comprobante adjunto' }}
+          </span>
+        </div>
+        @if (d.archivos[0]; as archivo) {
+          <ui-button appearance="soft" severity="primary" size="sm" icon="download"
+            ariaLabel="Descargar comprobante" (onClick)="downloadArchivo(archivo.urlArchivo)">
+            Descargar
+          </ui-button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Footer Start Slot -->
+  <div footer-start class="flex flex-col items-center md:items-start">
+    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Monto Total Rendido</span>
+    <div class="flex items-baseline gap-2">
+      <span class="text-xl md:text-2xl font-bold text-slate-800 leading-none">{{ formatCurrency(rendicion().total) }}</span>
+    </div>
+  </div>
+</app-ui-modal>

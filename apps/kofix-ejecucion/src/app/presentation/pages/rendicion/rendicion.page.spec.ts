@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { RendicionPageComponent } from './rendicion.page';
@@ -11,6 +12,7 @@ describe('RendicionPageComponent', () => {
     let mockRendicionRepo: jest.Mocked<Partial<RendicionRepository>>;
     let mockCatalogoRepo: jest.Mocked<Partial<CatalogoRepository>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
+    let mockRouter: { navigate: jest.Mock };
 
     beforeEach(async () => {
         mockRendicionRepo = {
@@ -19,13 +21,15 @@ describe('RendicionPageComponent', () => {
         };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockAlert = { confirm: jest.fn(), toast: jest.fn(), show: jest.fn() };
+        mockRouter = { navigate: jest.fn() };
 
         await TestBed.configureTestingModule({
             imports: [RendicionPageComponent],
             providers: [
                 { provide: RendicionRepository, useValue: mockRendicionRepo },
                 { provide: CatalogoRepository, useValue: mockCatalogoRepo },
-                { provide: AlertService, useValue: mockAlert }
+                { provide: AlertService, useValue: mockAlert },
+                { provide: Router, useValue: mockRouter }
             ]
         }).compileComponents();
 
@@ -101,5 +105,50 @@ describe('RendicionPageComponent', () => {
 
         expect(component.showModal()).toBe(false);
         expect(component.selectedRendicion()).toBeNull();
+    });
+
+    describe('viewRendicion / editRendicion (ADR-016 Fase 2)', () => {
+        it('should open the read-only detalle modal, not the edit form, when viewing', () => {
+            fixture.detectChanges();
+            const row = { id: 1 } as any;
+
+            component.viewRendicion(row);
+
+            expect(component.showDetalleModal()).toBe(true);
+            expect(component.viewingRendicion()).toBe(row);
+            expect(component.showModal()).toBe(false);
+        });
+
+        it('should close the detalle modal without reloading the list', () => {
+            fixture.detectChanges();
+            component.viewRendicion({ id: 1 } as any);
+            jest.clearAllMocks();
+
+            component.handleDetalleModalClose();
+
+            expect(component.showDetalleModal()).toBe(false);
+            expect(mockRendicionRepo.getByConvenio).not.toHaveBeenCalled();
+        });
+
+        it('should still open the editable form when editing', () => {
+            fixture.detectChanges();
+            const row = { id: 1 } as any;
+
+            component.editRendicion(row);
+
+            expect(component.showModal()).toBe(true);
+            expect(component.selectedRendicion()).toBe(row);
+            expect(component.showDetalleModal()).toBe(false);
+        });
+    });
+
+    describe('verGastosF1 (ADR-016 Fase 4)', () => {
+        it('should navigate to the dedicated gastos F1 page for the current convenio', () => {
+            fixture.detectChanges();
+
+            component.verGastosF1();
+
+            expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/convenios', 5, 'gastos-f1']);
+        });
     });
 });

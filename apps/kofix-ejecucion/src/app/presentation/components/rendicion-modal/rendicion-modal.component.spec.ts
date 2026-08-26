@@ -33,6 +33,7 @@ describe('RendicionModalComponent', () => {
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockRendicionRepo = {
             getPendientes: jest.fn().mockReturnValue(of([pendiente])),
+            getById: jest.fn(),
             uploadFile: jest.fn(),
             create: jest.fn(),
             update: jest.fn()
@@ -257,6 +258,118 @@ describe('RendicionModalComponent', () => {
 
             expect(mockRendicionRepo.update).toHaveBeenCalledWith(9, expect.any(Object));
             expect(mockAlert.toast).toHaveBeenCalledWith('Rendición actualizada exitosamente');
+        });
+    });
+
+    describe('edit mode — carga del detalle real (ADR-016 Fase 1)', () => {
+        const rendicionRow: Rendicion = {
+            id: 9,
+            solicitudDesembolsoId: 1,
+            sunatCpeId: 1,
+            numeroSolicitud: 'SOL-1',
+            tipoCpe: 'FACTURA',
+            serie: 'F001',
+            numero: '000123',
+            serieNumero: 'F001-000123',
+            fechaEmision: '2026-08-01',
+            total: 300,
+            observacion: 'Obs',
+            estado: 1
+        };
+
+        const detalleReal = {
+            id: 9,
+            solicitudDesembolsoId: 1,
+            sunatCpeId: 1,
+            serie: 'F001',
+            numero: '000123',
+            fechaEmision: '2026-08-01T00:00:00',
+            total: 300,
+            observacion: 'Obs',
+            estado: 1,
+            detalles: [
+                { solicitudDesembolsoDetId: 100, itemNombre: 'Fertilizante', montoDesembolsado: 500, montoRendido: 300, saldoDisponible: 500 }
+            ],
+            archivos: []
+        };
+
+        it('should fetch the real detalle by id and populate header + detalle rows from it', () => {
+            mockRendicionRepo.getById = jest.fn().mockReturnValue(of(detalleReal));
+            setInputs({ rendicion: rendicionRow });
+
+            fixture.detectChanges();
+
+            expect(mockRendicionRepo.getById).toHaveBeenCalledWith(9);
+            expect(component.form.get('serie')?.value).toBe('F001');
+            expect(component.form.get('totalComprobante')?.value).toBe(300);
+            expect(component.detallesFormArray.length).toBe(1);
+
+            const row = component.detallesFormArray.at(0);
+            expect(row.get('itemNombre')?.value).toBe('Fertilizante');
+            expect(row.get('montoRendido')?.value).toBe(300);
+            expect(row.get('selected')?.value).toBe(true);
+            // saldoDisponible ya calculado por el backend (incluye lo que esta misma rendición aporta)
+            expect(row.get('saldoPendiente')?.value).toBe(500);
+        });
+
+        it('should not let onSolicitudChange (triggered by patchValue) clobber the real detalle with the pendientes reconstruction', () => {
+            // La solicitud 1 también existe en "pendientes" con OTRO detalle (100 y 101),
+            // pero al editar debe prevalecer lo que devuelve getById, no lo reconstruido.
+            mockRendicionRepo.getById = jest.fn().mockReturnValue(of(detalleReal));
+            setInputs({ rendicion: rendicionRow });
+
+            fixture.detectChanges();
+
+            expect(component.detallesFormArray.length).toBe(1);
+            expect(component.detallesFormArray.at(0).get('solicitudDesembolsoDetId')?.value).toBe(100);
+        });
+
+        it('should add a synthetic pendientes entry so the select shows the solicitud even if it is not in "pendientes"', () => {
+            mockRendicionRepo.getPendientes = jest.fn().mockReturnValue(of([])); // la solicitud ya no tiene saldo pendiente global
+            mockRendicionRepo.getById = jest.fn().mockReturnValue(of(detalleReal));
+            setInputs({ rendicion: rendicionRow });
+
+            fixture.detectChanges();
+
+            expect(component.desembolsosPendientes().some((d: any) => d.id === 1)).toBe(true);
+        });
+
+        it('should show an error toast when loading the detalle fails', () => {
+            mockRendicionRepo.getById = jest.fn().mockReturnValue(throwError(() => new Error('boom')));
+            setInputs({ rendicion: rendicionRow });
+
+            fixture.detectChanges();
+
+            expect(mockAlert.show).toHaveBeenCalledWith('Error', expect.any(String), 'error');
+        });
+
+        it('should preload the existing archivo so it is preserved without re-uploading', () => {
+            mockRendicionRepo.getById = jest.fn().mockReturnValue(of({
+                ...detalleReal,
+                archivos: [{ tipoArchivoId: 2, urlArchivo: 'https://archivos/comprobante-existente.pdf' }]
+            }));
+            mockRendicionRepo.update = jest.fn().mockReturnValue(of({}));
+            setInputs({ rendicion: rendicionRow });
+            fixture.detectChanges();
+
+            expect(component.fileUrl()).toBe('https://archivos/comprobante-existente.pdf');
+
+            // El usuario no toca el campo de archivo y guarda: debe reenviarse el mismo archivo.
+            component.save();
+
+            expect(mockRendicionRepo.update).toHaveBeenCalledWith(
+                9,
+                expect.objectContaining({ archivos: [{ tipoArchivoId: 2, urlArchivo: 'https://archivos/comprobante-existente.pdf' }] })
+            );
+        });
+
+        it('should not preload any archivo when the rendición has none', () => {
+            mockRendicionRepo.getById = jest.fn().mockReturnValue(of(detalleReal));
+            setInputs({ rendicion: rendicionRow });
+
+            fixture.detectChanges();
+
+            expect(component.fileUrl()).toBeNull();
         });
     });
 });

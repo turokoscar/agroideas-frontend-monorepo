@@ -1,0 +1,65 @@
+<div class="px-6 py-8 animate-fade-in font-display w-full max-w-full overflow-hidden block">
+  <!-- Navigation & Title -->
+  <div class="flex flex-col md:flex-row items-start justify-between mb-8 gap-6">
+    <div class="flex gap-4 w-full md:w-auto">
+      <ui-button
+        severity="subtle"
+        iconOnly
+        icon="arrow_back"
+        ariaLabel="Volver a Rendiciones"
+        (onClick)="goBack()">
+      </ui-button>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white max-w-3xl leading-tight truncate">
+          Reporte de Gastos F1
+        </h2>
+        @if (convenio(); as c) {
+          <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 dark:text-slate-400">
+            <span class="text-xs md:text-sm font-semibold tracking-wide">{{ c.razonSocial }}</span>
+            <span class="hidden md:block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+            <span class="text-xs md:text-sm font-medium">{{ formatConvenioNumber() }}</span>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="inline-flex flex-col items-start md:items-end gap-1 self-start md:self-center whitespace-nowrap">
+      <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Total Rendido</span>
+      <span class="text-lg md:text-xl font-black text-primary">{{ formatCurrency(totalMontoRendido()) }}</span>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <app-ui-data-table
+    [data]="gastos()"
+    [loading]="loading()"
+    [columns]="columns"
+    [rows]="15"
+    [paginator]="true"
+    [rowTemplate]="rowTemplate"
+    icon="receipt_long"
+    title="Gastos Rendidos (Formato F1)"
+    emptyIcon="receipt_long"
+    emptyMessage="No hay gastos rendidos registrados para este convenio.">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'cantidad') {
+        <span class="dt-cell">{{ row.cantidad }}</span>
+      }
+      @if (col.field === 'precioAdjudicado') {
+        <span class="dt-cell dt-cell--currency">{{ formatCurrency(row.precioAdjudicado) }}</span>
+      }
+      @if (col.field === 'montoRendido') {
+        <span class="dt-cell dt-cell--currency">{{ formatCurrency(row.montoRendido) }}</span>
+      }
+      @if (col.field === 'archivoUrl') {
+        @if (row.archivoUrl) {
+          <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="download"
+            ariaLabel="Descargar comprobante" (onClick)="downloadArchivo(row.archivoUrl)" />
+        } @else {
+          <span class="dt-cell text-slate-400">—</span>
+        }
+      }
+    </ng-template>
+
+  </app-ui-data-table>
+</div>

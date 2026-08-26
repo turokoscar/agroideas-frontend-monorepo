@@ -1,4 +1,11 @@
 <div class="space-y-6">
+  <!-- Acceso al reporte de Gastos F1 -->
+  <div class="flex justify-end">
+    <ui-button appearance="soft" severity="accent" icon="receipt_long" label="Ver Reporte F1"
+      ariaLabel="Ver reporte de Gastos F1" (onClick)="verGastosF1()">
+    </ui-button>
+  </div>
+
   <!-- Filtros -->
   <app-ui-filter-bar (onSearch)="onSearch()" [showSearch]="true" searchLabel="Filtrar"
     [showAdd]="!readOnly()" addLabel="Nueva Rendición" (onAdd)="openModal()">
@@ -67,7 +74,7 @@
 <ng-template #rendicionActions let-row>
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
-      ariaLabel="Ver" (onClick)="viewRendicion(row)" />
+      ariaLabel="Ver detalle de la rendición" (onClick)="viewRendicion(row)" />
     @if (!readOnly() && row.estado === 1) {
       <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
         ariaLabel="Editar" (onClick)="editRendicion(row)" />
@@ -86,4 +93,12 @@
     (onHide)="showModal.set(false)"
     (onSuccess)="onRendicionSuccess()">
   </app-rendicion-modal>
+}
+
+<!-- Modal ligero de solo lectura -->
+@if (showDetalleModal()) {
+  <app-rendicion-detalle-modal
+    [rendicion]="viewingRendicion()!"
+    (close)="handleDetalleModalClose()">
+  </app-rendicion-detalle-modal>
 }

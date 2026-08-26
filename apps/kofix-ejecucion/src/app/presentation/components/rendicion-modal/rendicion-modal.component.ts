@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule, FormArray, FormGroup } from '@angular/forms';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
-import { Rendicion } from '../../../domain/models/rendicion.model';
+import { Rendicion, RendicionDetalle } from '../../../domain/models/rendicion.model';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 import { finalize } from 'rxjs';
 
@@ -51,6 +51,7 @@ export class RendicionModalComponent implements OnInit {
   selectedFile = signal<File | null>(null);
   uploadingFile = signal(false);
   fileUrl = signal<string | null>(null);
+  private archivoTipoId = signal(1);
 
   form = this.fb.group({
     solicitudDesembolsoId: [null as number | null, Validators.required],
@@ -87,9 +88,9 @@ export class RendicionModalComponent implements OnInit {
       this.onSolicitudChange(solId);
     });
 
-    // Si viene una rendición para editar, precargamos el formulario
+    // Si viene una rendición para editar, precargamos cabecera y detalle reales del backend
     if (this.rendicion()) {
-        this.loadRendicionData(this.rendicion()!);
+        this.loadRendicionDetalle(this.rendicion()!.id);
     }
   }
 
@@ -120,17 +121,61 @@ export class RendicionModalComponent implements OnInit {
     }
   }
 
-  loadRendicionData(data: Rendicion): void {
+  loadRendicionDetalle(id: number): void {
+    this.rendicionRepo.getById(id).subscribe({
+      next: (data) => this.populateFormFromDetalle(data),
+      error: () => this.alertService.show('Error', 'No se pudo cargar el detalle de la rendición.', 'error')
+    });
+  }
+
+  populateFormFromDetalle(data: RendicionDetalle): void {
+    // emitEvent: false — evita que el listener de solicitudDesembolsoId dispare
+    // onSolicitudChange() y reconstruya el detalle desde "pendientes" (que no
+    // refleja lo que esta misma rendición ya tiene imputado).
     this.form.patchValue({
       solicitudDesembolsoId: data.solicitudDesembolsoId,
       sunatCpeId: data.sunatCpeId,
       serie: data.serie,
       numero: data.numero,
-      fechaEmision: data.fechaEmision instanceof Date
-        ? data.fechaEmision.toISOString().split('T')[0]
-        : data.fechaEmision.split('T')[0],
+      fechaEmision: data.fechaEmision.split('T')[0],
       totalComprobante: data.total,
-      observacion: data.observacion
+      observacion: data.observacion || ''
+    }, { emitEvent: false });
+
+    const montoDesembolsadoTotal = data.detalles.reduce((sum, d) => sum + d.montoDesembolsado, 0);
+    this.selectedDesembolso.set({ id: data.solicitudDesembolsoId, monto: montoDesembolsadoTotal });
+
+    // Precarga el archivo ya adjunto para que, si el usuario no lo reemplaza, se
+    // reenvíe tal cual y no se elimine al guardar (RendicionRepository.UpdateAsync
+    // reemplaza por completo los archivos con lo que llegue en la solicitud).
+    const archivoExistente = data.archivos?.[0];
+    if (archivoExistente) {
+      this.fileUrl.set(archivoExistente.urlArchivo);
+      this.archivoTipoId.set(archivoExistente.tipoArchivoId);
+    }
+
+    // Asegura que la solicitud siga apareciendo en el selector aunque ya no tenga
+    // saldo pendiente global (fue esta misma rendición la que lo consumió).
+    if (!this.desembolsosPendientes().some((d: any) => d.id === data.solicitudDesembolsoId)) {
+      this.desembolsosPendientes.update((list: any[]) => [...list, {
+        id: data.solicitudDesembolsoId,
+        numeroSolicitud: this.rendicion()?.numeroSolicitud,
+        fechaSolicitud: data.fechaEmision
+      }]);
+    }
+
+    const arr = this.detallesFormArray;
+    arr.clear();
+    data.detalles.forEach(det => {
+      const estaImputado = det.montoRendido > 0;
+      arr.push(this.fb.group({
+        selected: [estaImputado],
+        solicitudDesembolsoDetId: [det.solicitudDesembolsoDetId],
+        itemNombre: [det.itemNombre],
+        montoDesembolsado: [det.montoDesembolsado],
+        saldoPendiente: [det.saldoDisponible],
+        montoRendido: [det.montoRendido, estaImputado ? [Validators.required, Validators.min(0.01), Validators.max(det.saldoDisponible)] : []]
+      }));
     });
   }
 
@@ -190,6 +235,7 @@ export class RendicionModalComponent implements OnInit {
     ).subscribe({
       next: (res) => {
         this.fileUrl.set(res.fileUrl);
+        this.archivoTipoId.set(1);
         this.alertService.toast('Archivo subido correctamente');
       },
       error: () => this.alertService.show('Error', 'No se pudo subir el archivo comprobante.', 'error')
@@ -240,7 +286,7 @@ export class RendicionModalComponent implements OnInit {
       totalComprobante: this.form.value.totalComprobante,
       observacion: this.form.value.observacion,
       detalles: selectedDetalles,
-      archivos: this.fileUrl() ? [{ tipoArchivoId: 1, urlArchivo: this.fileUrl()! }] : []
+      archivos: this.fileUrl() ? [{ tipoArchivoId: this.archivoTipoId(), urlArchivo: this.fileUrl()! }] : []
     };
 
     const obs$ = this.isEdit()
@@ -263,6 +309,7 @@ export class RendicionModalComponent implements OnInit {
     this.form.reset();
     this.selectedFile.set(null);
     this.fileUrl.set(null);
+    this.archivoTipoId.set(1);
     this.selectedDesembolso.set(null);
     this.detallesFormArray.clear();
   }

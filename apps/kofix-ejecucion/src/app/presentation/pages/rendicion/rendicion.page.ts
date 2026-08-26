@@ -2,8 +2,10 @@ import { TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarCompon
 import { AlertService } from '@agroideas/feedback';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Rendicion } from '../../../domain/models/rendicion.model';
 import { RendicionModalComponent } from '../../components/rendicion-modal/rendicion-modal.component';
+import { RendicionDetalleModalComponent } from '../../components/rendicion-detalle-modal/rendicion-detalle-modal.component';
 import { FormsModule } from '@angular/forms';
 import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
@@ -14,8 +16,9 @@ import { finalize } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    RendicionModalComponent, 
-    UiDataTableComponent, 
+    RendicionModalComponent,
+    RendicionDetalleModalComponent,
+    UiDataTableComponent,
     UiStatusPillComponent,
     UiFilterBarComponent,
     FormsModule,
@@ -31,6 +34,7 @@ export class RendicionPageComponent implements OnInit {
   private rendicionRepo = inject(RendicionRepository);
   private catalogoRepo = inject(CatalogoRepository);
   private alertService = inject(AlertService);
+  private router = inject(Router);
 
   loading = signal(false);
   rendiciones = signal<Rendicion[]>([]);
@@ -46,6 +50,9 @@ export class RendicionPageComponent implements OnInit {
   filterTipoCp = signal<number | undefined>(undefined);
   tiposCpe = signal<any[]>([]);
   selectedRendicion = signal<Rendicion | null>(null);
+
+  showDetalleModal = signal(false);
+  viewingRendicion = signal<Rendicion | null>(null);
 
   columns: TableColumn[] = [
     { field: 'fechaEmision', header: 'Fecha Emisión', type: 'date', width: '120px' },
@@ -102,9 +109,16 @@ export class RendicionPageComponent implements OnInit {
   }
 
   viewRendicion(item: Rendicion): void {
-    this.selectedRendicion.set(item);
-    this.showModal.set(true);
-    // Nota: el modal debe detectar el modo readOnly si se desea restringir dentro de él también
+    this.viewingRendicion.set(item);
+    this.showDetalleModal.set(true);
+  }
+
+  handleDetalleModalClose(): void {
+    this.showDetalleModal.set(false);
+  }
+
+  verGastosF1(): void {
+    this.router.navigate(['/main/convenios', this.convenioId(), 'gastos-f1']);
   }
 
   async deleteRendicion(id: number): Promise<void> {

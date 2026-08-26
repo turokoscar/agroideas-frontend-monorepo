@@ -113,6 +113,12 @@ export const routes: Routes = [
                 data: { permission: PERMISSIONS.ACCESO_APP },
                 loadComponent: () => import('./presentation/pages/rendicion/rendicion.page').then(m => m.RendicionPageComponent)
             },
+            {
+                path: 'convenios/:id/gastos-f1',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/gastos-f1/gastos-f1.page').then(m => m.GastosF1PageComponent)
+            },
             { path: '**', redirectTo: 'home' }
         ]
     },

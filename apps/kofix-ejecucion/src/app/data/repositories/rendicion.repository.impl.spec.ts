@@ -59,6 +59,17 @@ describe('RendicionRepositoryImpl', () => {
         expect(mockFileStorage.uploadFile).toHaveBeenCalledWith(file, 'rendiciones');
     });
 
+    it('should delegate downloadFile to FileStorageService', () => {
+        const blob = new Blob(['x']);
+        mockFileStorage.downloadFile = jest.fn().mockReturnValue(of(blob));
+
+        service.downloadFile('abc-url').subscribe((res) => {
+            expect(res).toBe(blob);
+        });
+
+        expect(mockFileStorage.downloadFile).toHaveBeenCalledWith('abc-url');
+    });
+
     it('should default getPendientes to an empty array', (done) => {
         service.getPendientes(3).subscribe((items) => {
             expect(items).toEqual([]);
@@ -66,5 +77,40 @@ describe('RendicionRepositoryImpl', () => {
         });
 
         httpMock.expectOne(`${baseUrl}/postulante/3/pendientes`).flush({});
+    });
+
+    it('should default getGastosF1 to an empty array', (done) => {
+        service.getGastosF1(3).subscribe((items) => {
+            expect(items).toEqual([]);
+            done();
+        });
+
+        httpMock.expectOne(`${baseUrl}/convenio/3/gastos-f1`).flush({});
+    });
+
+    it('should fetch the gastos F1 for a convenio', (done) => {
+        const gastos = [{ rendicionId: 1, itemNombre: 'Fertilizante', unidadMedida: 'UNIDAD', cantidad: 2, precioAdjudicado: 500, montoRendido: 300, fechaEmision: '2026-08-01', serieNumero: 'F001-123', tipoCpe: 'FACTURA' }];
+
+        service.getGastosF1(3).subscribe((res) => {
+            expect(res).toEqual(gastos);
+            done();
+        });
+
+        httpMock.expectOne(`${baseUrl}/convenio/3/gastos-f1`).flush({ datos: gastos });
+    });
+
+    it('should fetch a rendición by id with its real detalle', (done) => {
+        const detalle = {
+            id: 9, solicitudDesembolsoId: 1, sunatCpeId: 1, serie: 'F001', numero: '123',
+            fechaEmision: '2026-08-01', total: 300, observacion: '', estado: 1,
+            detalles: [{ solicitudDesembolsoDetId: 100, itemNombre: 'Fertilizante', montoDesembolsado: 500, montoRendido: 300, saldoDisponible: 500 }]
+        };
+
+        service.getById(9).subscribe((res) => {
+            expect(res).toEqual(detalle);
+            done();
+        });
+
+        httpMock.expectOne(`${baseUrl}/9`).flush({ datos: detalle });
     });
 });
