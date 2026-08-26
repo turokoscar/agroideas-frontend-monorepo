@@ -36,6 +36,8 @@ export class FileStorageService {
             codProceso = 'NO_OBJECIONES';
         } else if (subDirectory === 'rendiciones') {
             codProceso = 'RENDICIONES';
+        } else if (subDirectory === 'cheques') {
+            codProceso = 'CHEQUES';
         }
         formData.append('codProceso', codProceso);
 

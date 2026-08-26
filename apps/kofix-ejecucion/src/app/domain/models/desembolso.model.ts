@@ -40,3 +40,15 @@ export interface DesembolsoDetalleItem {
     montoSolicitado: number;
     observacion?: string;
 }
+
+/** Cheque de gerencia en DEVENGADO, pendiente de que el Supervisor lo active (pase a GIRADO). Ver ADR-020. */
+export interface DesembolsoChequePendiente {
+    id: number;
+    ideCheque: number;
+    correlativo: string;
+    postulanteId: number;
+    numeroSolicitud: string;
+    monto: number;
+    fechaDevengado: string | Date;
+    observacion?: string;
+}

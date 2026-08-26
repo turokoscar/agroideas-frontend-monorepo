@@ -5,9 +5,10 @@ import { PERMISSIONS, formatSolicitudNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Desembolso } from '../../../domain/models/desembolso.model';
+import { Desembolso, DesembolsoChequePendiente } from '../../../domain/models/desembolso.model';
 import { DesembolsoModalComponent } from '../../components/desembolso-modal/desembolso-modal.component';
 import { DesembolsoItemsModalComponent } from '../../components/desembolso-items-modal/desembolso-items-modal.component';
+import { ActivarChequeModalComponent } from '../../components/activar-cheque-modal/activar-cheque-modal.component';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { CatalogoItem } from '../../../domain/models/catalogo.model';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
@@ -24,6 +25,7 @@ import { finalize } from 'rxjs/operators';
     UiStatusPillComponent,
     DesembolsoModalComponent,
     DesembolsoItemsModalComponent,
+    ActivarChequeModalComponent,
     UIButtonComponent
   ],
   templateUrl: './desembolso.page.html',
@@ -43,6 +45,20 @@ export class DesembolsoPageComponent implements OnInit {
 
   showItemsModal = signal<boolean>(false);
   viewingDesembolso = signal<Desembolso | undefined>(undefined);
+
+  // Bandeja de cheques pendientes de activación (Supervisor, ver ADR-020)
+  chequesPendientes = signal<DesembolsoChequePendiente[]>([]);
+  loadingCheques = signal<boolean>(false);
+  showActivarChequeModal = signal<boolean>(false);
+  activandoCheque = signal<DesembolsoChequePendiente | undefined>(undefined);
+
+  chequesColumns: TableColumn[] = [
+    { field: 'correlativo', header: 'Correlativo', width: '140px' },
+    { field: 'numeroSolicitud', header: 'N° Solicitud', width: '130px' },
+    { field: 'fechaDevengado', header: 'Devengado el', type: 'date', width: '110px', align: 'center' },
+    { field: 'monto', header: 'Monto', type: 'currency', align: 'right', width: '140px' },
+    { field: 'observacion', header: 'Observación' },
+  ];
 
   // Filtros
   filterNumero = signal<string | undefined>(undefined);
@@ -103,6 +119,20 @@ export class DesembolsoPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadCatalogos();
     this.loadDesembolsos();
+    if (this.puedeActivarCheque()) {
+      this.loadChequesPendientes();
+    }
+  }
+
+  loadChequesPendientes(): void {
+    if (!this.convenioId()) return;
+    this.loadingCheques.set(true);
+    this.desembolsoRepo.getChequesPendientesActivacion(this.convenioId())
+      .pipe(finalize(() => this.loadingCheques.set(false)))
+      .subscribe({
+        next: (items) => this.chequesPendientes.set(items),
+        error: () => { /* Error handled by AlertService or removed */ }
+      });
   }
 
   loadCatalogos(): void {
@@ -149,24 +179,17 @@ export class DesembolsoPageComponent implements OnInit {
     if (refresh) this.loadDesembolsos();
   }
 
-  activarCheque(id: number): void {
-      this.alertService.confirm(
-          '¿Activar y Efectivizar Cheque?',
-          'Esta acción registrará la salida física en el Kardex y cambiará el estado de la solicitud a APROBADO.'
-      ).then((result: any) => {
-          if (result.isConfirmed) {
-              this.loading.set(true);
-              this.desembolsoRepo.activarCheque(id).pipe(finalize(() => this.loading.set(false))).subscribe({
-                  next: () => {
-                      this.alertService.show('Éxito', 'El cheque ha sido activado y efectivizado contablemente.', 'success');
-                      this.loadDesembolsos();
-                  },
-                  error: (err) => {
-                      this.alertService.show('Error', err.error?.mensaje || 'No se pudo activar el cheque.', 'error');
-                  }
-              });
-          }
-      });
+  abrirActivarChequeModal(cheque: DesembolsoChequePendiente): void {
+      this.activandoCheque.set(cheque);
+      this.showActivarChequeModal.set(true);
+  }
+
+  handleActivarChequeModalClose(refresh: boolean): void {
+      this.showActivarChequeModal.set(false);
+      if (refresh) {
+          this.loadChequesPendientes();
+          this.loadDesembolsos();
+      }
   }
 
   viewDesembolso(row: Desembolso): void {

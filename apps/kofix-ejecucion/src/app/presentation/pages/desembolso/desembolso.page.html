@@ -27,6 +27,23 @@
     </div>
   </app-ui-filter-bar>
 
+  <!-- Bandeja del Supervisor: cheques en DEVENGADO pendientes de activar (ver ADR-020) -->
+  @if (puedeActivarCheque()) {
+    <app-ui-data-table
+      [data]="chequesPendientes()"
+      [columns]="chequesColumns"
+      [loading]="loadingCheques()"
+      [hasActions]="true"
+      [paginator]="false"
+      [actionsTemplate]="chequeActions"
+      icon="verified"
+      title="Cheques Pendientes de Activación"
+      emptyIcon="verified"
+      emptyMessage="Sin cheques pendientes"
+      emptySubMessage="No hay cheques en estado DEVENGADO para este convenio.">
+    </app-ui-data-table>
+  }
+
   <app-ui-data-table
     [data]="desembolsos()"
     [columns]="columns"
@@ -62,16 +79,20 @@
 
 </div>
 
+<!-- Template de acciones de la bandeja de cheques pendientes de activación -->
+<ng-template #chequeActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="success" size="sm" icon="verified"
+      ariaLabel="Activar Cheque" (onClick)="abrirActivarChequeModal(row)" />
+  </div>
+</ng-template>
+
 <!-- Template de acciones por fila -->
 <ng-template #desembolsoActions let-row>
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
       ariaLabel="Ver ítems de la solicitud" (onClick)="viewDesembolso(row)" />
     @if (!readOnly()) {
-      @if (puedeActivarCheque() && row.tipoPagoNombre === 'CHEQUE' && row.estadoNombre === 'PENDIENTE') {
-        <ui-button iconOnly appearance="soft" severity="success" size="sm" icon="verified"
-          ariaLabel="Activar y Efectivizar Cheque" (onClick)="activarCheque(row.id)" />
-      }
       <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
         [ariaLabel]="row.montoRendido > 0 ? 'No se puede editar: tiene rendición asociada' : 'Editar'"
         [disabled]="row.montoRendido > 0"
@@ -100,4 +121,12 @@
     [desembolso]="viewingDesembolso()!"
     (close)="handleItemsModalClose()">
   </app-desembolso-items-modal>
+}
+
+<!-- Modal de activación de cheque (DEVENGADO -> GIRADO) -->
+@if (showActivarChequeModal()) {
+  <app-activar-cheque-modal
+    [cheque]="activandoCheque()!"
+    (onClose)="handleActivarChequeModalClose($event)">
+  </app-activar-cheque-modal>
 }

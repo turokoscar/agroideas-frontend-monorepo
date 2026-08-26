@@ -1,0 +1,56 @@
+<app-ui-modal [visible]="visible()" title="Activar Cheque de Gerencia" subtitle="Pasa el cheque de DEVENGADO a GIRADO" icon="verified"
+  [isSubmitting]="isSubmitting()" saveLabel="Activar Cheque" [saveDisabled]="!fileUrl() || uploadingFile()"
+  (onHide)="onHide()" (onSave)="save()" maxWidth="480px">
+
+  <div class="space-y-5">
+
+    <div class="form-card-flat grid grid-cols-2 gap-3 text-xs">
+      <div>
+        <span class="block text-slate-400 font-semibold uppercase text-[10px]">Correlativo</span>
+        <span class="font-semibold text-slate-700">{{ cheque().correlativo }}</span>
+      </div>
+      <div>
+        <span class="block text-slate-400 font-semibold uppercase text-[10px]">N° Solicitud</span>
+        <span class="font-semibold text-slate-700">{{ cheque().numeroSolicitud }}</span>
+      </div>
+      <div>
+        <span class="block text-slate-400 font-semibold uppercase text-[10px]">Monto</span>
+        <span class="font-semibold text-primary">S/ {{ cheque().monto | number:'1.2-2' }}</span>
+      </div>
+      <div>
+        <span class="block text-slate-400 font-semibold uppercase text-[10px]">Devengado el</span>
+        <span class="font-semibold text-slate-700">{{ cheque().fechaDevengado | date:'dd/MM/yyyy' }}</span>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="cheque-archivo-sustento">Documentación sustentatoria (contrapartida)</label>
+
+      <input id="cheque-archivo-sustento" type="file" #fileInput hidden (change)="onFileSelected($event)" accept="application/pdf">
+
+      @if (fileUrl()) {
+        <ui-file-chip [name]="selectedFile()?.name || 'Archivo cargado'" [size]="selectedFile()?.size || 0"
+          (onRemove)="removeFile()" />
+      } @else if (uploadingFile()) {
+        <div class="form-file-upload flex-col items-center justify-center p-5 min-h-[100px] text-center">
+          <span class="material-symbols-outlined animate-spin text-primary text-3xl mb-2">progress_activity</span>
+          <p class="text-xs font-semibold text-primary animate-pulse">Subiendo archivo...</p>
+        </div>
+      } @else {
+        <div class="form-file-upload group flex-col items-center justify-center p-5 min-h-[100px] text-center"
+             role="button"
+             tabindex="0"
+             aria-label="Subir documentación sustentatoria en PDF"
+             (click)="fileInput.click()"
+             (keydown.enter)="fileInput.click()"
+             (keydown.space)="$event.preventDefault(); fileInput.click()">
+          <span class="material-symbols-outlined text-slate-400 text-3xl mb-2 group-hover:scale-105 transition-transform">cloud_upload</span>
+          <p class="text-xs font-semibold text-slate-600">Haz clic para subir la contrapartida</p>
+          <p class="text-[9px] text-slate-400 tracking-wider mt-0.5">Solo PDF máx. 10MB</p>
+        </div>
+      }
+    </div>
+
+  </div>
+
+</app-ui-modal>

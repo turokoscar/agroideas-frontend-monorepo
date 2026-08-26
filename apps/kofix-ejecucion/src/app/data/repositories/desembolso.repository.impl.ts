@@ -5,8 +5,9 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { DesembolsoRepository } from '../../domain/repositories/desembolso.repository';
-import { Desembolso, DesembolsoDetalleItem, SettlementBalance } from '../../domain/models/desembolso.model';
+import { Desembolso, DesembolsoChequePendiente, DesembolsoDetalleItem, SettlementBalance } from '../../domain/models/desembolso.model';
 import { DesembolsoMapper } from '../mappers/desembolso.mapper';
+import { FileStorageService } from '../../shared/services/file-storage.service';
 
 @Injectable({
     providedIn: 'root'
@@ -14,7 +15,7 @@ import { DesembolsoMapper } from '../mappers/desembolso.mapper';
 export class DesembolsoRepositoryImpl extends DesembolsoRepository {
     private apiUrl = `${environment.apiEjecucion}/desembolsos`;
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private fileStorage: FileStorageService) {
         super();
     }
 
@@ -62,8 +63,19 @@ export class DesembolsoRepositoryImpl extends DesembolsoRepository {
         );
     }
 
-    override activarCheque(desembolsoId: number): Observable<any> {
-        return this.http.post<ResponseDto>(`${this.apiUrl}/${desembolsoId}/activacion-cheque`, {});
+    override getChequesPendientesActivacion(postulanteId: number): Observable<DesembolsoChequePendiente[]> {
+        const params = new HttpParams().set('postulanteId', postulanteId.toString());
+        return this.http.get<ResponseDto<DesembolsoChequePendiente[]>>(`${this.apiUrl}/cheques/pendientes-activacion`, { params }).pipe(
+            map(res => res.datos || [])
+        );
+    }
+
+    override activarCheque(desembolsoId: number, urlArchivo: string): Observable<any> {
+        return this.http.post<ResponseDto>(`${this.apiUrl}/${desembolsoId}/activacion-cheque`, { urlArchivo });
+    }
+
+    override uploadFile(file: File): Observable<{ fileUrl: string }> {
+        return this.fileStorage.uploadFile(file, 'cheques');
     }
 
     override ejecutarCierreContable(mes: number, anio: number): Observable<any> {
