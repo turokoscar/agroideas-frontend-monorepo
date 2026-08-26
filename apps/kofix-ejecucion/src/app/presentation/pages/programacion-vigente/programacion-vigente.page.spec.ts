@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ProgramacionVigentePageComponent } from './programacion-vigente.page';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { ExportService } from '../../../shared/services/export.service';
 
 describe('ProgramacionVigentePageComponent', () => {
     let component: ProgramacionVigentePageComponent;
@@ -15,7 +16,11 @@ describe('ProgramacionVigentePageComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [ProgramacionVigentePageComponent],
-            providers: [provideRouter([]), { provide: ConvenioRepository, useValue: mockRepo }]
+            providers: [
+                provideRouter([]),
+                { provide: ConvenioRepository, useValue: mockRepo },
+                { provide: ExportService, useValue: { exportProgramacionReporte: jest.fn() } }
+            ]
         }).compileComponents();
 
         fixture = TestBed.createComponent(ProgramacionVigentePageComponent);
@@ -63,9 +68,20 @@ describe('ProgramacionVigentePageComponent', () => {
         expect(component.getStatusLabel({ montoAprobado: 1000, programacionAcumulada: 0 })).toBe('No programado');
     });
 
-    it('should navigate to the convenio detail with the programacion tab', () => {
+    it('should navigate to the dedicated programacion-vigente detail page (ADR-019 Fase 3)', () => {
         component.goToProgramacion({ id: 9 });
 
-        expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 9], { queryParams: { tab: 'programacion' } });
+        expect(router.navigate).toHaveBeenCalledWith(['/main/programacion-vigente', 9]);
+    });
+
+    it('should format the convenio number from the row, defaulting to a dash when missing', () => {
+        expect(component.formatConvenioNumber({ numeroConvenio: '12', fechaInicio: '2026-06-01' })).toBe('0012-2026-ST');
+        expect(component.formatConvenioNumber({})).toBe('-');
+    });
+
+    it('should update pageSize when the table selector changes rows (ADR-019 Fase 3.5)', () => {
+        component.onRowsChange(20);
+
+        expect(component.pageSize()).toBe(20);
     });
 });

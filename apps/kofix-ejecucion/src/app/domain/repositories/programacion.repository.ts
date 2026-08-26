@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { ProgramacionItem, DetalleCronograma, GuardarCronogramaRequest, ProgramacionListResponse, ProgramacionBloqueoResponse } from '../models/programacion.model';
+import { ProgramacionItem, DetalleCronograma, GuardarCronogramaRequest, ProgramacionBloqueoResponse } from '../models/programacion.model';
 
 export interface ProgramacionItemsResponse {
     items: ProgramacionItem[];
@@ -7,8 +7,6 @@ export interface ProgramacionItemsResponse {
 }
 
 export abstract class ProgramacionRepository {
-    abstract getResumen(page: number, pageSize: number, search: string, estado: string): Observable<ProgramacionListResponse>;
-
     abstract getByPostulante(postulanteId: number, page: number, pageSize: number): Observable<ProgramacionItemsResponse>;
 
     abstract getCronograma(marcoLogicoId: number): Observable<DetalleCronograma[]>;

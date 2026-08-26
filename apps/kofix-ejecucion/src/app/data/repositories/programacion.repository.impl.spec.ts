@@ -19,27 +19,6 @@ describe('ProgramacionRepositoryImpl', () => {
 
     afterEach(() => httpMock.verify());
 
-    it('should only add search/estado params when they are truthy', () => {
-        service.getResumen(1, 10, '', '').subscribe();
-        const req1 = httpMock.expectOne((r) => r.url === `${baseUrl}/resumen`);
-        expect(req1.request.params.has('search')).toBe(false);
-        expect(req1.request.params.has('estado')).toBe(false);
-        req1.flush({ datos: { items: [], total: 0 } });
-
-        service.getResumen(2, 20, 'acme', 'VIGENTE').subscribe();
-        const req2 = httpMock.expectOne((r) => r.url === `${baseUrl}/resumen` && r.params.get('search') === 'acme' && r.params.get('estado') === 'VIGENTE');
-        req2.flush({ datos: { items: [], total: 0 } });
-    });
-
-    it('should default getResumen to an empty list when there is no datos', (done) => {
-        service.getResumen(1, 10, '', '').subscribe((res) => {
-            expect(res).toEqual({ items: [], total: 0 });
-            done();
-        });
-
-        httpMock.expectOne((r) => r.url === `${baseUrl}/resumen`).flush({});
-    });
-
     it('should map items via ProgramacionMapper and default the total', (done) => {
         service.getByPostulante(5, 1, 10).subscribe((res) => {
             expect(res.items).toHaveLength(1);

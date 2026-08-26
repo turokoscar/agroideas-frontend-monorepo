@@ -28,6 +28,7 @@
     [loading]="loading()"
     [totalRecords]="totalRecords()"
     [rows]="pageSize()"
+    [rowsOptions]="rowsOptions"
     [paginator]="true"
     [lazy]="true"
     [hasActions]="true"
@@ -40,7 +41,8 @@
     emptyIcon="calendar_month"
     emptyMessage="No se encontraron convenios vigentes"
     emptySubMessage="Intenta ajustar los filtros de búsqueda"
-    (onLazyLoad)="loadData($event)">
+    (onLazyLoad)="loadData($event)"
+    (rowsChange)="onRowsChange($event)">
 
     <!-- Columnas custom -->
     <ng-template #rowTemplate let-row let-col="col">
@@ -72,6 +74,8 @@
 <ng-template #programacionActions let-row>
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="calendar_month"
-      ariaLabel="Programar" (onClick)="goToProgramacion(row)" />
+      ariaLabel="Continuar Programación" (onClick)="goToProgramacion(row)" />
+    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="table_view"
+      ariaLabel="Descargar reporte de programación" (onClick)="exportService.exportProgramacionReporte(row.id, formatConvenioNumber(row))" />
   </div>
 </ng-template>

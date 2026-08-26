@@ -5,7 +5,6 @@ import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { ConvenioListPageComponent } from './convenio-list.page';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
-import { ExportService } from '../../../shared/services/export.service';
 import { Convenio } from '../../../domain/models/convenio.model';
 
 describe('ConvenioListPageComponent', () => {
@@ -54,8 +53,7 @@ describe('ConvenioListPageComponent', () => {
                 provideRouter([]),
                 { provide: ConvenioRepository, useValue: mockConvenioRepo },
                 { provide: PermissionService, useValue: mockPermissionService },
-                { provide: AlertService, useValue: mockAlert },
-                { provide: ExportService, useValue: {} }
+                { provide: AlertService, useValue: mockAlert }
             ]
         }).compileComponents();
 
@@ -122,15 +120,43 @@ describe('ConvenioListPageComponent', () => {
         expect(component.getPorcentajeEjecucion(buildConvenio({ montoAprobado: 0, montoEjecutado: 250 }))).toBe(0);
     });
 
-    it('should navigate to the convenio detail, and to specific tabs', () => {
+    it('should update pageSize when the table selector changes rows (ADR-019 Fase 3.5)', () => {
+        component.onRowsChange(50);
+
+        expect(component.pageSize()).toBe(50);
+    });
+
+    it('should navigate to the convenio detail', () => {
         component.goToDetail(3);
         expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 3]);
+    });
 
-        component.goToProgramacion(3);
-        expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 3], { queryParams: { tab: 'programacion' } });
+    describe('continuar (ADR-019 Fase 3)', () => {
+        it('should navigate to ejecucion when programacion is already complete', () => {
+            component.continuar(buildConvenio({ id: 7, programacionAcumulada: 1000, montoAprobado: 1000 }));
 
-        component.goToKardex(3);
-        expect(router.navigate).toHaveBeenCalledWith(['/main/convenios', 3], { queryParams: { tab: 'kardex' } });
+            expect(router.navigate).toHaveBeenCalledWith(['/main/ejecucion', 7]);
+        });
+
+        it('should navigate to programacion-vigente when programacion is still incomplete', () => {
+            component.continuar(buildConvenio({ id: 7, programacionAcumulada: 400, montoAprobado: 1000 }));
+
+            expect(router.navigate).toHaveBeenCalledWith(['/main/programacion-vigente', 7]);
+        });
+
+        it('should reflect the target stage in the label/icon', () => {
+            const completo = buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 });
+            const incompleto = buildConvenio({ programacionAcumulada: 400, montoAprobado: 1000 });
+
+            expect(component.continuarLabel(completo)).toBe('Ir a Ejecución');
+            expect(component.continuarIcon(completo)).toBe('account_balance_wallet');
+            expect(component.continuarLabel(incompleto)).toBe('Continuar Programación');
+            expect(component.continuarIcon(incompleto)).toBe('calendar_month');
+        });
+
+        it('should treat a missing montoAprobado as programacion incompleta', () => {
+            expect(component.isProgramacionCompleta(buildConvenio({ montoAprobado: 0 }))).toBe(false);
+        });
     });
 
     it('should map estado codes to status type, label, and semaphore class, defaulting unknown ones', () => {

@@ -28,6 +28,9 @@ describe('ConvenioRepositoryImpl', () => {
 
         service.getVigente(1, 10, 'acme').subscribe();
         httpMock.expectOne((r) => r.url === `${baseUrl}/vigentes` && r.params.get('busqueda') === 'acme').flush({ datos: [], total: 0 });
+
+        service.getEnEjecucion(1, 10, 'acme').subscribe();
+        httpMock.expectOne((r) => r.url === `${baseUrl}/en-ejecucion` && r.params.get('busqueda') === 'acme').flush({ datos: [], total: 0 });
     });
 
     it('should map the list response through ConvenioMapper and default total to 0', (done) => {

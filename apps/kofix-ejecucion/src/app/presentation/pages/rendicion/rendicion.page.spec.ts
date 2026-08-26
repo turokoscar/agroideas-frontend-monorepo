@@ -148,7 +148,7 @@ describe('RendicionPageComponent', () => {
 
             component.verGastosF1();
 
-            expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/convenios', 5, 'gastos-f1']);
+            expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/ejecucion', 5, 'gastos-f1']);
         });
     });
 });

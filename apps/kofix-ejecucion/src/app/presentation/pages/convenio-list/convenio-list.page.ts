@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Convenio } from '../../../domain/models/convenio.model';
 import { AlertService } from '@agroideas/feedback';
-import { ExportService } from '../../../shared/services/export.service';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { finalize } from 'rxjs/operators';
 
@@ -24,7 +23,6 @@ export class ConvenioListPageComponent implements OnInit {
     private convenioRepo = inject(ConvenioRepository);
     private alertService = inject(AlertService);
     private router = inject(Router);
-    exportService = inject(ExportService);
 
     convenios = signal<Convenio[]>([]);
     totalRecords = signal<number>(0);
@@ -32,6 +30,7 @@ export class ConvenioListPageComponent implements OnInit {
     search = signal('');
     estadoFilter = signal('');
     pageSize = signal(10);
+    readonly rowsOptions = [5, 10, 20, 50, 100];
 
     columns: TableColumn[] = [
         { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
@@ -75,16 +74,37 @@ export class ConvenioListPageComponent implements OnInit {
         this.loadData({ first: 0, rows: this.pageSize() });
     }
 
+    onRowsChange(rows: number): void {
+        this.pageSize.set(rows);
+    }
+
     goToDetail(id: number): void {
         this.router.navigate(['/main/convenios', id]);
     }
 
-    goToProgramacion(id: number): void {
-        this.router.navigate(['/main/convenios', id], { queryParams: { tab: 'programacion' } });
+    /**
+     * ADR-019 Fase 3: decide a dónde llevar al usuario sin que tenga que saber en qué etapa
+     * está el convenio — Programación Vigente si aún no completó su programación, Ejecución si ya la completó.
+     */
+    continuar(convenio: Convenio): void {
+        if (this.isProgramacionCompleta(convenio)) {
+            this.router.navigate(['/main/ejecucion', convenio.id]);
+        } else {
+            this.router.navigate(['/main/programacion-vigente', convenio.id]);
+        }
     }
 
-    goToKardex(id: number): void {
-        this.router.navigate(['/main/convenios', id], { queryParams: { tab: 'kardex' } });
+    isProgramacionCompleta(convenio: Convenio): boolean {
+        if (!convenio.montoAprobado || convenio.montoAprobado <= 0) return false;
+        return Math.round((convenio.programacionAcumulada / convenio.montoAprobado) * 100) >= 100;
+    }
+
+    continuarLabel(convenio: Convenio): string {
+        return this.isProgramacionCompleta(convenio) ? 'Ir a Ejecución' : 'Continuar Programación';
+    }
+
+    continuarIcon(convenio: Convenio): string {
+        return this.isProgramacionCompleta(convenio) ? 'account_balance_wallet' : 'calendar_month';
     }
 
     downloadConvenioFisico(id: number, numero: string): void {

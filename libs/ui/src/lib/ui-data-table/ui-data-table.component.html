@@ -130,9 +130,21 @@
   <!-- Paginación -->
   @if (paginator && effectiveTotalRecords > 0 && !loading) {
     <div class="dt-footer">
-      <p class="dt-footer__info">
-        Mostrando <strong>{{ first + 1 }}–{{ minVal(first + rows, effectiveTotalRecords) }}</strong> de <strong>{{ effectiveTotalRecords }}</strong> registros
-      </p>
+      <div class="dt-footer__left">
+        <p class="dt-footer__info">
+          Mostrando <strong>{{ first + 1 }}–{{ minVal(first + rows, effectiveTotalRecords) }}</strong> de <strong>{{ effectiveTotalRecords }}</strong> registros
+        </p>
+        @if (rowsOptions) {
+          <div class="dt-page-size">
+            <label for="dt-page-size-select">Ver</label>
+            <select id="dt-page-size-select" class="dt-page-size__select" [value]="rows" (change)="onRowsSelectChange($event)" aria-label="Filas por página">
+              @for (opt of rowsOptions; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
       <div class="dt-pagination">
         <button class="dt-page-btn dt-page-btn--nav" (click)="onPrevPage()" [disabled]="first === 0" title="Anterior">
           <span class="material-symbols-outlined">chevron_left</span>

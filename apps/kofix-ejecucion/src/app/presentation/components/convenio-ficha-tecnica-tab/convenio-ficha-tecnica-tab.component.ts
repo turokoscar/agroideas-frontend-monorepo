@@ -13,8 +13,6 @@ export class ConvenioFichaTecnicaTabComponent {
     convenio = input.required<Convenio>();
 
     downloadConvenioFisico = output<void>();
-    downloadKardexResumen = output<void>();
-    downloadReporteProgramacion = output<void>();
 
     formatDate(date?: string): string {
         if (!date) return '-';

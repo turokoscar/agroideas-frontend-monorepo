@@ -118,7 +118,7 @@ export class RendicionPageComponent implements OnInit {
   }
 
   verGastosF1(): void {
-    this.router.navigate(['/main/convenios', this.convenioId(), 'gastos-f1']);
+    this.router.navigate(['/main/ejecucion', this.convenioId(), 'gastos-f1']);
   }
 
   async deleteRendicion(id: number): Promise<void> {

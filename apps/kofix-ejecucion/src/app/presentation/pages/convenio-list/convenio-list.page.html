@@ -46,6 +46,7 @@
     [loading]="loading()"
     [totalRecords]="totalRecords()"
     [rows]="pageSize()"
+    [rowsOptions]="rowsOptions"
     [paginator]="true"
     [lazy]="true"
     [hasActions]="true"
@@ -58,7 +59,8 @@
     emptyIcon="folder_off"
     emptyMessage="No se encontraron convenios"
     emptySubMessage="Intenta ajustar los filtros de búsqueda"
-    (onLazyLoad)="loadData($event)">
+    (onLazyLoad)="loadData($event)"
+    (rowsChange)="onRowsChange($event)">
 
     <!-- Template para columnas custom -->
     <ng-template #rowTemplate let-row let-col="col">
@@ -100,11 +102,9 @@
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
       ariaLabel="Ver ficha" (onClick)="$event.stopPropagation(); goToDetail(row.id)" />
+    <ui-button iconOnly appearance="soft" severity="accent" size="sm" [icon]="continuarIcon(row)"
+      [ariaLabel]="continuarLabel(row)" (onClick)="$event.stopPropagation(); continuar(row)" />
     <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="download"
       ariaLabel="Descargar convenio físico" (onClick)="$event.stopPropagation(); downloadConvenioFisico(row.id, formatConvenioNumber(row))" />
-    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="receipt_long"
-      ariaLabel="Descargar Kardex resumen" (onClick)="$event.stopPropagation(); exportService.exportKardexConsolidado(row.id, formatConvenioNumber(row))" />
-    <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="table_view"
-      ariaLabel="Descargar reporte de programación" (onClick)="$event.stopPropagation(); exportService.exportProgramacionReporte(row.id, formatConvenioNumber(row))" />
   </div>
 </ng-template>

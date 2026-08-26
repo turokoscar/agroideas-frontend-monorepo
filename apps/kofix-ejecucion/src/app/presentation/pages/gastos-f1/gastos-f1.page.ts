@@ -99,6 +99,6 @@ export class GastosF1PageComponent implements OnInit {
     }
 
     goBack(): void {
-        this.router.navigate(['/main/convenios', this.postulanteId()], { queryParams: { tab: 'rendiciones' } });
+        this.router.navigate(['/main/ejecucion', this.postulanteId()], { queryParams: { tab: 'rendiciones' } });
     }
 }

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ProgramacionRepository, ProgramacionItemsResponse } from '../../domain/repositories/programacion.repository';
-import { ProgramacionItem, ProgramacionListResponse, ProgramacionBloqueoResponse } from '../../domain/models/programacion.model';
+import { ProgramacionBloqueoResponse } from '../../domain/models/programacion.model';
 
 @Injectable({
     providedIn: 'root'
@@ -15,18 +15,6 @@ export class ProgramacionRepositoryImpl extends ProgramacionRepository {
 
     constructor(private http: HttpClient) {
         super();
-    }
-
-    override getResumen(page: number, pageSize: number, search: string, estado: string): Observable<ProgramacionListResponse> {
-        let params = new HttpParams()
-            .set('page', page.toString())
-            .set('pageSize', pageSize.toString());
-        if (search) params = params.set('search', search);
-        if (estado) params = params.set('estado', estado);
-
-        return this.http.get<ResponseDto<ProgramacionListResponse>>(`${this.apiUrl}/resumen`, { params }).pipe(
-            map(res => res.datos || { items: [], total: 0 })
-        );
     }
 
     override getByPostulante(postulanteId: number, page: number, pageSize: number): Observable<ProgramacionItemsResponse> {

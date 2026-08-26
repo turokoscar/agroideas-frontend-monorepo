@@ -50,20 +50,12 @@ describe('ConvenioFichaTecnicaTabComponent', () => {
         expect(component.formatDate('2026-06-01')).not.toBe('-');
     });
 
-    it('should emit the download intents without handling them itself', () => {
+    it('should emit the download intent without handling it itself', () => {
         const fisico = jest.fn();
-        const kardex = jest.fn();
-        const reporte = jest.fn();
         component.downloadConvenioFisico.subscribe(fisico);
-        component.downloadKardexResumen.subscribe(kardex);
-        component.downloadReporteProgramacion.subscribe(reporte);
 
         component.downloadConvenioFisico.emit();
-        component.downloadKardexResumen.emit();
-        component.downloadReporteProgramacion.emit();
 
         expect(fisico).toHaveBeenCalled();
-        expect(kardex).toHaveBeenCalled();
-        expect(reporte).toHaveBeenCalled();
     });
 });

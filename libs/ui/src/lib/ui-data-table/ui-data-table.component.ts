@@ -43,9 +43,18 @@ export class UiDataTableComponent {
     // TemplateRef para las acciones de cada fila (soluciona el bug de ng-content dentro de @for)
     @Input() actionsTemplate?: TemplateRef<any>;
     @Input() rowTemplate?: TemplateRef<any>;
+    /**
+     * Opciones del selector de tamaño de página (ADR-019 Fase 3.5). `null` (default) no muestra
+     * el selector — mantiene el comportamiento actual para cualquier consumidor que no lo pida
+     * explícitamente, ya que su `[rows]` suele estar enlazado a un número literal (no a un
+     * signal) y perdería la selección en el siguiente ciclo de detección de cambios si el
+     * selector estuviera siempre visible.
+     */
+    @Input() rowsOptions: number[] | null = null;
 
     @Output() onLazyLoad = new EventEmitter<any>();
     @Output() onRowClick = new EventEmitter<any>();
+    @Output() rowsChange = new EventEmitter<number>();
 
     sortField = '';
     sortDirection: 'asc' | 'desc' = 'asc';
@@ -112,6 +121,16 @@ export class UiDataTableComponent {
 
     minVal(a: number, b: number): number {
         return Math.min(a, b);
+    }
+
+    onRowsSelectChange(event: Event): void {
+        const value = Number((event.target as HTMLSelectElement).value);
+        if (!value || value === this.rows) return;
+
+        this.rows = value;
+        this.first = 0;
+        this.rowsChange.emit(value);
+        this.emitLazyLoad();
     }
 
     private emitLazyLoad(): void {

@@ -111,7 +111,7 @@ describe('GastosF1PageComponent', () => {
 
         component.goBack();
 
-        expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/convenios', 5], { queryParams: { tab: 'rendiciones' } });
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/ejecucion', 5], { queryParams: { tab: 'rendiciones' } });
     });
 
     it('should download the comprobante file via the repository', () => {

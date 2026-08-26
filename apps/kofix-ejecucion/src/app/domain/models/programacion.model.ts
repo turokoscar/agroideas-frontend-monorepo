@@ -45,28 +45,6 @@ export interface Programacion {
     total: number;
 }
 
-export interface ProgramacionResumen {
-    id: number;
-    numeroConvenio: string;
-    razonSocial: string;
-    ruc: string;
-    region: string;
-    estado: string;
-    montoAprobado: number;
-    montoProgramado: number;
-    montoEjecutado: number;
-    porcentajeProgramado: number;
-    saldoPorProgramar: number;
-    saldoPorEjecutar: number;
-    fechaFirma: string;
-    fechaFin: string;
-}
-
-export interface ProgramacionListResponse {
-    items: ProgramacionResumen[];
-    total: number;
-}
-
 export interface ProgramacionBloqueoItem {
     itemMlId: number;
     nombre?: string;

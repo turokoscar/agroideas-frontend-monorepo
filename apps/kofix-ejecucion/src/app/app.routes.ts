@@ -54,16 +54,28 @@ export const routes: Routes = [
                 loadComponent: () => import('./presentation/pages/cartera/cartera.page').then(m => m.CarteraPageComponent)
             },
             {
-                path: 'programacion',
-                canActivate: [permissionGuard],
-                data: { permission: PERMISSIONS.REGISTRO_PROGRAMACION },
-                loadComponent: () => import('./presentation/pages/programacion/programacion.page').then(m => m.ProgramacionPageComponent)
-            },
-            {
                 path: 'programacion-vigente',
                 canActivate: [permissionGuard],
                 data: { permission: PERMISSIONS.ACCESO_APP },
                 loadComponent: () => import('./presentation/pages/programacion-vigente/programacion-vigente.page').then(m => m.ProgramacionVigentePageComponent)
+            },
+            {
+                path: 'programacion-vigente/:id',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/programacion-vigente-detail/programacion-vigente-detail.page').then(m => m.ProgramacionVigenteDetailPageComponent)
+            },
+            {
+                path: 'ejecucion',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/ejecucion/ejecucion.page').then(m => m.EjecucionPageComponent)
+            },
+            {
+                path: 'ejecucion/:id',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP },
+                loadComponent: () => import('./presentation/pages/ejecucion-detail/ejecucion-detail.page').then(m => m.EjecucionDetailPageComponent)
             },
             {
                 path: 'alertas',
@@ -96,25 +108,7 @@ export const routes: Routes = [
                 loadComponent: () => import('./presentation/pages/gestion-menus/gestion-menus.page').then(m => m.GestionMenusPageComponent)
             },
             {
-                path: 'no-objeciones',
-                canActivate: [permissionGuard],
-                data: { permission: PERMISSIONS.ACCESO_APP },
-                loadComponent: () => import('./presentation/pages/no-objecion/no-objecion.page').then(m => m.NoObjecionPageComponent)
-            },
-            {
-                path: 'desembolsos',
-                canActivate: [permissionGuard],
-                data: { permission: PERMISSIONS.ACCESO_APP },
-                loadComponent: () => import('./presentation/pages/desembolso/desembolso.page').then(m => m.DesembolsoPageComponent)
-            },
-            {
-                path: 'rendiciones',
-                canActivate: [permissionGuard],
-                data: { permission: PERMISSIONS.ACCESO_APP },
-                loadComponent: () => import('./presentation/pages/rendicion/rendicion.page').then(m => m.RendicionPageComponent)
-            },
-            {
-                path: 'convenios/:id/gastos-f1',
+                path: 'ejecucion/:id/gastos-f1',
                 canActivate: [permissionGuard],
                 data: { permission: PERMISSIONS.ACCESO_APP },
                 loadComponent: () => import('./presentation/pages/gastos-f1/gastos-f1.page').then(m => m.GastosF1PageComponent)

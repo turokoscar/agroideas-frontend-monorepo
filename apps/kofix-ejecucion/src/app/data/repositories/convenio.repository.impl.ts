@@ -68,6 +68,23 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
         );
     }
 
+    override getEnEjecucion(pagina: number, cantidad: number, busqueda?: string): Observable<{ datos: Convenio[], total: number }> {
+        let params = new HttpParams()
+            .set('pagina', pagina.toString())
+            .set('cantidad', cantidad.toString());
+
+        if (busqueda) {
+            params = params.set('busqueda', busqueda);
+        }
+
+        return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/en-ejecucion`, { params }).pipe(
+            map(res => ({
+                datos: ConvenioMapper.fromApiList(res.datos || []),
+                total: res.total || 0
+            }))
+        );
+    }
+
     override getById(id: number): Observable<Convenio> {
         return this.http.get<ResponseDto<ConvenioDto>>(`${this.apiUrl}/${id}`).pipe(
             map(res => ConvenioMapper.fromApi(res.datos || {} as ConvenioDto))

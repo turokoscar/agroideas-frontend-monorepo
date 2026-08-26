@@ -18,21 +18,9 @@
           <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-500 dark:text-slate-400">
             <span class="text-xs md:text-sm font-semibold tracking-wide">{{ formatConvenioNumber(convenio) }}</span>
             <span class="hidden md:block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-            <span class="text-[10px] md:text-sm font-medium uppercase">ORGANIZACIÓN AGRARIA</span>
+            <span class="text-[10px] md:text-sm font-medium uppercase">EJECUCIÓN FINANCIERA</span>
           </div>
         </div>
-      </div>
-      <div class="flex items-center gap-3 self-start md:self-center">
-        <span
-          class="inline-flex items-center rounded-full bg-info/10 px-4 py-1.5 text-xs font-bold text-info border border-info/30 uppercase tracking-widest whitespace-nowrap">
-          CONVENIO FIRMADO
-        </span>
-        <ui-button
-          severity="primary"
-          [icon]="continuarIcon()"
-          [label]="continuarLabel()"
-          (onClick)="continuar()">
-        </ui-button>
       </div>
     </div>
     <!-- KPI Cards -->
@@ -69,13 +57,39 @@
         [subtitle]="((stateService.saldoDisponible() / (stateService.convenio()!.programacionAcumulada || 1) * 100) | number:'1.0-0') + '% disponible'">
       </app-ui-kpi>
     </div>
-    <!-- Ficha Técnica -->
+    <!-- Detailed Sections (Tabs) -->
     <div
-      class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden p-8">
-      <app-convenio-ficha-tecnica-tab
-        [convenio]="convenio"
-        (downloadConvenioFisico)="downloadConvenioFisico()">
-      </app-convenio-ficha-tecnica-tab>
+      class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+      <app-convenio-detail-tabs
+        [tabs]="tabs"
+        [activeIndex]="activeTabIndex()"
+        (tabChange)="setActiveTab($event)">
+      </app-convenio-detail-tabs>
+      <!-- Tab Content -->
+      <div class="p-8">
+        @if (activeTabIndex() === 0) {
+          <div>
+            <app-no-objecion-page [convenioId]="convenio.id" [readOnly]="false"></app-no-objecion-page>
+          </div>
+        }
+        @if (activeTabIndex() === 1) {
+          <div>
+            <app-desembolso-page [convenioId]="convenio.id" [readOnly]="false"></app-desembolso-page>
+          </div>
+        }
+        @if (activeTabIndex() === 2) {
+          <div>
+            <app-rendicion-page [convenioId]="convenio.id" [readOnly]="false"></app-rendicion-page>
+          </div>
+        }
+        @if (activeTabIndex() === 3) {
+          <app-kardex-varianza-tab
+            [convenio]="convenio"
+            [kardexConsolidado]="kardexConsolidado()"
+            [loadingKardex]="loadingKardex()">
+          </app-kardex-varianza-tab>
+        }
+      </div>
     </div>
   </div>
 }

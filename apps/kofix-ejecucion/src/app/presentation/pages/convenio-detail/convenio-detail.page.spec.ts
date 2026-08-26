@@ -1,28 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
+import { of } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
-import { PermissionService } from '@agroideas/security';
 import { ConvenioDetailPageComponent } from './convenio-detail.page';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
 import { GetConvenioByIdUseCase } from '../../../domain/usecases/get-convenio-by-id.usecase';
-import { KardexRepository } from '../../../domain/repositories/kardex.repository';
-import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
-import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
-import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
 import { Convenio } from '../../../domain/models/convenio.model';
 
 describe('ConvenioDetailPageComponent', () => {
     let component: ConvenioDetailPageComponent;
     let fixture: ComponentFixture<ConvenioDetailPageComponent>;
     let mockUseCase: jest.Mocked<Partial<GetConvenioByIdUseCase>>;
-    let mockKardexRepo: jest.Mocked<Partial<KardexRepository>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
-    let mockDesembolsoRepo: jest.Mocked<Partial<DesembolsoRepository>>;
-    let mockCatalogoRepo: jest.Mocked<Partial<CatalogoRepository>>;
-    let mockRendicionRepo: jest.Mocked<Partial<RendicionRepository>>;
-    let mockPermissionService: jest.Mocked<Partial<PermissionService>>;
-    let queryParamMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+    let mockRouter: { navigate: jest.Mock };
 
     const buildConvenio = (overrides: Partial<Convenio> = {}): Convenio => ({
         id: 5,
@@ -48,26 +38,18 @@ describe('ConvenioDetailPageComponent', () => {
         ...overrides
     });
 
-    const createComponent = (routeId: string | null = '5', initialQueryParams: Record<string, string> = {}) => {
-        queryParamMap$ = new BehaviorSubject(convertToParamMap(initialQueryParams));
+    const createComponent = (routeId: string | null = '5') => {
+        mockRouter = { navigate: jest.fn() };
 
         TestBed.configureTestingModule({
             imports: [ConvenioDetailPageComponent],
             providers: [
                 { provide: GetConvenioByIdUseCase, useValue: mockUseCase },
-                { provide: KardexRepository, useValue: mockKardexRepo },
                 { provide: AlertService, useValue: mockAlert },
-                { provide: DesembolsoRepository, useValue: mockDesembolsoRepo },
-                { provide: CatalogoRepository, useValue: mockCatalogoRepo },
-                { provide: RendicionRepository, useValue: mockRendicionRepo },
-                { provide: PermissionService, useValue: mockPermissionService },
-                { provide: Router, useValue: { navigate: jest.fn() } },
+                { provide: Router, useValue: mockRouter },
                 {
                     provide: ActivatedRoute,
-                    useValue: {
-                        snapshot: { paramMap: convertToParamMap(routeId ? { id: routeId } : {}), queryParamMap: convertToParamMap(initialQueryParams) },
-                        queryParamMap: queryParamMap$.asObservable()
-                    }
+                    useValue: { snapshot: { paramMap: convertToParamMap(routeId ? { id: routeId } : {}) } }
                 }
             ]
         });
@@ -79,11 +61,6 @@ describe('ConvenioDetailPageComponent', () => {
 
     beforeEach(() => {
         mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio())) };
-        mockKardexRepo = { getConsolidado: jest.fn().mockReturnValue(of([])) };
-        mockDesembolsoRepo = { getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })) };
-        mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
-        mockRendicionRepo = { getByConvenio: jest.fn().mockReturnValue(of({ items: [], total: 0 })) };
-        mockPermissionService = { hasPermission: jest.fn().mockReturnValue(false) };
         mockAlert = { show: jest.fn() };
     });
 
@@ -100,87 +77,39 @@ describe('ConvenioDetailPageComponent', () => {
         expect(mockUseCase.execute).not.toHaveBeenCalled();
     });
 
-    it('should switch to the requested tab once it arrives via query params', () => {
-        createComponent('5').detectChanges();
+    describe('continuar (ADR-019 Fase 3)', () => {
+        it('should navigate to ejecucion when programacion is already complete', () => {
+            mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 }))) };
+            createComponent('5').detectChanges();
 
-        queryParamMap$.next(convertToParamMap({ tab: 'programacion' }));
+            component.continuar();
 
-        expect(component.activeTabIndex()).toBe(1);
-    });
-
-    it('should restore a deep-linked tab once the convenio finishes loading', () => {
-        mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 }))) };
-
-        createComponent('5', { tab: 'desembolsos' }).detectChanges();
-
-        expect(component.activeTabIndex()).toBe(3);
-    });
-
-    it('should not snap back to the deep-linked tab when the convenio is refreshed again later (e.g. after saving a desembolso)', () => {
-        mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 }))) };
-
-        createComponent('5', { tab: 'desembolsos' }).detectChanges();
-        expect(component.activeTabIndex()).toBe(3);
-
-        // El usuario cambia manualmente de pestaña...
-        component.setActiveTab(4);
-        expect(component.activeTabIndex()).toBe(4);
-
-        // ...y algo (p.ej. desembolso-modal.save()) vuelve a llamar a stateService.refresh(),
-        // que actualiza el signal `convenio()` sin que haya habido ninguna navegación real.
-        component.stateService.refresh(5);
-        fixture.detectChanges();
-
-        expect(component.activeTabIndex()).toBe(4);
-    });
-
-    describe('setActiveTab', () => {
-        it('should block tabs beyond index 1 until programacion is complete', () => {
-            createComponent('5');
-            component.stateService.setConvenio(buildConvenio({ programacionAcumulada: 200, montoAprobado: 1000 })); // 20%
-
-            component.setActiveTab(3);
-
-            expect(component.activeTabIndex()).toBe(0);
+            expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/ejecucion', 5]);
         });
 
-        it('should allow deep tabs once programacion is complete, and load the kardex on tab 5', () => {
-            createComponent('5');
-            component.stateService.setConvenio(buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 })); // 100%
+        it('should navigate to programacion-vigente when programacion is still incomplete', () => {
+            mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio({ programacionAcumulada: 200, montoAprobado: 1000 }))) };
+            createComponent('5').detectChanges();
 
-            component.setActiveTab(5);
+            component.continuar();
 
-            expect(component.activeTabIndex()).toBe(5);
-            expect(mockKardexRepo.getConsolidado).toHaveBeenCalledWith(5);
-        });
-    });
-
-    describe('setTabIndexByTab', () => {
-        it('should map simple tabs directly', () => {
-            createComponent('5');
-            component.setTabIndexByTab('ficha');
-            expect(component.activeTabIndex()).toBe(0);
-
-            component.setTabIndexByTab('programacion');
-            expect(component.activeTabIndex()).toBe(1);
+            expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/programacion-vigente', 5]);
         });
 
-        it('should fall back deep tabs to the programacion tab while it is incomplete', () => {
-            createComponent('5');
-            component.stateService.setConvenio(buildConvenio({ programacionAcumulada: 0, montoAprobado: 1000 }));
+        it('should reflect the target stage in the button label/icon', () => {
+            mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 }))) };
+            createComponent('5').detectChanges();
 
-            component.setTabIndexByTab('rendiciones');
-
-            expect(component.activeTabIndex()).toBe(1);
+            expect(component.continuarLabel()).toBe('Ir a Ejecución');
+            expect(component.continuarIcon()).toBe('account_balance_wallet');
         });
 
-        it('should jump deep tabs to their real index once programacion is complete', () => {
-            createComponent('5');
-            component.stateService.setConvenio(buildConvenio({ programacionAcumulada: 1000, montoAprobado: 1000 }));
+        it('should do nothing when there is no convenio loaded yet', () => {
+            createComponent(null).detectChanges();
 
-            component.setTabIndexByTab('rendiciones');
+            component.continuar();
 
-            expect(component.activeTabIndex()).toBe(4);
+            expect(mockRouter.navigate).not.toHaveBeenCalled();
         });
     });
 
@@ -188,7 +117,15 @@ describe('ConvenioDetailPageComponent', () => {
         createComponent('5');
         component.goBack();
 
-        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/main/convenios']);
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/convenios']);
+    });
+
+    it('should show an informational alert when downloading the physical convenio', () => {
+        createComponent('5').detectChanges();
+
+        component.downloadConvenioFisico();
+
+        expect(mockAlert.show).toHaveBeenCalledWith('Descarga de Convenio', expect.stringContaining('próximamente'), 'info');
     });
 
     describe('formatConvenioNumber', () => {
