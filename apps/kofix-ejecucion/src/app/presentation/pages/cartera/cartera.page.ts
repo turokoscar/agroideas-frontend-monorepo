@@ -48,7 +48,7 @@ export class CarteraPageComponent implements OnInit {
 
     columns: TableColumn[] = [
         { field: 'numeroConvenio', header: 'N° Convenio', width: '130px', type: 'custom' },
-        { field: 'razonSocial', header: 'Organización' },
+        { field: 'razonSocial', header: 'Organización', type: 'custom' },
         { field: 'asignadoA', header: 'Especialista', width: '160px' },
         { field: 'estadoSituacional', header: 'Estado', type: 'custom', align: 'center', width: '120px' },
         { field: 'saldo', header: 'Saldo', type: 'custom', align: 'right', width: '130px' }

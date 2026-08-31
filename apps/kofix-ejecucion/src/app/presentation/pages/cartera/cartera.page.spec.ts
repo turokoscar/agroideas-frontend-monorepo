@@ -17,7 +17,6 @@ describe('CarteraPageComponent', () => {
         postulanteId: 1,
         nroRuc: '20100000001',
         razonSocial: 'Asociación',
-        nombresCompletos: 'Ana Torres',
         email: 'ana@test.com',
         numeroConvenio: '12',
         periodo: 2026,

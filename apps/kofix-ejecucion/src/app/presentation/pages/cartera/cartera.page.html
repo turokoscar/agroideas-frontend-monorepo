@@ -53,9 +53,15 @@
                     {{ row.numeroConvenio }}
                 </span>
             }
+            @if (col.field === 'razonSocial') {
+                <div class="flex flex-col">
+                    <span>{{ row.razonSocial }}</span>
+                    <span class="text-xs text-slate-400">{{ row.nroRuc || '—' }}</span>
+                </div>
+            }
             @if (col.field === 'asignadoA') {
                 <div class="flex flex-col">
-                    <span class="font-medium text-slate-700">{{ row.asignadoA || row.nombresCompletos || '—' }}</span>
+                    <span class="font-medium text-slate-700">{{ row.asignadoA || '—' }}</span>
                     <span class="text-xs text-slate-400">{{ row.email || '—' }}</span>
                 </div>
             }
@@ -66,8 +72,8 @@
             }
             @if (col.field === 'estadoSituacional') {
                 <app-ui-status-pill
-                    [status]="getEstadoSemaforo(row).status"
-                    [text]="getEstadoSemaforo(row).text">
+                    [status]="getEstadoVariant(row.estadoSituacional)"
+                    [text]="getEstadoText(row.estadoSituacional)">
                 </app-ui-status-pill>
             }
         </ng-template>
@@ -120,7 +126,7 @@
                     </div>
                     <div class="info-group">
                         <span class="info-label">Especialista Actual:</span>
-                        <span class="info-value">{{ item.nombresCompletos }}</span>
+                        <span class="info-value">{{ item.asignadoA }}</span>
                     </div>
 
                     <div class="form-group mt-4">

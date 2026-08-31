@@ -2,7 +2,6 @@ export interface CarteraItem {
     postulanteId: number;
     nroRuc: string;
     razonSocial: string;
-    nombresCompletos: string;
     email: string;
     numeroConvenio: string;
     periodo: number;
