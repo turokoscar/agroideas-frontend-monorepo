@@ -1,0 +1,37 @@
+<div class="filter-group">
+    <label class="filter-label" for="ubigeo-departamento">Departamento</label>
+    <select id="ubigeo-departamento" class="filter-input"
+        [ngModel]="departamentoCodigo()"
+        (ngModelChange)="onDepartamentoChange($event)">
+        <option value="">Todos los departamentos</option>
+        @for (dep of departamentos(); track dep.codigo) {
+            <option [value]="dep.codigo">{{ dep.nombre }}</option>
+        }
+    </select>
+</div>
+
+<div class="filter-group">
+    <label class="filter-label" for="ubigeo-provincia">Provincia</label>
+    <select id="ubigeo-provincia" class="filter-input"
+        [ngModel]="provinciaCodigo()"
+        (ngModelChange)="onProvinciaChange($event)"
+        [disabled]="!departamentoCodigo()">
+        <option value="">Todas las provincias</option>
+        @for (prov of provincias(); track prov.codigo) {
+            <option [value]="prov.codigo">{{ prov.nombre }}</option>
+        }
+    </select>
+</div>
+
+<div class="filter-group">
+    <label class="filter-label" for="ubigeo-distrito">Distrito</label>
+    <select id="ubigeo-distrito" class="filter-input"
+        [ngModel]="distritoCodigo()"
+        (ngModelChange)="onDistritoChange($event)"
+        [disabled]="!provinciaCodigo()">
+        <option value="">Todos los distritos</option>
+        @for (dist of distritos(); track dist.codigo) {
+            <option [value]="dist.codigo">{{ dist.nombre }}</option>
+        }
+    </select>
+</div>

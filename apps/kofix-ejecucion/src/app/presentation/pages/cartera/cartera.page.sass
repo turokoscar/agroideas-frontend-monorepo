@@ -1,3 +1,21 @@
+// Filtros de ubicación (departamento/provincia/distrito) + especialista.
+// Se agrupan en un contenedor propio (en vez de dejarlos sueltos como hijos flex
+// directos de app-ui-filter-bar) para que siempre aparezcan juntos y en el mismo
+// orden, con su propio grid responsive -- el flex-wrap del filter-bar compartido
+// no garantiza un acomodo predecible cuando hay 4+ selects sueltos de por medio.
+.filters-geo-grid
+    display: grid
+    grid-template-columns: repeat(4, minmax(140px, 1fr))
+    gap: 0.875rem
+    flex: 1 1 480px
+
+    @media (max-width: 900px)
+        grid-template-columns: repeat(2, 1fr)
+        flex-basis: 100%
+
+    @media (max-width: 480px)
+        grid-template-columns: 1fr
+
 // Modal styles
 .modal-overlay
     position: fixed

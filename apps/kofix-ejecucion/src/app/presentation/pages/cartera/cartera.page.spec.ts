@@ -40,6 +40,7 @@ describe('CarteraPageComponent', () => {
         mockRepo = {
             getCartera: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
             getEspecialistas: jest.fn().mockReturnValue(of([])),
+            getUbigeos: jest.fn().mockReturnValue(of([])),
             reasignar: jest.fn()
         };
         mockAlert = { show: jest.fn() };
@@ -62,8 +63,32 @@ describe('CarteraPageComponent', () => {
     it('should load the cartera and the especialistas list on init', () => {
         fixture.detectChanges();
 
-        expect(mockRepo.getCartera).toHaveBeenCalledWith('', 0, 10);
+        expect(mockRepo.getCartera).toHaveBeenCalledWith('', 0, 10, { especialistaId: undefined });
         expect(mockRepo.getEspecialistas).toHaveBeenCalled();
+    });
+
+    it('should merge the ubigeo filter into the next getCartera call and reload', () => {
+        fixture.detectChanges();
+
+        component.onUbigeoFiltroChange({ departamentoCodigo: '08', provinciaCodigo: '0801' });
+
+        expect(mockRepo.getCartera).toHaveBeenLastCalledWith('', 0, 10, {
+            departamentoCodigo: '08',
+            provinciaCodigo: '0801',
+            especialistaId: undefined
+        });
+    });
+
+    it('should merge the especialista filter into the next getCartera call and reload', () => {
+        fixture.detectChanges();
+
+        component.onEspecialistaFiltroChange(165793);
+
+        expect(mockRepo.getCartera).toHaveBeenLastCalledWith('', 0, 10, { especialistaId: 165793 });
+
+        component.onEspecialistaFiltroChange(null);
+
+        expect(mockRepo.getCartera).toHaveBeenLastCalledWith('', 0, 10, { especialistaId: undefined });
     });
 
     it('should require an especialista before confirming a reassignment', () => {

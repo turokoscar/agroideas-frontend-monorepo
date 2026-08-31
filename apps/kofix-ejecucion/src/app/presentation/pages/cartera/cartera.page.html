@@ -18,6 +18,22 @@
                     (keyup.enter)="onSearch()" />
             </div>
         </div>
+
+        <div class="filters-geo-grid">
+            <app-ubigeo-cascada-filter (filtroChange)="onUbigeoFiltroChange($event)" />
+
+            <div class="filter-group">
+                <label class="filter-label" for="cartera-especialista-filtro">Especialista</label>
+                <select id="cartera-especialista-filtro" class="filter-input"
+                    [ngModel]="especialistaFiltroId()"
+                    (ngModelChange)="onEspecialistaFiltroChange($event)">
+                    <option [ngValue]="null">Todos los especialistas</option>
+                    @for (esp of especialistas(); track esp.id) {
+                        <option [ngValue]="esp.id">{{ esp.nombresCompletos }}</option>
+                    }
+                </select>
+            </div>
+        </div>
     </app-ui-filter-bar>
 
     <!-- Table -->

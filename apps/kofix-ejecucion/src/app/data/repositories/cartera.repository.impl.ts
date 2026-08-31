@@ -4,7 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { CarteraRepository, Especialista, ReasignarRequest } from '../../domain/repositories/cartera.repository';
+import { CarteraFiltros, CarteraRepository, Especialista, NivelUbigeo, ReasignarRequest, Ubigeo } from '../../domain/repositories/cartera.repository';
 import { CarteraItem } from '../../domain/models/cartera.model';
 
 @Injectable({
@@ -20,12 +20,18 @@ export class CarteraRepositoryImpl extends CarteraRepository {
     override getCartera(
         busqueda?: string,
         offset = 0,
-        limit = 10
+        limit = 10,
+        filtros?: CarteraFiltros
     ): Observable<{ items: CarteraItem[], total: number }> {
-        const params = new HttpParams()
+        let params = new HttpParams()
             .set('busqueda', busqueda || '')
             .set('pagina', Math.floor(offset / limit) + 1)
             .set('cantidad', limit);
+
+        if (filtros?.departamentoCodigo) params = params.set('departamentoCodigo', filtros.departamentoCodigo);
+        if (filtros?.provinciaCodigo) params = params.set('provinciaCodigo', filtros.provinciaCodigo);
+        if (filtros?.distritoCodigo) params = params.set('distritoCodigo', filtros.distritoCodigo);
+        if (filtros?.especialistaId) params = params.set('especialistaId', filtros.especialistaId);
 
         return this.http.get<ResponseDto<CarteraItem[]>>(`${this.carteraUrl}`, { params }).pipe(
             map(res => ({
@@ -37,6 +43,15 @@ export class CarteraRepositoryImpl extends CarteraRepository {
 
     override getEspecialistas(): Observable<Especialista[]> {
         return this.http.get<ResponseDto<Especialista[]>>(`${this.carteraUrl}/especialistas`).pipe(
+            map(res => res.datos || [])
+        );
+    }
+
+    override getUbigeos(nivel: NivelUbigeo, padre?: string): Observable<Ubigeo[]> {
+        let params = new HttpParams().set('nivel', nivel);
+        if (padre) params = params.set('padre', padre);
+
+        return this.http.get<ResponseDto<Ubigeo[]>>(`${this.carteraUrl}/ubigeos`, { params }).pipe(
             map(res => res.datos || [])
         );
     }

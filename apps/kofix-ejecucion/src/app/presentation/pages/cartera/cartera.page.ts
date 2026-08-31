@@ -5,10 +5,11 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CarteraRepository, Especialista, ReasignarRequest } from '../../../domain/repositories/cartera.repository';
+import { CarteraFiltros, CarteraRepository, Especialista, ReasignarRequest } from '../../../domain/repositories/cartera.repository';
 import { finalize } from 'rxjs/operators';
 import { CarteraItem } from '../../../domain/models/cartera.model';
 import { AlertService } from '@agroideas/feedback';
+import { UbigeoCascadaFilterComponent, UbigeoFiltro } from '../../components/ubigeo-cascada-filter/ubigeo-cascada-filter.component';
 
 @Component({
     selector: 'app-cartera-page',
@@ -20,7 +21,8 @@ import { AlertService } from '@agroideas/feedback';
         UiFilterBarComponent,
         UiStatusPillComponent,
         HasPermissionDirective,
-        UIButtonComponent
+        UIButtonComponent,
+        UbigeoCascadaFilterComponent
     ],
     templateUrl: './cartera.page.html',
     styleUrls: ['./cartera.page.sass'],
@@ -43,6 +45,9 @@ export class CarteraPageComponent implements OnInit {
     especialistas = signal<Especialista[]>([]);
     selectedEspecialistaId = signal<number | null>(null);
     observacion = signal('');
+
+    ubigeoFiltro = signal<UbigeoFiltro>({});
+    especialistaFiltroId = signal<number | null>(null);
     reasignItem = signal<CarteraItem | null>(null);
     showReasignModal = signal(false);
 
@@ -65,10 +70,16 @@ export class CarteraPageComponent implements OnInit {
 
         this.loading.set(true);
 
+        const filtros: CarteraFiltros = {
+            ...this.ubigeoFiltro(),
+            especialistaId: this.especialistaFiltroId() ?? undefined
+        };
+
         this.carteraRepo.getCartera(
             this.search(),
             offset,
-            limit
+            limit,
+            filtros
         ).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res) => {
                 this.cartera.set(res.items);
@@ -87,6 +98,16 @@ export class CarteraPageComponent implements OnInit {
     }
 
     onSearch(): void {
+        this.loadData();
+    }
+
+    onUbigeoFiltroChange(filtro: UbigeoFiltro): void {
+        this.ubigeoFiltro.set(filtro);
+        this.loadData();
+    }
+
+    onEspecialistaFiltroChange(especialistaId: number | null): void {
+        this.especialistaFiltroId.set(especialistaId);
         this.loadData();
     }
 
