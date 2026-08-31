@@ -5,6 +5,24 @@
 :host
   display: block
 
+// Filtros de ubicación (departamento/provincia/distrito) + año + estado -- mismo patrón que
+// cartera.page.sass (ADR-021/ADR-022): se agrupan en un grid propio para que aparezcan juntos
+// y de forma responsive, en vez de sueltos como hijos flex directos de app-ui-filter-bar.
+.filters-geo-grid
+  display: grid
+  grid-template-columns: repeat(5, minmax(140px, 1fr))
+  gap: 0.875rem
+  // A diferencia de cartera.page.sass (donde el grid cabe junto al buscador en una sola fila
+  // a 1440px), acá son 5 filtros -- flex-basis:100% incondicional para que el grupo caiga
+  // siempre a su propia fila debajo del buscador, en vez de competir por espacio con él.
+  flex-basis: 100%
+
+  @media (max-width: 900px)
+    grid-template-columns: repeat(2, 1fr)
+
+  @media (max-width: 480px)
+    grid-template-columns: 1fr
+
 // ── Page Header ──────────────────────────────────
 .page-header
   display: flex

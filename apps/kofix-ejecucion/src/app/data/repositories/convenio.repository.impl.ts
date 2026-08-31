@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ConvenioRepository } from '../../domain/repositories/convenio.repository';
+import { ConvenioFiltros, ConvenioFiltrosVigente, ConvenioRepository } from '../../domain/repositories/convenio.repository';
 import { Convenio, ConvenioResumenFinanciero } from '../../domain/models/convenio.model';
 import { ConvenioMapper, ConvenioDto } from '../mappers/convenio.mapper';
 
@@ -17,14 +17,23 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
         super();
     }
 
-    override getAsignados(pagina: number, cantidad: number, busqueda?: string): Observable<{ datos: Convenio[], total: number }> {
+    private static buildParams(pagina: number, cantidad: number, busqueda?: string, filtros?: ConvenioFiltros): HttpParams {
         let params = new HttpParams()
             .set('pagina', pagina.toString())
             .set('cantidad', cantidad.toString());
 
-        if (busqueda) {
-            params = params.set('busqueda', busqueda);
-        }
+        if (busqueda) params = params.set('busqueda', busqueda);
+        if (filtros?.departamentoCodigo) params = params.set('departamentoCodigo', filtros.departamentoCodigo);
+        if (filtros?.provinciaCodigo) params = params.set('provinciaCodigo', filtros.provinciaCodigo);
+        if (filtros?.distritoCodigo) params = params.set('distritoCodigo', filtros.distritoCodigo);
+        if (filtros?.periodo) params = params.set('periodo', filtros.periodo);
+        if (filtros?.estado) params = params.set('estado', filtros.estado);
+
+        return params;
+    }
+
+    override getAsignados(pagina: number, cantidad: number, busqueda?: string, filtros?: ConvenioFiltros): Observable<{ datos: Convenio[], total: number }> {
+        const params = ConvenioRepositoryImpl.buildParams(pagina, cantidad, busqueda, filtros);
 
         return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/asignados`, { params }).pipe(
             map(res => ({
@@ -34,14 +43,8 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
         );
     }
 
-    override getTodos(pagina: number, cantidad: number, busqueda?: string): Observable<{ datos: Convenio[], total: number }> {
-        let params = new HttpParams()
-            .set('pagina', pagina.toString())
-            .set('cantidad', cantidad.toString());
-
-        if (busqueda) {
-            params = params.set('busqueda', busqueda);
-        }
+    override getTodos(pagina: number, cantidad: number, busqueda?: string, filtros?: ConvenioFiltros): Observable<{ datos: Convenio[], total: number }> {
+        const params = ConvenioRepositoryImpl.buildParams(pagina, cantidad, busqueda, filtros);
 
         return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/todos`, { params }).pipe(
             map(res => ({
@@ -51,14 +54,8 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
         );
     }
 
-    override getVigente(pagina: number, cantidad: number, busqueda?: string): Observable<{ datos: Convenio[], total: number }> {
-        let params = new HttpParams()
-            .set('pagina', pagina.toString())
-            .set('cantidad', cantidad.toString());
-
-        if (busqueda) {
-            params = params.set('busqueda', busqueda);
-        }
+    override getVigente(pagina: number, cantidad: number, busqueda?: string, filtros?: ConvenioFiltrosVigente): Observable<{ datos: Convenio[], total: number }> {
+        const params = ConvenioRepositoryImpl.buildParams(pagina, cantidad, busqueda, filtros);
 
         return this.http.get<ResponseDto<ConvenioDto[]>>(`${this.apiUrl}/vigentes`, { params }).pipe(
             map(res => ({

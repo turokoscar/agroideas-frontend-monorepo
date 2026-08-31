@@ -19,6 +19,22 @@
           (keyup.enter)="onSearch()" />
       </div>
     </div>
+
+    <div class="filters-geo-grid">
+      <app-ubigeo-cascada-filter (filtroChange)="onUbigeoFiltroChange($event)" />
+
+      <div class="filter-group">
+        <label class="filter-label" for="programacion-vigente-anio">Año</label>
+        <select id="programacion-vigente-anio" class="filter-input"
+          [ngModel]="periodoFiltro()"
+          (ngModelChange)="onPeriodoFiltroChange($event)">
+          <option [ngValue]="null">Todos los años</option>
+          @for (anio of aniosDisponibles; track anio) {
+            <option [ngValue]="anio">{{ anio }}</option>
+          }
+        </select>
+      </div>
+    </div>
   </app-ui-filter-bar>
 
   <!-- Table -->

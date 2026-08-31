@@ -3,22 +3,26 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { ProgramacionVigentePageComponent } from './programacion-vigente.page';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { CarteraRepository } from '../../../domain/repositories/cartera.repository';
 import { ExportService } from '../../../shared/services/export.service';
 
 describe('ProgramacionVigentePageComponent', () => {
     let component: ProgramacionVigentePageComponent;
     let fixture: ComponentFixture<ProgramacionVigentePageComponent>;
     let mockRepo: jest.Mocked<Partial<ConvenioRepository>>;
+    let mockCarteraRepo: jest.Mocked<Partial<CarteraRepository>>;
     let router: Router;
 
     beforeEach(async () => {
         mockRepo = { getVigente: jest.fn().mockReturnValue(of({ datos: [], total: 0 })) };
+        mockCarteraRepo = { getUbigeos: jest.fn().mockReturnValue(of([])) };
 
         await TestBed.configureTestingModule({
             imports: [ProgramacionVigentePageComponent],
             providers: [
                 provideRouter([]),
                 { provide: ConvenioRepository, useValue: mockRepo },
+                { provide: CarteraRepository, useValue: mockCarteraRepo },
                 { provide: ExportService, useValue: { exportProgramacionReporte: jest.fn() } }
             ]
         }).compileComponents();
@@ -29,17 +33,39 @@ describe('ProgramacionVigentePageComponent', () => {
         jest.spyOn(router, 'navigate').mockResolvedValue(true);
     });
 
+    const filtrosVacios = { periodo: undefined };
+
     it('should auto-load the first page on init', () => {
         fixture.detectChanges();
 
-        expect(mockRepo.getVigente).toHaveBeenCalledWith(1, 10, '');
+        expect(mockRepo.getVigente).toHaveBeenCalledWith(1, 10, '', filtrosVacios);
     });
 
     it('should convert the lazy-load offset into a 1-based page', () => {
         component.pageSize.set(10);
         component.loadData({ first: 20, rows: 10 });
 
-        expect(mockRepo.getVigente).toHaveBeenCalledWith(3, 10, '');
+        expect(mockRepo.getVigente).toHaveBeenCalledWith(3, 10, '', filtrosVacios);
+    });
+
+    it('should merge the ubigeo filter into the next request and reset to page 1', () => {
+        fixture.detectChanges();
+
+        component.onUbigeoFiltroChange({ departamentoCodigo: '08', distritoCodigo: '080101' });
+
+        expect(mockRepo.getVigente).toHaveBeenLastCalledWith(1, 10, '', {
+            departamentoCodigo: '08',
+            distritoCodigo: '080101',
+            periodo: undefined
+        });
+    });
+
+    it('should merge the periodo filter into the next request', () => {
+        fixture.detectChanges();
+
+        component.onPeriodoFiltroChange('2023');
+
+        expect(mockRepo.getVigente).toHaveBeenLastCalledWith(1, 10, '', { periodo: 2023 });
     });
 
     it('should clamp the progress percentage to 100 and handle a missing montoAprobado', () => {

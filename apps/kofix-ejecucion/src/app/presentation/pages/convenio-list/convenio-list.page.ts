@@ -7,13 +7,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Convenio } from '../../../domain/models/convenio.model';
 import { AlertService } from '@agroideas/feedback';
-import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { ConvenioFiltros, ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { finalize } from 'rxjs/operators';
+import { UbigeoCascadaFilterComponent, UbigeoFiltro } from '../../components/ubigeo-cascada-filter/ubigeo-cascada-filter.component';
 
 @Component({
     selector: 'app-convenio-list-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent],
+    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
     templateUrl: './convenio-list.page.html',
     styleUrls: ['./convenio-list.page.sass'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -28,9 +29,20 @@ export class ConvenioListPageComponent implements OnInit {
     totalRecords = signal<number>(0);
     loading = signal<boolean>(false);
     search = signal('');
+    /** 'ACTIVO' | 'FINALIZADO' | '' (todos) -- filtro real server-side (ADR-022), ya no en memoria. */
     estadoFilter = signal('');
+    ubigeoFiltro = signal<UbigeoFiltro>({});
+    periodoFiltro = signal<number | null>(null);
     pageSize = signal(10);
     readonly rowsOptions = [5, 10, 20, 50, 100];
+
+    /** Rango fijo calculado en cliente (ADR-022 Fase 0) -- sin endpoint nuevo. */
+    readonly aniosDisponibles: number[] = (() => {
+        const actual = new Date().getFullYear();
+        const anios: number[] = [];
+        for (let a = actual + 1; a >= 2015; a--) anios.push(a);
+        return anios;
+    })();
 
     columns: TableColumn[] = [
         { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
@@ -51,19 +63,19 @@ export class ConvenioListPageComponent implements OnInit {
         const page = event ? Math.floor(event.first / event.rows) + 1 : 1;
         const rows = event?.rows || this.pageSize();
 
+        const filtros: ConvenioFiltros = {
+            ...this.ubigeoFiltro(),
+            periodo: this.periodoFiltro() ?? undefined,
+            estado: (this.estadoFilter() || undefined) as ConvenioFiltros['estado']
+        };
+
         const obs$ = this.permissionService.hasPermission(PERMISSIONS.VER_TODOS_CONVENIOS)
-            ? this.convenioRepo.getTodos(page, rows, this.search())
-            : this.convenioRepo.getAsignados(page, rows, this.search());
+            ? this.convenioRepo.getTodos(page, rows, this.search(), filtros)
+            : this.convenioRepo.getAsignados(page, rows, this.search(), filtros);
 
         obs$.pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res) => {
-                let datos = res.datos;
-
-                if (this.estadoFilter()) {
-                    datos = datos.filter((c: Convenio) => c.estado === this.estadoFilter());
-                }
-
-                this.convenios.set(datos);
+                this.convenios.set(res.datos);
                 this.totalRecords.set(res.total);
             },
             error: () => {}
@@ -76,6 +88,21 @@ export class ConvenioListPageComponent implements OnInit {
 
     onRowsChange(rows: number): void {
         this.pageSize.set(rows);
+    }
+
+    onUbigeoFiltroChange(filtro: UbigeoFiltro): void {
+        this.ubigeoFiltro.set(filtro);
+        this.loadData({ first: 0, rows: this.pageSize() });
+    }
+
+    onPeriodoFiltroChange(periodo: string): void {
+        this.periodoFiltro.set(periodo ? Number(periodo) : null);
+        this.loadData({ first: 0, rows: this.pageSize() });
+    }
+
+    onEstadoFiltroChange(estado: string): void {
+        this.estadoFilter.set(estado);
+        this.loadData({ first: 0, rows: this.pageSize() });
     }
 
     goToDetail(id: number): void {

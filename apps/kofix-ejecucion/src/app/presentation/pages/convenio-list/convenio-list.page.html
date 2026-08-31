@@ -28,14 +28,31 @@
       </div>
     </div>
 
-    <div class="filter-group">
-      <label class="filter-label" for="convenio-list-estado">Estado</label>
-      <select id="convenio-list-estado" class="filter-input" [(ngModel)]="estadoFilter" (change)="onSearch()">
-        <option value="">Todos los estados</option>
-        <option value="VIGENTE">Activo</option>
-        <option value="POR_INICIAR">Por Iniciar</option>
-        <option value="FINALIZADO">Finalizado</option>
-      </select>
+    <div class="filters-geo-grid">
+      <app-ubigeo-cascada-filter (filtroChange)="onUbigeoFiltroChange($event)" />
+
+      <div class="filter-group">
+        <label class="filter-label" for="convenio-list-anio">Año</label>
+        <select id="convenio-list-anio" class="filter-input"
+          [ngModel]="periodoFiltro()"
+          (ngModelChange)="onPeriodoFiltroChange($event)">
+          <option [ngValue]="null">Todos los años</option>
+          @for (anio of aniosDisponibles; track anio) {
+            <option [ngValue]="anio">{{ anio }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="convenio-list-estado">Estado</label>
+        <select id="convenio-list-estado" class="filter-input"
+          [ngModel]="estadoFilter()"
+          (ngModelChange)="onEstadoFiltroChange($event)">
+          <option value="">Todos los estados</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="FINALIZADO">Finalizado</option>
+        </select>
+      </div>
     </div>
   </app-ui-filter-bar>
 

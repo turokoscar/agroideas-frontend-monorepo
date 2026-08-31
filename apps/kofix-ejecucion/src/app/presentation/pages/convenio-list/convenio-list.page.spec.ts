@@ -5,12 +5,14 @@ import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { ConvenioListPageComponent } from './convenio-list.page';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { CarteraRepository } from '../../../domain/repositories/cartera.repository';
 import { Convenio } from '../../../domain/models/convenio.model';
 
 describe('ConvenioListPageComponent', () => {
     let component: ConvenioListPageComponent;
     let fixture: ComponentFixture<ConvenioListPageComponent>;
     let mockConvenioRepo: jest.Mocked<Partial<ConvenioRepository>>;
+    let mockCarteraRepo: jest.Mocked<Partial<CarteraRepository>>;
     let mockPermissionService: jest.Mocked<Partial<PermissionService>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
     let router: Router;
@@ -44,6 +46,9 @@ describe('ConvenioListPageComponent', () => {
             getTodos: jest.fn().mockReturnValue(of({ datos: [], total: 0 })),
             getAsignados: jest.fn().mockReturnValue(of({ datos: [], total: 0 }))
         };
+        mockCarteraRepo = {
+            getUbigeos: jest.fn().mockReturnValue(of([]))
+        };
         mockPermissionService = { hasPermission: jest.fn().mockReturnValue(false) };
         mockAlert = { show: jest.fn() };
 
@@ -52,6 +57,7 @@ describe('ConvenioListPageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: ConvenioRepository, useValue: mockConvenioRepo },
+                { provide: CarteraRepository, useValue: mockCarteraRepo },
                 { provide: PermissionService, useValue: mockPermissionService },
                 { provide: AlertService, useValue: mockAlert }
             ]
@@ -63,10 +69,12 @@ describe('ConvenioListPageComponent', () => {
         jest.spyOn(router, 'navigate').mockResolvedValue(true);
     });
 
+    const filtrosVacios = { periodo: undefined, estado: undefined };
+
     it('should use getAsignados by default (no VER_TODOS_CONVENIOS permission)', () => {
         fixture.detectChanges();
 
-        expect(mockConvenioRepo.getAsignados).toHaveBeenCalledWith(1, 10, '');
+        expect(mockConvenioRepo.getAsignados).toHaveBeenCalledWith(1, 10, '', filtrosVacios);
         expect(mockConvenioRepo.getTodos).not.toHaveBeenCalled();
     });
 
@@ -75,19 +83,40 @@ describe('ConvenioListPageComponent', () => {
 
         fixture.detectChanges();
 
-        expect(mockConvenioRepo.getTodos).toHaveBeenCalledWith(1, 10, '');
+        expect(mockConvenioRepo.getTodos).toHaveBeenCalledWith(1, 10, '', filtrosVacios);
     });
 
-    it('should filter the results client-side by estado when a filter is set', () => {
-        mockConvenioRepo.getAsignados = jest.fn().mockReturnValue(
-            of({ datos: [buildConvenio({ id: 1, estado: 'VIGENTE' }), buildConvenio({ id: 2, estado: 'FINALIZADO' })], total: 2 })
-        );
-        component.estadoFilter.set('VIGENTE');
-
+    it('should send estado to the repository as a real server-side filter (ADR-022), not filter in memory', () => {
         fixture.detectChanges();
 
-        expect(component.convenios()).toHaveLength(1);
-        expect(component.convenios()[0].id).toBe(1);
+        component.onEstadoFiltroChange('ACTIVO');
+
+        expect(mockConvenioRepo.getAsignados).toHaveBeenLastCalledWith(1, 10, '', { periodo: undefined, estado: 'ACTIVO' });
+    });
+
+    it('should merge the ubigeo filter into the next request and reset to page 1', () => {
+        fixture.detectChanges();
+
+        component.onUbigeoFiltroChange({ departamentoCodigo: '08', provinciaCodigo: '0801' });
+
+        expect(mockConvenioRepo.getAsignados).toHaveBeenLastCalledWith(1, 10, '', {
+            departamentoCodigo: '08',
+            provinciaCodigo: '0801',
+            periodo: undefined,
+            estado: undefined
+        });
+    });
+
+    it('should merge the periodo filter into the next request', () => {
+        fixture.detectChanges();
+
+        component.onPeriodoFiltroChange('2024');
+
+        expect(mockConvenioRepo.getAsignados).toHaveBeenLastCalledWith(1, 10, '', { periodo: 2024, estado: undefined });
+
+        component.onPeriodoFiltroChange('');
+
+        expect(mockConvenioRepo.getAsignados).toHaveBeenLastCalledWith(1, 10, '', { periodo: undefined, estado: undefined });
     });
 
     describe('formatConvenioNumber', () => {

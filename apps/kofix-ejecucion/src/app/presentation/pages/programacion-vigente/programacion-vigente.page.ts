@@ -4,9 +4,10 @@ import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { ConvenioFiltrosVigente, ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { ExportService } from '../../../shared/services/export.service';
 import { finalize } from 'rxjs/operators';
+import { UbigeoCascadaFilterComponent, UbigeoFiltro } from '../../components/ubigeo-cascada-filter/ubigeo-cascada-filter.component';
 
 interface LazyLoadEvent {
     first?: number;
@@ -16,7 +17,7 @@ interface LazyLoadEvent {
 @Component({
     selector: 'app-programacion-vigente-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UIButtonComponent],
+    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
     templateUrl: './programacion-vigente.page.html',
     styleUrls: ['./programacion-vigente.page.sass'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -35,6 +36,16 @@ export class ProgramacionVigentePageComponent implements OnInit {
     readonly rowsOptions = [5, 10, 20, 50, 100];
 
     search = signal('');
+    ubigeoFiltro = signal<UbigeoFiltro>({});
+    periodoFiltro = signal<number | null>(null);
+
+    /** Rango fijo calculado en cliente (ADR-022 Fase 0) -- sin endpoint nuevo. */
+    readonly aniosDisponibles: number[] = (() => {
+        const actual = new Date().getFullYear();
+        const anios: number[] = [];
+        for (let a = actual + 1; a >= 2015; a--) anios.push(a);
+        return anios;
+    })();
 
     columns: TableColumn[] = [
         { field: 'numeroConvenio', header: 'N° Convenio', width: '120px' },
@@ -54,7 +65,12 @@ export class ProgramacionVigentePageComponent implements OnInit {
         const page = event.first ? Math.floor(event.first / (event.rows ?? this.pageSize())) + 1 : 1;
         const size = event.rows ?? this.pageSize();
 
-        this.convenioRepo.getVigente(page, size, this.search()).pipe(finalize(() => this.loading.set(false))).subscribe({
+        const filtros: ConvenioFiltrosVigente = {
+            ...this.ubigeoFiltro(),
+            periodo: this.periodoFiltro() ?? undefined
+        };
+
+        this.convenioRepo.getVigente(page, size, this.search(), filtros).pipe(finalize(() => this.loading.set(false))).subscribe({
             next: (res: { datos: any[], total: number }) => {
                 this.convenios.set(res.datos);
                 this.totalRecords.set(res.total);
@@ -69,6 +85,16 @@ export class ProgramacionVigentePageComponent implements OnInit {
 
     onRowsChange(rows: number): void {
         this.pageSize.set(rows);
+    }
+
+    onUbigeoFiltroChange(filtro: UbigeoFiltro): void {
+        this.ubigeoFiltro.set(filtro);
+        this.loadData({ first: 0, rows: this.pageSize() });
+    }
+
+    onPeriodoFiltroChange(periodo: string): void {
+        this.periodoFiltro.set(periodo ? Number(periodo) : null);
+        this.loadData({ first: 0, rows: this.pageSize() });
     }
 
     getPorcentajeProgramado(item: any): number {
