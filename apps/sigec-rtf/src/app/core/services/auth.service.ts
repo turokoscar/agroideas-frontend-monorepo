@@ -8,6 +8,36 @@ import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
 
 export type UserRole = 'POSTULANTE' | 'UR' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO';
 
+/**
+ * `sel-api-seguridad` devuelve los roles tal cual están en su catálogo (texto completo en
+ * español, ej. "Unidad de Monitoreo"), no los códigos cortos que usan las rutas/guards de esta
+ * app (`app.routes.ts`, `auth.guard.ts`). Sin este mapeo, un rol no reconocido cae en el `else`
+ * final de `roleGuard` y genera un ciclo de redirección infinito entre rutas (cada guard rechaza
+ * y vuelve a redirigir a una ruta que el rol tampoco puede activar), que cuelga la pestaña por
+ * completo — no es un bug de red ni de extensiones del navegador.
+ *
+ * Los roles de personal MIDAGRI que existen para este módulo (RTF) son "Unidad de Monitoreo" y
+ * "Unidad de Negocios" — ambos son el mismo especialista que evalúa el RTF (etapa "UN" del
+ * flujo), y "Administrador del sistema" con acceso equivalente. Cualquier rol no listado aquí
+ * (y cualquier usuario sin roles reconocidos) cae en 'POSTULANTE' — el mismo comportamiento por
+ * defecto que ya tenía `normalizarRol`, y a propósito: `roleGuard(['POSTULANTE'])` sí deja pasar
+ * ese caso (mostrando el dashboard con error si no hay convenio), en vez de repetir el ciclo.
+ */
+const ROLES_SIGEC_RTF: Readonly<Record<string, UserRole>> = {
+  POSTULANTE: 'POSTULANTE',
+  'UNIDAD DE MONITOREO': 'UN',
+  'UNIDAD DE NEGOCIOS': 'UN',
+  'ADMINISTRADOR DEL SISTEMA': 'UN'
+};
+
+function mapearRolSigecRtf(roles: readonly string[] | null | undefined): UserRole {
+  for (const rol of roles ?? []) {
+    const mapeado = ROLES_SIGEC_RTF[rol?.trim().toUpperCase()];
+    if (mapeado) return mapeado;
+  }
+  return 'POSTULANTE';
+}
+
 export interface AuthUser {
   id: string;
   nombre: string;
@@ -71,7 +101,7 @@ export class AuthService {
             usuario: sesion.usuario,
             email: sesion.email,
             sigla: sesion.sigla,
-            role: sesion.rol as UserRole
+            role: mapearRolSigecRtf(data.user.roles)
           };
 
           localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, data.accessToken);
