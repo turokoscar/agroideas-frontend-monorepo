@@ -50,7 +50,7 @@ export class UrAuditoriaService {
   }
 
   loadRtfCompleto(rtfId: number) {
-    return this.http.get<ApiResponse<UrCompletoDto>>(`${this.apiUrl}/rtfs/completo/${rtfId}`).pipe(
+    return this.http.get<ApiResponse<UrCompletoDto>>(`${this.apiUrl}/rtfs/${rtfId}/completo`).pipe(
       map(res => {
         const data = res.datos;
         if (data) {
@@ -73,7 +73,7 @@ export class UrAuditoriaService {
   uploadActaCampo(rtfId: number, archivo: File) {
     const formData = new FormData();
     formData.append('archivo', archivo);
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/acta-campo`, formData).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/actas-campo`, formData).pipe(
       map(res => {
         this.urActaCampoArchivo.set(archivo);
         return res;
@@ -87,7 +87,7 @@ export class UrAuditoriaService {
 
   guardarEvaluacionUr(rtfId: number, items: UrEvaluacionItemDto[]) {
     const body: UrEvaluacionRequestDto = { ideRtf: rtfId, items };
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/evaluacion-ur`, body).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/evaluaciones`, body).pipe(
       map(res => {
         this.urEvaluacionItems.set(items);
         return res;
@@ -100,7 +100,7 @@ export class UrAuditoriaService {
   }
 
   derivarUn(rtfId: number) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/derivar-un`, {}).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/derivaciones`, {}).pipe(
       map(res => {
         this.rtfStatus.set('IN_REVISION_UN');
         return res;
@@ -113,7 +113,7 @@ export class UrAuditoriaService {
   }
 
   devolverRtf(rtfId: number, observacion: string) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/devolver`, JSON.stringify(observacion), {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/devoluciones`, JSON.stringify(observacion), {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {

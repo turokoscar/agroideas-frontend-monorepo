@@ -26,7 +26,7 @@ export class UnGabineteService {
   rtfStatus = signal<string>('PENDIENTE');
 
   loadDashboardUn() {
-    return this.http.get<ApiResponse<DashboardUnData>>(`${this.apiUrl}/rtfs/dashboard-un`).pipe(
+    return this.http.get<ApiResponse<DashboardUnData>>(`${this.apiUrl}/un/dashboard`).pipe(
       map(res => {
         this.dashboardUnData.set(res.datos || null);
         return res.datos;
@@ -39,7 +39,7 @@ export class UnGabineteService {
   }
 
   loadBandejaUn() {
-    return this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(`${this.apiUrl}/rtfs/bandeja/un`).pipe(
+    return this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(`${this.apiUrl}/un/bandeja`).pipe(
       map(res => {
         this.unRtfList.set(res.datos?.items || []);
         return res.datos;
@@ -52,7 +52,7 @@ export class UnGabineteService {
   }
 
   aprobarUn(rtfId: number, observacion?: string) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/aprobar-un`, observacion ? JSON.stringify(observacion) : {}, {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/aprobaciones`, observacion ? JSON.stringify(observacion) : {}, {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {
@@ -68,7 +68,7 @@ export class UnGabineteService {
   }
 
   rechazarUn(rtfId: number, observacion?: string) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/rechazar-un`, observacion ? JSON.stringify(observacion) : {}, {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/rechazos`, observacion ? JSON.stringify(observacion) : {}, {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {
@@ -84,7 +84,7 @@ export class UnGabineteService {
   }
 
   devolverUn(rtfId: number, observacion: string) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/devolver-un`, JSON.stringify(observacion), {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/devoluciones-un`, JSON.stringify(observacion), {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {

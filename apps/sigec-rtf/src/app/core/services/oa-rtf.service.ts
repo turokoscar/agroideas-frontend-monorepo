@@ -65,7 +65,7 @@ export class OaRtfService {
   oaBandejaPagina = signal(1);
 
   resolvePostulanteId() {
-    return this.http.get<ApiResponse<{ postulanteId: number }>>(`${this.apiUrl}/rtfs/postulante/mi-id`).pipe(
+    return this.http.get<ApiResponse<{ postulanteId: number }>>(`${this.apiUrl}/postulantes/actual`).pipe(
       map(res => res.datos?.postulanteId),
       tap(postulanteId => {
         if (postulanteId) this.postulanteId.set(postulanteId);
@@ -90,7 +90,7 @@ export class OaRtfService {
   }
 
   loadDashboard(postulanteId: number) {
-    return this.http.get<ApiResponse<DashboardData>>(`${this.apiUrl}/rtfs/postulante/${postulanteId}/dashboard`).pipe(
+    return this.http.get<ApiResponse<DashboardData>>(`${this.apiUrl}/postulantes/${postulanteId}/dashboard`).pipe(
       map(res => {
         const data = res.datos;
         if (data) {
@@ -130,7 +130,7 @@ export class OaRtfService {
   }
 
   loadPasosCriticos(postulanteId: number) {
-    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/rtfs/postulante/${postulanteId}/pasos-criticos`).pipe(
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/postulantes/${postulanteId}/pasos-criticos`).pipe(
       map(res => {
         const data = res.datos;
         if (Array.isArray(data)) {
@@ -291,7 +291,7 @@ export class OaRtfService {
   }
 
   enviarRtf(rtfId: number) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/enviar`, {}).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/envios`, {}).pipe(
       map(res => {
         this.rtfStatus.set('ENVIADO');
         return res;
@@ -323,7 +323,7 @@ export class OaRtfService {
   }
 
   downloadEvidencia(evidenciaId: number) {
-    return this.http.get(`${this.apiUrl}/rtfs/evidencias/${evidenciaId}/descarga`, {
+    return this.http.get(`${this.apiUrl}/evidencias/${evidenciaId}/contenido`, {
       responseType: 'blob'
     }).pipe(
       catchError(err => {
@@ -334,7 +334,7 @@ export class OaRtfService {
   }
 
   removeEvidencia(evidenciaId: number) {
-    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/rtfs/evidencias/${evidenciaId}`).pipe(
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/evidencias/${evidenciaId}`).pipe(
       map(res => {
         this.evidencias.update(ev => ev.filter(e => e.ideEvidencia !== evidenciaId));
         return res;
