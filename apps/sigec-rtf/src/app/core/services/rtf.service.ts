@@ -158,14 +158,15 @@ export class RtfService {
   rechazarUn = (rtfId: number, observacion?: string) => this.unService.rechazarUn(rtfId, observacion);
   devolverUn = (rtfId: number, observacion: string) => this.unService.devolverUn(rtfId, observacion);
 
-  // Delegaciones BD_SEL
-  loadMetasPorPasoCritico = (pasoCriticoId: number) => this.pasoService.loadMetasPorPasoCritico(pasoCriticoId);
-  actualizarEjecucionMeta = (metaId: number, metaFisicaEjecutada: number, metaFinancieraEjecutada: number, comentarios?: string) =>
-    this.pasoService.actualizarEjecucionMeta(metaId, metaFisicaEjecutada, metaFinancieraEjecutada, comentarios);
-  subirEvidenciaMeta = (pasoCriticoId: number, metaId: number, archivo: File) => this.pasoService.subirEvidenciaMeta(pasoCriticoId, metaId, archivo);
-  loadIndicadoresPorPasoCritico = (pasoCriticoId: number) => this.pasoService.loadIndicadoresPorPasoCritico(pasoCriticoId);
-  actualizarEjecucionIndicador = (id: number, metaProgramada: number, metaEjecutada: number, comentarios?: string) =>
-    this.pasoService.actualizarEjecucionIndicador(id, metaProgramada, metaEjecutada, comentarios);
-  subirEvidenciaIndicador = (pasoCriticoId: number, indicadorId: number, archivo: File) =>
-    this.pasoService.subirEvidenciaIndicador(pasoCriticoId, indicadorId, archivo);
+  // Delegaciones BD_SEL — lo programado sigue viniendo de BD_SEL; el avance ejecutado y la
+  // evidencia se guardan localmente por RTF (ADR-009), de ahí el ideRtf en cada llamada.
+  loadMetasPorPasoCritico = (pasoCriticoId: number, ideRtf?: number | null) => this.pasoService.loadMetasPorPasoCritico(pasoCriticoId, ideRtf);
+  actualizarEjecucionMeta = (metaId: number, ideRtf: number, metaFisicaEjecutada: number, metaFinancieraEjecutada: number, comentarios?: string) =>
+    this.pasoService.actualizarEjecucionMeta(metaId, ideRtf, metaFisicaEjecutada, metaFinancieraEjecutada, comentarios);
+  subirEvidenciaMeta = (metaId: number, ideRtf: number, archivo: File) => this.pasoService.subirEvidenciaMeta(metaId, ideRtf, archivo);
+  loadIndicadoresPorPasoCritico = (pasoCriticoId: number, ideRtf?: number | null) => this.pasoService.loadIndicadoresPorPasoCritico(pasoCriticoId, ideRtf);
+  actualizarEjecucionIndicador = (id: number, ideRtf: number, metaProgramada: number, metaEjecutada: number, comentarios?: string) =>
+    this.pasoService.actualizarEjecucionIndicador(id, ideRtf, metaProgramada, metaEjecutada, comentarios);
+  subirEvidenciaIndicador = (indicadorId: number, ideRtf: number, archivo: File) =>
+    this.pasoService.subirEvidenciaIndicador(indicadorId, ideRtf, archivo);
 }

@@ -23,10 +23,12 @@ export class PasoCriticoService {
   // ADR-003 — Indicadores BD_SEL state
   pasoCriticoIndicadores = signal<PasoCriticoIndicador[]>([]);
 
-  // ADR-002 — Metas físicas/financieras desde BD_SEL vía sel-api-general
-  loadMetasPorPasoCritico(pasoCriticoId: number) {
+  // ADR-002 — Metas físicas/financieras desde BD_SEL vía sel-api-general (programado);
+  // el avance ejecutado se fusiona localmente por RTF cuando se pasa ideRtf (ADR-009).
+  loadMetasPorPasoCritico(pasoCriticoId: number, ideRtf?: number | null) {
     this.pasoCriticoId.set(pasoCriticoId);
-    return this.http.get<ApiResponse<PasoCriticoMeta[]>>(`${this.apiUrl}/rtfs/paso-critico/${pasoCriticoId}/metas`).pipe(
+    const params = ideRtf ? `?ideRtf=${ideRtf}` : '';
+    return this.http.get<ApiResponse<PasoCriticoMeta[]>>(`${this.apiUrl}/pasos-criticos/${pasoCriticoId}/metas${params}`).pipe(
       map(res => {
         this.pasoCriticoMetas.set(res.datos || []);
         return res.datos;
@@ -38,8 +40,9 @@ export class PasoCriticoService {
     );
   }
 
-  actualizarEjecucionMeta(metaId: number, metaFisicaEjecutada: number, metaFinancieraEjecutada: number, comentarios?: string) {
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/rtfs/paso-critico/metas/${metaId}`, {
+  // ADR-009: el avance ejecutado se guarda localmente, ligado al RTF — ya no se empuja a BD_SEL.
+  actualizarEjecucionMeta(metaId: number, ideRtf: number, metaFisicaEjecutada: number, metaFinancieraEjecutada: number, comentarios?: string) {
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/pasos-criticos/metas/${metaId}/ejecucion?ideRtf=${ideRtf}`, {
       metaFisicaEjecutada,
       metaFinancieraEjecutada,
       comentarios
@@ -52,10 +55,10 @@ export class PasoCriticoService {
     );
   }
 
-  subirEvidenciaMeta(pasoCriticoId: number, metaId: number, archivo: File) {
+  subirEvidenciaMeta(metaId: number, ideRtf: number, archivo: File) {
     const formData = new FormData();
     formData.append('archivo', archivo);
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/paso-critico/${pasoCriticoId}/metas/${metaId}/evidencia`, formData).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/pasos-criticos/metas/${metaId}/evidencia?ideRtf=${ideRtf}`, formData).pipe(
       map(res => res.respuesta === 'OK'),
       catchError(err => {
         console.error('Error uploading evidencia meta', err);
@@ -64,9 +67,10 @@ export class PasoCriticoService {
     );
   }
 
-  // ADR-003 — Indicadores desde BD_SEL
-  loadIndicadoresPorPasoCritico(pasoCriticoId: number) {
-    return this.http.get<ApiResponse<PasoCriticoIndicador[]>>(`${this.apiUrl}/rtfs/paso-critico/${pasoCriticoId}/indicadores`).pipe(
+  // ADR-003 — Indicadores desde BD_SEL (programado); avance ejecutado fusionado localmente (ADR-009)
+  loadIndicadoresPorPasoCritico(pasoCriticoId: number, ideRtf?: number | null) {
+    const params = ideRtf ? `?ideRtf=${ideRtf}` : '';
+    return this.http.get<ApiResponse<PasoCriticoIndicador[]>>(`${this.apiUrl}/pasos-criticos/${pasoCriticoId}/indicadores${params}`).pipe(
       map(res => {
         this.pasoCriticoIndicadores.set(res.datos || []);
         return res.datos;
@@ -78,8 +82,8 @@ export class PasoCriticoService {
     );
   }
 
-  actualizarEjecucionIndicador(id: number, metaProgramada: number, metaEjecutada: number, comentarios?: string) {
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/rtfs/paso-critico/indicadores/${id}`, {
+  actualizarEjecucionIndicador(id: number, ideRtf: number, metaProgramada: number, metaEjecutada: number, comentarios?: string) {
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/pasos-criticos/indicadores/${id}/ejecucion?ideRtf=${ideRtf}`, {
       metaProgramada,
       metaEjecutada,
       comentarios
@@ -92,10 +96,10 @@ export class PasoCriticoService {
     );
   }
 
-  subirEvidenciaIndicador(pasoCriticoId: number, indicadorId: number, archivo: File) {
+  subirEvidenciaIndicador(indicadorId: number, ideRtf: number, archivo: File) {
     const formData = new FormData();
     formData.append('archivo', archivo);
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/paso-critico/${pasoCriticoId}/indicadores/${indicadorId}/evidencia`, formData).pipe(
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/pasos-criticos/indicadores/${indicadorId}/evidencia?ideRtf=${ideRtf}`, formData).pipe(
       map(res => res.respuesta === 'OK'),
       catchError(err => {
         console.error('Error uploading evidencia indicador', err);
