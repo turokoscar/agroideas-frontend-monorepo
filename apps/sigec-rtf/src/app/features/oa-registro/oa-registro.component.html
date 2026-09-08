@@ -66,6 +66,7 @@
               class="w-full rounded-xl border border-border bg-surface-container/10 px-4 py-3 text-sm resize-y min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               placeholder="Ej. Se compraron 50 sacos de abono orgánico y se instaló el sistema de riego por goteo en la parcela principal..."
               [(ngModel)]="rtfService.txtActividadesRealizadas"
+              [disabled]="!isEditable()"
             ></textarea>
           </div>
 
@@ -80,6 +81,7 @@
               class="w-full rounded-xl border border-border bg-surface-container/10 px-4 py-3 text-sm resize-y min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               placeholder="Ej. No se pudo construir el cobertizo debido al retraso en la entrega de maderas por el proveedor..."
               [(ngModel)]="rtfService.txtActividadesNoRealizadas"
+              [disabled]="!isEditable()"
             ></textarea>
           </div>
 
@@ -94,6 +96,7 @@
               class="w-full rounded-xl border border-border bg-surface-container/10 px-4 py-3 text-sm resize-y min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               placeholder="Ej. Se logró mejorar la humedad de la tierra y cosechamos las primeras 2 toneladas de papa de calidad A..."
               [(ngModel)]="rtfService.txtLogros"
+              [disabled]="!isEditable()"
             ></textarea>
           </div>
 
@@ -108,6 +111,7 @@
               class="w-full rounded-xl border border-border bg-surface-container/10 px-4 py-3 text-sm resize-y min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               placeholder="Ej. Tuvimos problemas por exceso de lluvias durante la primera semana, lo cual dificultó el ingreso del camión..."
               [(ngModel)]="rtfService.txtDificultades"
+              [disabled]="!isEditable()"
             ></textarea>
           </div>
 
@@ -122,6 +126,7 @@
               class="w-full rounded-xl border border-border bg-surface-container/10 px-4 py-3 text-sm resize-y min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               placeholder="Ej. Se cambió de marca de abono foliar por sugerencia del técnico y se reprogramaron los talleres grupales..."
               [(ngModel)]="rtfService.txtCambiosPaso"
+              [disabled]="!isEditable()"
             ></textarea>
           </div>
 
@@ -168,7 +173,8 @@
                       <h3 class="text-sm font-bold text-foreground">{{ meta.descripcion }}</h3>
                     </div>
                     <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      [disabled]="!isEditable()"
                       (click)="openModal('meta', meta)"
                       title="Anotar avance"
                     >
@@ -227,7 +233,8 @@
                       <h3 class="text-sm font-bold text-foreground">{{ meta.actividad }}</h3>
                     </div>
                     <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      [disabled]="!isEditable()"
                       (click)="openModal('meta', meta)"
                     >
                       <span class="material-symbols-outlined text-[20px]">edit_note</span>
@@ -301,7 +308,8 @@
                       <p class="text-[10px] text-muted-foreground font-semibold">Cadena: {{ ind.cadenaProductiva }}</p>
                     </div>
                     <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      [disabled]="!isEditable()"
                       (click)="openModal('indicador', ind)"
                     >
                       <span class="material-symbols-outlined text-[20px]">edit_note</span>
@@ -357,7 +365,8 @@
                       <h3 class="text-sm font-bold text-foreground">{{ ind.nombre }}</h3>
                     </div>
                     <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      [disabled]="!isEditable()"
                       (click)="openModal('indicador', ind)"
                     >
                       <span class="material-symbols-outlined text-[20px]">edit_note</span>
@@ -533,8 +542,8 @@
   </div>
   <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
     <button
-      class="w-full sm:w-auto rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5"
-      [disabled]="isSaving()"
+      class="w-full sm:w-auto rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+      [disabled]="isSaving() || !isEditable()"
       (click)="guardarBorrador()"
     >
       @if (isSaving()) {
@@ -567,7 +576,7 @@
   [subtitle]="modalTitle()"
   [icon]="'edit_note'"
   [saveLabel]="'Confirmar y Guardar'"
-  [saveDisabled]="editEjecutado() == null || editEjecutado()! < 0"
+  [saveDisabled]="editEjecutado() == null || editEjecutado()! < 0 || !isEditable()"
   [isSubmitting]="isSaving()"
   (onHide)="closeModal()"
   (onSave)="saveModalAvance()"
@@ -753,9 +762,10 @@
 <!-- Templates para las celdas personalizadas y acciones de las tablas -->
 <ng-template #metasActionsTpl let-row>
   <button
-    class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm"
+    class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
     [style.width]="'36px'"
     [style.height]="'36px'"
+    [disabled]="!isEditable()"
     (click)="openModal('meta', row)"
     title="Registrar avance"
   >
@@ -765,9 +775,10 @@
 
 <ng-template #indicadoresActionsTpl let-row>
   <button
-    class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm"
+    class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
     [style.width]="'36px'"
     [style.height]="'36px'"
+    [disabled]="!isEditable()"
     (click)="openModal('indicador', row)"
     title="Registrar avance"
   >

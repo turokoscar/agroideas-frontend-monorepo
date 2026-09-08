@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { RtfService, MetaFisicaDto, IndicadorDto, PasoCriticoIndicador } from '../../core/services/rtf.service';
+import { RtfService, MetaFisicaDto, IndicadorDto, PasoCriticoIndicador, RtfCabeceraDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, TableColumn } from '@agroideas/ui';
 
@@ -21,6 +21,17 @@ export class OaRegistroComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   useBdSelMetas = signal(false);
+
+  /**
+   * Mismo conjunto que EstadoRtf.EditablesPorOa en el backend (SIGEC_RTF.Entidad/Rtf/EstadoRtf.cs):
+   * fuera de estos estados el RTF está en revisión de AGROIDEAS o ya fue evaluado, y el backend
+   * rechaza cualquier escritura (MaquinaEstadosRtf.ValidarEditablePorOa). Se duplica aquí porque
+   * es otro repo/otro lenguaje; solo controla la UI (modo lectura), el backend sigue siendo la
+   * fuente de verdad.
+   */
+  isEditable = computed(() =>
+    ['PENDIENTE', 'EN_EDICION', 'OBSERVADO'].includes(this.rtfService.rtfStatus())
+  );
 
   filteredPasoCriticoMetas = computed(() => {
     return this.rtfService.pasoCriticoMetas().filter(meta => meta.metaFisicaProgramada > 0);
@@ -96,6 +107,10 @@ export class OaRegistroComponent implements OnInit {
           this.rtfService.loadEvidencias(rtfId).subscribe();
           this.rtfService.loadGastosF1(rtfId).subscribe();
           this.rtfService.loadEstadoPlazo(rtfId).subscribe();
+          // Recarga con ideRtf ya conocido para que se fusione el avance guardado localmente
+          // (ADR-009), que la primera carga (línea de arriba, sin ideRtf) no pudo traer.
+          this.rtfService.loadMetasPorPasoCritico(pasoCriticoId, rtfId).subscribe();
+          this.rtfService.loadIndicadoresPorPasoCritico(pasoCriticoId, rtfId).subscribe();
         }
       };
 
@@ -171,6 +186,7 @@ export class OaRegistroComponent implements OnInit {
 
   // Computed
   canSubmit = computed(() => {
+    if (!this.isEditable()) return false;
     if (this.useBdSelMetas()) {
       const metasConAvance = this.rtfService.pasoCriticoMetas().filter(m => m.metaFisicaEjecutada != null).length;
       const indicadoresConAvance = this.rtfService.pasoCriticoIndicadores().filter(i => i.metaEjecutada != null).length;
@@ -294,13 +310,52 @@ export class OaRegistroComponent implements OnInit {
   }
 
   saveModalAvance() {
+    if (!this.isEditable()) {
+      this.toast.error('Reporte en revisión', 'El RTF no puede modificarse mientras está en revisión o ya fue evaluado por AGROIDEAS.');
+      return;
+    }
+    const value = this.editEjecutado();
+    if (value == null || value < 0) return;
+
+    if (this.useBdSelMetas()) {
+      // ADR-009: el avance ejecutado y la evidencia BD_SEL se guardan localmente, ligados al
+      // RTF — hace falta que exista antes de guardar el avance.
+      const rtfId = this.rtfService.rtfId();
+      if (rtfId) {
+        this.guardarAvanceModal(rtfId);
+        return;
+      }
+      const payload = this.construirPayloadNuevoRtf({});
+      if (!payload) {
+        this.toast.error('Error', 'No se pudo determinar el convenio o el periodo del paso crítico activo.');
+        return;
+      }
+      this.rtfService.registrarRtf(payload).subscribe({
+        next: nuevoRtf => {
+          if (nuevoRtf?.ideRtf) {
+            this.rtfService.rtfId.set(nuevoRtf.ideRtf);
+            this.guardarAvanceModal(nuevoRtf.ideRtf);
+          } else {
+            this.toast.error('Error', 'No se pudo crear el RTF.');
+          }
+        },
+        error: () => this.toast.error('Error', 'No se pudo crear el RTF.')
+      });
+      return;
+    }
+
+    this.guardarAvanceModal(null);
+  }
+
+  /** rtfIdBdSel es obligatorio cuando useBdSelMetas() es true (ADR-009); ignorado en el flujo legacy. */
+  private guardarAvanceModal(rtfIdBdSel: number | null) {
     const value = this.editEjecutado();
     if (value == null || value < 0) return;
 
     if (this.useBdSelMetas() && this.modalMode() === 'meta') {
       const meta = this.rtfService.pasoCriticoMetas()[this.modalIndex()];
       const financiera = this.editMetaFinancieraEjecutada();
-      this.rtfService.actualizarEjecucionMeta(meta.id, value, financiera, this.editComentario()).subscribe({
+      this.rtfService.actualizarEjecucionMeta(meta.id, rtfIdBdSel!, value, financiera, this.editComentario()).subscribe({
         next: () => {
           this.rtfService.pasoCriticoMetas.update(prev => prev.map((m, i) =>
             i === this.modalIndex() ? { ...m, metaFisicaEjecutada: value, metaFinancieraEjecutada: financiera, comentarios: this.editComentario() } : m
@@ -311,7 +366,7 @@ export class OaRegistroComponent implements OnInit {
     } else if (this.useBdSelMetas() && this.modalMode() === 'indicador') {
       const ind = this.rtfService.pasoCriticoIndicadores()[this.modalIndex()];
       const metaProgramada = this.editMetaProgramada();
-      this.rtfService.actualizarEjecucionIndicador(ind.id, metaProgramada, value, this.editComentario()).subscribe({
+      this.rtfService.actualizarEjecucionIndicador(ind.id, rtfIdBdSel!, metaProgramada, value, this.editComentario()).subscribe({
         next: () => {
           this.rtfService.pasoCriticoIndicadores.update(prev => prev.map((m, i) =>
             i === this.modalIndex() ? { ...m, metaProgramada, metaEjecutada: value, comentarios: this.editComentario() } : m
@@ -334,21 +389,19 @@ export class OaRegistroComponent implements OnInit {
     // Upload pending files
     const files = this.pendingFiles();
     if (this.useBdSelMetas() && this.modalMode() === 'meta') {
-      const pasoCriticoId = this.rtfService.pasoCriticoId();
       const meta = this.rtfService.pasoCriticoMetas()[this.modalIndex()];
-      if (pasoCriticoId && files.length > 0) {
+      if (files.length > 0) {
         for (const f of files) {
-          this.rtfService.subirEvidenciaMeta(pasoCriticoId, meta.id, f.file).subscribe({
+          this.rtfService.subirEvidenciaMeta(meta.id, rtfIdBdSel!, f.file).subscribe({
             error: err => this.toast.error('Error', `No se pudo subir ${f.name}: ${err.message}`)
           });
         }
       }
     } else if (this.useBdSelMetas() && this.modalMode() === 'indicador') {
-      const pasoCriticoId = this.rtfService.pasoCriticoId();
       const ind = this.rtfService.pasoCriticoIndicadores()[this.modalIndex()];
-      if (pasoCriticoId && files.length > 0) {
+      if (files.length > 0) {
         for (const f of files) {
-          this.rtfService.subirEvidenciaIndicador(pasoCriticoId, ind.id, f.file).subscribe({
+          this.rtfService.subirEvidenciaIndicador(ind.id, rtfIdBdSel!, f.file).subscribe({
             error: err => this.toast.error('Error', `No se pudo subir ${f.name}: ${err.message}`)
           });
         }
@@ -427,9 +480,33 @@ export class OaRegistroComponent implements OnInit {
     this.pdfViewerDownloadUrl.set(null);
   }
 
+  /**
+   * Convenio y periodo del RTF nuevo salen del paso crítico activo (cargado en `pasos()` vía
+   * loadDashboard/loadPasosCriticos), no del paso crítico "activo" ficticio - antes se enviaban
+   * hardcodeados (ideConvenio: 0, fechas vacías) y el backend rechazaba la creación con 400.
+   */
+  private construirPayloadNuevoRtf(r1Payload: Partial<RtfCabeceraDto>): Partial<RtfCabeceraDto> | null {
+    const pasoActual = this.rtfService.pasos().find(p => p.id === this.rtfService.pasoCriticoId());
+    const ideConvenio = this.rtfService.postulanteId();
+    if (!pasoActual || !ideConvenio) {
+      return null;
+    }
+    return {
+      ideConvenio,
+      numPasoCritico: this.rtfService.activePasoNumero(),
+      fecInicioPeriodo: pasoActual.start.toISOString(),
+      fecFinPeriodo: pasoActual.end.toISOString(),
+      ...r1Payload
+    };
+  }
+
   guardarBorrador() {
+    if (!this.isEditable()) {
+      this.toast.error('Reporte en revisión', 'El RTF no puede modificarse mientras está en revisión o ya fue evaluado por AGROIDEAS.');
+      return;
+    }
     this.isSaving.set(true);
-    const rtfId = this.rtfService.rtfId();
+    let rtfId = this.rtfService.rtfId();
     const r1Payload = {
       txtActividadesRealizadas: this.rtfService.txtActividadesRealizadas(),
       txtActividadesNoRealizadas: this.rtfService.txtActividadesNoRealizadas(),
@@ -462,15 +539,16 @@ export class OaRegistroComponent implements OnInit {
         error: () => { this.isSaving.set(false); this.toast.error('Error', 'No se pudo guardar el borrador.'); }
       });
     } else {
-      this.rtfService.registrarRtf({
-        ideConvenio: 0,
-        numPasoCritico: this.rtfService.activePasoNumero(),
-        fecInicioPeriodo: '',
-        fecFinPeriodo: '',
-        ...r1Payload
-      }).subscribe({
+      const payload = this.construirPayloadNuevoRtf(r1Payload);
+      if (!payload) {
+        this.isSaving.set(false);
+        this.toast.error('Error', 'No se pudo determinar el convenio o el periodo del paso crítico activo.');
+        return;
+      }
+      this.rtfService.registrarRtf(payload).subscribe({
         next: (nuevoRtf) => {
           if (nuevoRtf?.ideRtf) {
+            rtfId = nuevoRtf.ideRtf;
             this.rtfService.rtfId.set(nuevoRtf.ideRtf);
             afterR1();
           } else {
@@ -487,7 +565,7 @@ export class OaRegistroComponent implements OnInit {
     if (!this.canSubmit()) return;
     this.isSubmitting.set(true);
 
-    const rtfId = this.rtfService.rtfId();
+    let rtfId = this.rtfService.rtfId();
     const r1Payload = {
       txtActividadesRealizadas: this.rtfService.txtActividadesRealizadas(),
       txtActividadesNoRealizadas: this.rtfService.txtActividadesNoRealizadas(),
@@ -529,15 +607,16 @@ export class OaRegistroComponent implements OnInit {
         error: () => { this.isSubmitting.set(false); this.toast.error('Error', 'No se pudo enviar el RTF.'); }
       });
     } else {
-      this.rtfService.registrarRtf({
-        ideConvenio: 0,
-        numPasoCritico: this.rtfService.activePasoNumero(),
-        fecInicioPeriodo: '',
-        fecFinPeriodo: '',
-        ...r1Payload
-      }).subscribe({
+      const payload = this.construirPayloadNuevoRtf(r1Payload);
+      if (!payload) {
+        this.isSubmitting.set(false);
+        this.toast.error('Error', 'No se pudo determinar el convenio o el periodo del paso crítico activo.');
+        return;
+      }
+      this.rtfService.registrarRtf(payload).subscribe({
         next: (nuevoRtf) => {
           if (nuevoRtf?.ideRtf) {
+            rtfId = nuevoRtf.ideRtf;
             this.rtfService.rtfId.set(nuevoRtf.ideRtf);
             afterR1();
           } else {
