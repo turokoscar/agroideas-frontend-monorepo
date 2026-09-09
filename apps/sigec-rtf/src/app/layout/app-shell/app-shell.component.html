@@ -37,14 +37,16 @@
       <!-- Pasos Críticos Collapsible -->
       <div class="space-y-1">
         <button
+          type="button"
           (click)="toggleSteps()"
-          class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all text-left"
+          [attr.aria-expanded]="isStepsExpanded()"
+          class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all text-left focus-visible:outline-2 focus-visible:outline-sidebar-primary focus-visible:outline-offset-2"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+            <span class="material-symbols-outlined text-[20px]" aria-hidden="true">assignment_turned_in</span>
             <span>Pasos Críticos</span>
           </div>
-          <span class="material-symbols-outlined text-[16px] transition-transform" [class.rotate-180]="isStepsExpanded()">
+          <span class="material-symbols-outlined text-[16px] transition-transform" aria-hidden="true" [class.rotate-180]="isStepsExpanded()">
             expand_more
           </span>
         </button>
@@ -90,14 +92,16 @@
       <!-- Reportes Collapsible -->
       <div class="space-y-1">
         <button
+          type="button"
           (click)="toggleReports()"
-          class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all text-left"
+          [attr.aria-expanded]="isReportsExpanded()"
+          class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all text-left focus-visible:outline-2 focus-visible:outline-sidebar-primary focus-visible:outline-offset-2"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px]">query_stats</span>
+            <span class="material-symbols-outlined text-[20px]" aria-hidden="true">query_stats</span>
             <span>Reportes</span>
           </div>
-          <span class="material-symbols-outlined text-[16px] transition-transform" [class.rotate-180]="isReportsExpanded()">
+          <span class="material-symbols-outlined text-[16px] transition-transform" aria-hidden="true" [class.rotate-180]="isReportsExpanded()">
             expand_more
           </span>
         </button>

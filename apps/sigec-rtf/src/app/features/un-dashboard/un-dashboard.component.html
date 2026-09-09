@@ -11,9 +11,17 @@
 
   <!-- Loading -->
   @if (loading()) {
-    <div class="flex items-center justify-center py-16">
-      <span class="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
-      <span class="ml-3 text-sm text-muted-foreground">Cargando dashboard...</span>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
+      @for (card of [1,2,3,4]; track card) {
+        <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
+          <div class="flex items-center justify-between">
+            <div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div>
+            <div class="h-8 w-8 rounded-lg bg-surface-container animate-pulse"></div>
+          </div>
+          <div class="mt-4 h-6 w-14 rounded bg-surface-container animate-pulse"></div>
+        </div>
+      }
+      <span class="sr-only">Cargando dashboard…</span>
     </div>
   }
 

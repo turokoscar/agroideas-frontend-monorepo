@@ -16,12 +16,15 @@ import { NotificacionDto } from '../../core/models';
     <div class="relative">
       <button
         type="button"
-        class="relative rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        class="relative rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+        [attr.aria-label]="notificacionService.noLeidas() > 0 ? 'Notificaciones, ' + notificacionService.noLeidas() + ' sin leer' : 'Notificaciones'"
+        aria-haspopup="true"
+        [attr.aria-expanded]="open()"
         (click)="toggleOpen()"
       >
-        <span class="material-symbols-outlined text-[20px]">notifications</span>
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">notifications</span>
         @if (notificacionService.noLeidas() > 0) {
-          <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+          <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground" aria-hidden="true">
             {{ notificacionService.noLeidas() > 9 ? '9+' : notificacionService.noLeidas() }}
           </span>
         }
@@ -99,5 +102,10 @@ export class NotificacionBellComponent implements OnInit, OnDestroy {
     if (this.open() && !this.elementRef.nativeElement.contains(event.target)) {
       this.open.set(false);
     }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.open.set(false);
   }
 }

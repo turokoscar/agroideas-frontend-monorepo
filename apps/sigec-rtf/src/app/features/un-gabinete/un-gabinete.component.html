@@ -20,9 +20,36 @@
   <!-- Bandeja (lista) -->
   @if (viewState() === 'list') {
     @if (loadingBandeja()) {
-      <div class="flex items-center justify-center py-16">
-        <span class="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
-        <span class="ml-3 text-sm text-muted-foreground">Cargando RTFs pendientes...</span>
+      <div class="bg-card border border-border rounded-xl overflow-hidden shadow-sm" aria-hidden="true">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/30">
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">ID RTF</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Convenio</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Crítico</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Estado</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Límite</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Recepción</th>
+                <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of [1,2,3,4,5]; track row) {
+                <tr class="border-b border-border">
+                  <td class="px-4 py-3"><div class="h-3 w-10 rounded bg-surface-container animate-pulse"></div></td>
+                  <td class="px-4 py-3"><div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div></td>
+                  <td class="px-4 py-3"><div class="h-3 w-16 rounded bg-surface-container animate-pulse"></div></td>
+                  <td class="px-4 py-3"><div class="h-4 w-20 rounded-full bg-surface-container animate-pulse"></div></td>
+                  <td class="px-4 py-3"><div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div></td>
+                  <td class="px-4 py-3"><div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div></td>
+                  <td class="px-4 py-3"><div class="h-6 w-16 rounded bg-surface-container animate-pulse ml-auto"></div></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <span class="sr-only">Cargando RTFs pendientes…</span>
       </div>
     } @else if (unRtfList().length === 0) {
       <div class="flex flex-col items-center justify-center py-20 text-center">
@@ -75,9 +102,23 @@
   <!-- Vista Auditoría -->
   @if (viewState() === 'audit') {
     @if (loadingCompleto()) {
-      <div class="flex items-center justify-center py-16">
-        <span class="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
-        <span class="ml-3 text-sm text-muted-foreground">Cargando RTF completo...</span>
+      <div class="space-y-6" aria-hidden="true">
+        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            @for (field of [1,2,3,4]; track field) {
+              <div>
+                <div class="h-2.5 w-16 rounded bg-surface-container animate-pulse"></div>
+                <div class="mt-2 h-4 w-20 rounded bg-surface-container animate-pulse"></div>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="bg-card border border-border rounded-xl p-5 shadow-sm space-y-3">
+          @for (row of [1,2,3]; track row) {
+            <div class="h-10 rounded bg-surface-container animate-pulse"></div>
+          }
+        </div>
+        <span class="sr-only">Cargando RTF completo…</span>
       </div>
     } @else {
       <!-- Cabecera -->
@@ -223,8 +264,13 @@
                   <p class="text-xs font-medium text-foreground truncate">{{ ev.txtNombreArchivo }}</p>
                   <p class="text-[10px] text-muted-foreground">{{ ev.fecRegistro | date:'dd/MM/yyyy' }}</p>
                 </div>
-                <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarEvidencia(ev)" title="Ver documento">
-                  <span class="material-symbols-outlined text-lg">visibility</span>
+                <button
+                  class="text-primary hover:text-primary/80 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+                  (click)="descargarEvidencia(ev)"
+                  title="Ver documento"
+                  [attr.aria-label]="'Ver documento ' + ev.txtNombreArchivo"
+                >
+                  <span class="material-symbols-outlined text-lg" aria-hidden="true">visibility</span>
                 </button>
               </div>
             }
@@ -335,8 +381,13 @@
                       Notificada el {{ carta.fecNotificacion | date:'dd/MM/yyyy' }} · {{ carta.canDiasOtorgados }} días otorgados
                     </div>
                   </div>
-                  <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarCarta(carta)" title="Ver documento">
-                    <span class="material-symbols-outlined text-lg">visibility</span>
+                  <button
+                    class="text-primary hover:text-primary/80 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+                    (click)="descargarCarta(carta)"
+                    title="Ver documento"
+                    [attr.aria-label]="'Ver documento ' + carta.numDocumento"
+                  >
+                    <span class="material-symbols-outlined text-lg" aria-hidden="true">visibility</span>
                   </button>
                 </div>
               }

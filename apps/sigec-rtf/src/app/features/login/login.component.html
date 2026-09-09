@@ -49,11 +49,13 @@
       </div>
 
       <!-- Tab Selector -->
-      <div class="flex border-b border-border">
+      <div class="flex border-b border-border" role="tablist">
         <button
           type="button"
+          role="tab"
+          [attr.aria-selected]="selectedTab() === 'postulante'"
           (click)="selectedTab.set('postulante')"
-          class="flex-1 pb-3 text-sm font-semibold border-b-2 transition-all focus:outline-none"
+          class="flex-1 pb-3 text-sm font-semibold border-b-2 transition-all rounded-t-sm focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
           [class.border-primary]="selectedTab() === 'postulante'"
           [class.text-primary]="selectedTab() === 'postulante'"
           [class.border-transparent]="selectedTab() !== 'postulante'"
@@ -63,8 +65,10 @@
         </button>
         <button
           type="button"
+          role="tab"
+          [attr.aria-selected]="selectedTab() === 'personal'"
           (click)="selectedTab.set('personal')"
-          class="flex-1 pb-3 text-sm font-semibold border-b-2 transition-all focus:outline-none"
+          class="flex-1 pb-3 text-sm font-semibold border-b-2 transition-all rounded-t-sm focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
           [class.border-primary]="selectedTab() === 'personal'"
           [class.text-primary]="selectedTab() === 'personal'"
           [class.border-transparent]="selectedTab() !== 'personal'"

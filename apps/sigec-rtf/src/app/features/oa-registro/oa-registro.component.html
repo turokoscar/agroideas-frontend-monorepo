@@ -173,12 +173,13 @@
                       <h3 class="text-sm font-bold text-foreground">{{ meta.descripcion }}</h3>
                     </div>
                     <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
                       [disabled]="!isEditable()"
                       (click)="openModal('meta', meta)"
                       title="Anotar avance"
+                      [attr.aria-label]="'Anotar avance de ' + meta.descripcion"
                     >
-                      <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                      <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
                     </button>
                   </div>
 
@@ -768,8 +769,9 @@
     [disabled]="!isEditable()"
     (click)="openModal('meta', row)"
     title="Registrar avance"
+    [attr.aria-label]="'Registrar avance de ' + row.descripcion"
   >
-    <span class="material-symbols-outlined text-[20px]">edit_note</span>
+    <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
   </button>
 </ng-template>
 
@@ -781,8 +783,9 @@
     [disabled]="!isEditable()"
     (click)="openModal('indicador', row)"
     title="Registrar avance"
+    [attr.aria-label]="'Registrar avance de ' + row.descripcion"
   >
-    <span class="material-symbols-outlined text-[20px]">edit_note</span>
+    <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
   </button>
 </ng-template>
 
