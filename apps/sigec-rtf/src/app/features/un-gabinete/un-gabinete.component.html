@@ -223,8 +223,8 @@
                   <p class="text-xs font-medium text-foreground truncate">{{ ev.txtNombreArchivo }}</p>
                   <p class="text-[10px] text-muted-foreground">{{ ev.fecRegistro | date:'dd/MM/yyyy' }}</p>
                 </div>
-                <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarEvidencia(ev)" title="Descargar">
-                  <span class="material-symbols-outlined text-lg">download</span>
+                <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarEvidencia(ev)" title="Ver documento">
+                  <span class="material-symbols-outlined text-lg">visibility</span>
                 </button>
               </div>
             }
@@ -335,8 +335,8 @@
                       Notificada el {{ carta.fecNotificacion | date:'dd/MM/yyyy' }} · {{ carta.canDiasOtorgados }} días otorgados
                     </div>
                   </div>
-                  <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarCarta(carta)" title="Descargar">
-                    <span class="material-symbols-outlined text-lg">download</span>
+                  <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarCarta(carta)" title="Ver documento">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
                   </button>
                 </div>
               }
@@ -518,8 +518,8 @@
               (click)="generarAnexo18()"
               title="{{ anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : '' }}"
             >
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
-              {{ anexo18Empty() ? 'Generar PDF Anexo 18' : 'Descargar PDF Anexo 18' }}
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">visibility</span>
+              {{ anexo18Empty() ? 'Generar PDF Anexo 18' : 'Ver PDF Anexo 18' }}
             </button>
           </div>
         </div>
@@ -614,5 +614,13 @@
 
     }
   }
+
+  <ui-pdf-viewer
+    [open]="pdfViewerOpen()"
+    [filename]="pdfViewerFilename()"
+    [fileUrl]="pdfViewerFileUrl()"
+    [downloadUrl]="pdfViewerDownloadUrl()"
+    (onOpenChange)="closePdfViewer()"
+  ></ui-pdf-viewer>
 
 </div>

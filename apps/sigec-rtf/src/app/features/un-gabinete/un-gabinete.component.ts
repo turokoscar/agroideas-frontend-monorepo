@@ -2,8 +2,8 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RtfService, EvidenceDto, UrEvaluacionItemDto, CartaDto } from '../../core/services/rtf.service';
-import { ToastService, UiCountdownBannerComponent } from '@agroideas/ui';
-import { Subscription } from 'rxjs';
+import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent } from '@agroideas/ui';
+import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 interface Anexo18FormValue {
@@ -24,7 +24,7 @@ interface Anexo18FormValue {
 @Component({
   selector: 'app-un-gabinete',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe, UiCountdownBannerComponent],
+  imports: [CommonModule, DecimalPipe, DatePipe, UiCountdownBannerComponent, UiPdfViewerComponent],
   providers: [DecimalPipe, DatePipe],
   templateUrl: './un-gabinete.component.html',
 })
@@ -68,6 +68,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   nuevaCartaDias = signal(15);
   nuevaCartaArchivo = signal<File | null>(null);
   registrandoCarta = signal(false);
+
+  // Visor de PDF real (pdfjs-dist, Fase 5) para evidencias, cartas y Anexo 17/18.
+  pdfViewerOpen = signal(false);
+  pdfViewerFilename = signal<string | null>(null);
+  pdfViewerFileUrl = signal<string | null>(null);
+  pdfViewerDownloadUrl = signal<string | null>(null);
 
   // Devolver form (desde IN_REVISION_UN)
   showDevolverForm = signal(false);
@@ -449,21 +455,39 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   // --- Evidencias, Anexo 18, Aprobar/Rechazar/Devolver (IN_REVISION_UN) ---
 
-  descargarEvidencia(ev: EvidenceDto) {
-    if (!ev.ideEvidencia) return;
+  /** Abre el visor de PDF real (pdfjs-dist) para el documento que resuelva blob$. */
+  private openPdfViewer(filename: string, blob$: Observable<Blob>) {
+    this.pdfViewerFilename.set(filename);
+    this.pdfViewerFileUrl.set(null);
+    this.pdfViewerDownloadUrl.set(null);
+    this.pdfViewerOpen.set(true);
+
     this.subs.add(
-      this.rtfService.downloadEvidencia(ev.ideEvidencia).subscribe({
-        next: (blob: Blob) => {
+      blob$.subscribe({
+        next: (blob) => {
           const url = URL.createObjectURL(blob);
-          const a = window.document.createElement('a');
-          a.href = url;
-          a.download = ev.txtNombreArchivo || `evidencia_${ev.ideEvidencia}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
+          this.pdfViewerFileUrl.set(url);
+          this.pdfViewerDownloadUrl.set(url);
         },
-        error: () => this.toast.error('Error', 'No se pudo descargar la evidencia.')
+        error: () => {
+          this.toast.error('Error', 'No se pudo cargar el documento PDF.');
+          this.pdfViewerOpen.set(false);
+        }
       })
     );
+  }
+
+  closePdfViewer() {
+    const url = this.pdfViewerFileUrl();
+    if (url) URL.revokeObjectURL(url);
+    this.pdfViewerOpen.set(false);
+    this.pdfViewerFileUrl.set(null);
+    this.pdfViewerDownloadUrl.set(null);
+  }
+
+  descargarEvidencia(ev: EvidenceDto) {
+    if (!ev.ideEvidencia) return;
+    this.openPdfViewer(ev.txtNombreArchivo || `evidencia_${ev.ideEvidencia}.pdf`, this.rtfService.downloadEvidencia(ev.ideEvidencia));
   }
 
   updateAnexo18Form(patch: Partial<Anexo18FormValue>) {
@@ -547,37 +571,15 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   descargarCarta(carta: CartaDto) {
     const rtfId = this.rtfService.unSelectedRtfId();
     if (!rtfId || !carta.ideCarta) return;
-
-    this.subs.add(
-      this.rtfService.descargarCarta(rtfId, carta.ideCarta).subscribe({
-        next: (blob: Blob) => {
-          const url = URL.createObjectURL(blob);
-          const a = window.document.createElement('a');
-          a.href = url;
-          a.download = `${carta.tipCarta}_${carta.numDocumento}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
-        },
-        error: () => this.toast.error('Error', 'No se pudo descargar la carta.')
-      })
-    );
+    this.openPdfViewer(`${carta.tipCarta}_${carta.numDocumento}.pdf`, this.rtfService.descargarCarta(rtfId, carta.ideCarta));
   }
 
   generarAnexo18() {
     const rtfId = this.rtfService.unSelectedRtfId();
     if (!rtfId) return;
-    this.subs.add(
-      this.http.get(`${environment.apiUrl}/rtfs/${rtfId}/documentos/anexo18`, { responseType: 'blob' }).subscribe({
-        next: (blob) => {
-          const url = URL.createObjectURL(blob);
-          const a = window.document.createElement('a');
-          a.href = url;
-          a.download = `Anexo18_RTF_${rtfId}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
-        },
-        error: () => this.toast.error('Error', 'No se pudo generar el Anexo 18')
-      })
+    this.openPdfViewer(
+      `Anexo18_RTF_${rtfId}.pdf`,
+      this.http.get(`${environment.apiUrl}/rtfs/${rtfId}/documentos/anexo18`, { responseType: 'blob' })
     );
   }
 
