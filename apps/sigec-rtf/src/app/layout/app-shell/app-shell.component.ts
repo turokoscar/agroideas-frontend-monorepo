@@ -4,11 +4,12 @@ import { RouterModule, Router } from '@angular/router';
 import { UiAppShellComponent } from '@agroideas/ui';
 import { AuthService } from '../../core/services/auth.service';
 import { PasoCritico, RtfService } from '../../core/services/rtf.service';
+import { NotificacionBellComponent } from '../notificacion-bell/notificacion-bell.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, UiAppShellComponent],
+  imports: [CommonModule, RouterModule, UiAppShellComponent, NotificacionBellComponent],
   templateUrl: './app-shell.component.html'
 })
 export class AppShellComponent implements OnInit {
