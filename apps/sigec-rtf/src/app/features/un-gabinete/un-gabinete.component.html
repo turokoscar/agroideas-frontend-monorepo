@@ -302,6 +302,131 @@
             </div>
           </div>
         }
+      } @else if (enControlDePlazo()) {
+        <!-- Control de Plazos - Cartas de Notificación/Notarial (Fase 4) -->
+        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px] text-primary">mail</span>
+            Control de Plazos · Cartas de Notificación
+          </h3>
+          <p class="text-sm text-muted-foreground mb-4">
+            El RTF no fue enviado dentro del plazo. Registre la Carta de Notificación (desbloqueo temporal) o,
+            si ya venció sin regularizar, la Carta Notarial (plazo final de hasta 30 días).
+          </p>
+
+          @if (ultimaCarta()) {
+            <ui-countdown-banner
+              [hours]="horasRestantesCarta()"
+              [tone]="rtfStatus() === 'PLAZO_LIMITE_NOTARIAL' ? 'destructive' : 'warning'"
+              [label]="ultimaCarta()?.tipCarta === 'CARTA_NOTARIAL' ? 'Plazo de la Carta Notarial' : 'Plazo de la Carta de Notificación'"
+            />
+          }
+
+          @if (cartas().length > 0) {
+            <div class="mt-4 space-y-2">
+              @for (carta of cartas(); track carta.ideCarta) {
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm">
+                  <div class="min-w-0">
+                    <div class="font-medium text-foreground">
+                      {{ carta.tipCarta === 'CARTA_NOTARIAL' ? 'Carta Notarial' : 'Carta de Notificación' }}
+                      <span class="ml-2 font-mono text-xs text-muted-foreground">{{ carta.numDocumento }}</span>
+                    </div>
+                    <div class="text-xs text-muted-foreground">
+                      Notificada el {{ carta.fecNotificacion | date:'dd/MM/yyyy' }} · {{ carta.canDiasOtorgados }} días otorgados
+                    </div>
+                  </div>
+                  <button class="text-primary hover:text-primary/80 transition-colors" (click)="descargarCarta(carta)" title="Descargar">
+                    <span class="material-symbols-outlined text-lg">download</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Formulario para registrar una nueva carta -->
+          <div class="mt-5 border-t border-border pt-4">
+            <h4 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3">Registrar Nueva Carta</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Tipo de Carta</label>
+                <select
+                  class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  [value]="nuevaCartaTipo()"
+                  (change)="onTipoCartaChange($any($event.target).value)"
+                >
+                  <option value="PRIMERA_NOTIFICACION">Carta de Notificación (Recordatoria)</option>
+                  <option value="CARTA_NOTARIAL">Carta Notarial</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">N° de Documento</label>
+                <input
+                  type="text"
+                  class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  placeholder="CN-2026-001"
+                  [value]="nuevaCartaNumDocumento()"
+                  (input)="nuevaCartaNumDocumento.set($any($event.target).value)"
+                />
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Fecha de Notificación</label>
+                <input
+                  type="date"
+                  class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  [value]="nuevaCartaFecNotificacion()"
+                  (input)="nuevaCartaFecNotificacion.set($any($event.target).value)"
+                />
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Días Otorgados</label>
+                <input
+                  type="number"
+                  min="1"
+                  class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  [value]="nuevaCartaDias()"
+                  (input)="nuevaCartaDias.set(+$any($event.target).value)"
+                />
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Archivo de la Carta (PDF)</label>
+              @if (nuevaCartaArchivo()) {
+                <div class="flex items-center gap-2 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
+                  <span class="material-symbols-outlined text-[18px] text-success">check_circle</span>
+                  <span class="font-mono">{{ nuevaCartaArchivo()?.name }}</span>
+                  <button class="ml-auto text-muted-foreground hover:text-destructive" (click)="nuevaCartaArchivo.set(null)">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                </div>
+              } @else {
+                <div
+                  class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 text-center transition-all hover:border-primary/50 hover:bg-primary/5"
+                  (click)="cartaFileInput.click()"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="onCartaDrop($event)"
+                >
+                  <span class="material-symbols-outlined text-[28px] text-primary">cloud_upload</span>
+                  <div class="text-sm font-medium">Cargar PDF de la carta (máx 10MB)</div>
+                  <input #cartaFileInput type="file" accept="application/pdf" class="hidden" (change)="onCartaSelect($event)" />
+                </div>
+              }
+            </div>
+
+            @if (!nuevaCartaFormValida()) {
+              <p class="mt-2 text-[11px] text-destructive">Complete N° de documento, fecha, días otorgados y adjunte el archivo PDF.</p>
+            }
+
+            <button
+              class="mt-4 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
+              [disabled]="!nuevaCartaFormValida() || registrandoCarta()"
+              (click)="registrarCartaSubmit()"
+            >
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">send</span>
+              {{ registrandoCarta() ? 'Registrando...' : 'Registrar y Notificar' }}
+            </button>
+          </div>
+        </div>
       } @else {
         <!-- Anexo 18 - Informe de Comprobación, formulario real (B-012) -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
@@ -451,6 +576,10 @@
               <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">send</span>
               Continuar Evaluación
             </button>
+          </div>
+        } @else if (enControlDePlazo()) {
+          <div class="text-sm text-muted-foreground">
+            RTF en control de plazos · registre la carta correspondiente arriba
           </div>
         } @else {
           <div class="text-sm text-muted-foreground">

@@ -14,7 +14,8 @@ import {
   GastoF1Dto,
   IndicadorDto,
   MetaFisicaDto,
-  InformeComprobacionDto
+  InformeComprobacionDto,
+  CartaDto
 } from '../models';
 
 /**
@@ -53,6 +54,9 @@ export class UnGabineteService {
   // Anexo 18 - Informe de Comprobación (registrado por la UN, B-012).
   anexo18 = signal<InformeComprobacionDto | null>(null);
 
+  // Cartas de Notificación/Notarial (control de plazos, Fase 4) sobre el RTF seleccionado.
+  cartas = signal<CartaDto[]>([]);
+
   loadDashboardUn() {
     return this.http.get<ApiResponse<DashboardUnData>>(`${this.apiUrl}/un/dashboard`).pipe(
       map(res => {
@@ -67,7 +71,12 @@ export class UnGabineteService {
   }
 
   loadBandejaUn() {
-    const estados = ['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN'];
+    const estados = [
+      'EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN',
+      // Control de plazos (Fase 4): RTFs vencidos, con Carta de Notificación o Carta Notarial
+      // registrada, también son responsabilidad del especialista UN de la cartera.
+      'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'
+    ];
     return forkJoin(
       estados.map(estado =>
         this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(`${this.apiUrl}/rtfs?estado=${estado}`)
@@ -224,6 +233,52 @@ export class UnGabineteService {
       }),
       catchError(err => {
         console.error('Error guardando el Anexo 18', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Cartas de Notificación/Notarial (control de plazos, Fase 4). */
+  cargarCartas(rtfId: number) {
+    return this.http.get<ApiResponse<CartaDto[]>>(`${this.apiUrl}/rtfs/${rtfId}/cartas`).pipe(
+      map(res => {
+        const cartas = res.datos ?? [];
+        this.cartas.set(cartas);
+        return cartas;
+      }),
+      catchError(err => {
+        console.error('Error cargando las cartas del RTF', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  registrarCarta(rtfId: number, tipCarta: string, numDocumento: string, fecNotificacion: string, canDiasOtorgados: number, archivo: File) {
+    const formData = new FormData();
+    formData.append('tipCarta', tipCarta);
+    formData.append('numDocumento', numDocumento);
+    formData.append('fecNotificacion', fecNotificacion);
+    formData.append('canDiasOtorgados', String(canDiasOtorgados));
+    formData.append('archivo', archivo);
+
+    return this.http.post<ApiResponse<CartaDto>>(`${this.apiUrl}/rtfs/${rtfId}/cartas`, formData).pipe(
+      map(res => {
+        if (res.datos) {
+          this.cartas.update(cartas => [...cartas, res.datos as CartaDto]);
+        }
+        return res.datos ?? null;
+      }),
+      catchError(err => {
+        console.error('Error registrando la carta', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  descargarCarta(rtfId: number, ideCarta: number) {
+    return this.http.get(`${this.apiUrl}/rtfs/${rtfId}/cartas/${ideCarta}/descarga`, { responseType: 'blob' }).pipe(
+      catchError(err => {
+        console.error('Error descargando la carta', err);
         return throwError(() => err);
       })
     );

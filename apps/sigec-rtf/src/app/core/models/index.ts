@@ -17,3 +17,4 @@ export * from './ur-evaluacion-request.dto';
 export * from './dashboard-un-convenio-item.dto';
 export * from './dashboard-un-data.model';
 export * from './informe-comprobacion.dto';
+export * from './carta.dto';

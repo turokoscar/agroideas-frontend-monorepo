@@ -1,8 +1,8 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RtfService, EvidenceDto, UrEvaluacionItemDto } from '../../core/services/rtf.service';
-import { ToastService } from '@agroideas/ui';
+import { RtfService, EvidenceDto, UrEvaluacionItemDto, CartaDto } from '../../core/services/rtf.service';
+import { ToastService, UiCountdownBannerComponent } from '@agroideas/ui';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -24,7 +24,7 @@ interface Anexo18FormValue {
 @Component({
   selector: 'app-un-gabinete',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe],
+  imports: [CommonModule, DecimalPipe, DatePipe, UiCountdownBannerComponent],
   providers: [DecimalPipe, DatePipe],
   templateUrl: './un-gabinete.component.html',
 })
@@ -60,6 +60,15 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   });
   guardandoAnexo18 = signal(false);
 
+  // Control de Plazos - Cartas de Notificación/Notarial (Fase 4)
+  cartas = this.rtfService.unCartas;
+  nuevaCartaTipo = signal<'PRIMERA_NOTIFICACION' | 'CARTA_NOTARIAL'>('PRIMERA_NOTIFICACION');
+  nuevaCartaNumDocumento = signal('');
+  nuevaCartaFecNotificacion = signal(new Date().toISOString().slice(0, 10));
+  nuevaCartaDias = signal(15);
+  nuevaCartaArchivo = signal<File | null>(null);
+  registrandoCarta = signal(false);
+
   // Devolver form (desde IN_REVISION_UN)
   showDevolverForm = signal(false);
   devolverObservacion = signal('');
@@ -75,6 +84,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   // Solo aplica antes de que el expediente llegue a IN_REVISION_UN.
   estaEnEvaluacionPrevia = computed(() => ['EN_REVISION', 'AUDITADO_CAMPO'].includes(this.rtfStatus()));
 
+  // Control de Plazos (Fase 4): RTF vencido, con Carta de Notificación o Carta Notarial en curso.
+  enControlDePlazo = computed(() =>
+    ['VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfStatus())
+  );
+
   rtfStatusLabel = computed(() => {
     const map: Record<string, string> = {
       'EN_REVISION': 'En Revisión',
@@ -83,9 +97,39 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
       'APROBADO': 'Aprobado',
       'RECHAZADO': 'Rechazado',
       'OBSERVADO': 'Observado',
+      'VENCIDO': 'Plazo Vencido',
+      'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
+      'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
     };
     return map[this.rtfStatus()] ?? this.rtfStatus();
   });
+
+  ultimaCarta = computed<CartaDto | null>(() => {
+    const cartas = this.cartas();
+    if (cartas.length === 0) return null;
+    return [...cartas].sort((a, b) => new Date(b.fecNotificacion).getTime() - new Date(a.fecNotificacion).getTime())[0];
+  });
+
+  fecLimiteCarta = computed<Date | null>(() => {
+    const carta = this.ultimaCarta();
+    if (!carta) return null;
+    const fecha = new Date(carta.fecNotificacion);
+    fecha.setDate(fecha.getDate() + carta.canDiasOtorgados);
+    return fecha;
+  });
+
+  horasRestantesCarta = computed(() => {
+    const fecLimite = this.fecLimiteCarta();
+    if (!fecLimite) return 0;
+    return Math.max(0, (fecLimite.getTime() - Date.now()) / 3_600_000);
+  });
+
+  nuevaCartaFormValida = computed(() =>
+    !!this.nuevaCartaNumDocumento().trim() &&
+    !!this.nuevaCartaFecNotificacion() &&
+    this.nuevaCartaDias() > 0 &&
+    !!this.nuevaCartaArchivo()
+  );
 
   // R1 items para la vista
   r1Items = computed(() => [
@@ -159,6 +203,9 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     switch (estado) {
       case 'IN_REVISION_UN': return 'border-primary/20 bg-primary/10 text-primary';
       case 'AUDITADO_CAMPO': return 'border-info/20 bg-info/10 text-info';
+      case 'VENCIDO': return 'border-destructive/20 bg-destructive/10 text-destructive';
+      case 'PLAZO_LIMITE_NOTARIAL': return 'border-destructive/20 bg-destructive/10 text-destructive';
+      case 'PLAZO_INICIAL_NOTIFICACION': return 'border-warning/20 bg-warning/10 text-warning';
       default: return 'border-warning/20 bg-warning/10 text-warning';
     }
   }
@@ -190,6 +237,10 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.rowEvalMap.set({});
     this.actaSubida.set(false);
     this.actaFileName.set('');
+    this.nuevaCartaNumDocumento.set('');
+    this.nuevaCartaFecNotificacion.set(new Date().toISOString().slice(0, 10));
+    this.nuevaCartaDias.set(15);
+    this.nuevaCartaArchivo.set(null);
 
     this.subs.add(
       this.rtfService.loadRtfCompleto(rtfId).subscribe({
@@ -200,12 +251,19 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
             this.actaFileName.set('Acta de Campo registrada');
           }
           this.cargarAnexo18(rtfId);
+          this.cargarCartas(rtfId);
         },
         error: () => {
           this.loadingCompleto.set(false);
           this.toast.error('Error al cargar el RTF completo');
         }
       })
+    );
+  }
+
+  private cargarCartas(rtfId: number) {
+    this.subs.add(
+      this.rtfService.cargarCartas(rtfId).subscribe({ error: () => {} })
     );
   }
 
@@ -434,6 +492,73 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
           this.guardandoAnexo18.set(false);
           this.toast.error('Error', err.error?.mensaje || 'No se pudo guardar el Anexo 18.');
         }
+      })
+    );
+  }
+
+  // --- Control de Plazos - Cartas de Notificación/Notarial (Fase 4) ---
+
+  onTipoCartaChange(tipo: string) {
+    this.nuevaCartaTipo.set(tipo === 'CARTA_NOTARIAL' ? 'CARTA_NOTARIAL' : 'PRIMERA_NOTIFICACION');
+    this.nuevaCartaDias.set(tipo === 'CARTA_NOTARIAL' ? 30 : 15);
+  }
+
+  onCartaDrop(event: DragEvent) {
+    event.preventDefault();
+    const file = event.dataTransfer?.files[0];
+    if (file) this.nuevaCartaArchivo.set(file);
+  }
+
+  onCartaSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) this.nuevaCartaArchivo.set(file);
+    input.value = '';
+  }
+
+  registrarCartaSubmit() {
+    const rtfId = this.rtfService.unSelectedRtfId();
+    const archivo = this.nuevaCartaArchivo();
+    if (!rtfId || !archivo || !this.nuevaCartaFormValida()) return;
+
+    this.registrandoCarta.set(true);
+    this.subs.add(
+      this.rtfService.registrarCarta(
+        rtfId,
+        this.nuevaCartaTipo(),
+        this.nuevaCartaNumDocumento(),
+        this.nuevaCartaFecNotificacion(),
+        this.nuevaCartaDias(),
+        archivo
+      ).subscribe({
+        next: () => {
+          this.registrandoCarta.set(false);
+          this.toast.success('Carta registrada', 'La carta fue registrada y notificada a la OA.');
+          this.seleccionarRtf(rtfId);
+        },
+        error: (err) => {
+          this.registrandoCarta.set(false);
+          this.toast.error('Error', err.error?.mensaje || 'No se pudo registrar la carta.');
+        }
+      })
+    );
+  }
+
+  descargarCarta(carta: CartaDto) {
+    const rtfId = this.rtfService.unSelectedRtfId();
+    if (!rtfId || !carta.ideCarta) return;
+
+    this.subs.add(
+      this.rtfService.descargarCarta(rtfId, carta.ideCarta).subscribe({
+        next: (blob: Blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = window.document.createElement('a');
+          a.href = url;
+          a.download = `${carta.tipCarta}_${carta.numDocumento}.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        error: () => this.toast.error('Error', 'No se pudo descargar la carta.')
       })
     );
   }
