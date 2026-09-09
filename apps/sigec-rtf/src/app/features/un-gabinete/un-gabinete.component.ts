@@ -185,7 +185,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   private cargarAnexo18(rtfId: number) {
     this.subs.add(
-      this.http.get<any>(`${environment.apiUrl}/rtfs/${rtfId}/informe-comprobacion`).subscribe({
+      this.http.get<any>(`${environment.apiUrl}/un/rtfs/${rtfId}/informe-comprobacion`).subscribe({
         next: (res: any) => {
           if (res?.datos) {
             this.anexo18.set(res.datos);
