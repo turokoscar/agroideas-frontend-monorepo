@@ -80,28 +80,31 @@
                 <td class="px-4 py-3 text-xs">{{ rtf.fecRegistro | date:'dd/MM/yyyy' }}</td>
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-1">
-                    <a
-                      [routerLink]="'/rtf/pasos-criticos/registrar'"
+                    <button
+                      type="button"
+                      (click)="abrirRtf(rtf)"
                       class="rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
                       title="Ver RTF"
                     >
                       <span class="material-symbols-outlined text-[16px]">visibility</span>
-                    </a>
+                    </button>
                     @if (rtf.estRtf === 'PENDIENTE' || rtf.estRtf === 'EN_EDICION') {
-                      <a
-                        [routerLink]="'/rtf/pasos-criticos/registrar'"
+                      <button
+                        type="button"
+                        (click)="abrirRtf(rtf)"
                         class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
                         title="Editar RTF"
                       >
                         <span class="material-symbols-outlined text-[16px]">edit</span>
-                      </a>
-                      <a
-                        [routerLink]="'/rtf/pasos-criticos/enviar'"
+                      </button>
+                      <button
+                        type="button"
+                        (click)="enviarRtf(rtf)"
                         class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-success hover:bg-success/10 transition-colors"
                         title="Enviar RTF"
                       >
                         <span class="material-symbols-outlined text-[16px]">send</span>
-                      </a>
+                      </button>
                     }
                   </div>
                 </td>

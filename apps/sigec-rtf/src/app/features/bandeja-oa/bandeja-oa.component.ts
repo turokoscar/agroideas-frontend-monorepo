@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { RtfService } from '../../core/services/rtf.service';
+import { Router, RouterModule } from '@angular/router';
+import { RtfService, RtfCabeceraDto } from '../../core/services/rtf.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 })
 export class BandejaOAComponent implements OnInit, OnDestroy {
   rtfService = inject(RtfService);
+  private router = inject(Router);
   private subs = new Subscription();
 
   tabs = [
@@ -65,6 +66,26 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
   irPagina(pagina: number) {
     this.rtfService.oaBandejaPagina.set(pagina);
     this.cargarBandeja();
+  }
+
+  /**
+   * `RtfCabeceraDto` no trae el id de paso crítico BD_SEL (solo `numPasoCritico`, la secuencia
+   * 1-6), así que no se puede armar la ruta `/rtf/pasos-criticos/:idpc/registrar`. Se abre por
+   * `ideRtf` directo: se fija el signal que `OaRegistroComponent` ya lee cuando no hay `idpc` en
+   * la ruta (carga R1 + T1/R2 legacy vía `loadDetalleRtf`/`loadMetas`/`loadIndicadores`).
+   */
+  abrirRtf(rtf: RtfCabeceraDto) {
+    this.navegarConRtf(rtf, '/rtf/pasos-criticos/registrar');
+  }
+
+  enviarRtf(rtf: RtfCabeceraDto) {
+    this.navegarConRtf(rtf, '/rtf/pasos-criticos/enviar');
+  }
+
+  private navegarConRtf(rtf: RtfCabeceraDto, ruta: string) {
+    if (!rtf.ideRtf) return;
+    this.rtfService.rtfId.set(rtf.ideRtf);
+    this.router.navigate([ruta]);
   }
 
   statusLabel(estado?: string): string {
