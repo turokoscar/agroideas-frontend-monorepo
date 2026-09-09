@@ -13,7 +13,8 @@ import {
   EvidenceDto,
   GastoF1Dto,
   IndicadorDto,
-  MetaFisicaDto
+  MetaFisicaDto,
+  InformeComprobacionDto
 } from '../models';
 
 /**
@@ -48,6 +49,9 @@ export class UnGabineteService {
   // Verificación de campo (Anexo 19, opcional) sobre el RTF seleccionado.
   urEvaluacionItems = signal<UrEvaluacionItemDto[]>([]);
   urActaCampoArchivo = signal<File | null>(null);
+
+  // Anexo 18 - Informe de Comprobación (registrado por la UN, B-012).
+  anexo18 = signal<InformeComprobacionDto | null>(null);
 
   loadDashboardUn() {
     return this.http.get<ApiResponse<DashboardUnData>>(`${this.apiUrl}/un/dashboard`).pipe(
@@ -192,6 +196,34 @@ export class UnGabineteService {
       }),
       catchError(err => {
         console.error('Error devolviendo RTF desde UN', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Anexo 18 - Informe de Comprobación: es UN quien lo registra (CLAUDE.md, ADR-010). */
+  cargarAnexo18(rtfId: number) {
+    return this.http.get<ApiResponse<InformeComprobacionDto | null>>(`${this.apiUrl}/un/rtfs/${rtfId}/informe-comprobacion`).pipe(
+      map(res => {
+        this.anexo18.set(res.datos ?? null);
+        return res.datos ?? null;
+      }),
+      catchError(err => {
+        console.error('Error cargando el Anexo 18', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  guardarAnexo18(rtfId: number, informe: Partial<InformeComprobacionDto>) {
+    const body: Partial<InformeComprobacionDto> = { ...informe, ideRtf: rtfId };
+    return this.http.post<ApiResponse<InformeComprobacionDto>>(`${this.apiUrl}/un/rtfs/${rtfId}/informe-comprobacion`, body).pipe(
+      map(res => {
+        this.anexo18.set(res.datos ?? null);
+        return res.datos ?? null;
+      }),
+      catchError(err => {
+        console.error('Error guardando el Anexo 18', err);
         return throwError(() => err);
       })
     );

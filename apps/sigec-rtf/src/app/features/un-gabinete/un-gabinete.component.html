@@ -303,29 +303,100 @@
           </div>
         }
       } @else {
-        <!-- Anexo 18 - solo una vez en evaluación final (IN_REVISION_UN) -->
+        <!-- Anexo 18 - Informe de Comprobación, formulario real (B-012) -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px] text-primary">summarize</span>
             Anexo 18 - Informe de Comprobación
           </h3>
+
           @if (anexo18Empty()) {
-            <p class="text-sm text-muted-foreground">Aún no se ha generado el Informe de Comprobación (Anexo 18).</p>
-            <button class="mt-3 rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors" (click)="generarAnexo18()">
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
-              Generar PDF Anexo 18
-            </button>
+            <p class="text-sm text-muted-foreground mb-4">Aún no se ha registrado el Informe de Comprobación. Complete y guarde el formulario antes de aprobar el RTF.</p>
           } @else {
-            <div class="space-y-2 text-sm">
-              <p><span class="font-semibold text-muted-foreground">Número Informe:</span> {{ anexo18()?.txtNumeroInforme }}</p>
-              <p><span class="font-semibold text-muted-foreground">Representante UN:</span> {{ anexo18()?.txtRepresentanteUn }}</p>
-              <p><span class="font-semibold text-muted-foreground">Conclusiones:</span> {{ anexo18()?.txtConclusiones || 'Sin conclusiones' }}</p>
-            </div>
-            <button class="mt-3 rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors" (click)="generarAnexo18()">
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
-              Descargar PDF Anexo 18
-            </button>
+            <p class="text-sm text-muted-foreground mb-4">Informe registrado. Puede editarlo y volver a guardar mientras el expediente esté en evaluación.</p>
           }
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">N° de Informe</label>
+              <input
+                type="text"
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="IC-2026-001"
+                [value]="anexo18Form().txtNumeroInforme"
+                (input)="updateAnexo18Form({ txtNumeroInforme: $any($event.target).value })"
+              />
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Representante UN</label>
+              <input
+                type="text"
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Nombre del especialista"
+                [value]="anexo18Form().txtRepresentanteUn"
+                (input)="updateAnexo18Form({ txtRepresentanteUn: $any($event.target).value })"
+              />
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Conclusiones</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Conclusiones de la evaluación..."
+              [value]="anexo18Form().txtConclusiones"
+              (input)="updateAnexo18Form({ txtConclusiones: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Recomendaciones</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Recomendaciones para la OA..."
+              [value]="anexo18Form().txtRecomendaciones"
+              (input)="updateAnexo18Form({ txtRecomendaciones: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4 max-w-xs">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Calificación Final</label>
+            <select
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              [value]="anexo18Form().estCalificacion"
+              (change)="updateAnexo18Form({ estCalificacion: $any($event.target).value })"
+            >
+              <option value="">Sin calificar</option>
+              <option value="APROBADO_CONFORME">Aprobado de forma Conforme</option>
+              <option value="RECHAZADO_OBSERVACIONES">Rechazado con Observaciones</option>
+            </select>
+          </div>
+
+          @if (!anexo18FormValido()) {
+            <p class="mt-2 text-[11px] text-destructive">El N° de Informe y el Representante UN son obligatorios para guardar.</p>
+          }
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button
+              class="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
+              [disabled]="!anexo18FormValido() || guardandoAnexo18()"
+              (click)="guardarAnexo18()"
+            >
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">save</span>
+              {{ guardandoAnexo18() ? 'Guardando...' : 'Guardar Informe' }}
+            </button>
+            <button
+              class="rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
+              [disabled]="anexo18Empty()"
+              (click)="generarAnexo18()"
+              title="{{ anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : '' }}"
+            >
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
+              {{ anexo18Empty() ? 'Generar PDF Anexo 18' : 'Descargar PDF Anexo 18' }}
+            </button>
+          </div>
         </div>
 
         <!-- Observaciones para Devolver -->

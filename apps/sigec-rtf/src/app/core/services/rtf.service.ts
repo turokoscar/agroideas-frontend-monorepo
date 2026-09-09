@@ -18,6 +18,7 @@ import {
   UrEvaluacionItemDto,
   UrEvaluacionRequestDto,
   DashboardUnData,
+  InformeComprobacionDto,
 } from '../models';
 
 export type {
@@ -36,6 +37,7 @@ export type {
   UrEvaluacionItemDto,
   UrEvaluacionRequestDto,
   DashboardUnData,
+  InformeComprobacionDto,
 };
 
 @Injectable({
@@ -97,6 +99,7 @@ export class RtfService {
   unRtfStatus = this.unService.rtfStatus;
   urEvaluacionItems = this.unService.urEvaluacionItems;
   urActaCampoArchivo = this.unService.urActaCampoArchivo;
+  unAnexo18 = this.unService.anexo18;
 
   // BD_SEL proxies
   pasoCriticoMetas = this.pasoService.pasoCriticoMetas;
@@ -153,6 +156,8 @@ export class RtfService {
   aprobarUn = (rtfId: number, observacion?: string) => this.unService.aprobarUn(rtfId, observacion);
   rechazarUn = (rtfId: number, observacion?: string) => this.unService.rechazarUn(rtfId, observacion);
   devolverUn = (rtfId: number, observacion: string) => this.unService.devolverUn(rtfId, observacion);
+  cargarAnexo18 = (rtfId: number) => this.unService.cargarAnexo18(rtfId);
+  guardarAnexo18 = (rtfId: number, informe: Partial<InformeComprobacionDto>) => this.unService.guardarAnexo18(rtfId, informe);
 
   // Delegaciones BD_SEL — lo programado sigue viniendo de BD_SEL; el avance ejecutado y la
   // evidencia se guardan localmente por RTF (ADR-009), de ahí el ideRtf en cada llamada.

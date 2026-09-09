@@ -6,6 +6,14 @@ import { ToastService } from '@agroideas/ui';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+interface Anexo18FormValue {
+  txtNumeroInforme: string;
+  txtRepresentanteUn: string;
+  txtConclusiones: string;
+  txtRecomendaciones: string;
+  estCalificacion: '' | 'APROBADO_CONFORME' | 'RECHAZADO_OBSERVACIONES';
+}
+
 /**
  * ADR-010: pantalla única de la Unidad de Negocios (UN) para todo el ciclo de un expediente
  * — desde que llega (EN_REVISION) hasta que se aprueba/rechaza (IN_REVISION_UN). No existe un
@@ -40,7 +48,17 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   evidencias = this.rtfService.unEvidencias;
   gastosF1 = this.rtfService.unGastosF1;
   rtfStatus = this.rtfService.unRtfStatus;
-  anexo18 = signal<any>(null);
+  anexo18 = this.rtfService.unAnexo18;
+
+  // Formulario del Anexo 18 (B-012) — conclusiones, recomendaciones y calificación final.
+  anexo18Form = signal<Anexo18FormValue>({
+    txtNumeroInforme: '',
+    txtRepresentanteUn: '',
+    txtConclusiones: '',
+    txtRecomendaciones: '',
+    estCalificacion: '',
+  });
+  guardandoAnexo18 = signal(false);
 
   // Devolver form (desde IN_REVISION_UN)
   showDevolverForm = signal(false);
@@ -78,9 +96,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     { label: 'Cambios en el Paso', value: this.cabecera()?.txtCambiosPaso },
   ]);
 
-  anexo18Empty = computed(() => {
-    const a = this.anexo18();
-    return !a || Object.keys(a).length === 0;
+  anexo18Empty = computed(() => !this.anexo18());
+
+  anexo18FormValido = computed(() => {
+    const f = this.anexo18Form();
+    return !!f.txtNumeroInforme.trim() && !!f.txtRepresentanteUn.trim();
   });
 
   // Evaluación por fila (T1/R2 locales) para la verificación de campo opcional.
@@ -160,7 +180,13 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.showDevolverForm.set(false);
     this.showDevolverTempranoForm.set(false);
     this.devolverObservacion.set('');
-    this.anexo18.set(null);
+    this.anexo18Form.set({
+      txtNumeroInforme: '',
+      txtRepresentanteUn: '',
+      txtConclusiones: '',
+      txtRecomendaciones: '',
+      estCalificacion: '',
+    });
     this.rowEvalMap.set({});
     this.actaSubida.set(false);
     this.actaFileName.set('');
@@ -185,10 +211,16 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   private cargarAnexo18(rtfId: number) {
     this.subs.add(
-      this.http.get<any>(`${environment.apiUrl}/un/rtfs/${rtfId}/informe-comprobacion`).subscribe({
-        next: (res: any) => {
-          if (res?.datos) {
-            this.anexo18.set(res.datos);
+      this.rtfService.cargarAnexo18(rtfId).subscribe({
+        next: (informe) => {
+          if (informe) {
+            this.anexo18Form.set({
+              txtNumeroInforme: informe.txtNumeroInforme ?? '',
+              txtRepresentanteUn: informe.txtRepresentanteUn ?? '',
+              txtConclusiones: informe.txtConclusiones ?? '',
+              txtRecomendaciones: informe.txtRecomendaciones ?? '',
+              estCalificacion: (informe.estCalificacion as any) ?? '',
+            });
           }
         },
         error: () => {}
@@ -372,6 +404,36 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
           URL.revokeObjectURL(url);
         },
         error: () => this.toast.error('Error', 'No se pudo descargar la evidencia.')
+      })
+    );
+  }
+
+  updateAnexo18Form(patch: Partial<Anexo18FormValue>) {
+    this.anexo18Form.update(f => ({ ...f, ...patch }));
+  }
+
+  guardarAnexo18() {
+    const rtfId = this.rtfService.unSelectedRtfId();
+    if (!rtfId || !this.anexo18FormValido()) return;
+
+    this.guardandoAnexo18.set(true);
+    const f = this.anexo18Form();
+    this.subs.add(
+      this.rtfService.guardarAnexo18(rtfId, {
+        txtNumeroInforme: f.txtNumeroInforme,
+        txtRepresentanteUn: f.txtRepresentanteUn,
+        txtConclusiones: f.txtConclusiones,
+        txtRecomendaciones: f.txtRecomendaciones,
+        estCalificacion: f.estCalificacion || undefined,
+      }).subscribe({
+        next: () => {
+          this.guardandoAnexo18.set(false);
+          this.toast.success('Anexo 18 guardado', 'Informe de comprobación registrado con éxito.');
+        },
+        error: (err) => {
+          this.guardandoAnexo18.set(false);
+          this.toast.error('Error', err.error?.mensaje || 'No se pudo guardar el Anexo 18.');
+        }
       })
     );
   }
