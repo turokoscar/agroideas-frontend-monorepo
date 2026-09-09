@@ -7,7 +7,6 @@ import { OaEnviarComponent } from './features/oa-enviar/oa-enviar.component';
 import { OaObservacionesComponent } from './features/oa-observaciones/oa-observaciones.component';
 import { ReporteFisicoComponent } from './features/reportes/reporte-fisico.component';
 import { ReporteFinancieroComponent } from './features/reportes/reporte-financiero.component';
-import { UrAuditoriaComponent } from './features/ur-auditoria/ur-auditoria.component';
 import { UnGabineteComponent } from './features/un-gabinete/un-gabinete.component';
 import { BandejaOAComponent } from './features/bandeja-oa/bandeja-oa.component';
 import { UnDashboardComponent } from './features/un-dashboard/un-dashboard.component';
@@ -64,11 +63,8 @@ export const appRoutes: Route[] = [
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
-        path: 'rtf/auditoria-regional',
-        component: UrAuditoriaComponent,
-        canActivate: [roleGuard(['UR'])]
-      },
-      {
+        // ADR-010: no existe un actor "UR" separado — la verificación de campo (Anexo 19) es una
+        // sección más dentro de esta misma pantalla, para el mismo especialista UN.
         path: 'rtf/evaluacion-gabinete',
         component: UnGabineteComponent,
         canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]

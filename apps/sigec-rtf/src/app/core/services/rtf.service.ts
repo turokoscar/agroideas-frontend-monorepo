@@ -1,6 +1,5 @@
 import { Injectable, inject, computed } from '@angular/core';
 import { OaRtfService } from './oa-rtf.service';
-import { UrAuditoriaService } from './ur-auditoria.service';
 import { UnGabineteService } from './un-gabinete.service';
 import { PasoCriticoService } from './paso-critico.service';
 import {
@@ -44,7 +43,6 @@ export type {
 })
 export class RtfService {
   private oaService = inject(OaRtfService);
-  private urService = inject(UrAuditoriaService);
   private unService = inject(UnGabineteService);
   private pasoService = inject(PasoCriticoService);
 
@@ -86,18 +84,19 @@ export class RtfService {
   oaBandejaEstado = this.oaService.oaBandejaEstado;
   oaBandejaPagina = this.oaService.oaBandejaPagina;
 
-  // UR proxies
-  urRtfList = this.urService.urRtfList;
-  urSelectedRtfId = this.urService.urSelectedRtfId;
-  urEvaluacionItems = this.urService.urEvaluacionItems;
-  urActaCampoArchivo = this.urService.urActaCampoArchivo;
-
-  // UN proxies
+  // UN proxies (ADR-010: UN maneja todo el ciclo EN_REVISION → IN_REVISION_UN, sin actor UR
+  // separado — un-gabinete.service.ts absorbió lo que vivía en ur-auditoria.service.ts)
   unRtfList = this.unService.unRtfList;
   unSelectedRtfId = this.unService.unSelectedRtfId;
-  unEvaluacionItems = this.unService.unEvaluacionItems;
-  unObservacionDevolver = this.unService.unObservacionDevolver;
   dashboardUnData = this.unService.dashboardUnData;
+  unCabeceraSeleccionada = this.unService.cabeceraSeleccionada;
+  unMetas = this.unService.metas;
+  unIndicadores = this.unService.indicadores;
+  unEvidencias = this.unService.evidencias;
+  unGastosF1 = this.unService.gastosF1;
+  unRtfStatus = this.unService.rtfStatus;
+  urEvaluacionItems = this.unService.urEvaluacionItems;
+  urActaCampoArchivo = this.unService.urActaCampoArchivo;
 
   // BD_SEL proxies
   pasoCriticoMetas = this.pasoService.pasoCriticoMetas;
@@ -143,17 +142,14 @@ export class RtfService {
   updateIndicador = (index: number, patch: Partial<IndicadorDto>) => this.oaService.updateIndicador(index, patch);
   loadBandejaOA = (estado: string, pagina?: number, cantidad?: number) => this.oaService.loadBandejaOA(estado, pagina, cantidad);
 
-  // Delegaciones UR
-  loadBandejaUr = () => this.urService.loadBandejaUr();
-  loadRtfCompleto = (rtfId: number) => this.urService.loadRtfCompleto(rtfId);
-  uploadActaCampo = (rtfId: number, archivo: File) => this.urService.uploadActaCampo(rtfId, archivo);
-  guardarEvaluacionUr = (rtfId: number, items: UrEvaluacionItemDto[]) => this.urService.guardarEvaluacionUr(rtfId, items);
-  derivarUn = (rtfId: number) => this.urService.derivarUn(rtfId);
-  devolverRtf = (rtfId: number, observacion: string) => this.urService.devolverRtf(rtfId, observacion);
-
-  // Delegaciones UN
+  // Delegaciones UN (incluye la verificación de campo opcional — ver comentario arriba)
   loadDashboardUn = () => this.unService.loadDashboardUn();
   loadBandejaUn = () => this.unService.loadBandejaUn();
+  loadRtfCompleto = (rtfId: number) => this.unService.loadRtfCompleto(rtfId);
+  uploadActaCampo = (rtfId: number, archivo: File) => this.unService.uploadActaCampo(rtfId, archivo);
+  guardarEvaluacionUr = (rtfId: number, items: UrEvaluacionItemDto[]) => this.unService.guardarEvaluacionUr(rtfId, items);
+  derivarUn = (rtfId: number) => this.unService.derivarUn(rtfId);
+  devolverTemprano = (rtfId: number, observacion: string) => this.unService.devolverTemprano(rtfId, observacion);
   aprobarUn = (rtfId: number, observacion?: string) => this.unService.aprobarUn(rtfId, observacion);
   rechazarUn = (rtfId: number, observacion?: string) => this.unService.rechazarUn(rtfId, observacion);
   devolverUn = (rtfId: number, observacion: string) => this.unService.devolverUn(rtfId, observacion);

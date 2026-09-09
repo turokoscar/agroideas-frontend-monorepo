@@ -6,7 +6,9 @@ import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
 import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
 
-export type UserRole = 'POSTULANTE' | 'UR' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO';
+// No hay rol 'UR' (ADR-010): UN maneja todo el ciclo del expediente, no hay un actor del
+// sistema separado para la verificación de campo.
+export type UserRole = 'POSTULANTE' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO';
 
 /**
  * `sel-api-seguridad` devuelve los roles tal cual están en su catálogo (texto completo en

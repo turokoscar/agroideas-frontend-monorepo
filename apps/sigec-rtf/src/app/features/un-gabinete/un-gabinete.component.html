@@ -5,9 +5,9 @@
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-bold tracking-tight text-foreground">
-        {{ viewState() === 'list' ? 'Evaluaci\u00F3n de Gabinete' : 'Revisar RTF' }}
+        {{ viewState() === 'list' ? 'Evaluación de Gabinete' : 'Revisar RTF' }}
       </h2>
-      <p class="text-sm text-muted-foreground">Especialista UN Central / Direcci\u00F3n Ejecutiva / USE</p>
+      <p class="text-sm text-muted-foreground">Especialista UN Central / Dirección Ejecutiva / USE</p>
     </div>
     @if (viewState() === 'audit') {
       <button class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="volverBandeja()">
@@ -27,8 +27,8 @@
     } @else if (unRtfList().length === 0) {
       <div class="flex flex-col items-center justify-center py-20 text-center">
         <span class="material-symbols-outlined text-5xl text-muted-foreground/40 mb-4">fact_check</span>
-        <p class="text-sm font-medium text-foreground">No hay RTFs pendientes de evaluaci\u00F3n de gabinete</p>
-        <p class="text-xs text-muted-foreground mt-1">Los RTFs derivados por UR aparecer\u00E1n aqu\u00ED autom\u00E1ticamente.</p>
+        <p class="text-sm font-medium text-foreground">No hay RTFs pendientes de evaluación</p>
+        <p class="text-xs text-muted-foreground mt-1">Los RTFs enviados por la OA aparecerán aquí automáticamente.</p>
       </div>
     } @else {
       <div class="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
@@ -38,11 +38,11 @@
               <tr class="border-b border-border bg-muted/30">
                 <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">ID RTF</th>
                 <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Convenio</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Cr\u00EDtico</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Crítico</th>
                 <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Estado</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. L\u00EDmite</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Recepci\u00F3n</th>
-                <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acci\u00F3n</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Límite</th>
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Recepción</th>
+                <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -52,8 +52,8 @@
                   <td class="px-4 py-3 font-medium">{{ rtf.ideConvenio }}</td>
                   <td class="px-4 py-3">{{ rtf.numPasoCritico }}</td>
                   <td class="px-4 py-3">
-                    <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-primary/20 bg-primary/10 text-primary">
-                      {{ rtfService.rtfStatusLabel() }}
+                    <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border" [class]="estadoBadgeClass(rtf.estRtf)">
+                      {{ rtf.estRtf }}
                     </span>
                   </td>
                   <td class="px-4 py-3 text-xs">{{ rtf.fecLimite | date:'dd/MM/yyyy' }}</td>
@@ -85,19 +85,19 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Convenio</p>
-            <p class="text-sm font-bold text-foreground">{{ rtfService.convenioId() }}</p>
+            <p class="text-sm font-bold text-foreground">{{ cabecera()?.ideConvenio }}</p>
           </div>
           <div>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Paso Cr\u00EDtico</p>
-            <p class="text-sm font-bold text-foreground">{{ rtfService.activePasoNumero() }} de {{ rtfService.totalPasos() }}</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Paso Crítico</p>
+            <p class="text-sm font-bold text-foreground">{{ cabecera()?.numPasoCritico }}</p>
           </div>
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Estado</p>
-            <p class="text-sm font-bold text-primary">{{ rtfService.rtfStatusLabel() }}</p>
+            <p class="text-sm font-bold text-primary">{{ rtfStatusLabel() }}</p>
           </div>
           <div>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Avance F\u00EDsico</p>
-            <p class="text-sm font-bold text-foreground">{{ rtfService.physicalProgress() }}%</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fec. Límite</p>
+            <p class="text-sm font-bold text-foreground">{{ cabecera()?.fecLimite | date:'dd/MM/yyyy' }}</p>
           </div>
         </div>
       </div>
@@ -108,13 +108,13 @@
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px] text-primary">description</span>
-            R1 - Informaci\u00F3n Cualitativa
+            R1 - Información Cualitativa
           </h3>
           <div class="space-y-3">
             @for (item of r1Items(); track item.label) {
               <div>
                 <p class="text-[11px] font-semibold text-muted-foreground mb-0.5">{{ item.label }}</p>
-                <p class="text-sm text-foreground whitespace-pre-wrap">{{ item.value || 'Sin informaci\u00F3n' }}</p>
+                <p class="text-sm text-foreground whitespace-pre-wrap">{{ item.value || 'Sin información' }}</p>
               </div>
             }
           </div>
@@ -126,7 +126,7 @@
             <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
             F1 - Gastos Financieros
           </h3>
-          @if (rtfService.gastosF1().length === 0) {
+          @if (gastosF1().length === 0) {
             <p class="text-sm text-muted-foreground">Sin gastos registrados.</p>
           } @else {
             <div class="overflow-x-auto">
@@ -140,7 +140,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (g of rtfService.gastosF1(); track g.ideGastoF1) {
+                  @for (g of gastosF1(); track g.ideGastoF1) {
                     <tr class="border-b border-border/40">
                       <td class="py-1.5">{{ g.txtItemNombre }}</td>
                       <td class="text-right py-1.5">{{ g.canCantidad | number:'1.0-0' }}</td>
@@ -158,13 +158,13 @@
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px] text-primary">checklist</span>
-            T1 - Metas F\u00EDsicas
+            T1 - Metas Físicas
           </h3>
-          @if (rtfService.metas().length === 0) {
+          @if (metas().length === 0) {
             <p class="text-sm text-muted-foreground">Sin metas registradas.</p>
           } @else {
             <div class="space-y-3">
-              @for (m of rtfService.metas(); track m.ideActividad) {
+              @for (m of metas(); track m.ideActividad) {
                 <div>
                   <div class="flex justify-between text-xs mb-1">
                     <span class="text-foreground font-medium truncate mr-2">{{ m.txtComentario || 'Actividad' }}</span>
@@ -185,11 +185,11 @@
             <span class="material-symbols-outlined text-[16px] text-primary">analytics</span>
             R2 - Indicadores
           </h3>
-          @if (rtfService.indicadores().length === 0) {
+          @if (indicadores().length === 0) {
             <p class="text-sm text-muted-foreground">Sin indicadores registrados.</p>
           } @else {
             <div class="space-y-3">
-              @for (ind of rtfService.indicadores(); track ind.ideIndicador) {
+              @for (ind of indicadores(); track ind.ideIndicador) {
                 <div>
                   <div class="flex justify-between text-xs mb-1">
                     <span class="text-foreground font-medium truncate mr-2">{{ ind.txtComentario || 'Indicador' }}</span>
@@ -232,84 +232,187 @@
         }
       </div>
 
-      <!-- Evaluación Anexo 18 (Informe de Comprobación) -->
-      <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-        <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <span class="material-symbols-outlined text-[16px] text-primary">summarize</span>
-          Anexo 18 - Informe de Comprobaci\u00F3n
-        </h3>
-        @if (anexo18Empty()) {
-          <p class="text-sm text-muted-foreground">A\u00FAn no se ha generado el Informe de Comprobaci\u00F3n (Anexo 18).</p>
-          <button class="mt-3 rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors" (click)="generarAnexo18()">
-            <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
-            Generar PDF Anexo 18
-          </button>
-        } @else {
-          <div class="space-y-2 text-sm">
-            <p><span class="font-semibold text-muted-foreground">N\u00FAmero Informe:</span> {{ anexo18()?.txtNumeroInforme }}</p>
-            <p><span class="font-semibold text-muted-foreground">Representante UN:</span> {{ anexo18()?.txtRepresentanteUn }}</p>
-            <p><span class="font-semibold text-muted-foreground">Conclusiones:</span> {{ anexo18()?.txtConclusiones || 'Sin conclusiones' }}</p>
-          </div>
-          <button class="mt-3 rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors" (click)="generarAnexo18()">
-            <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
-            Descargar PDF Anexo 18
-          </button>
-        }
-      </div>
-
-      <!-- Observaciones para Devolver -->
-      @if (showDevolverForm()) {
+      @if (estaEnEvaluacionPrevia()) {
+        <!-- Verificación de Campo (Anexo 19) — opcional, ADR-010 -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px] text-destructive">rate_review</span>
-            Devolver a OA - Observaciones
+            <span class="material-symbols-outlined text-[16px] text-primary">travel_explore</span>
+            Verificación de Campo · Anexo 19 (Opcional)
           </h3>
-          <textarea
-            class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-xs resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-            placeholder="Describa las observaciones para la correcci\u00F3n..."
-            [value]="devolverObservacion()"
-            (input)="devolverObservacion.set($any($event.target).value)"
-            rows="3"
-          ></textarea>
-          @if (!devolverObservacion().trim()) {
-            <p class="mt-1 text-[11px] text-destructive">Debe ingresar una observaci\u00F3n para devolver el RTF.</p>
+          <p class="text-sm text-muted-foreground mb-4">
+            Si realizó (o coordinó) una visita de campo para verificar la adopción tecnológica, registre aquí el Acta. No es obligatoria para continuar.
+          </p>
+          @if (actaSubida()) {
+            <div class="flex items-center gap-2 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
+              <span class="material-symbols-outlined text-[18px] text-success">check_circle</span>
+              Verificación de campo registrada · <span class="font-mono">{{ actaFileName() }}</span>
+            </div>
+          } @else {
+            <div
+              class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 text-center transition-all hover:border-primary/50 hover:bg-primary/5"
+              (click)="actaFileInput.click()"
+              (dragover)="$event.preventDefault()"
+              (drop)="onActaDrop($event)"
+            >
+              <span class="material-symbols-outlined text-[28px] text-primary">cloud_upload</span>
+              <div class="text-sm font-medium">Cargar Acta de Campo (PDF, máx 10MB)</div>
+              <input #actaFileInput type="file" accept="application/pdf" class="hidden" (change)="onActaSelect($event)" />
+            </div>
           }
         </div>
+
+        @if (evaluationRows().length > 0) {
+          <!-- Evaluación por fila (solo aplica a metas/indicadores locales, flujo legacy) -->
+          <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4">Evaluación · Conforme / Observado por fila</h3>
+            <div class="space-y-3">
+              @for (row of evaluationRows(); track row.id) {
+                <div class="rounded-lg border p-3" [ngClass]="evaluationRowClasses(row.id)">
+                  <div class="mb-2 flex items-center justify-between">
+                    <div class="text-sm font-medium text-foreground">
+                      {{ row.label }} <span class="ml-2 font-mono text-xs text-muted-foreground">{{ row.value }}</span>
+                    </div>
+                    <div class="flex gap-3">
+                      <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                        <input type="checkbox" class="accent-success" [checked]="rowEvalMap()[row.id]?.estConformidad === 'CONFORME'" (change)="setEvaluacion(row.id, 'CONFORME')" />
+                        <span class="material-symbols-outlined text-[16px] text-success">check_circle</span>
+                        Conforme
+                      </label>
+                      <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                        <input type="checkbox" class="accent-destructive" [checked]="rowEvalMap()[row.id]?.estConformidad === 'OBSERVADO'" (change)="setEvaluacion(row.id, 'OBSERVADO')" />
+                        <span class="material-symbols-outlined text-[16px] text-destructive">cancel</span>
+                        Observado
+                      </label>
+                    </div>
+                  </div>
+                  @if (rowEvalMap()[row.id]?.estConformidad === 'OBSERVADO') {
+                    <textarea
+                      class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-xs resize-y min-h-[60px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      placeholder="Comentario obligatorio de la observación..."
+                      [value]="rowEvalMap()[row.id]?.txtObservacion ?? ''"
+                      (input)="setObservacion(row.id, $any($event.target).value)"
+                      rows="2"
+                    ></textarea>
+                  }
+                  @if (rowNeedsComment(row.id)) {
+                    <div class="mt-1 text-[11px] text-destructive">Debe ingresar un comentario justificando la observación.</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        <!-- Anexo 18 - solo una vez en evaluación final (IN_REVISION_UN) -->
+        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px] text-primary">summarize</span>
+            Anexo 18 - Informe de Comprobación
+          </h3>
+          @if (anexo18Empty()) {
+            <p class="text-sm text-muted-foreground">Aún no se ha generado el Informe de Comprobación (Anexo 18).</p>
+            <button class="mt-3 rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors" (click)="generarAnexo18()">
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
+              Generar PDF Anexo 18
+            </button>
+          } @else {
+            <div class="space-y-2 text-sm">
+              <p><span class="font-semibold text-muted-foreground">Número Informe:</span> {{ anexo18()?.txtNumeroInforme }}</p>
+              <p><span class="font-semibold text-muted-foreground">Representante UN:</span> {{ anexo18()?.txtRepresentanteUn }}</p>
+              <p><span class="font-semibold text-muted-foreground">Conclusiones:</span> {{ anexo18()?.txtConclusiones || 'Sin conclusiones' }}</p>
+            </div>
+            <button class="mt-3 rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors" (click)="generarAnexo18()">
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">download</span>
+              Descargar PDF Anexo 18
+            </button>
+          }
+        </div>
+
+        <!-- Observaciones para Devolver -->
+        @if (showDevolverForm()) {
+          <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px] text-destructive">rate_review</span>
+              Devolver a OA - Observaciones
+            </h3>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-xs resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Describa las observaciones para la corrección..."
+              [value]="devolverObservacion()"
+              (input)="devolverObservacion.set($any($event.target).value)"
+              rows="3"
+            ></textarea>
+            @if (!devolverObservacion().trim()) {
+              <p class="mt-1 text-[11px] text-destructive">Debe ingresar una observación para devolver el RTF.</p>
+            }
+          </div>
+        }
       }
 
       <!-- Sticky Footer Actions -->
       <div class="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-container-lowest border border-border p-4 shadow-lg">
-        <div class="text-sm text-muted-foreground">
-          RTF en evaluaci\u00F3n de gabinete
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          @if (showDevolverForm()) {
-            <button class="rounded-xl border border-border bg-surface-container/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="toggleDevolverForm()">
-              Cancelar
-            </button>
-            <button class="rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-40" (click)="devolverRtf()" [disabled]="accionEjecutandose()">
+        @if (estaEnEvaluacionPrevia()) {
+          <div class="text-sm text-muted-foreground">
+            @if (evaluationRows().length === 0) {
+              Sin filas locales que evaluar · puede continuar directo
+            } @else if (!allMarked()) {
+              Marque Conforme u Observado en cada fila
+            } @else if (observedRows().length > 0) {
+              {{ observedRows().length }} fila(s) observada(s) · devolver a la OA
+            } @else {
+              Todo conforme · puede continuar
+            }
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              [disabled]="!puedeDevolverTemprano() || accionEjecutandose()"
+              (click)="devolverTemprano()"
+            >
               <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
-              Confirmar Devoluci\u00F3n
+              Devolver a OA (Observado)
             </button>
-          } @else {
-            <button class="rounded-xl border border-border bg-surface-container/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="toggleDevolverForm()">
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
-              Devolver a OA
+            <button
+              class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              [disabled]="!puedeContinuar() || accionEjecutandose()"
+              (click)="continuarEvaluacion()"
+            >
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">send</span>
+              Continuar Evaluación
             </button>
-          }
-          <button class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 transition-colors" (click)="rechazar()" [disabled]="accionEjecutandose()">
-            <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">cancel</span>
-            Rechazar
-          </button>
-          <button class="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40" (click)="aprobar()" [disabled]="accionEjecutandose()">
-            <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">check_circle</span>
-            Aprobar
-          </button>
-        </div>
+          </div>
+        } @else {
+          <div class="text-sm text-muted-foreground">
+            RTF en evaluación final
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            @if (showDevolverForm()) {
+              <button class="rounded-xl border border-border bg-surface-container/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="toggleDevolverForm()">
+                Cancelar
+              </button>
+              <button class="rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-40" (click)="devolverRtf()" [disabled]="accionEjecutandose()">
+                <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
+                Confirmar Devolución
+              </button>
+            } @else {
+              <button class="rounded-xl border border-border bg-surface-container/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="toggleDevolverForm()">
+                <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
+                Devolver a OA
+              </button>
+            }
+            <button class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 transition-colors" (click)="rechazar()" [disabled]="accionEjecutandose()">
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">cancel</span>
+              Rechazar
+            </button>
+            <button class="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40" (click)="aprobar()" [disabled]="accionEjecutandose()">
+              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">check_circle</span>
+              Aprobar
+            </button>
+          </div>
+        }
       </div>
 
     }
   }
 
 </div>
-

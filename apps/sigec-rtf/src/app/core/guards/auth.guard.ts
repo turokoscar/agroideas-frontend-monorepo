@@ -29,11 +29,10 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
     if (!authService.isLoggedIn) {
       router.navigate(['/login']);
     } else {
-      // Redirect to base screen depending on user's role
+      // Redirect to base screen depending on user's role. No hay rol 'UR' (ADR-010): UN
+      // maneja todo el ciclo del expediente en una sola pantalla.
       if (user?.role === 'POSTULANTE') {
         router.navigate(['/rtf/dashboard']);
-      } else if (user?.role === 'UR') {
-        router.navigate(['/rtf/auditoria-regional']);
       } else {
         router.navigate(['/rtf/evaluacion-gabinete']);
       }

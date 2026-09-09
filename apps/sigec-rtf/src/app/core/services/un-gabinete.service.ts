@@ -1,15 +1,28 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { throwError } from 'rxjs';
+import { forkJoin, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import {
   RtfCabeceraDto,
+  UrCompletoDto,
   UrEvaluacionItemDto,
+  UrEvaluacionRequestDto,
   DashboardUnData,
-  ApiResponse
+  ApiResponse,
+  EvidenceDto,
+  GastoF1Dto,
+  IndicadorDto,
+  MetaFisicaDto
 } from '../models';
 
+/**
+ * ADR-010: la UN maneja todo el ciclo de un expediente, desde que llega (EN_REVISION) hasta que
+ * lo aprueba/rechaza (IN_REVISION_UN) — no hay un actor "UR" separado en el sistema. Este
+ * servicio (antes solo IN_REVISION_UN) absorbe también lo que vivía en `UrAuditoriaService`
+ * (bandeja EN_REVISION/AUDITADO_CAMPO, Acta de Campo, evaluación por fila, derivar, devolver
+ * temprano) para que `UnGabineteComponent` sea la única pantalla de este flujo.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -17,13 +30,24 @@ export class UnGabineteService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  // UN State Signals
+  // Bandeja: EN_REVISION + AUDITADO_CAMPO + IN_REVISION_UN, filtrada por cartera en el backend.
   unRtfList = signal<RtfCabeceraDto[]>([]);
   unSelectedRtfId = signal<number | null>(null);
-  unEvaluacionItems = signal<UrEvaluacionItemDto[]>([]);
-  unObservacionDevolver = signal<string>('');
   dashboardUnData = signal<DashboardUnData | null>(null);
-  rtfStatus = signal<string>('PENDIENTE');
+
+  // RTF seleccionado (self-contained: no depende de las signals de OaRtfService, que solo se
+  // llenan del lado OA y podían quedar vacías/desactualizadas para el RTF que la UN abre).
+  cabeceraSeleccionada = signal<RtfCabeceraDto | null>(null);
+  metas = signal<MetaFisicaDto[]>([]);
+  indicadores = signal<IndicadorDto[]>([]);
+  evidencias = signal<EvidenceDto[]>([]);
+  gastosF1 = signal<GastoF1Dto[]>([]);
+
+  rtfStatus = computed(() => this.cabeceraSeleccionada()?.estRtf ?? 'PENDIENTE');
+
+  // Verificación de campo (Anexo 19, opcional) sobre el RTF seleccionado.
+  urEvaluacionItems = signal<UrEvaluacionItemDto[]>([]);
+  urActaCampoArchivo = signal<File | null>(null);
 
   loadDashboardUn() {
     return this.http.get<ApiResponse<DashboardUnData>>(`${this.apiUrl}/un/dashboard`).pipe(
@@ -39,13 +63,90 @@ export class UnGabineteService {
   }
 
   loadBandejaUn() {
-    return this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(`${this.apiUrl}/un/bandeja`).pipe(
-      map(res => {
-        this.unRtfList.set(res.datos?.items || []);
-        return res.datos;
+    const estados = ['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN'];
+    return forkJoin(
+      estados.map(estado =>
+        this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(`${this.apiUrl}/rtfs?estado=${estado}`)
+      )
+    ).pipe(
+      map(respuestas => {
+        const items = respuestas.flatMap(res => res.datos?.items ?? []);
+        this.unRtfList.set(items);
+        return items;
       }),
       catchError(err => {
         console.error('Error loading UN bandeja', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  loadRtfCompleto(rtfId: number) {
+    return this.http.get<ApiResponse<UrCompletoDto>>(`${this.apiUrl}/rtfs/${rtfId}/completo`).pipe(
+      map(res => {
+        const data = res.datos;
+        if (data) {
+          this.cabeceraSeleccionada.set(data.cabecera);
+          this.metas.set(data.metas || []);
+          this.indicadores.set(data.indicadores || []);
+          this.evidencias.set(data.evidencias || []);
+          this.gastosF1.set(data.gastos || []);
+        }
+        return data;
+      }),
+      catchError(err => {
+        console.error('Error loading RTF completo', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  uploadActaCampo(rtfId: number, archivo: File) {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/actas-campo`, formData).pipe(
+      map(res => {
+        this.urActaCampoArchivo.set(archivo);
+        return res;
+      }),
+      catchError(err => {
+        console.error('Error uploading acta campo', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  guardarEvaluacionUr(rtfId: number, items: UrEvaluacionItemDto[]) {
+    const body: UrEvaluacionRequestDto = { ideRtf: rtfId, items };
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/evaluaciones`, body).pipe(
+      map(res => {
+        this.urEvaluacionItems.set(items);
+        return res;
+      }),
+      catchError(err => {
+        console.error('Error saving evaluation', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Continúa la evaluación (antes "derivar a UN" entre dos actores; ahora un paso interno). */
+  derivarUn(rtfId: number) {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/derivaciones`, {}).pipe(
+      catchError(err => {
+        console.error('Error al continuar la evaluación del RTF', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Devuelve a la OA antes de llegar a IN_REVISION_UN (desde EN_REVISION/AUDITADO_CAMPO). */
+  devolverTemprano(rtfId: number, observacion: string) {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/devoluciones`, JSON.stringify(observacion), {
+      headers: { 'Content-Type': 'application/json' }
+    }).pipe(
+      catchError(err => {
+        console.error('Error devolviendo RTF', err);
         return throwError(() => err);
       })
     );
@@ -56,7 +157,6 @@ export class UnGabineteService {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {
-        this.rtfStatus.set('APROBADO');
         this.unSelectedRtfId.set(null);
         return res;
       }),
@@ -72,7 +172,6 @@ export class UnGabineteService {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {
-        this.rtfStatus.set('RECHAZADO');
         this.unSelectedRtfId.set(null);
         return res;
       }),
@@ -88,7 +187,6 @@ export class UnGabineteService {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {
-        this.rtfStatus.set('EN_EDICION');
         this.unSelectedRtfId.set(null);
         return res;
       }),

@@ -53,11 +53,10 @@ export class LoginComponent {
     });
   }
 
+  // No hay rol 'UR' (ADR-010): UN maneja todo el ciclo del expediente en una sola pantalla.
   private redirectByUserRole(role: string) {
     if (role === 'POSTULANTE') {
       this.router.navigate(['/rtf/dashboard']);
-    } else if (role === 'UR') {
-      this.router.navigate(['/rtf/auditoria-regional']);
     } else if (role === 'UN' || role === 'DE' || role === 'UAJ' || role === 'USE') {
       this.router.navigate(['/rtf/evaluacion-gabinete']);
     } else {
