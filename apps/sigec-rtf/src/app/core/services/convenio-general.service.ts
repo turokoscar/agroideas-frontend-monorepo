@@ -1,15 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, of, Observable } from 'rxjs';
+import { of, Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, ConvenioResumenDto } from '../models';
+import { ApiResponse, ConvenioResumenDto, DatosPaginados } from '../models';
 
 /**
  * sigec-api-rtf no tiene datos de organización (RUC/razón social/número de convenio) — esa
  * fuente vive en sel-api-general. El JWT de sesión de sigec-rtf es válido ahí sin config extra
- * (mismo issuer/audience que sel-api-seguridad), y `postulanteId` en sel-api-general es el
- * mismo id que `ideConvenio` en sigec-api-rtf.
+ * (mismo issuer/audience que sel-api-seguridad).
  */
 @Injectable({
   providedIn: 'root'
@@ -18,31 +17,27 @@ export class ConvenioGeneralService {
   private http = inject(HttpClient);
   private apiGeneral = environment.apiGeneral;
 
-  private obtenerConvenio(id: number): Observable<ConvenioResumenDto | null> {
-    return this.http.get<ApiResponse<ConvenioResumenDto>>(`${this.apiGeneral}/convenios/${id}`).pipe(
-      map(res => res.datos ?? null),
-      catchError(err => {
-        console.error(`Error obteniendo convenio ${id} de sel-api-general`, err);
-        return of(null);
-      })
-    );
-  }
-
   /**
-   * No existe endpoint por lote en sel-api-general: dispara una petición por id en paralelo.
-   * Pensado para invocarse solo con los ids visibles en la página actual (no la lista completa).
+   * Trae TODOS los convenios asignados al usuario autenticado en una sola llamada (no hay
+   * endpoint por lista de ids en sel-api-general, pero sí uno de colección ya scopeado al
+   * usuario del JWT — el mismo que usa sigec-api-rtf internamente, en
+   * RtfCabeceraServicio.ObtenerConveniosAsignadosAsync, para filtrar RTFs por convenio). Evita
+   * N requests (uno por convenio) al no depender de ideConvenio como parámetro de ruta.
+   * Cantidad tope de la API: 2000.
    */
-  obtenerResumenPorIds(ids: number[]): Observable<Map<number, ConvenioResumenDto>> {
-    if (ids.length === 0) {
-      return of(new Map());
-    }
-    return forkJoin(ids.map(id => this.obtenerConvenio(id))).pipe(
-      map(resultados => {
+  obtenerAsignados(cantidad = 2000): Observable<Map<number, ConvenioResumenDto>> {
+    return this.http.get<ApiResponse<DatosPaginados<ConvenioResumenDto>>>(
+      `${this.apiGeneral}/convenios/asignados`,
+      { params: { pagina: 1, cantidad } }
+    ).pipe(
+      map(res => {
         const mapa = new Map<number, ConvenioResumenDto>();
-        resultados.forEach((convenio, i) => {
-          if (convenio) mapa.set(ids[i], convenio);
-        });
+        (res.datos?.items ?? []).forEach(c => mapa.set(c.id, c));
         return mapa;
+      }),
+      catchError(err => {
+        console.error('Error obteniendo convenios asignados de sel-api-general', err);
+        return of(new Map<number, ConvenioResumenDto>());
       })
     );
   }

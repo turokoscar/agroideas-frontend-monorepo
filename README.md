@@ -41,6 +41,7 @@ El monorepo se organiza bajo la convención de **Nx** en aplicaciones (`apps/`) 
     ├── http/                # @agroideas/http      -> Respuestas estandarizadas (ResponseDto) y cliente HTTP base
     ├── feedback/            # @agroideas/feedback  -> Centralización de alertas y diálogos (SweetAlert2)
     ├── security/            # @agroideas/security  -> Directivas y servicios de control de acceso por permisos
+    ├── menu/                # @agroideas/menu       -> Modelos MenuItem/MenuAgrupado y stub de componente
     └── utils/               # @agroideas/utils     -> Utilidades puras de TypeScript (formatos, JWT, storage-keys)
 ```
 
@@ -177,15 +178,15 @@ Los archivos resultantes se generarán en la ruta:
 Dado que las aplicaciones son SPA (Single Page Applications) generadas como archivos estáticos (HTML, CSS y JS), se pueden servir mediante cualquier servidor web de alto rendimiento.
 
 #### Opción A: Despliegue mediante Nginx (Recomendado)
-A continuación se presenta un archivo de configuración básico de Nginx (`nginx.conf`) que incluye el manejo correcto de rutas para Angular (redirección a `index.html` para evitar errores `404` en recargas de página):
+A continuación se presenta un archivo de configuración básico de Nginx que incluye el manejo correcto de rutas para Angular (redirección a `index.html` para evitar errores `404` en recargas de página):
 
 ```nginx
 server {
     listen 80;
-    server_name sat.agroideas.gob.pe;
+    server_name localhost;
 
     location / {
-        root /usr/share/nginx/html/sat-ui;
+        root /usr/share/nginx/html;
         index index.html index.htm;
         try_files $uri $uri/ /index.html;
     }
@@ -198,17 +199,16 @@ server {
 ```
 
 #### Opción B: Contenedores Docker (Producción)
-Se puede empaquetar la aplicación en una imagen ligera de Docker utilizando Nginx:
+Cada app tiene su propio `Dockerfile` en la raíz del repositorio:
 
-```dockerfile
-# Paso 1: Servir con Nginx
-FROM nginx:alpine
-COPY dist/apps/sat-ui/browser /usr/share/nginx/html/sat-ui
-# Opcional: Reemplazar configuración default de Nginx
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+```bash
+# KOFIX (calidad)
+docker build -t kofix-ejecucion .
+# SAT UI
+docker build -f Dockerfile.sat-ui -t sat-ui .
 ```
+
+El `Dockerfile` de kofix usa `npx nx build kofix-ejecucion --configuration=quality` (reemplaza `environment.ts` por `environment.quality.ts`).
 
 #### Opción C: Servicios Cloud / CDN
 Puedes subir el contenido de la carpeta `dist/apps/<app>/browser/` directamente a:

@@ -1,6 +1,6 @@
 # AGROIDEAS Frontend Monorepo — Agent Guide
 
-**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (SIGEC apps, lib export tables) — kept in sync as of 2026-08-14.
+**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (SIGEC apps, lib export tables) — kept in sync as of 2026-09-10.
 
 ## Commands (use `npx nx` — no npm scripts)
 
@@ -33,6 +33,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 | `scope:shared` | `scope:shared` |
 | `scope:kofix` | `scope:kofix`, `scope:shared` |
 | `scope:sat` | `scope:sat`, `scope:shared` |
+| `scope:sigec` | `scope:sigec`, `scope:shared` |
 | `type:app` / `type:feature` | `feature`, `ui`, `data-access`, `util` |
 | `type:ui` | `ui`, `util` |
 | `type:data-access` | `data-access`, `util` |
@@ -50,8 +51,8 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 - **kofix-ejecucion** (:7100, `scope:kofix`): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. `inlineStyleLanguage: "css"` (global, but most components use `.sass`). Auth via shared `@agroideas/auth` interceptor. Real backend permission provider. Talks to three .NET APIs (`apiSeguridad`, `apiEjecucion`, `apiGeneral`). Needs `@angular/localize/init` polyfill. Allows `sweetalert2` and `leaflet` as CommonJS deps.
 - **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards, interceptors), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth via local `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth` interceptor, though it imports `AUTH_LOGOUT_HANDLER` from that lib). Permissions provider is a stub (`of([])`). Its backend is a different one (:7081, `txtNombres`/`codUsuario`), so it does not use the `sel-usuario` mapper — only `inicialesDeNombre`.
-- **sigec-rtf** (:4300, untagged): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure. Session comes from `sel-api-seguridad` (:7101) via the shared mapper.
-- **sigec-cierre** (:4400, `scope:sigec`, `type:app`): Feature-based with `core/` and `features/` (login, cierre-registro). Same structure and same auth backend as sigec-rtf. The `scope:sigec` constraint lives in root `eslint.config.js`.
+- **sigec-rtf** (:4300, `scope:kofix`): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure. Session comes from `sel-api-seguridad` (:7101) via the shared mapper.
+- **sigec-cierre** (:4400, `scope:sigec`): Feature-based with `core/` and `features/` (login, cierre-registro). Same structure and same auth backend as sigec-rtf.
 
 ## Lib state
 
@@ -63,12 +64,12 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 | `security` | done | `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
 | `auth` | done | `authInterceptor` (HttpInterceptorFn), `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY` injection tokens |
 | `feedback` | done | `AlertService` (SweetAlert2 wrapper) — methods: `show`, `toast`, `showResponse`, `confirm` |
-| `menu` | done | Exports stub component + `MenuItem`/`MenuAgrupado`. `MenuRepository` (in `domain/repositories/`) is not exported via `index.ts`. |
+| `menu` | done | Exports `MenuItem`/`MenuAgrupado` models and stub component. `MenuRepository` (in `domain/repositories/`) is not exported. |
 | `http` | scaffold | Only re-exports `ResponseDto` from `@agroideas/utils`; no own code |
 
 ## Gotchas
 
-- **ESLint stack pinned** — `eslint 9.14.0` + `typescript-eslint 8.13.0` + `angular-eslint 18.4.3` must be upgraded together (enforced via `overrides` in `package.json`). Mismatches crash linting.
+- **ESLint stack pinned** — `eslint 9.14.0` + `typescript-eslint 8.13.0` must be upgraded together (enforced via `overrides` in `package.json`). `angular-eslint` follows `^18.3.0`. Mismatches crash linting.
 - `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto Angular templates).
 - **Design system chain:** `libs/theme/src/styles/tokens.css` (HSL CSS vars) → `tailwind-preset.js` → `base.css`. No brand hex outside this lib. Apps wire `base.css` in `project.json` `styles` array (NOT `@import` in `.scss` — that leaves `@tailwind` unprocessed). No `postcss.config.js` (managed via Angular build).
 - **kofix-ejecucion lint** passes with 0 errors but 259 warnings (intentional style debt — mostly `no-explicit-any`/`no-unused-vars`). Its `eslint.config.js` has transitional overrides downgrading style rules to `warn` — it does **not** relax `no-restricted-imports`; direct provider imports (PrimeNG/SweetAlert2/Leaflet) are still an error and kofix has none. The a11y template rules were fully remediated under [ADR 0008](docs/adr/0008-remediacion-ui-kofix-ejecucion.md).
@@ -76,10 +77,9 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - **All components** are `standalone: true` (no NgModules).
 - **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names.
 - **In Angular templates,** literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).
-- **TypeScript 5.5.2** — not 5.6+.
+- **TypeScript ~5.5.2** — not 5.6+.
 - **Prettier:** `singleQuote: true` (`.prettierrc`).
 - **No CI/CD** — no GitHub workflows, Jenkinsfile, husky, or lint-staged.
-- **sigec-cierre** has `tags: []` in its `project.json` — this breaks `@nx/enforce-module-boundaries`. When referencing it, add `scope:kofix,type:app` tags.
 
 ## References
 

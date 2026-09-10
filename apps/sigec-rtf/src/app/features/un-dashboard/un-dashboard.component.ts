@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect, untracked, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { UiPaginationComponent } from '@agroideas/ui';
 import { formatConvenioNumber } from '@agroideas/utils';
@@ -23,9 +23,7 @@ export class UnDashboardComponent implements OnInit {
   dashboard = this.rtfService.dashboardUnData;
 
   // Paginación client-side: sigec-api-rtf no pagina esta lista (llega completa en un solo
-  // request), así que se pagina en memoria. RUC/razón social/número de convenio no existen en
-  // sigec-api-rtf (solo ideConvenio) — se resuelven aparte contra sel-api-general, y solo para
-  // los convenios de la página visible, para no disparar N requests por los 100 de golpe.
+  // request), así que se pagina en memoria.
   pageSize = signal(10);
   currentPage = signal(1);
 
@@ -37,27 +35,18 @@ export class UnDashboardComponent implements OnInit {
     return todos.slice(inicio, inicio + this.pageSize());
   });
 
+  // RUC/razón social/número de convenio no existen en sigec-api-rtf (solo ideConvenio) — se
+  // resuelven contra sel-api-general. No hay endpoint por lista de ids ahí, pero sí uno de
+  // colección ya scopeado al usuario del JWT (convenios/asignados), así que se trae todo de una
+  // vez en vez de N requests (uno por convenio visible).
   conveniosInfo = signal<Map<number, ConvenioResumenDto>>(new Map());
   loadingConveniosInfo = signal(false);
 
-  constructor() {
-    effect(() => {
-      const ids = this.pagedConvenios().map(c => c.ideConvenio);
-      untracked(() => this.cargarInfoConvenios(ids));
-    });
-  }
-
-  private cargarInfoConvenios(ids: number[]) {
-    const cache = this.conveniosInfo();
-    const faltantes = ids.filter(id => !cache.has(id));
-    if (faltantes.length === 0) return;
-
+  private cargarConveniosInfo() {
     this.loadingConveniosInfo.set(true);
-    this.convenioGeneralService.obtenerResumenPorIds(faltantes).subscribe({
-      next: nuevos => {
-        const actualizado = new Map(this.conveniosInfo());
-        nuevos.forEach((info, id) => actualizado.set(id, info));
-        this.conveniosInfo.set(actualizado);
+    this.convenioGeneralService.obtenerAsignados().subscribe({
+      next: mapa => {
+        this.conveniosInfo.set(mapa);
         this.loadingConveniosInfo.set(false);
       },
       error: () => this.loadingConveniosInfo.set(false)
@@ -115,5 +104,6 @@ export class UnDashboardComponent implements OnInit {
         this.hasError.set(true);
       }
     });
+    this.cargarConveniosInfo();
   }
 }
