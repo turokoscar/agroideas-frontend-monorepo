@@ -64,11 +64,11 @@ export class UnDashboardComponent implements OnInit {
     return formatConvenioNumber(info.numeroConvenio, info.fechaFirma);
   }
 
-  avanceFisico = computed(() => Math.round(this.dashboard()?.avanceFisicoPromedio ?? 0));
+  avanceFinanciero = computed(() => Math.round(this.dashboard()?.avanceFinancieroPromedio ?? 0));
 
-  semaforoVerde = computed(() => this.avanceFisico() >= 70);
-  semaforoAmbar = computed(() => this.avanceFisico() >= 30 && this.avanceFisico() < 70);
-  semaforoRojo = computed(() => this.avanceFisico() < 30);
+  semaforoVerde = computed(() => this.avanceFinanciero() >= 70);
+  semaforoAmbar = computed(() => this.avanceFinanciero() >= 30 && this.avanceFinanciero() < 70);
+  semaforoRojo = computed(() => this.avanceFinanciero() < 30);
 
   aprobadosPct = computed(() => {
     const d = this.dashboard();

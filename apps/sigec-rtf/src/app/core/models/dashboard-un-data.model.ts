@@ -10,5 +10,6 @@ export interface DashboardUnData {
   inRevisionUn: number;
   vencidos: number;
   avanceFisicoPromedio: number;
+  avanceFinancieroPromedio: number;
   convenios: DashboardUnConvenioItemDto[];
 }

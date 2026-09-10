@@ -86,14 +86,14 @@
       </div>
     </div>
 
-    <!-- Avance Físico Promedio + Breakdown -->
+    <!-- Avance Financiero Promedio + Breakdown -->
     <div class="grid gap-6 lg:grid-cols-2">
 
-      <!-- Avance Físico Semáforo -->
+      <!-- Avance Financiero Semáforo -->
       <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
         <h3 class="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <span class="material-symbols-outlined text-[18px]" [class.text-success]="semaforoVerde()" [class.text-amber-500]="semaforoAmbar()" [class.text-destructive]="semaforoRojo()">monitoring</span>
-          Avance Físico Promedio
+          <span class="material-symbols-outlined text-[18px]" [class.text-success]="semaforoVerde()" [class.text-amber-500]="semaforoAmbar()" [class.text-destructive]="semaforoRojo()">payments</span>
+          Avance Financiero Promedio
         </h3>
         <div class="flex items-center gap-4">
           <div class="relative h-24 w-24 flex items-center justify-center">
@@ -104,12 +104,12 @@
                 [class.text-amber-500]="semaforoAmbar()"
                 [class.text-destructive]="semaforoRojo()"
                 [style.stroke-dasharray]="264"
-                [style.stroke-dashoffset]="264 - (264 * avanceFisico() / 100)"
+                [style.stroke-dashoffset]="264 - (264 * avanceFinanciero() / 100)"
                 stroke-linecap="round"
               ></circle>
             </svg>
             <span class="absolute text-xl font-bold" [class.text-success]="semaforoVerde()" [class.text-amber-500]="semaforoAmbar()" [class.text-destructive]="semaforoRojo()">
-              {{ avanceFisico() }}%
+              {{ avanceFinanciero() }}%
             </span>
           </div>
           <div class="space-y-2 text-xs">
@@ -179,7 +179,7 @@
                 <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Aprobados</th>
                 <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Pendientes</th>
                 <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Vencidos</th>
-                <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Avance Físico</th>
+                <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Avance Financiero</th>
               </tr>
             </thead>
             <tbody>
@@ -210,13 +210,13 @@
                       <div class="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
                           class="h-full rounded-full"
-                          [style.width.%]="c.avanceFisicoPromedio"
-                          [class.bg-success]="c.avanceFisicoPromedio >= 70"
-                          [class.bg-amber-500]="c.avanceFisicoPromedio >= 30 && c.avanceFisicoPromedio < 70"
-                          [class.bg-destructive]="c.avanceFisicoPromedio < 30"
+                          [style.width.%]="c.avanceFinancieroPromedio"
+                          [class.bg-success]="c.avanceFinancieroPromedio >= 70"
+                          [class.bg-amber-500]="c.avanceFinancieroPromedio >= 30 && c.avanceFinancieroPromedio < 70"
+                          [class.bg-destructive]="c.avanceFinancieroPromedio < 30"
                         ></div>
                       </div>
-                      <span class="text-xs font-medium">{{ c.avanceFisicoPromedio | number:'1.0-0' }}%</span>
+                      <span class="text-xs font-medium">{{ c.avanceFinancieroPromedio | number:'1.0-0' }}%</span>
                     </div>
                   </td>
                 </tr>

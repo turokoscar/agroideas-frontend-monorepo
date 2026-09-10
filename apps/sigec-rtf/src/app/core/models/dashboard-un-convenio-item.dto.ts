@@ -5,4 +5,5 @@ export interface DashboardUnConvenioItemDto {
   pendientes: number;
   vencidos: number;
   avanceFisicoPromedio: number;
+  avanceFinancieroPromedio: number;
 }
