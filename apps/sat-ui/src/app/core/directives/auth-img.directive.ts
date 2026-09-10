@@ -3,7 +3,7 @@ import { EvidenciaService } from '../services/evidencia.service';
 import { Subscription } from 'rxjs';
 
 @Directive({
-  selector: '[authImg]',
+  selector: '[appAuthImg]',
   standalone: true
 })
 export class AuthImgDirective implements OnChanges, OnDestroy {
@@ -12,7 +12,7 @@ export class AuthImgDirective implements OnChanges, OnDestroy {
   private subscription?: Subscription;
   private currentUrl?: string;
 
-  @Input('authImg') imgId!: string;
+  @Input('appAuthImg') imgId!: string;
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['imgId'] && this.imgId) {

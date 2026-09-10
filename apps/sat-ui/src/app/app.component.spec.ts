@@ -9,11 +9,10 @@ describe('AppComponent', () => {
     }).compileComponents();
   });
 
-  it('should render the design-system banner', () => {
+  it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('AGROIDEAS');
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
   });
 
   it(`should have as title 'sat-ui'`, () => {

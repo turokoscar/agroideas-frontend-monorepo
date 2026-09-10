@@ -116,7 +116,7 @@ export class EvidenciaService {
   }
 
   private extraerNombreDeBlob(blob: Blob, id: string): string {
-    const contentDisposition = blob instanceof Blob ? (blob as any).name : null;
+    const contentDisposition = blob instanceof Blob ? (blob as File).name : null;
     return contentDisposition || `${id}.jpg`;
   }
 

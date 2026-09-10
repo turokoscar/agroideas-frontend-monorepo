@@ -1,4 +1,4 @@
-import { Component, input, computed, effect, OnDestroy, signal } from '@angular/core';
+import { Component, input, computed, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type CountdownTone = 'primary' | 'warning' | 'destructive';

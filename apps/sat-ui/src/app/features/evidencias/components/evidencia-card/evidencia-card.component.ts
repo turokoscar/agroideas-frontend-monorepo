@@ -9,10 +9,10 @@ import { AuthImgDirective } from '../../../../core/directives/auth-img.directive
   standalone: true,
   imports: [CommonModule, FormatDatePipe, AuthImgDirective],
   template: `
-    <div (click)="abrirDetalle.emit(ev())" 
+    <div (click)="abrirDetalle.emit(ev())" (keydown.enter)="abrirDetalle.emit(ev())" tabindex="0"
       class="bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-primary transition-all group">
       <div class="aspect-square bg-slate-100 relative overflow-hidden">
-        <img [authImg]="ev().ideEvidencia" alt="Evidencia" 
+        <img [appAuthImg]="ev().ideEvidencia" alt="Evidencia" 
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           (error)="onImageError($event)"/>
         <div class="absolute top-2 right-2">

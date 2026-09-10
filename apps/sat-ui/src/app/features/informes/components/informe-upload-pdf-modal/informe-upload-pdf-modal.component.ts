@@ -32,9 +32,10 @@ import { AlertService } from '@agroideas/feedback';
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Archivo PDF</label>
+          <label for="informePdfFileInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Archivo PDF</label>
           <input
             #fileInput
+            id="informePdfFileInput"
             type="file"
             accept=".pdf"
             (change)="onFileSelected($event)"
@@ -42,6 +43,8 @@ import { AlertService } from '@agroideas/feedback';
           />
           <div
             (click)="triggerFileInput()"
+            (keydown.enter)="triggerFileInput()"
+            tabindex="0"
             class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-slate-50 transition-colors"
           >
             @if (selectedFile) {

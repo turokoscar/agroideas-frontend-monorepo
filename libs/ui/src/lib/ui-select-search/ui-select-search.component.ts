@@ -34,8 +34,10 @@ export class UiSelectSearchComponent implements ControlValueAccessor {
   value: any = null;
   disabled = false;
 
-  onChange = (val: any) => {};
-  onTouched = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  onChange: (value: unknown) => void = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  onTouched: () => void = () => {};
 
   writeValue(value: any): void {
     this.value = value;
