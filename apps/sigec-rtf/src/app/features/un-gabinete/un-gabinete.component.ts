@@ -269,7 +269,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   private cargarCartas(rtfId: number) {
     this.subs.add(
-      this.rtfService.cargarCartas(rtfId).subscribe({ error: () => {} })
+      this.rtfService.cargarCartas(rtfId).subscribe()
     );
   }
 
@@ -287,7 +287,6 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
             });
           }
         },
-        error: () => {}
       })
     );
   }
@@ -340,7 +339,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.rowEvalMap.update(map => {
       const current = map[rowId];
       if (current?.estConformidad === est) {
-        const { [rowId]: _, ...rest } = map;
+        const rest = { ...map }; delete rest[rowId];
         return rest;
       }
       return { ...map, [rowId]: { estConformidad: est, txtObservacion: current?.txtObservacion || '' } };

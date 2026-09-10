@@ -384,7 +384,7 @@ export class OaRtfService {
     this.indicadores.update(prev => prev.map((ind, i) => i === index ? { ...ind, ...patch } : ind));
   }
 
-  loadBandejaOA(estado: string, pagina: number = 1, cantidad: number = 10) {
+  loadBandejaOA(estado: string, pagina = 1, cantidad = 10) {
     return this.http.get<ApiResponse<DatosPaginados<RtfCabeceraDto>>>(`${this.apiUrl}/rtfs?estado=${estado}&pagina=${pagina}&cantidad=${cantidad}`).pipe(
       map(res => {
         this.oaBandejaList.set(res.datos?.items || []);

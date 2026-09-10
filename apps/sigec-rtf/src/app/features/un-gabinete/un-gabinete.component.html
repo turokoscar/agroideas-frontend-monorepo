@@ -296,7 +296,7 @@
           } @else {
             <div
               class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 text-center transition-all hover:border-primary/50 hover:bg-primary/5"
-              (click)="actaFileInput.click()"
+              tabindex="0" (keydown.enter)="actaFileInput.click()" (click)="actaFileInput.click()"
               (dragover)="$event.preventDefault()"
               (drop)="onActaDrop($event)"
             >
@@ -453,7 +453,7 @@
               } @else {
                 <div
                   class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 text-center transition-all hover:border-primary/50 hover:bg-primary/5"
-                  (click)="cartaFileInput.click()"
+                  tabindex="0" (keydown.enter)="cartaFileInput.click()" (click)="cartaFileInput.click()"
                   (dragover)="$event.preventDefault()"
                   (drop)="onCartaDrop($event)"
                 >

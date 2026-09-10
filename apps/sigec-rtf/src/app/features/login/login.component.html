@@ -74,7 +74,7 @@
           [class.border-transparent]="selectedTab() !== 'personal'"
           [class.text-muted-foreground]="selectedTab() !== 'personal'"
         >
-          Personal MIDAGRI
+          Personal AGROIDEAS
         </button>
       </div>
 
@@ -104,7 +104,7 @@
               />
             </div>
           } @else {
-            <label for="username" class="text-sm font-medium text-foreground">Usuario / Correo</label>
+            <label for="username" class="text-sm font-medium text-foreground">Nombre de usuario</label>
             <div class="relative">
               <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-muted-foreground">person</span>
               <input
@@ -114,7 +114,7 @@
                 required
                 [(ngModel)]="username"
                 class="w-full pl-10 pr-3 py-2.5 bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 border-input text-foreground transition-all placeholder:text-muted-foreground/60 text-sm"
-                placeholder="nombre.apellido"
+                placeholder="usuario"
               />
             </div>
           }

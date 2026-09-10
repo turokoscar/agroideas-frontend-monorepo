@@ -577,7 +577,7 @@
   [subtitle]="modalTitle()"
   [icon]="'edit_note'"
   [saveLabel]="'Confirmar y Guardar'"
-  [saveDisabled]="editEjecutado() == null || editEjecutado()! < 0 || !isEditable()"
+  [saveDisabled]="editEjecutado() === null || editEjecutado() === undefined || editEjecutado()! < 0 || !isEditable()"
   [isSubmitting]="isSaving()"
   (onHide)="closeModal()"
   (onSave)="saveModalAvance()"
@@ -709,7 +709,7 @@
         <!-- New evidence upload -->
         <div
           class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-all hover:border-primary hover:bg-primary/10 shadow-sm"
-          (click)="fileInput.click()"
+          tabindex="0" (keydown.enter)="fileInput.click()" (click)="fileInput.click()"
           (dragover)="$event.preventDefault()"
           (drop)="onModalFileDrop($event)"
         >
@@ -810,14 +810,14 @@
 
 <ng-template #metasLegacyRowTpl let-row let-col="col">
   @if (col.field === 'canEjecutada') {
-    @if (row.canEjecutada != null) {
+    @if (row.canEjecutada !== null && row.canEjecutada !== undefined) {
       <span>{{ row.canEjecutada }}</span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
   }
   @if (col.field === 'avancePct') {
-    @if (row.canEjecutada != null && row.canProgramada > 0) {
+    @if (row.canEjecutada !== null && row.canEjecutada !== undefined && row.canProgramada > 0) {
       <span class="text-xs font-bold" [class.text-success]="(row.canEjecutada / row.canProgramada) >= 1" [class.text-warning]="(row.canEjecutada / row.canProgramada) < 1">
         {{ (row.canEjecutada / row.canProgramada) | percent:'1.0-0' }}
       </span>
@@ -829,14 +829,14 @@
 
 <ng-template #indicadoresSelRowTpl let-row let-col="col">
   @if (col.field === 'metaEjecutada') {
-    @if (row.metaEjecutada != null) {
+    @if (row.metaEjecutada !== null && row.metaEjecutada !== undefined) {
       <span>{{ row.metaEjecutada }}</span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
   }
   @if (col.field === 'avancePct') {
-    @if (row.metaEjecutada != null && row.metaProgramada > 0) {
+    @if (row.metaEjecutada !== null && row.metaEjecutada !== undefined && row.metaProgramada > 0) {
       <span class="text-xs font-bold" [class.text-success]="(row.metaEjecutada / row.metaProgramada) >= 1" [class.text-warning]="(row.metaEjecutada / row.metaProgramada) < 1">
         {{ (row.metaEjecutada / row.metaProgramada) | percent:'1.0-0' }}
       </span>
@@ -848,14 +848,14 @@
 
 <ng-template #indicadoresLegacyRowTpl let-row let-col="col">
   @if (col.field === 'canEjecutado') {
-    @if (row.canEjecutado != null) {
+    @if (row.canEjecutado !== null && row.canEjecutado !== undefined) {
       <span>{{ row.canEjecutado }}</span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
   }
   @if (col.field === 'avancePct') {
-    @if (row.canEjecutado != null && row.canProgramado > 0) {
+    @if (row.canEjecutado !== null && row.canEjecutado !== undefined && row.canProgramado > 0) {
       <span class="text-xs font-bold" [class.text-success]="(row.canEjecutado / row.canProgramado) >= 1" [class.text-warning]="(row.canEjecutado / row.canProgramado) < 1">
         {{ (row.canEjecutado / row.canProgramado) | percent:'1.0-0' }}
       </span>
