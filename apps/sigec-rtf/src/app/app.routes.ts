@@ -1,77 +1,66 @@
 import { Route } from '@angular/router';
-import { LoginComponent } from './features/login/login.component';
-import { AppShellComponent } from './layout/app-shell/app-shell.component';
-import { OaDashboardComponent } from './features/oa-dashboard/oa-dashboard.component';
-import { OaRegistroComponent } from './features/oa-registro/oa-registro.component';
-import { OaEnviarComponent } from './features/oa-enviar/oa-enviar.component';
-import { OaObservacionesComponent } from './features/oa-observaciones/oa-observaciones.component';
-import { ReporteFisicoComponent } from './features/reportes/reporte-fisico.component';
-import { ReporteFinancieroComponent } from './features/reportes/reporte-financiero.component';
-import { UnGabineteComponent } from './features/un-gabinete/un-gabinete.component';
-import { BandejaOAComponent } from './features/bandeja-oa/bandeja-oa.component';
-import { UnDashboardComponent } from './features/un-dashboard/un-dashboard.component';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
 
 export const appRoutes: Route[] = [
   {
     path: 'login',
-    component: LoginComponent
+    loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent)
   },
   {
     path: '',
-    component: AppShellComponent,
+    loadComponent: () => import('./layout/app-shell/app-shell.component').then(m => m.AppShellComponent),
     canActivate: [authGuard],
     children: [
       {
         path: 'rtf/dashboard',
-        component: OaDashboardComponent,
+        loadComponent: () => import('./features/oa-dashboard/oa-dashboard.component').then(m => m.OaDashboardComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/pasos-criticos/registrar',
-        component: OaRegistroComponent,
+        loadComponent: () => import('./features/oa-registro/oa-registro.component').then(m => m.OaRegistroComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/pasos-criticos/:idpc/registrar',
-        component: OaRegistroComponent,
+        loadComponent: () => import('./features/oa-registro/oa-registro.component').then(m => m.OaRegistroComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/pasos-criticos/enviar',
-        component: OaEnviarComponent,
+        loadComponent: () => import('./features/oa-enviar/oa-enviar.component').then(m => m.OaEnviarComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/pasos-criticos/observaciones',
-        component: OaObservacionesComponent,
+        loadComponent: () => import('./features/oa-observaciones/oa-observaciones.component').then(m => m.OaObservacionesComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/reportes/metas-fisicas',
-        component: ReporteFisicoComponent,
+        loadComponent: () => import('./features/reportes/reporte-fisico.component').then(m => m.ReporteFisicoComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/reportes/metas-financieras',
-        component: ReporteFinancieroComponent,
+        loadComponent: () => import('./features/reportes/reporte-financiero.component').then(m => m.ReporteFinancieroComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         path: 'rtf/bandeja',
-        component: BandejaOAComponent,
+        loadComponent: () => import('./features/bandeja-oa/bandeja-oa.component').then(m => m.BandejaOAComponent),
         canActivate: [roleGuard(['POSTULANTE'])]
       },
       {
         // ADR-010: no existe un actor "UR" separado — la verificación de campo (Anexo 19) es una
         // sección más dentro de esta misma pantalla, para el mismo especialista UN.
         path: 'rtf/evaluacion-gabinete',
-        component: UnGabineteComponent,
+        loadComponent: () => import('./features/un-gabinete/un-gabinete.component').then(m => m.UnGabineteComponent),
         canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]
       },
       {
         path: 'rtf/dashboard-un',
-        component: UnDashboardComponent,
+        loadComponent: () => import('./features/un-dashboard/un-dashboard.component').then(m => m.UnDashboardComponent),
         canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]
       },
       {
