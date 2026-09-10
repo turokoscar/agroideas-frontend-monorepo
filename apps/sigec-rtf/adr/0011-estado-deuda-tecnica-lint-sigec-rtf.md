@@ -25,7 +25,28 @@ En lugar de intentar una refactorización masiva que paralizaría el desarrollo 
    - Reglas de TypeScript degradadas a `warn`: `no-explicit-any`, `no-unused-vars`, `no-empty-function`, `no-non-null-assertion`.
 
 3. **Reconocimiento de Deuda Restante:**
-   - Quedan documentados aproximadamente **1590 errores remanentes** (mayormente derivados de reglas menores como `no-inferrable-types` o variables complejas). Estos no se silenciarán por completo; permanecerán visibles en los reportes locales para que el equipo los subsane gradualmente como parte de su flujo de trabajo habitual (regla del *Boy Scout*: dejar el código más limpio de lo que se encontró).
+   - Quedaron documentados aproximadamente **1590 errores remanentes** (mayormente derivados de reglas menores como `no-inferrable-types` o variables complejas). Estos no se silenciarán por completo; permanecerán visibles en los reportes locales para que el equipo los subsane gradualmente como parte de su flujo de trabajo habitual (regla del *Boy Scout*: dejar el código más limpio de lo que se encontró).
+
+## Actualización (2026-09-10)
+
+Se auditó este ADR contra el estado real del código y se corrigieron dos problemas:
+
+1. **Los 2 errores duros restantes** (`@typescript-eslint/no-inferrable-types` en
+   `oa-rtf.service.ts:387`, sobre los parámetros `pagina: number = 1, cantidad: number = 10`)
+   se eliminaron quitando las anotaciones redundantes. `nx lint sigec-rtf` ya no falla:
+   **0 errores, 79 warnings** (el resto de la deuda reconocida arriba).
+2. Al correr `nx lint` se detectó que **`apps/sigec-rtf/public/pdf.worker.min.mjs`**
+   (bundle minificado de `pdfjs-dist`, agregado en la Fase 5 del visor PDF, commit `879f2eb`,
+   posterior a este ADR) estaba siendo linteado como código fuente, generando ~1294 errores
+   falsos no relacionados con esta deuda técnica y rompiendo `nx run-many -t lint` para todo
+   el monorepo. Causa: el `eslint.config.js` raíz solo ignoraba `**/dist`. Se agregó
+   `**/public/**` a `ignores` en el `eslint.config.js` raíz — este archivo de assets estáticos
+   nunca debió lintearse como TS.
+
+Con ambos arreglos, `npx nx run-many -t lint,test` pasa limpio en los 16 proyectos del
+monorepo. De paso se corrigieron errores duros preexistentes, no relacionados con
+`sigec-rtf` pero descubiertos durante la misma verificación, en `libs/ui`, `apps/sat-ui`
+y `apps/sigec-cierre` (ver historial de commits del 2026-09-10).
 
 ## Consecuencias
 ### Positivas

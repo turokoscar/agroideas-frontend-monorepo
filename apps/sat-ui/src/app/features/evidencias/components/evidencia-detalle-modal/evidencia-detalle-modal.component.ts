@@ -11,9 +11,7 @@ import { AuthImgDirective } from '../../../../core/directives/auth-img.directive
   imports: [CommonModule, FormatDatePipe, UIButtonComponent, AuthImgDirective],
   template: `
     @if (ev()) {
-      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
       <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="presentation" (click)="cerrar.emit()">
-        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
         <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl" role="presentation" (click)="$event.stopPropagation()">
           <div class="flex items-center justify-between p-4 border-b border-slate-100">
             <h3 class="font-bold text-slate-800">Detalle de Evidencia</h3>
