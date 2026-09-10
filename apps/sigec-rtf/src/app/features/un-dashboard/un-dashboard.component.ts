@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, effect, untracked, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { UiPaginationComponent } from '@agroideas/ui';
+import { formatConvenioNumber } from '@agroideas/utils';
 import { RtfService } from '../../core/services/rtf.service';
 import { ConvenioGeneralService } from '../../core/services/convenio-general.service';
 import { ConvenioResumenDto } from '../../core/models';
@@ -65,6 +66,13 @@ export class UnDashboardComponent implements OnInit {
 
   onPageChange(page: number) {
     this.currentPage.set(page);
+  }
+
+  // Mismo formato que kofix-ejecucion: NNNN-YYYY-ST. "periodo" viene en 0 para convenios
+  // reales (gap de datos en sel-api-general) — se usa fechaFirma como año, igual que
+  // formatConvenioNumber(numeroConvenio, fechaInicio) en @agroideas/utils.
+  formatConvenio(info: ConvenioResumenDto): string {
+    return formatConvenioNumber(info.numeroConvenio, info.fechaFirma);
   }
 
   avanceFisico = computed(() => Math.round(this.dashboard()?.avanceFisicoPromedio ?? 0));

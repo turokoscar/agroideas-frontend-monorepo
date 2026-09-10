@@ -187,7 +187,7 @@
                 <tr class="border-b border-border hover:bg-muted/20 transition-colors">
                   <td class="px-4 py-3 font-medium">
                     @if (conveniosInfo().get(c.ideConvenio); as info) {
-                      <div>{{ info.numeroConvenio }}</div>
+                      <div>{{ formatConvenio(info) }}</div>
                       <div class="text-xs font-normal text-muted-foreground">{{ info.ruc }} · {{ info.razonSocial }}</div>
                     } @else if (loadingConveniosInfo()) {
                       <div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div>

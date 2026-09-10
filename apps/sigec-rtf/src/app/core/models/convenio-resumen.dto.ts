@@ -3,4 +3,5 @@ export interface ConvenioResumenDto {
   numeroConvenio: string;
   ruc: string;
   razonSocial: string;
+  fechaFirma: string;
 }
