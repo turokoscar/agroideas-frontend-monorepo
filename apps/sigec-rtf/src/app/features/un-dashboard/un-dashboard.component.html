@@ -167,7 +167,7 @@
           Resumen por Convenio
         </h3>
       </div>
-      @if (dashboard()!.convenios.length === 0) {
+      @if (totalConvenios() === 0) {
         <div class="py-8 text-center text-sm text-muted-foreground">No hay convenios registrados.</div>
       } @else {
         <div class="overflow-x-auto">
@@ -183,9 +183,18 @@
               </tr>
             </thead>
             <tbody>
-              @for (c of dashboard()!.convenios; track c.ideConvenio) {
+              @for (c of pagedConvenios(); track c.ideConvenio) {
                 <tr class="border-b border-border hover:bg-muted/20 transition-colors">
-                  <td class="px-4 py-3 font-medium">{{ c.ideConvenio }}</td>
+                  <td class="px-4 py-3 font-medium">
+                    @if (conveniosInfo().get(c.ideConvenio); as info) {
+                      <div>{{ info.numeroConvenio }}</div>
+                      <div class="text-xs font-normal text-muted-foreground">{{ info.ruc }} · {{ info.razonSocial }}</div>
+                    } @else if (loadingConveniosInfo()) {
+                      <div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div>
+                    } @else {
+                      <span class="text-muted-foreground">Convenio #{{ c.ideConvenio }}</span>
+                    }
+                  </td>
                   <td class="px-4 py-3 text-center">{{ c.totalRtfs }}</td>
                   <td class="px-4 py-3 text-center">
                     <span class="text-success font-semibold">{{ c.aprobados }}</span>
@@ -215,6 +224,14 @@
             </tbody>
           </table>
         </div>
+        @if (totalConvenios() > pageSize()) {
+          <app-ui-pagination class="block p-5 border-t border-border"
+            [total]="totalConvenios()"
+            [pageSize]="pageSize()"
+            [currentPage]="currentPage()"
+            (pageChange)="onPageChange($event)"
+          ></app-ui-pagination>
+        }
       }
     </div>
 

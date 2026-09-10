@@ -19,3 +19,4 @@ export * from './dashboard-un-data.model';
 export * from './informe-comprobacion.dto';
 export * from './carta.dto';
 export * from './notificacion.dto';
+export * from './convenio-resumen.dto';
