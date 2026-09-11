@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { of, throwError } from 'rxjs';
@@ -54,6 +54,10 @@ export class OaRtfService {
   indicadores = signal<IndicadorDto[]>([]);
   evidencias = signal<EvidenceDto[]>([]);
   gastosF1 = signal<GastoF1Dto[]>([]);
+  ultimaSincronizacionGastosF1 = computed(() => {
+    const fechas = this.gastosF1().map(g => g.fecRegistro).filter((f): f is string => !!f);
+    return fechas.length ? fechas.reduce((max, f) => (f > max ? f : max)) : null;
+  });
   observacionesUR = signal('');
   actividadReciente = signal<ActividadReciente[]>([]);
 
@@ -172,32 +176,6 @@ export class OaRtfService {
     );
   }
 
-  loadMetas(rtfId: number) {
-    return this.http.get<ApiResponse<MetaFisicaDto[]>>(`${this.apiUrl}/rtfs/${rtfId}/metas-fisicas`).pipe(
-      map(res => {
-        this.metas.set(res.datos || []);
-        return res.datos;
-      }),
-      catchError(err => {
-        console.error('Error loading metas', err);
-        return throwError(() => err);
-      })
-    );
-  }
-
-  loadIndicadores(rtfId: number) {
-    return this.http.get<ApiResponse<IndicadorDto[]>>(`${this.apiUrl}/rtfs/${rtfId}/indicadores`).pipe(
-      map(res => {
-        this.indicadores.set(res.datos || []);
-        return res.datos;
-      }),
-      catchError(err => {
-        console.error('Error loading indicadores', err);
-        return throwError(() => err);
-      })
-    );
-  }
-
   loadEvidencias(rtfId: number) {
     return this.http.get<ApiResponse<EvidenceDto[]>>(`${this.apiUrl}/rtfs/${rtfId}/evidencias`).pipe(
       map(res => {
@@ -211,6 +189,7 @@ export class OaRtfService {
     );
   }
 
+  /** Snapshot local compartido con la UN (ADR-012) — ya no es una llamada en vivo a KOFIX. */
   loadGastosF1(rtfId: number) {
     return this.http.get<ApiResponse<GastoF1Dto[]>>(`${this.apiUrl}/rtfs/${rtfId}/gastos-f1`).pipe(
       map(res => {
@@ -219,6 +198,20 @@ export class OaRtfService {
       }),
       catchError(err => {
         console.error('Error loading gastos F1', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Botón "Sincronizar" — refresca el snapshot de gastos F1 desde KOFIX (ADR-012). */
+  sincronizarGastosF1(rtfId: number) {
+    return this.http.post<ApiResponse<GastoF1Dto[]>>(`${this.apiUrl}/rtfs/${rtfId}/gastos-f1/sincronizacion`, {}).pipe(
+      map(res => {
+        this.gastosF1.set(res.datos || []);
+        return res.datos;
+      }),
+      catchError(err => {
+        console.error('Error sincronizando gastos F1', err);
         return throwError(() => err);
       })
     );
@@ -267,24 +260,6 @@ export class OaRtfService {
       }),
       catchError(err => {
         console.error('Error updating rtf cabecera', err);
-        return throwError(() => err);
-      })
-    );
-  }
-
-  updateMetas(rtfId: number, metas: MetaFisicaDto[]) {
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/metas-fisicas`, metas).pipe(
-      catchError(err => {
-        console.error('Error updating metas', err);
-        return throwError(() => err);
-      })
-    );
-  }
-
-  updateIndicadores(rtfId: number, indicadores: IndicadorDto[]) {
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/indicadores`, indicadores).pipe(
-      catchError(err => {
-        console.error('Error updating indicadores', err);
         return throwError(() => err);
       })
     );

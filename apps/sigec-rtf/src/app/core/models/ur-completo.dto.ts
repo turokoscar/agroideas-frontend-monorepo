@@ -1,15 +1,11 @@
 import { RtfCabeceraDto } from './rtf-cabecera.dto';
-import { MetaFisicaDto } from './meta-fisica.dto';
-import { IndicadorDto } from './indicador.dto';
 import { EvidenceDto } from './evidence.dto';
-import { GastoF1Dto } from './gasto-f1.dto';
 
+// ADR-012: ya no incluye metas/indicadores/gastos — cada uno se carga por su endpoint dedicado
+// (/pasos-criticos/{id}/metas|indicadores, /rtfs/{id}/gastos-f1), la misma fuente que usa la OA.
 export interface UrCompletoDto {
   cabecera: RtfCabeceraDto;
-  metas: MetaFisicaDto[];
-  indicadores: IndicadorDto[];
   evidencias: EvidenceDto[];
-  gastos: GastoF1Dto[];
   revisiones: unknown[];
   verificacionesCampo: unknown[];
 }

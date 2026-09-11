@@ -54,16 +54,17 @@ describe('UnGabineteService', () => {
   });
 
   describe('loadRtfCompleto', () => {
-    it('populates cabecera, metas, indicadores, evidencias y gastos', () => {
+    it('ADR-012: puebla cabecera/evidencias desde /completo, y T1/R2/F1 desde sus endpoints dedicados', () => {
       service.loadRtfCompleto(10001).subscribe();
 
       httpMock.expectOne(`${apiUrl}/rtfs/10001/completo`).flush(ok({
-        cabecera: { ideRtf: 10001, estRtf: 'IN_REVISION_UN' },
-        metas: [{ ideMetaFisica: 1 }],
-        indicadores: [{ ideIndicadorAvance: 1 }],
-        evidencias: [{ ideEvidencia: 1 }],
-        gastos: [{ ideGastoF1: 1 }]
+        cabecera: { ideRtf: 10001, estRtf: 'IN_REVISION_UN', idePasoCritico: 55 },
+        evidencias: [{ ideEvidencia: 1 }]
       }));
+
+      httpMock.expectOne(`${apiUrl}/pasos-criticos/55/metas?ideRtf=10001`).flush(ok([{ id: 1 }]));
+      httpMock.expectOne(`${apiUrl}/pasos-criticos/55/indicadores?ideRtf=10001`).flush(ok([{ id: 1 }]));
+      httpMock.expectOne(`${apiUrl}/rtfs/10001/gastos-f1`).flush(ok([{ ideGastoF1: 1 }]));
 
       expect(service.cabeceraSeleccionada()?.ideRtf).toBe(10001);
       expect(service.rtfStatus()).toBe('IN_REVISION_UN');
@@ -71,6 +72,31 @@ describe('UnGabineteService', () => {
       expect(service.indicadores()).toHaveLength(1);
       expect(service.evidencias()).toHaveLength(1);
       expect(service.gastosF1()).toHaveLength(1);
+    });
+
+    it('ADR-012: no carga T1/R2 si la cabecera aún no tiene idePasoCritico resuelto', () => {
+      service.loadRtfCompleto(10002).subscribe();
+
+      httpMock.expectOne(`${apiUrl}/rtfs/10002/completo`).flush(ok({
+        cabecera: { ideRtf: 10002, estRtf: 'EN_REVISION' },
+        evidencias: []
+      }));
+      httpMock.expectOne(`${apiUrl}/rtfs/10002/gastos-f1`).flush(ok([]));
+
+      expect(service.metas()).toHaveLength(0);
+      expect(service.indicadores()).toHaveLength(0);
+    });
+  });
+
+  describe('sincronizarGastosF1', () => {
+    it('refresca el snapshot de gastos F1', () => {
+      service.sincronizarGastosF1(10001).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/rtfs/10001/gastos-f1/sincronizacion`);
+      expect(req.request.method).toBe('POST');
+      req.flush(ok([{ ideGastoF1: 1 }, { ideGastoF1: 2 }]));
+
+      expect(service.gastosF1()).toHaveLength(2);
     });
   });
 

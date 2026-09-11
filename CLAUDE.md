@@ -49,9 +49,9 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
   - `scope:kofix|sat|sigec` → `scope:shared` only.
   - `type:app|feature` → `feature | ui | data-access | util`.
   - `type:ui` → `ui | util`; `type:data-access` → `data-access | util`; `type:util` → `util`.
-  - `apps/sigec-cierre` is `scope:sigec`; `sigec-rtf` and `kofix-ejecucion` still carry no
-    tags (untagged projects skip the constraint — an empty `tags: []` does **not**, it blocks
-    every lib import).
+  - `apps/sigec-cierre` and `apps/sigec-rtf` are `scope:sigec`; `kofix-ejecucion` is
+    `scope:kofix` (untagged projects would skip the constraint — an empty `tags: []` does
+    **not**, it blocks every lib import — but every app in this workspace is tagged).
 - Apps **must not** import `primeng`, `@angular/material`/`@angular/cdk`, `bootstrap`,
   `sweetalert2`, `leaflet` directly — those are banned as `error` in `apps/**` via
   `no-restricted-imports` in root `eslint.config.js` and must be consumed through

@@ -79,6 +79,7 @@ export class RtfService {
   indicadores = this.oaService.indicadores;
   evidencias = this.oaService.evidencias;
   gastosF1 = this.oaService.gastosF1;
+  ultimaSincronizacionGastosF1 = this.oaService.ultimaSincronizacionGastosF1;
   observacionesUR = this.oaService.observacionesUR;
   actividadReciente = this.oaService.actividadReciente;
 
@@ -98,6 +99,7 @@ export class RtfService {
   unIndicadores = this.unService.indicadores;
   unEvidencias = this.unService.evidencias;
   unGastosF1 = this.unService.gastosF1;
+  unUltimaSincronizacionGastosF1 = this.unService.ultimaSincronizacionGastosF1;
   unRtfStatus = this.unService.rtfStatus;
   urEvaluacionItems = this.unService.urEvaluacionItems;
   urActaCampoArchivo = this.unService.urActaCampoArchivo;
@@ -129,15 +131,12 @@ export class RtfService {
   loadDashboard = (postulanteId: number) => this.oaService.loadDashboard(postulanteId);
   loadPasosCriticos = (postulanteId: number) => this.oaService.loadPasosCriticos(postulanteId);
   loadDetalleRtf = (rtfId: number) => this.oaService.loadDetalleRtf(rtfId);
-  loadMetas = (rtfId: number) => this.oaService.loadMetas(rtfId);
-  loadIndicadores = (rtfId: number) => this.oaService.loadIndicadores(rtfId);
   loadEvidencias = (rtfId: number) => this.oaService.loadEvidencias(rtfId);
   loadGastosF1 = (rtfId: number) => this.oaService.loadGastosF1(rtfId);
   loadEstadoPlazo = (rtfId: number) => this.oaService.loadEstadoPlazo(rtfId);
   registrarRtf = (data: Partial<RtfCabeceraDto>) => this.oaService.registrarRtf(data);
   updateRtf = (rtfId: number, data: Partial<RtfCabeceraDto>) => this.oaService.updateRtf(rtfId, data);
-  updateMetas = (rtfId: number, metas: MetaFisicaDto[]) => this.oaService.updateMetas(rtfId, metas);
-  updateIndicadores = (rtfId: number, indicadores: IndicadorDto[]) => this.oaService.updateIndicadores(rtfId, indicadores);
+  sincronizarGastosF1 = (rtfId: number) => this.oaService.sincronizarGastosF1(rtfId);
   enviarRtf = (rtfId: number) => this.oaService.enviarRtf(rtfId);
   uploadEvidencia = (rtfId: number, ideConcepto: number, tipConcepto: string, archivo: File) => this.oaService.uploadEvidencia(rtfId, ideConcepto, tipConcepto, archivo);
   downloadEvidencia = (evidenciaId: number) => this.oaService.downloadEvidencia(evidenciaId);
@@ -152,6 +151,7 @@ export class RtfService {
   loadDashboardUn = () => this.unService.loadDashboardUn();
   loadBandejaUn = () => this.unService.loadBandejaUn();
   loadRtfCompleto = (rtfId: number) => this.unService.loadRtfCompleto(rtfId);
+  sincronizarGastosF1UN = (rtfId: number) => this.unService.sincronizarGastosF1(rtfId);
   uploadActaCampo = (rtfId: number, archivo: File) => this.unService.uploadActaCampo(rtfId, archivo);
   guardarEvaluacionUr = (rtfId: number, items: UrEvaluacionItemDto[]) => this.unService.guardarEvaluacionUr(rtfId, items);
   derivarUn = (rtfId: number) => this.unService.derivarUn(rtfId);

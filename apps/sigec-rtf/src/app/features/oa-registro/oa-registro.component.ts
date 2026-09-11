@@ -21,6 +21,23 @@ export class OaRegistroComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   useBdSelMetas = signal(false);
+  sincronizandoGastosF1 = signal(false);
+
+  sincronizarGastosF1() {
+    const rtfId = this.rtfService.rtfId();
+    if (!rtfId) return;
+    this.sincronizandoGastosF1.set(true);
+    this.rtfService.sincronizarGastosF1(rtfId).subscribe({
+      next: () => {
+        this.sincronizandoGastosF1.set(false);
+        this.toast.success('Gastos F1 sincronizados', 'Se actualizó el detalle desde KOFIX.');
+      },
+      error: () => {
+        this.sincronizandoGastosF1.set(false);
+        this.toast.error('No se pudo sincronizar', 'Intenta nuevamente en unos minutos.');
+      }
+    });
+  }
 
   /**
    * Mismo conjunto que EstadoRtf.EditablesPorOa en el backend (SIGEC_RTF.Entidad/Rtf/EstadoRtf.cs):
@@ -140,11 +157,21 @@ export class OaRegistroComponent implements OnInit {
         }
       }
     } else {
+      // ADR-012: sin `idpc` en la ruta (caso ya raro: bandeja-oa ahora siempre lo incluye cuando
+      // `idePasoCritico` está resuelto). El propio detalle del RTF trae `idePasoCritico`
+      // autosanado por el backend (resolución perezosa), así que se usa ese valor para cargar
+      // T1/R2 BD_SEL — no queda ninguna ruta legacy a la que recurrir.
       const rtfId = this.rtfService.rtfId();
       if (rtfId) {
-        this.rtfService.loadDetalleRtf(rtfId).subscribe();
-        this.rtfService.loadMetas(rtfId).subscribe();
-        this.rtfService.loadIndicadores(rtfId).subscribe();
+        this.rtfService.loadDetalleRtf(rtfId).subscribe({
+          next: (data) => {
+            if (data?.idePasoCritico != null) {
+              this.useBdSelMetas.set(true);
+              this.rtfService.loadMetasPorPasoCritico(data.idePasoCritico, rtfId).subscribe();
+              this.rtfService.loadIndicadoresPorPasoCritico(data.idePasoCritico, rtfId).subscribe();
+            }
+          }
+        });
         this.rtfService.loadEvidencias(rtfId).subscribe();
         this.rtfService.loadGastosF1(rtfId).subscribe();
         this.rtfService.loadEstadoPlazo(rtfId).subscribe();
@@ -514,24 +541,13 @@ export class OaRegistroComponent implements OnInit {
       txtDificultades: this.rtfService.txtDificultades(),
       txtCambiosPaso: this.rtfService.txtCambiosPaso()
     };
+    // ADR-012: el avance de metas/indicadores BD_SEL ya se persiste fila a fila (modal de avance,
+    // PasoCriticoService.actualizarEjecucionMeta/Indicador) — "Guardar Borrador" solo necesita
+    // guardar R1 aquí. La ruta legacy (bulk updateMetas/updateIndicadores contra
+    // rtfs/{id}/metas-fisicas) se retiró junto con las tablas que la respaldaban.
     const afterR1 = () => {
-      if (this.useBdSelMetas()) {
-        this.isSaving.set(false);
-        this.toast.success('Borrador guardado', 'El borrador del RTF se ha guardado correctamente.');
-      } else {
-        this.rtfService.updateMetas(rtfId!, this.rtfService.metas()).subscribe({
-          next: () => {
-            this.rtfService.updateIndicadores(rtfId!, this.rtfService.indicadores()).subscribe({
-              next: () => {
-                this.isSaving.set(false);
-                this.toast.success('Borrador guardado', 'El borrador del RTF se ha guardado correctamente.');
-              },
-              error: () => { this.isSaving.set(false); this.toast.error('Error', 'No se pudo guardar el borrador.'); }
-            });
-          },
-          error: () => { this.isSaving.set(false); this.toast.error('Error', 'No se pudo guardar el borrador.'); }
-        });
-      }
+      this.isSaving.set(false);
+      this.toast.success('Borrador guardado', 'El borrador del RTF se ha guardado correctamente.');
     };
     if (rtfId) {
       this.rtfService.updateRtf(rtfId, r1Payload).subscribe({
@@ -573,33 +589,20 @@ export class OaRegistroComponent implements OnInit {
       txtDificultades: this.rtfService.txtDificultades(),
       txtCambiosPaso: this.rtfService.txtCambiosPaso()
     };
+    // ADR-012: igual que en guardarBorrador() — el avance BD_SEL ya está persistido fila a fila;
+    // nada que hacer aquí salvo enviar.
     const afterR1 = () => {
-      const afterIndicadores = () => {
-        this.rtfService.enviarRtf(rtfId!).subscribe({
-          next: () => {
-            this.isSubmitting.set(false);
-            this.toast.success('RTF enviado', 'El Reporte Técnico Financiero se ha guardado correctamente.');
-            this.router.navigate(['/rtf/dashboard']);
-          },
-          error: () => {
-            this.isSubmitting.set(false);
-            this.toast.error('Error al enviar', 'No se pudo enviar el RTF. Intente nuevamente.');
-          }
-        });
-      };
-      if (this.useBdSelMetas()) {
-        afterIndicadores();
-      } else {
-        this.rtfService.updateMetas(rtfId!, this.rtfService.metas()).subscribe({
-          next: () => {
-            this.rtfService.updateIndicadores(rtfId!, this.rtfService.indicadores()).subscribe({
-              next: () => afterIndicadores(),
-              error: () => { this.isSubmitting.set(false); this.toast.error('Error', 'No se pudo enviar el RTF.'); }
-            });
-          },
-          error: () => { this.isSubmitting.set(false); this.toast.error('Error', 'No se pudo enviar el RTF.'); }
-        });
-      }
+      this.rtfService.enviarRtf(rtfId!).subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.toast.success('RTF enviado', 'El Reporte Técnico Financiero se ha guardado correctamente.');
+          this.router.navigate(['/rtf/dashboard']);
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.toast.error('Error al enviar', 'No se pudo enviar el RTF. Intente nuevamente.');
+        }
+      });
     };
     if (rtfId) {
       this.rtfService.updateRtf(rtfId, r1Payload).subscribe({

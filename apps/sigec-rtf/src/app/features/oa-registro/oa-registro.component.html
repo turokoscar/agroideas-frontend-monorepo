@@ -438,6 +438,20 @@
             </div>
           </div>
 
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-[10px] text-muted-foreground">
+              Última sincronización de Gastos F1: {{ rtfService.ultimaSincronizacionGastosF1() ? (rtfService.ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}
+            </p>
+            <button
+              type="button"
+              class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+              [disabled]="sincronizandoGastosF1()"
+              (click)="sincronizarGastosF1()">
+              <span class="material-symbols-outlined text-[14px]">sync</span>
+              {{ sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar' }}
+            </button>
+          </div>
+
           @if (rtfService.gastosF1().length === 0) {
             <!-- Vista Escritorio para Desembolsos/KOFIX -->
             <div class="hidden md:block">

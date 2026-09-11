@@ -5,7 +5,7 @@
   "prefix": "app",
   "sourceRoot": "apps/sigec-rtf/src",
   "tags": [
-    "scope:kofix",
+    "scope:sigec",
     "type:app"
   ],
   "targets": {

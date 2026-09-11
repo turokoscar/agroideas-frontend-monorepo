@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RtfService, EvidenceDto, UrEvaluacionItemDto, CartaDto } from '../../core/services/rtf.service';
+import { RtfService, EvidenceDto, CartaDto } from '../../core/services/rtf.service';
 import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent } from '@agroideas/ui';
 import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -47,6 +47,8 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   indicadores = this.rtfService.unIndicadores;
   evidencias = this.rtfService.unEvidencias;
   gastosF1 = this.rtfService.unGastosF1;
+  ultimaSincronizacionGastosF1 = this.rtfService.unUltimaSincronizacionGastosF1;
+  sincronizandoGastosF1 = signal(false);
   rtfStatus = this.rtfService.unRtfStatus;
   anexo18 = this.rtfService.unAnexo18;
 
@@ -82,8 +84,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   // Devolver temprano (desde EN_REVISION/AUDITADO_CAMPO, antes de continuar la evaluación)
   showDevolverTempranoForm = signal(false);
 
-  // Verificación de campo (Anexo 19, opcional) — ver ADR-010
-  rowEvalMap = signal<Partial<Record<number, { estConformidad: 'CONFORME' | 'OBSERVADO'; txtObservacion?: string }>>>({});
+  // Verificación de campo (Anexo 19, opcional) — ver ADR-010. Solo queda el Acta de Campo
+  // (subida de archivo); la evaluación Conforme/Observado por fila que existía aquí dependía de
+  // metas/indicadores locales del flujo "sin paso crítico" (ADR-006 §9), retirado por ADR-012 —
+  // por eso "continuar"/"devolver a OA" ya no tienen ninguna condición que cumplir más allá de
+  // no tener otra acción en curso (`accionEjecutandose`).
   actaSubida = signal(false);
   actaFileName = signal('');
 
@@ -153,46 +158,6 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     return !!f.txtNumeroInforme.trim() && !!f.txtRepresentanteUn.trim();
   });
 
-  // Evaluación por fila (T1/R2 locales) para la verificación de campo opcional.
-  evaluationRows = computed(() => {
-    const metas = this.metas().map(m => ({
-      id: m.ideMetaFisica!,
-      label: m.actividad || 'Meta',
-      value: `${m.canEjecutada ?? '—'} / ${m.canProgramada} ${m.unidad ?? ''}`,
-      kind: 'META' as const
-    }));
-    const indicadores = this.indicadores().map(i => ({
-      id: i.ideIndicadorAvance!,
-      label: i.nombre || 'Indicador',
-      value: `${i.canEjecutado ?? '—'} ${i.unidad ?? ''}`,
-      kind: 'INDICADOR' as const
-    }));
-    return [...metas, ...indicadores];
-  });
-
-  allMarked = computed(() => this.evaluationRows().every(r => this.rowEvalMap()[r.id]?.estConformidad != null));
-
-  observedRows = computed(() =>
-    this.evaluationRows().filter(r => this.rowEvalMap()[r.id]?.estConformidad === 'OBSERVADO')
-  );
-
-  observedMissingComment = computed(() =>
-    this.observedRows().filter(r => !(this.rowEvalMap()[r.id]?.txtObservacion ?? '').trim())
-  );
-
-  /**
-   * La verificación de campo (Anexo 19) es opcional (ADR-010) — un RTF con metas/indicadores
-   * BD_SEL no tiene filas locales que marcar (`evaluationRows().length === 0`), así que se puede
-   * continuar directo. Cuando sí hay filas locales (flujo legacy), deben quedar todas marcadas y
-   * sin observaciones para continuar.
-   */
-  puedeContinuar = computed(() =>
-    this.evaluationRows().length === 0 || (this.allMarked() && this.observedRows().length === 0)
-  );
-  puedeDevolverTemprano = computed(() =>
-    this.evaluationRows().length === 0 || (this.observedRows().length > 0 && this.observedMissingComment().length === 0)
-  );
-
   ngOnInit() {
     this.cargarBandeja();
   }
@@ -240,7 +205,6 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
       txtRecomendaciones: '',
       estCalificacion: '',
     });
-    this.rowEvalMap.set({});
     this.actaSubida.set(false);
     this.actaFileName.set('');
     this.nuevaCartaNumDocumento.set('');
@@ -335,121 +299,52 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     );
   }
 
-  setEvaluacion(rowId: number, est: 'CONFORME' | 'OBSERVADO') {
-    this.rowEvalMap.update(map => {
-      const current = map[rowId];
-      if (current?.estConformidad === est) {
-        const rest = { ...map }; delete rest[rowId];
-        return rest;
-      }
-      return { ...map, [rowId]: { estConformidad: est, txtObservacion: current?.txtObservacion || '' } };
-    });
-  }
-
-  setObservacion(rowId: number, comment: string) {
-    this.rowEvalMap.update(map => {
-      const current = map[rowId];
-      if (!current) return map;
-      return { ...map, [rowId]: { ...current, txtObservacion: comment } };
-    });
-  }
-
-  rowNeedsComment(rowId: number): boolean {
-    const rv = this.rowEvalMap()[rowId];
-    return rv?.estConformidad === 'OBSERVADO' && !(rv?.txtObservacion ?? '').trim().length;
-  }
-
-  evaluationRowClasses(rowId: number): Record<string, boolean> {
-    const needsComment = this.rowNeedsComment(rowId);
-    return {
-      'border-destructive/50': needsComment,
-      'bg-destructive/5': needsComment,
-      'border-border': !needsComment,
-      'bg-surface-container/20': !needsComment
-    };
-  }
-
   toggleDevolverTempranoForm() {
     this.showDevolverTempranoForm.update(v => !v);
   }
 
-  /** Devuelve a la OA desde EN_REVISION/AUDITADO_CAMPO, antes de llegar a IN_REVISION_UN. */
+  /**
+   * Devuelve a la OA desde EN_REVISION/AUDITADO_CAMPO, antes de llegar a IN_REVISION_UN.
+   * ADR-012: ya no hay evaluación por fila que guardar antes de devolver (ver nota en
+   * `estaEnEvaluacionPrevia` más arriba) — se devuelve directo con observación vacía.
+   */
   devolverTemprano() {
     const rtfId = this.rtfService.unSelectedRtfId();
-    if (!rtfId || !this.puedeDevolverTemprano()) return;
-
-    const obs = this.observedRows()
-      .map(r => `• ${r.label}: ${this.rowEvalMap()[r.id]?.txtObservacion ?? ''}`)
-      .join('\n');
-
-    const items: UrEvaluacionItemDto[] = this.evaluationRows().map(r => ({
-      id: r.id,
-      kind: r.kind,
-      estConformidad: this.rowEvalMap()[r.id]?.estConformidad || 'CONFORME',
-      txtObservacion: this.rowEvalMap()[r.id]?.txtObservacion
-    }));
+    if (!rtfId) return;
 
     this.accionEjecutandose.set(true);
-    const continuar = () => {
-      this.subs.add(
-        this.rtfService.devolverTemprano(rtfId, obs).subscribe({
-          next: () => {
-            this.accionEjecutandose.set(false);
-            this.toast.warning('Devuelto a la OA', 'RTF devuelto como Observado.');
-            this.volverBandeja();
-          },
-          error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo devolver el RTF.'); }
-        })
-      );
-    };
-
-    if (items.length > 0) {
-      this.subs.add(
-        this.rtfService.guardarEvaluacionUr(rtfId, items).subscribe({
-          next: continuar,
-          error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo guardar la evaluación.'); }
-        })
-      );
-    } else {
-      continuar();
-    }
+    this.subs.add(
+      this.rtfService.devolverTemprano(rtfId, '').subscribe({
+        next: () => {
+          this.accionEjecutandose.set(false);
+          this.toast.warning('Devuelto a la OA', 'RTF devuelto como Observado.');
+          this.volverBandeja();
+        },
+        error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo devolver el RTF.'); }
+      })
+    );
   }
 
-  /** Continúa la evaluación desde EN_REVISION/AUDITADO_CAMPO hacia IN_REVISION_UN. */
+  /**
+   * Continúa la evaluación desde EN_REVISION/AUDITADO_CAMPO hacia IN_REVISION_UN.
+   * ADR-012: ya no hay evaluación por fila que guardar antes de continuar (ver nota en
+   * `estaEnEvaluacionPrevia` más arriba).
+   */
   continuarEvaluacion() {
     const rtfId = this.rtfService.unSelectedRtfId();
-    if (!rtfId || !this.puedeContinuar()) return;
-
-    const items: UrEvaluacionItemDto[] = this.evaluationRows().map(r => ({
-      id: r.id,
-      kind: r.kind,
-      estConformidad: 'CONFORME'
-    }));
+    if (!rtfId) return;
 
     this.accionEjecutandose.set(true);
-    const continuar = () => {
-      this.subs.add(
-        this.rtfService.derivarUn(rtfId).subscribe({
-          next: () => {
-            this.accionEjecutandose.set(false);
-            this.toast.success('Evaluación continuada', 'El expediente pasó a evaluación final.');
-            this.seleccionarRtf(rtfId);
-          },
-          error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo continuar la evaluación.'); }
-        })
-      );
-    };
-
-    if (items.length > 0) {
-      this.subs.add(
-        this.rtfService.guardarEvaluacionUr(rtfId, items).subscribe({
-          next: continuar,
-          error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo guardar la evaluación.'); }
-        })
-      );
-    } else {
-      continuar();
-    }
+    this.subs.add(
+      this.rtfService.derivarUn(rtfId).subscribe({
+        next: () => {
+          this.accionEjecutandose.set(false);
+          this.toast.success('Evaluación continuada', 'El expediente pasó a evaluación final.');
+          this.seleccionarRtf(rtfId);
+        },
+        error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo continuar la evaluación.'); }
+      })
+    );
   }
 
   // --- Evidencias, Anexo 18, Aprobar/Rechazar/Devolver (IN_REVISION_UN) ---
@@ -562,6 +457,24 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.registrandoCarta.set(false);
           this.toast.error('Error', err.error?.mensaje || 'No se pudo registrar la carta.');
+        }
+      })
+    );
+  }
+
+  sincronizarGastosF1() {
+    const rtfId = this.rtfService.unSelectedRtfId();
+    if (!rtfId) return;
+    this.sincronizandoGastosF1.set(true);
+    this.subs.add(
+      this.rtfService.sincronizarGastosF1UN(rtfId).subscribe({
+        next: () => {
+          this.sincronizandoGastosF1.set(false);
+          this.toast.success('Gastos F1 sincronizados', 'Se actualizó el detalle desde KOFIX.');
+        },
+        error: () => {
+          this.sincronizandoGastosF1.set(false);
+          this.toast.error('No se pudo sincronizar', 'Intenta nuevamente en unos minutos.');
         }
       })
     );

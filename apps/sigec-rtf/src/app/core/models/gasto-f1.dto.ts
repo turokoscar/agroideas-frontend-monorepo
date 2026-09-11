@@ -11,4 +11,5 @@ export interface GastoF1Dto {
   txtTipoCpe?: string;
   txtProveedorNombre?: string;
   txtProveedorRuc?: string;
+  fecRegistro?: string; // ADR-012: fecha de la última sincronización del snapshot con KOFIX
 }

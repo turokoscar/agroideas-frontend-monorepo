@@ -2,7 +2,8 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { forkJoin, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
+import { PasoCriticoService } from './paso-critico.service';
 import {
   RtfCabeceraDto,
   UrCompletoDto,
@@ -12,8 +13,8 @@ import {
   ApiResponse,
   EvidenceDto,
   GastoF1Dto,
-  IndicadorDto,
-  MetaFisicaDto,
+  PasoCriticoMeta,
+  PasoCriticoIndicador,
   InformeComprobacionDto,
   CartaDto
 } from '../models';
@@ -31,6 +32,7 @@ import {
 export class UnGabineteService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
+  private pasoService = inject(PasoCriticoService);
 
   // Bandeja: EN_REVISION + AUDITADO_CAMPO + IN_REVISION_UN, filtrada por cartera en el backend.
   unRtfList = signal<RtfCabeceraDto[]>([]);
@@ -40,10 +42,17 @@ export class UnGabineteService {
   // RTF seleccionado (self-contained: no depende de las signals de OaRtfService, que solo se
   // llenan del lado OA y podían quedar vacías/desactualizadas para el RTF que la UN abre).
   cabeceraSeleccionada = signal<RtfCabeceraDto | null>(null);
-  metas = signal<MetaFisicaDto[]>([]);
-  indicadores = signal<IndicadorDto[]>([]);
+  // ADR-012: T1/R2 se resuelven contra BD_SEL (programada) + avance local ejecutado — la misma
+  // fuente que usa oa-registro — en vez de las tablas legacy retiradas (SRT_TMD_METAFISICA/
+  // INDICADOR). Gastos F1 es el snapshot local compartido con la OA, sincronizado explícitamente.
+  metas = signal<PasoCriticoMeta[]>([]);
+  indicadores = signal<PasoCriticoIndicador[]>([]);
   evidencias = signal<EvidenceDto[]>([]);
   gastosF1 = signal<GastoF1Dto[]>([]);
+  ultimaSincronizacionGastosF1 = computed(() => {
+    const fechas = this.gastosF1().map(g => g.fecRegistro).filter((f): f is string => !!f);
+    return fechas.length ? fechas.reduce((max, f) => (f > max ? f : max)) : null;
+  });
 
   rtfStatus = computed(() => this.cabeceraSeleccionada()?.estRtf ?? 'PENDIENTE');
 
@@ -100,15 +109,61 @@ export class UnGabineteService {
         const data = res.datos;
         if (data) {
           this.cabeceraSeleccionada.set(data.cabecera);
-          this.metas.set(data.metas || []);
-          this.indicadores.set(data.indicadores || []);
           this.evidencias.set(data.evidencias || []);
-          this.gastosF1.set(data.gastos || []);
+          // ADR-012: T1/R2/F1 ya no vienen en /completo — cada uno se carga por su endpoint
+          // dedicado, la misma fuente que usa la OA.
+          if (data.cabecera.idePasoCritico != null) {
+            this.loadMetasPorPasoCritico(data.cabecera.idePasoCritico, rtfId).subscribe();
+            this.loadIndicadoresPorPasoCritico(data.cabecera.idePasoCritico, rtfId).subscribe();
+          }
+          this.loadGastosF1(rtfId).subscribe();
         }
         return data;
       }),
       catchError(err => {
         console.error('Error loading RTF completo', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Delega en PasoCriticoService (misma fuente BD_SEL que usa oa-registro) — ver ADR-012. */
+  loadMetasPorPasoCritico(pasoCriticoId: number, ideRtf: number) {
+    return this.pasoService.loadMetasPorPasoCritico(pasoCriticoId, ideRtf).pipe(
+      tap(datos => this.metas.set(datos || []))
+    );
+  }
+
+  /** Delega en PasoCriticoService (misma fuente BD_SEL que usa oa-registro) — ver ADR-012. */
+  loadIndicadoresPorPasoCritico(pasoCriticoId: number, ideRtf: number) {
+    return this.pasoService.loadIndicadoresPorPasoCritico(pasoCriticoId, ideRtf).pipe(
+      tap(datos => this.indicadores.set(datos || []))
+    );
+  }
+
+  /** Snapshot local compartido con la OA (ADR-012) — ya no es una llamada en vivo a KOFIX. */
+  loadGastosF1(rtfId: number) {
+    return this.http.get<ApiResponse<GastoF1Dto[]>>(`${this.apiUrl}/rtfs/${rtfId}/gastos-f1`).pipe(
+      map(res => {
+        this.gastosF1.set(res.datos || []);
+        return res.datos;
+      }),
+      catchError(err => {
+        console.error('Error loading gastos F1', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Botón "Sincronizar" — refresca el snapshot de gastos F1 desde KOFIX (ADR-012). */
+  sincronizarGastosF1(rtfId: number) {
+    return this.http.post<ApiResponse<GastoF1Dto[]>>(`${this.apiUrl}/rtfs/${rtfId}/gastos-f1/sincronizacion`, {}).pipe(
+      map(res => {
+        this.gastosF1.set(res.datos || []);
+        return res.datos;
+      }),
+      catchError(err => {
+        console.error('Error sincronizando gastos F1', err);
         return throwError(() => err);
       })
     );

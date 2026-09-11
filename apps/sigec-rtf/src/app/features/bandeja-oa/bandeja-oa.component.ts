@@ -69,13 +69,20 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * `RtfCabeceraDto` no trae el id de paso crítico BD_SEL (solo `numPasoCritico`, la secuencia
-   * 1-6), así que no se puede armar la ruta `/rtf/pasos-criticos/:idpc/registrar`. Se abre por
-   * `ideRtf` directo: se fija el signal que `OaRegistroComponent` ya lee cuando no hay `idpc` en
-   * la ruta (carga R1 + T1/R2 legacy vía `loadDetalleRtf`/`loadMetas`/`loadIndicadores`).
+   * ADR-012: `RtfCabeceraDto.idePasoCritico` (id real BD_SEL) reemplaza a `numPasoCritico` (el
+   * ordinal) para reconstruir la ruta `/rtf/pasos-criticos/:idpc/registrar` al reabrir un RTF
+   * existente — antes esto era imposible y forzaba la rama legacy de `OaRegistroComponent`
+   * (`loadMetas`/`loadIndicadores` contra las tablas ya retiradas). Si por algún motivo
+   * `idePasoCritico` aún no se resolvió (fila muy antigua, ver resolución perezosa del backend),
+   * se cae a la ruta sin `idpc` como respaldo.
    */
   abrirRtf(rtf: RtfCabeceraDto) {
-    this.navegarConRtf(rtf, '/rtf/pasos-criticos/registrar');
+    if (!rtf.ideRtf) return;
+    this.rtfService.rtfId.set(rtf.ideRtf);
+    const ruta = rtf.idePasoCritico != null
+      ? ['/rtf/pasos-criticos', rtf.idePasoCritico, 'registrar']
+      : ['/rtf/pasos-criticos/registrar'];
+    this.router.navigate(ruta);
   }
 
   enviarRtf(rtf: RtfCabeceraDto) {

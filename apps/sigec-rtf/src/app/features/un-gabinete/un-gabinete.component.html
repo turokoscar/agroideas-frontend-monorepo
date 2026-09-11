@@ -163,10 +163,23 @@
 
         <!-- F1 - Gastos Financieros -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
-            F1 - Gastos Financieros
-          </h3>
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
+              F1 - Gastos Financieros
+            </h3>
+            <button
+              type="button"
+              class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+              [disabled]="sincronizandoGastosF1()"
+              (click)="sincronizarGastosF1()">
+              <span class="material-symbols-outlined text-[14px]">sync</span>
+              {{ sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar' }}
+            </button>
+          </div>
+          <p class="text-[10px] text-muted-foreground mb-3">
+            Última sincronización: {{ ultimaSincronizacionGastosF1() ? (ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}
+          </p>
           @if (gastosF1().length === 0) {
             <p class="text-sm text-muted-foreground">Sin gastos registrados.</p>
           } @else {
@@ -205,14 +218,14 @@
             <p class="text-sm text-muted-foreground">Sin metas registradas.</p>
           } @else {
             <div class="space-y-3">
-              @for (m of metas(); track m.ideActividad) {
+              @for (m of metas(); track m.id) {
                 <div>
                   <div class="flex justify-between text-xs mb-1">
-                    <span class="text-foreground font-medium truncate mr-2">{{ m.txtComentario || 'Actividad' }}</span>
-                    <span class="text-muted-foreground whitespace-nowrap">{{ (m.canEjecutada ?? 0) | number:'1.0-1' }} / {{ m.canProgramada | number:'1.0-1' }}</span>
+                    <span class="text-foreground font-medium truncate mr-2">{{ m.descripcion || 'Actividad' }}</span>
+                    <span class="text-muted-foreground whitespace-nowrap">{{ (m.metaFisicaEjecutada ?? 0) | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}</span>
                   </div>
                   <div class="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div class="h-full rounded-full transition-all" [class.bg-success]="(m.canEjecutada ?? 0) >= m.canProgramada" [class.bg-warning]="(m.canEjecutada ?? 0) < m.canProgramada" [style.width.%]="((m.canEjecutada ?? 0) / (m.canProgramada || 1)) * 100"></div>
+                    <div class="h-full rounded-full transition-all" [class.bg-success]="(m.metaFisicaEjecutada ?? 0) >= m.metaFisicaProgramada" [class.bg-warning]="(m.metaFisicaEjecutada ?? 0) < m.metaFisicaProgramada" [style.width.%]="((m.metaFisicaEjecutada ?? 0) / (m.metaFisicaProgramada || 1)) * 100"></div>
                   </div>
                 </div>
               }
@@ -230,14 +243,14 @@
             <p class="text-sm text-muted-foreground">Sin indicadores registrados.</p>
           } @else {
             <div class="space-y-3">
-              @for (ind of indicadores(); track ind.ideIndicador) {
+              @for (ind of indicadores(); track ind.id) {
                 <div>
                   <div class="flex justify-between text-xs mb-1">
-                    <span class="text-foreground font-medium truncate mr-2">{{ ind.txtComentario || 'Indicador' }}</span>
-                    <span class="text-muted-foreground whitespace-nowrap">{{ (ind.canEjecutado ?? 0) | number:'1.0-1' }} / {{ ind.canProgramado | number:'1.0-1' }}</span>
+                    <span class="text-foreground font-medium truncate mr-2">{{ ind.indicador || 'Indicador' }}</span>
+                    <span class="text-muted-foreground whitespace-nowrap">{{ (ind.metaEjecutada ?? 0) | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}</span>
                   </div>
                   <div class="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div class="h-full rounded-full transition-all" [class.bg-success]="(ind.canEjecutado ?? 0) >= ind.canProgramado" [class.bg-warning]="(ind.canEjecutado ?? 0) < ind.canProgramado" [style.width.%]="((ind.canEjecutado ?? 0) / (ind.canProgramado || 1)) * 100"></div>
+                    <div class="h-full rounded-full transition-all" [class.bg-success]="(ind.metaEjecutada ?? 0) >= ind.metaProgramada" [class.bg-warning]="(ind.metaEjecutada ?? 0) < ind.metaProgramada" [style.width.%]="((ind.metaEjecutada ?? 0) / (ind.metaProgramada || 1)) * 100"></div>
                   </div>
                 </div>
               }
@@ -306,48 +319,6 @@
             </div>
           }
         </div>
-
-        @if (evaluationRows().length > 0) {
-          <!-- Evaluación por fila (solo aplica a metas/indicadores locales, flujo legacy) -->
-          <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4">Evaluación · Conforme / Observado por fila</h3>
-            <div class="space-y-3">
-              @for (row of evaluationRows(); track row.id) {
-                <div class="rounded-lg border p-3" [ngClass]="evaluationRowClasses(row.id)">
-                  <div class="mb-2 flex items-center justify-between">
-                    <div class="text-sm font-medium text-foreground">
-                      {{ row.label }} <span class="ml-2 font-mono text-xs text-muted-foreground">{{ row.value }}</span>
-                    </div>
-                    <div class="flex gap-3">
-                      <label class="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" class="accent-success" [checked]="rowEvalMap()[row.id]?.estConformidad === 'CONFORME'" (change)="setEvaluacion(row.id, 'CONFORME')" />
-                        <span class="material-symbols-outlined text-[16px] text-success">check_circle</span>
-                        Conforme
-                      </label>
-                      <label class="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" class="accent-destructive" [checked]="rowEvalMap()[row.id]?.estConformidad === 'OBSERVADO'" (change)="setEvaluacion(row.id, 'OBSERVADO')" />
-                        <span class="material-symbols-outlined text-[16px] text-destructive">cancel</span>
-                        Observado
-                      </label>
-                    </div>
-                  </div>
-                  @if (rowEvalMap()[row.id]?.estConformidad === 'OBSERVADO') {
-                    <textarea
-                      class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-xs resize-y min-h-[60px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-                      placeholder="Comentario obligatorio de la observación..."
-                      [value]="rowEvalMap()[row.id]?.txtObservacion ?? ''"
-                      (input)="setObservacion(row.id, $any($event.target).value)"
-                      rows="2"
-                    ></textarea>
-                  }
-                  @if (rowNeedsComment(row.id)) {
-                    <div class="mt-1 text-[11px] text-destructive">Debe ingresar un comentario justificando la observación.</div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
       } @else if (enControlDePlazo()) {
         <!-- Control de Plazos - Cartas de Notificación/Notarial (Fase 4) -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
@@ -600,20 +571,12 @@
       <div class="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-container-lowest border border-border p-4 shadow-lg">
         @if (estaEnEvaluacionPrevia()) {
           <div class="text-sm text-muted-foreground">
-            @if (evaluationRows().length === 0) {
-              Sin filas locales que evaluar · puede continuar directo
-            } @else if (!allMarked()) {
-              Marque Conforme u Observado en cada fila
-            } @else if (observedRows().length > 0) {
-              {{ observedRows().length }} fila(s) observada(s) · devolver a la OA
-            } @else {
-              Todo conforme · puede continuar
-            }
+            Verificación de campo opcional (Anexo 19) · puede continuar directo o devolver a la OA
           </div>
           <div class="flex flex-wrap gap-2">
             <button
               class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-              [disabled]="!puedeDevolverTemprano() || accionEjecutandose()"
+              [disabled]="accionEjecutandose()"
               (click)="devolverTemprano()"
             >
               <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
@@ -621,7 +584,7 @@
             </button>
             <button
               class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              [disabled]="!puedeContinuar() || accionEjecutandose()"
+              [disabled]="accionEjecutandose()"
               (click)="continuarEvaluacion()"
             >
               <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">send</span>
