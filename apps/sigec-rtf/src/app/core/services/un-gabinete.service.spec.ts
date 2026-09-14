@@ -153,6 +153,32 @@ describe('UnGabineteService', () => {
     });
   });
 
+  describe('cargarPlazoReevaluacion', () => {
+    it('guarda el plazo cuando el RTF fue reenviado tras observación', () => {
+      service.cargarPlazoReevaluacion(10001).subscribe();
+
+      httpMock.expectOne(`${apiUrl}/rtfs/10001/estado-plazo?tipPlazo=REEVALUACION_UN`).flush(ok({
+        ideRtf: 10001,
+        tipPlazo: 'REEVALUACION_UN',
+        fecHabilitacion: '2026-09-14',
+        fecLimite: '2026-09-21',
+        estPlazo: 'ACTIVO',
+        horasRestantes: 168
+      }));
+
+      expect(service.plazoReevaluacion()?.horasRestantes).toBe(168);
+    });
+
+    it('guarda null cuando el RTF nunca fue observado (sin plazo de reevaluación)', () => {
+      service.plazoReevaluacion.set({ horasRestantes: 10 } as any);
+
+      service.cargarPlazoReevaluacion(10001).subscribe();
+      httpMock.expectOne(`${apiUrl}/rtfs/10001/estado-plazo?tipPlazo=REEVALUACION_UN`).flush(ok(null));
+
+      expect(service.plazoReevaluacion()).toBeNull();
+    });
+  });
+
   describe('Cartas', () => {
     it('cargarCartas guarda el listado', () => {
       service.cargarCartas(10001).subscribe();

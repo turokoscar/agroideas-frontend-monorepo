@@ -20,3 +20,4 @@ export * from './informe-comprobacion.dto';
 export * from './carta.dto';
 export * from './notificacion.dto';
 export * from './convenio-resumen.dto';
+export * from './control-plazo.dto';

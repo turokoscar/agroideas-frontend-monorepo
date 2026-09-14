@@ -50,6 +50,17 @@ export class OaRegistroComponent implements OnInit {
     ['PENDIENTE', 'EN_EDICION', 'OBSERVADO'].includes(this.rtfService.rtfStatus())
   );
 
+  /**
+   * ADR-012 de sigec-api-rtf/docs: sin filtro, `loadEstadoPlazo` trae el plazo activo más
+   * reciente -- será de subsanación (10 días) en vez de presentación (15 días) en cuanto la UN
+   * devuelva el RTF con observaciones, así que el rótulo del banner debe reflejarlo.
+   */
+  plazoBannerLabel = computed(() =>
+    this.rtfService.rtfDeadlineTipo() === 'SUBSANACION_OBSERVACION'
+      ? 'Plazo para subsanar observaciones'
+      : 'Plazo para envío del RTF'
+  );
+
   filteredPasoCriticoMetas = computed(() => {
     return this.rtfService.pasoCriticoMetas().filter(meta => meta.metaFisicaProgramada > 0);
   });

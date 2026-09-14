@@ -16,7 +16,8 @@ import {
   PasoCriticoMeta,
   PasoCriticoIndicador,
   InformeComprobacionDto,
-  CartaDto
+  CartaDto,
+  ControlPlazoDto
 } from '../models';
 
 /**
@@ -65,6 +66,11 @@ export class UnGabineteService {
 
   // Cartas de Notificación/Notarial (control de plazos, Fase 4) sobre el RTF seleccionado.
   cartas = signal<CartaDto[]>([]);
+
+  // ADR-012 de sigec-api-rtf/docs (Fase 4): plazo de 7 días para que la UN reevalúe un RTF
+  // reenviado tras observación -- puramente informativo, null cuando no aplica (RTF nunca
+  // observado, o envío inicial).
+  plazoReevaluacion = signal<ControlPlazoDto | null>(null);
 
   loadDashboardUn() {
     return this.http.get<ApiResponse<DashboardUnData>>(`${this.apiUrl}/un/dashboard`).pipe(
@@ -315,6 +321,27 @@ export class UnGabineteService {
       }),
       catchError(err => {
         console.error('Error cargando las cartas del RTF', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
+   * ADR-012 de sigec-api-rtf/docs (Fase 4): plazo de reevaluación de la UN, filtrado
+   * explícitamente por tipo -- a diferencia del plazo que consulta la OA (sin filtro), acá sí
+   * hace falta el filtro para no mezclarlo con el plazo de subsanación de la OA, que es un dato
+   * distinto aunque ambos vivan en la misma tabla.
+   */
+  cargarPlazoReevaluacion(rtfId: number) {
+    return this.http.get<ApiResponse<ControlPlazoDto | null>>(
+      `${this.apiUrl}/rtfs/${rtfId}/estado-plazo?tipPlazo=REEVALUACION_UN`
+    ).pipe(
+      map(res => {
+        this.plazoReevaluacion.set(res.datos ?? null);
+        return res.datos;
+      }),
+      catchError(err => {
+        console.error('Error cargando el plazo de reevaluación del RTF', err);
         return throwError(() => err);
       })
     );

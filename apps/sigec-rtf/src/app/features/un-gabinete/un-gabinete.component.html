@@ -136,6 +136,15 @@
         </div>
       </div>
 
+      @if (tieneReevaluacionPendiente()) {
+        <!-- Plazo de reevaluación de la UN (7 días, informativo -- ADR-012 de sigec-api-rtf/docs) -->
+        <ui-countdown-banner
+          [hours]="horasRestantesReevaluacion()"
+          [tone]="'primary'"
+          [label]="'Plazo interno para reevaluar (reenviado por la OA tras observación)'"
+        />
+      }
+
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- R1 - Información Cualitativa -->

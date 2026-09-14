@@ -1,3 +1,13 @@
+/*
+ * Sin esto, el host (un elemento custom sin estilo por defecto del navegador) renderiza como
+ * `inline`, y el margen vertical de utilidades como `space-y-*` del contenedor padre no tiene
+ * ningún efecto sobre elementos inline -- el banner queda pegado al elemento anterior sin que se
+ * note por qué, ya que el "espaciador" (space-y-6) sigue aplicado, simplemente no hace nada.
+ */
+:host {
+  display: block;
+}
+
 .countdown-block {
   display: flex;
   flex-direction: column;

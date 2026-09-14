@@ -14,7 +14,8 @@ import {
   ActividadReciente,
   DashboardData,
   ApiResponse,
-  DatosPaginados
+  DatosPaginados,
+  ControlPlazoDto
 } from '../models';
 
 @Injectable({
@@ -30,6 +31,11 @@ export class OaRtfService {
   rtfId = signal<number | null>(null);
   rtfStatus = signal<string>('PENDIENTE');
   rtfDeadlineHours = signal(0);
+  // ADR-012 de sigec-api-rtf/docs: sin filtro, el backend devuelve el plazo activo más reciente
+  // -- será SUBSANACION_OBSERVACION en vez de PRESENTACION_INICIAL en cuanto la UN devuelva el
+  // RTF con observaciones. Se guarda el tipo para que la plantilla rotule el banner correctamente
+  // ("Plazo para envío" vs "Plazo para subsanar observaciones").
+  rtfDeadlineTipo = signal<string | null>(null);
   convenioId = signal('');
   oa = signal('');
   budget = signal(0);
@@ -218,12 +224,14 @@ export class OaRtfService {
   }
 
   loadEstadoPlazo(rtfId: number) {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/rtfs/${rtfId}/estado-plazo`).pipe(
+    return this.http.get<ApiResponse<ControlPlazoDto | null>>(`${this.apiUrl}/rtfs/${rtfId}/estado-plazo`).pipe(
       map(res => {
         const data = res.datos;
-        if (data?.horasRestantes) {
-          this.rtfDeadlineHours.set(data.horasRestantes);
-        }
+        // Antes se comparaba con `if (data?.horasRestantes)`: un plazo ya vencido llega con
+        // horasRestantes = 0, un valor "falsy" que dejaba el banner con el valor previo en vez de
+        // reflejar el vencimiento real.
+        this.rtfDeadlineHours.set(data ? data.horasRestantes : 0);
+        this.rtfDeadlineTipo.set(data?.tipPlazo ?? null);
         return data;
       }),
       catchError(err => {

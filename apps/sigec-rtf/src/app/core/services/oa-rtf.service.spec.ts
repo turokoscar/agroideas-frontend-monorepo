@@ -185,4 +185,53 @@ describe('OaRtfService', () => {
       expect(service.oaBandejaPagina()).toBe(2);
     });
   });
+
+  describe('loadEstadoPlazo', () => {
+    it('sets rtfDeadlineHours and rtfDeadlineTipo from the response', () => {
+      service.loadEstadoPlazo(1).subscribe();
+
+      httpMock.expectOne(`${apiUrl}/rtfs/1/estado-plazo`).flush(ok({
+        ideRtf: 1,
+        tipPlazo: 'SUBSANACION_OBSERVACION',
+        fecHabilitacion: '2026-01-01',
+        fecLimite: '2026-01-11',
+        estPlazo: 'ACTIVO',
+        horasRestantes: 72
+      }));
+
+      expect(service.rtfDeadlineHours()).toBe(72);
+      expect(service.rtfDeadlineTipo()).toBe('SUBSANACION_OBSERVACION');
+    });
+
+    /**
+     * Antes se comparaba con `if (data?.horasRestantes)`, una condición "falsy" que ignoraba un
+     * plazo ya vencido (horasRestantes = 0) y dejaba el valor previo del signal.
+     */
+    it('sets rtfDeadlineHours to 0 when the deadline already expired (falsy value, not missing)', () => {
+      service.rtfDeadlineHours.set(5);
+      service.loadEstadoPlazo(1).subscribe();
+
+      httpMock.expectOne(`${apiUrl}/rtfs/1/estado-plazo`).flush(ok({
+        ideRtf: 1,
+        tipPlazo: 'PRESENTACION_INICIAL',
+        fecHabilitacion: '2026-01-01',
+        fecLimite: '2026-01-16',
+        estPlazo: 'VENCIDO',
+        horasRestantes: 0
+      }));
+
+      expect(service.rtfDeadlineHours()).toBe(0);
+    });
+
+    it('resets to defaults when there is no active plazo', () => {
+      service.rtfDeadlineHours.set(10);
+      service.rtfDeadlineTipo.set('PRESENTACION_INICIAL');
+      service.loadEstadoPlazo(1).subscribe();
+
+      httpMock.expectOne(`${apiUrl}/rtfs/1/estado-plazo`).flush(ok(null));
+
+      expect(service.rtfDeadlineHours()).toBe(0);
+      expect(service.rtfDeadlineTipo()).toBeNull();
+    });
+  });
 });

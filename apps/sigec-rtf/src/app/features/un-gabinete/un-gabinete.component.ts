@@ -156,6 +156,13 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   // Control de Plazos - Cartas de Notificación/Notarial (Fase 4)
   cartas = this.rtfService.unCartas;
+
+  // ADR-012 de sigec-api-rtf/docs (Fase 4): plazo informativo de 7 días para reevaluar un RTF
+  // reenviado tras observación -- no confundir con el "Fase 4" de arriba, que es del plan de
+  // implementación original del propio frontend (apps/sigec-rtf/adr), un documento distinto.
+  plazoReevaluacion = this.rtfService.unPlazoReevaluacion;
+  tieneReevaluacionPendiente = computed(() => this.plazoReevaluacion() !== null);
+  horasRestantesReevaluacion = computed(() => this.plazoReevaluacion()?.horasRestantes ?? 0);
   nuevaCartaTipo = signal<'PRIMERA_NOTIFICACION' | 'CARTA_NOTARIAL'>('PRIMERA_NOTIFICACION');
   nuevaCartaNumDocumento = signal('');
   nuevaCartaFecNotificacion = signal(new Date().toISOString().slice(0, 10));
@@ -218,12 +225,26 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     return [...cartas].sort((a, b) => new Date(b.fecNotificacion).getTime() - new Date(a.fecNotificacion).getTime())[0];
   });
 
+  /**
+   * Réplica en el cliente de `CalculadoraPlazos.CalcularFechaLimite` (sigec-api-rtf, ADR-012
+   * Fase 1) -- corrige un desajuste real detectado al implementar Fase 4: este cómputo sumaba los
+   * días directamente desde `fecNotificacion` (sin el +1 día de "surte efecto al día siguiente" ni
+   * el traslado al lunes si cae fin de semana), así que la UI podía mostrar una fecha límite
+   * distinta a la que `ControlPlazoServicio.VerificarBloqueosDefinitivosAsync` realmente aplica.
+   */
+  private siguienteDiaHabil(fecha: Date): Date {
+    const dia = fecha.getDay(); // 0 = domingo, 6 = sábado
+    if (dia === 6) return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate() + 2);
+    if (dia === 0) return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate() + 1);
+    return fecha;
+  }
+
   fecLimiteCarta = computed<Date | null>(() => {
     const carta = this.ultimaCarta();
     if (!carta) return null;
     const fecha = new Date(carta.fecNotificacion);
-    fecha.setDate(fecha.getDate() + carta.canDiasOtorgados);
-    return fecha;
+    fecha.setDate(fecha.getDate() + 1 + carta.canDiasOtorgados); // notificación electrónica: surte efecto al día siguiente
+    return this.siguienteDiaHabil(fecha);
   });
 
   horasRestantesCarta = computed(() => {
@@ -357,6 +378,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
           }
           this.cargarAnexo18(rtfId);
           this.cargarCartas(rtfId);
+          this.cargarPlazoReevaluacion(rtfId);
         },
         error: () => {
           this.loadingCompleto.set(false);
@@ -369,6 +391,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   private cargarCartas(rtfId: number) {
     this.subs.add(
       this.rtfService.cargarCartas(rtfId).subscribe()
+    );
+  }
+
+  private cargarPlazoReevaluacion(rtfId: number) {
+    this.subs.add(
+      this.rtfService.cargarPlazoReevaluacion(rtfId).subscribe()
     );
   }
 

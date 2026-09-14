@@ -56,6 +56,7 @@ export class RtfService {
   rtfId = this.oaService.rtfId;
   rtfStatus = this.oaService.rtfStatus;
   rtfDeadlineHours = this.oaService.rtfDeadlineHours;
+  rtfDeadlineTipo = this.oaService.rtfDeadlineTipo;
   convenioId = this.oaService.convenioId;
   oa = this.oaService.oa;
   budget = this.oaService.budget;
@@ -105,6 +106,7 @@ export class RtfService {
   urActaCampoArchivo = this.unService.urActaCampoArchivo;
   unAnexo18 = this.unService.anexo18;
   unCartas = this.unService.cartas;
+  unPlazoReevaluacion = this.unService.plazoReevaluacion;
 
   // BD_SEL proxies
   pasoCriticoMetas = this.pasoService.pasoCriticoMetas;
@@ -162,6 +164,7 @@ export class RtfService {
   cargarAnexo18 = (rtfId: number) => this.unService.cargarAnexo18(rtfId);
   guardarAnexo18 = (rtfId: number, informe: Partial<InformeComprobacionDto>) => this.unService.guardarAnexo18(rtfId, informe);
   cargarCartas = (rtfId: number) => this.unService.cargarCartas(rtfId);
+  cargarPlazoReevaluacion = (rtfId: number) => this.unService.cargarPlazoReevaluacion(rtfId);
   registrarCarta = (rtfId: number, tipCarta: string, numDocumento: string, fecNotificacion: string, canDiasOtorgados: number, archivo: File) =>
     this.unService.registrarCarta(rtfId, tipCarta, numDocumento, fecNotificacion, canDiasOtorgados, archivo);
   descargarCarta = (rtfId: number, ideCarta: number) => this.unService.descargarCarta(rtfId, ideCarta);
