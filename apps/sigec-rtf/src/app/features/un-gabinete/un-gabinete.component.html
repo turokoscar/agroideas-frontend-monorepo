@@ -10,93 +10,81 @@
       <p class="text-sm text-muted-foreground">Especialista UN Central / Dirección Ejecutiva / USE</p>
     </div>
     @if (viewState() === 'audit') {
-      <button class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="volverBandeja()">
-        <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">arrow_back</span>
-        Volver a la bandeja
-      </button>
+      <ui-button appearance="soft" severity="secondary" icon="arrow_back" label="Volver a la bandeja" (onClick)="volverBandeja()" />
     }
   </div>
 
   <!-- Bandeja (lista) -->
   @if (viewState() === 'list') {
-    @if (loadingBandeja()) {
-      <div class="bg-card border border-border rounded-xl overflow-hidden shadow-sm" aria-hidden="true">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-border bg-muted/30">
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">ID RTF</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Convenio</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Crítico</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Estado</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Límite</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Recepción</th>
-                <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of [1,2,3,4,5]; track row) {
-                <tr class="border-b border-border">
-                  <td class="px-4 py-3"><div class="h-3 w-10 rounded bg-surface-container animate-pulse"></div></td>
-                  <td class="px-4 py-3"><div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div></td>
-                  <td class="px-4 py-3"><div class="h-3 w-16 rounded bg-surface-container animate-pulse"></div></td>
-                  <td class="px-4 py-3"><div class="h-4 w-20 rounded-full bg-surface-container animate-pulse"></div></td>
-                  <td class="px-4 py-3"><div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div></td>
-                  <td class="px-4 py-3"><div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div></td>
-                  <td class="px-4 py-3"><div class="h-6 w-16 rounded bg-surface-container animate-pulse ml-auto"></div></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        <span class="sr-only">Cargando RTFs pendientes…</span>
-      </div>
-    } @else if (unRtfList().length === 0) {
-      <div class="flex flex-col items-center justify-center py-20 text-center">
-        <span class="material-symbols-outlined text-5xl text-muted-foreground/40 mb-4">fact_check</span>
-        <p class="text-sm font-medium text-foreground">No hay RTFs pendientes de evaluación</p>
-        <p class="text-xs text-muted-foreground mt-1">Los RTFs enviados por la OA aparecerán aquí automáticamente.</p>
-      </div>
-    } @else {
-      <div class="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-border bg-muted/30">
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">ID RTF</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Convenio</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Crítico</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Estado</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Límite</th>
-                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Recepción</th>
-                <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (rtf of unRtfList(); track rtf.ideRtf) {
-                <tr class="border-b border-border hover:bg-muted/20 transition-colors">
-                  <td class="px-4 py-3 font-mono text-xs">{{ rtf.ideRtf }}</td>
-                  <td class="px-4 py-3 font-medium">{{ rtf.ideConvenio }}</td>
-                  <td class="px-4 py-3">{{ rtf.numPasoCritico }}</td>
-                  <td class="px-4 py-3">
-                    <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border" [class]="estadoBadgeClass(rtf.estRtf)">
-                      {{ rtf.estRtf }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-xs">{{ rtf.fecLimite | date:'dd/MM/yyyy' }}</td>
-                  <td class="px-4 py-3 text-xs">{{ getFecRegistro(rtf) | date:'dd/MM/yyyy' }}</td>
-                  <td class="px-4 py-3 text-right">
-                    <button class="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40" (click)="seleccionarRtf(rtf.ideRtf!)">
-                      Revisar
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+    <app-ui-filter-bar [showSearch]="false">
+      <div class="filter-group filter-group--search flex-1">
+        <label class="filter-label" for="bandeja-search">Buscar</label>
+        <div class="filter-search-wrap">
+          <span class="material-symbols-outlined filter-search-icon">search</span>
+          <input id="bandeja-search" type="text" class="filter-input filter-input--search"
+            placeholder="Convenio, RUC o razón social..."
+            [value]="filtroTexto()"
+            (input)="filtroTexto.set($any($event.target).value)" />
         </div>
       </div>
-    }
+
+      <div class="filter-group">
+        <label class="filter-label" for="bandeja-estado">Estado</label>
+        <select id="bandeja-estado" class="filter-input"
+          [value]="filtroEstado()"
+          (change)="filtroEstado.set($any($event.target).value)">
+          <option value="">Todos los estados</option>
+          @for (est of estadosBandeja; track est) {
+            <option [value]="est">{{ estadoLabel(est) }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="bandeja-fec-desde">Fec. Límite desde</label>
+        <input id="bandeja-fec-desde" type="date" class="filter-input"
+          [value]="filtroFecDesde()"
+          (input)="filtroFecDesde.set($any($event.target).value)" />
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="bandeja-fec-hasta">Fec. Límite hasta</label>
+        <input id="bandeja-fec-hasta" type="date" class="filter-input"
+          [value]="filtroFecHasta()"
+          (input)="filtroFecHasta.set($any($event.target).value)" />
+      </div>
+    </app-ui-filter-bar>
+
+    <app-ui-data-table
+      [columns]="bandejaColumns"
+      [data]="bandejaFiltrada()"
+      [loading]="loadingBandeja()"
+      [rows]="10"
+      [rowTemplate]="bandejaRowTemplate"
+      emptyIcon="fact_check"
+      emptyMessage="No hay RTFs pendientes de evaluación"
+      emptySubMessage="Los RTFs enviados por la OA aparecerán aquí automáticamente.">
+
+      <ng-template #bandejaRowTemplate let-row let-col="col">
+        @if (col.field === 'ideConvenio') {
+          @if (conveniosInfo().get(row.ideConvenio); as info) {
+            <div class="flex flex-col">
+              <span class="font-medium text-foreground">{{ formatConvenio(info) }}</span>
+              <span class="text-xs text-muted-foreground">{{ info.ruc }} · {{ info.razonSocial }}</span>
+            </div>
+          } @else {
+            <span class="text-muted-foreground">Convenio #{{ row.ideConvenio }}</span>
+          }
+        }
+        @if (col.field === 'estRtf') {
+          <app-ui-status-pill [text]="estadoLabel(row.estRtf)" [status]="estadoPillStatus(row.estRtf)" />
+        }
+        @if (col.field === 'accion') {
+          <ui-button size="sm" label="Revisar" (onClick)="seleccionarRtf(row.ideRtf)" />
+        }
+      </ng-template>
+
+    </app-ui-data-table>
   }
 
   <!-- Vista Auditoría -->
@@ -126,7 +114,12 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Convenio</p>
-            <p class="text-sm font-bold text-foreground">{{ cabecera()?.ideConvenio }}</p>
+            @if (cabecera()?.ideConvenio !== undefined && conveniosInfo().get(cabecera()!.ideConvenio); as info) {
+              <p class="text-sm font-bold text-foreground">{{ formatConvenio(info) }}</p>
+              <p class="text-xs text-muted-foreground">{{ info.ruc }} · {{ info.razonSocial }}</p>
+            } @else {
+              <p class="text-sm font-bold text-foreground">Convenio #{{ cabecera()?.ideConvenio }}</p>
+            }
           </div>
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Paso Crítico</p>
@@ -134,7 +127,7 @@
           </div>
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Estado</p>
-            <p class="text-sm font-bold text-primary">{{ rtfStatusLabel() }}</p>
+            <app-ui-status-pill [text]="rtfStatusLabel()" [status]="estadoPillStatus(rtfStatus())" />
           </div>
           <div>
             <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fec. Límite</p>
@@ -168,14 +161,14 @@
               <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
               F1 - Gastos Financieros
             </h3>
-            <button
-              type="button"
-              class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
-              [disabled]="sincronizandoGastosF1()"
-              (click)="sincronizarGastosF1()">
-              <span class="material-symbols-outlined text-[14px]">sync</span>
-              {{ sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar' }}
-            </button>
+            <ui-button
+              appearance="soft"
+              severity="secondary"
+              size="sm"
+              icon="sync"
+              [label]="sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar'"
+              [loading]="sincronizandoGastosF1()"
+              (onClick)="sincronizarGastosF1()" />
           </div>
           <p class="text-[10px] text-muted-foreground mb-3">
             Última sincronización: {{ ultimaSincronizacionGastosF1() ? (ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}
@@ -224,9 +217,7 @@
                     <span class="text-foreground font-medium truncate mr-2">{{ m.descripcion || 'Actividad' }}</span>
                     <span class="text-muted-foreground whitespace-nowrap">{{ (m.metaFisicaEjecutada ?? 0) | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}</span>
                   </div>
-                  <div class="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div class="h-full rounded-full transition-all" [class.bg-success]="(m.metaFisicaEjecutada ?? 0) >= m.metaFisicaProgramada" [class.bg-warning]="(m.metaFisicaEjecutada ?? 0) < m.metaFisicaProgramada" [style.width.%]="((m.metaFisicaEjecutada ?? 0) / (m.metaFisicaProgramada || 1)) * 100"></div>
-                  </div>
+                  <app-ui-progress-bar [value]="m.metaFisicaEjecutada ?? 0" [maxValue]="m.metaFisicaProgramada" [showPercentage]="false" />
                 </div>
               }
             </div>
@@ -249,9 +240,7 @@
                     <span class="text-foreground font-medium truncate mr-2">{{ ind.indicador || 'Indicador' }}</span>
                     <span class="text-muted-foreground whitespace-nowrap">{{ (ind.metaEjecutada ?? 0) | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}</span>
                   </div>
-                  <div class="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div class="h-full rounded-full transition-all" [class.bg-success]="(ind.metaEjecutada ?? 0) >= ind.metaProgramada" [class.bg-warning]="(ind.metaEjecutada ?? 0) < ind.metaProgramada" [style.width.%]="((ind.metaEjecutada ?? 0) / (ind.metaProgramada || 1)) * 100"></div>
-                  </div>
+                  <app-ui-progress-bar [value]="ind.metaEjecutada ?? 0" [maxValue]="ind.metaProgramada" [showPercentage]="false" />
                 </div>
               }
             </div>
@@ -271,21 +260,11 @@
         } @else {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             @for (ev of evidencias(); track ev.ideEvidencia) {
-              <div class="flex items-center gap-3 rounded-lg border border-border p-3">
-                <span class="material-symbols-outlined text-2xl text-primary">picture_as_pdf</span>
-                <div class="min-w-0 flex-1">
-                  <p class="text-xs font-medium text-foreground truncate">{{ ev.txtNombreArchivo }}</p>
-                  <p class="text-[10px] text-muted-foreground">{{ ev.fecRegistro | date:'dd/MM/yyyy' }}</p>
-                </div>
-                <button
-                  class="text-primary hover:text-primary/80 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
-                  (click)="descargarEvidencia(ev)"
-                  title="Ver documento"
-                  [attr.aria-label]="'Ver documento ' + ev.txtNombreArchivo"
-                >
-                  <span class="material-symbols-outlined text-lg" aria-hidden="true">visibility</span>
-                </button>
-              </div>
+              <ui-file-chip
+                [name]="ev.txtNombreArchivo || ('evidencia_' + ev.ideEvidencia + '.pdf')"
+                [removable]="false"
+                [viewable]="true"
+                (onView)="descargarEvidencia(ev)" />
             }
           </div>
         }
@@ -302,21 +281,9 @@
             Si realizó (o coordinó) una visita de campo para verificar la adopción tecnológica, registre aquí el Acta. No es obligatoria para continuar.
           </p>
           @if (actaSubida()) {
-            <div class="flex items-center gap-2 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
-              <span class="material-symbols-outlined text-[18px] text-success">check_circle</span>
-              Verificación de campo registrada · <span class="font-mono">{{ actaFileName() }}</span>
-            </div>
+            <ui-file-chip [name]="actaFileName()" [removable]="false" />
           } @else {
-            <div
-              class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 text-center transition-all hover:border-primary/50 hover:bg-primary/5"
-              tabindex="0" (keydown.enter)="actaFileInput.click()" (click)="actaFileInput.click()"
-              (dragover)="$event.preventDefault()"
-              (drop)="onActaDrop($event)"
-            >
-              <span class="material-symbols-outlined text-[28px] text-primary">cloud_upload</span>
-              <div class="text-sm font-medium">Cargar Acta de Campo (PDF, máx 10MB)</div>
-              <input #actaFileInput type="file" accept="application/pdf" class="hidden" (change)="onActaSelect($event)" />
-            </div>
+            <ui-dropzone label="Cargar Acta de Campo" [maxMB]="10" [multiple]="false" (onFile)="onActaFile($event)" />
           }
         </div>
       } @else if (enControlDePlazo()) {
@@ -352,14 +319,7 @@
                       Notificada el {{ carta.fecNotificacion | date:'dd/MM/yyyy' }} · {{ carta.canDiasOtorgados }} días otorgados
                     </div>
                   </div>
-                  <button
-                    class="text-primary hover:text-primary/80 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
-                    (click)="descargarCarta(carta)"
-                    title="Ver documento"
-                    [attr.aria-label]="'Ver documento ' + carta.numDocumento"
-                  >
-                    <span class="material-symbols-outlined text-lg" aria-hidden="true">visibility</span>
-                  </button>
+                  <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="visibility" ariaLabel="{{ 'Ver documento ' + carta.numDocumento }}" (onClick)="descargarCarta(carta)" />
                 </div>
               }
             </div>
@@ -413,25 +373,10 @@
 
             <div class="mt-4">
               <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Archivo de la Carta (PDF)</label>
-              @if (nuevaCartaArchivo()) {
-                <div class="flex items-center gap-2 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
-                  <span class="material-symbols-outlined text-[18px] text-success">check_circle</span>
-                  <span class="font-mono">{{ nuevaCartaArchivo()?.name }}</span>
-                  <button class="ml-auto text-muted-foreground hover:text-destructive" (click)="nuevaCartaArchivo.set(null)">
-                    <span class="material-symbols-outlined text-[16px]">close</span>
-                  </button>
-                </div>
+              @if (nuevaCartaArchivo(); as archivo) {
+                <ui-file-chip [name]="archivo.name" [size]="archivo.size" [removable]="true" (onRemove)="nuevaCartaArchivo.set(null)" />
               } @else {
-                <div
-                  class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 text-center transition-all hover:border-primary/50 hover:bg-primary/5"
-                  tabindex="0" (keydown.enter)="cartaFileInput.click()" (click)="cartaFileInput.click()"
-                  (dragover)="$event.preventDefault()"
-                  (drop)="onCartaDrop($event)"
-                >
-                  <span class="material-symbols-outlined text-[28px] text-primary">cloud_upload</span>
-                  <div class="text-sm font-medium">Cargar PDF de la carta (máx 10MB)</div>
-                  <input #cartaFileInput type="file" accept="application/pdf" class="hidden" (change)="onCartaSelect($event)" />
-                </div>
+                <ui-dropzone label="Cargar PDF de la carta" [maxMB]="10" [multiple]="false" (onFile)="onCartaFile($event)" />
               }
             </div>
 
@@ -439,14 +384,13 @@
               <p class="mt-2 text-[11px] text-destructive">Complete N° de documento, fecha, días otorgados y adjunte el archivo PDF.</p>
             }
 
-            <button
-              class="mt-4 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
-              [disabled]="!nuevaCartaFormValida() || registrandoCarta()"
-              (click)="registrarCartaSubmit()"
-            >
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">send</span>
-              {{ registrandoCarta() ? 'Registrando...' : 'Registrar y Notificar' }}
-            </button>
+            <ui-button
+              class="mt-4"
+              icon="send"
+              [label]="registrandoCarta() ? 'Registrando...' : 'Registrar y Notificar'"
+              [loading]="registrandoCarta()"
+              [disabled]="!nuevaCartaFormValida()"
+              (onClick)="registrarCartaSubmit()" />
           </div>
         </div>
       } @else {
@@ -526,23 +470,20 @@
           }
 
           <div class="mt-4 flex flex-wrap gap-2">
-            <button
-              class="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
-              [disabled]="!anexo18FormValido() || guardandoAnexo18()"
-              (click)="guardarAnexo18()"
-            >
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">save</span>
-              {{ guardandoAnexo18() ? 'Guardando...' : 'Guardar Informe' }}
-            </button>
-            <button
-              class="rounded-lg bg-primary/10 text-primary px-4 py-2 text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
+            <ui-button
+              icon="save"
+              [label]="guardandoAnexo18() ? 'Guardando...' : 'Guardar Informe'"
+              [loading]="guardandoAnexo18()"
+              [disabled]="!anexo18FormValido()"
+              (onClick)="guardarAnexo18()" />
+            <ui-button
+              appearance="soft"
+              severity="primary"
+              icon="visibility"
+              [label]="anexo18Empty() ? 'Generar PDF Anexo 18' : 'Ver PDF Anexo 18'"
               [disabled]="anexo18Empty()"
-              (click)="generarAnexo18()"
-              title="{{ anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : '' }}"
-            >
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">visibility</span>
-              {{ anexo18Empty() ? 'Generar PDF Anexo 18' : 'Ver PDF Anexo 18' }}
-            </button>
+              [ariaLabel]="anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : ''"
+              (onClick)="generarAnexo18()" />
           </div>
         </div>
 
@@ -574,22 +515,8 @@
             Verificación de campo opcional (Anexo 19) · puede continuar directo o devolver a la OA
           </div>
           <div class="flex flex-wrap gap-2">
-            <button
-              class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-              [disabled]="accionEjecutandose()"
-              (click)="devolverTemprano()"
-            >
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
-              Devolver a OA (Observado)
-            </button>
-            <button
-              class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              [disabled]="accionEjecutandose()"
-              (click)="continuarEvaluacion()"
-            >
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">send</span>
-              Continuar Evaluación
-            </button>
+            <ui-button appearance="soft" severity="secondary" icon="undo" label="Devolver a OA (Observado)" [disabled]="accionEjecutandose()" (onClick)="devolverTemprano()" />
+            <ui-button icon="send" label="Continuar Evaluación" [disabled]="accionEjecutandose()" (onClick)="continuarEvaluacion()" />
           </div>
         } @else if (enControlDePlazo()) {
           <div class="text-sm text-muted-foreground">
@@ -601,27 +528,13 @@
           </div>
           <div class="flex flex-wrap items-center gap-2">
             @if (showDevolverForm()) {
-              <button class="rounded-xl border border-border bg-surface-container/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="toggleDevolverForm()">
-                Cancelar
-              </button>
-              <button class="rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-40" (click)="devolverRtf()" [disabled]="accionEjecutandose()">
-                <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
-                Confirmar Devolución
-              </button>
+              <ui-button appearance="soft" severity="secondary" label="Cancelar" (onClick)="toggleDevolverForm()" />
+              <ui-button severity="danger" icon="undo" label="Confirmar Devolución" [disabled]="accionEjecutandose()" (onClick)="devolverRtf()" />
             } @else {
-              <button class="rounded-xl border border-border bg-surface-container/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors" (click)="toggleDevolverForm()">
-                <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">undo</span>
-                Devolver a OA
-              </button>
+              <ui-button appearance="soft" severity="secondary" icon="undo" label="Devolver a OA" (onClick)="toggleDevolverForm()" />
             }
-            <button class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 transition-colors" (click)="rechazar()" [disabled]="accionEjecutandose()">
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">cancel</span>
-              Rechazar
-            </button>
-            <button class="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40" (click)="aprobar()" [disabled]="accionEjecutandose()">
-              <span class="material-symbols-outlined text-[16px] align-text-bottom mr-1">check_circle</span>
-              Aprobar
-            </button>
+            <ui-button appearance="soft" severity="danger" icon="cancel" label="Rechazar" [disabled]="accionEjecutandose()" (onClick)="rechazar()" />
+            <ui-button icon="check_circle" label="Aprobar" [disabled]="accionEjecutandose()" (onClick)="aprobar()" />
           </div>
         }
       </div>

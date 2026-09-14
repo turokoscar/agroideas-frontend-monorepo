@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 export interface FileInfo {
   name: string;
   size: number;
+  file: File;
 }
 
 @Component({
@@ -99,7 +100,7 @@ export class UiDropzoneComponent {
       if (f.size > this.maxMB() * 1024 * 1024) {
         return;
       }
-      this.onFile.emit({ name: f.name, size: f.size });
+      this.onFile.emit({ name: f.name, size: f.size, file: f });
     });
   }
 }

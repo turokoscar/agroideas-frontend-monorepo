@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { forkJoin, throwError } from 'rxjs';
+import { throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { PasoCriticoService } from './paso-critico.service';
 import {
@@ -86,13 +86,25 @@ export class UnGabineteService {
       // registrada, también son responsabilidad del especialista UN de la cartera.
       'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'
     ];
-    return forkJoin(
-      estados.map(estado =>
-        this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(`${this.apiUrl}/rtfs?estado=${estado}`)
-      )
+    // Antes: un forkJoin de 6 GET /rtfs?estado=X, uno por estado. Multiplicaba por 6, en cada
+    // carga de bandeja, tanto los round-trips HTTP como las llamadas del backend a
+    // sel-api-general (RtfCabeceraServicio.ListarRtfsPaginadoAsync ->
+    // IClienteExternoRtf.ObtenerConveniosAsignadosAsync pide la misma cartera del usuario una
+    // vez por estado). El backend ahora acepta `estados` (CSV) para resolver los 6 en una sola
+    // llamada (ver ADR-013 y sigec-api-rtf/data/migrations/2026-09-13_sp_r_rtf_batch_estados.sql).
+    //
+    // `cantidad=1000` sigue siendo necesario: GET /rtfs pagina con `cantidad=10` por defecto
+    // incluso en la rama "soloConveniosAsignados" del backend, que trae TODO de la BD para
+    // filtrar por cartera pero igual trunca el resultado final con `.Skip(offset).Take(limit)`
+    // usando ese valor por defecto — sin este parámetro, un especialista con más de 10 RTFs en
+    // un mismo estado perdía los demás en silencio (el filtrado en cliente asume que
+    // `unRtfList` ya tiene toda su cartera). Mismo patrón que
+    // `ConvenioGeneralService.obtenerAsignados`.
+    return this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(
+      `${this.apiUrl}/rtfs?estados=${estados.join(',')}&cantidad=1000`
     ).pipe(
-      map(respuestas => {
-        const items = respuestas.flatMap(res => res.datos?.items ?? []);
+      map(res => {
+        const items = res.datos?.items ?? [];
         this.unRtfList.set(items);
         return items;
       }),

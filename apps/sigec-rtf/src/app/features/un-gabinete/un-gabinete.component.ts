@@ -2,7 +2,24 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RtfService, EvidenceDto, CartaDto } from '../../core/services/rtf.service';
-import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent } from '@agroideas/ui';
+import { ConvenioGeneralService } from '../../core/services/convenio-general.service';
+import { ConvenioResumenDto } from '../../core/models';
+import { formatConvenioNumber } from '@agroideas/utils';
+import {
+  ToastService,
+  UiCountdownBannerComponent,
+  UiPdfViewerComponent,
+  UiDataTableComponent,
+  TableColumn,
+  UIButtonComponent,
+  UiStatusPillComponent,
+  StatusType,
+  UiProgressBarComponent,
+  UiDropzoneComponent,
+  UiFileChipComponent,
+  FileInfo,
+  UiFilterBarComponent,
+} from '@agroideas/ui';
 import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -24,7 +41,20 @@ interface Anexo18FormValue {
 @Component({
   selector: 'app-un-gabinete',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe, UiCountdownBannerComponent, UiPdfViewerComponent],
+  imports: [
+    CommonModule,
+    DecimalPipe,
+    DatePipe,
+    UiCountdownBannerComponent,
+    UiPdfViewerComponent,
+    UiDataTableComponent,
+    UIButtonComponent,
+    UiStatusPillComponent,
+    UiProgressBarComponent,
+    UiDropzoneComponent,
+    UiFileChipComponent,
+    UiFilterBarComponent,
+  ],
   providers: [DecimalPipe, DatePipe],
   templateUrl: './un-gabinete.component.html',
 })
@@ -32,6 +62,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   rtfService = inject(RtfService);
   private toast = inject(ToastService);
   private http = inject(HttpClient);
+  private convenioGeneralService = inject(ConvenioGeneralService);
   private subs = new Subscription();
 
   // View state
@@ -39,6 +70,67 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   loadingBandeja = signal(false);
   loadingCompleto = signal(false);
   accionEjecutandose = signal(false);
+
+  // RUC/razón social/número de convenio no existen en sigec-api-rtf (solo ideConvenio) — se
+  // resuelven contra sel-api-general, igual que en un-dashboard.component.ts.
+  conveniosInfo = signal<Map<number, ConvenioResumenDto>>(new Map());
+
+  bandejaColumns: TableColumn[] = [
+    { field: 'ideRtf', header: 'ID RTF', type: 'text' },
+    { field: 'ideConvenio', header: 'Convenio', type: 'custom' },
+    { field: 'numPasoCritico', header: 'Paso Crítico', type: 'text' },
+    { field: 'estRtf', header: 'Estado', type: 'custom' },
+    { field: 'fecLimite', header: 'Fec. Límite', type: 'date' },
+    { field: 'fecRegistro', header: 'Fec. Recepción', type: 'date' },
+    { field: 'accion', header: 'Acción', type: 'custom', align: 'right' },
+  ];
+
+  // Filtros de la bandeja (ADR-013): se resuelven en el cliente — texto, estado y fecha
+  // límite ya están completos en memoria (unRtfList + conveniosInfo), sin volver al backend.
+  readonly estadosBandeja = [
+    'EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN',
+    'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL',
+  ] as const;
+
+  filtroTexto = signal('');
+  filtroEstado = signal('');
+  filtroFecDesde = signal('');
+  filtroFecHasta = signal('');
+
+  private normalizar(texto: string): string {
+    return texto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  bandejaFiltrada = computed(() => {
+    const texto = this.normalizar(this.filtroTexto());
+    const estado = this.filtroEstado();
+    const fecDesde = this.filtroFecDesde();
+    const fecHasta = this.filtroFecHasta();
+    const conveniosInfo = this.conveniosInfo();
+
+    return this.unRtfList().filter(rtf => {
+      if (estado && rtf.estRtf !== estado) return false;
+
+      if (fecDesde && rtf.fecLimite < fecDesde) return false;
+      if (fecHasta && rtf.fecLimite.slice(0, 10) > fecHasta) return false;
+
+      if (texto) {
+        const info = conveniosInfo.get(rtf.ideConvenio);
+        const haystack = this.normalizar(
+          [info ? this.formatConvenio(info) : String(rtf.ideConvenio), info?.ruc, info?.razonSocial]
+            .filter(Boolean)
+            .join(' ')
+        );
+        if (!haystack.includes(texto)) return false;
+      }
+
+      return true;
+    });
+  });
 
   // UN signals (self-contained, ver un-gabinete.service.ts)
   unRtfList = this.rtfService.unRtfList;
@@ -100,20 +192,25 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     ['VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfStatus())
   );
 
-  rtfStatusLabel = computed(() => {
-    const map: Record<string, string> = {
-      'EN_REVISION': 'En Revisión',
-      'AUDITADO_CAMPO': 'Verificación de Campo Registrada',
-      'IN_REVISION_UN': 'En Evaluación de Gabinete',
-      'APROBADO': 'Aprobado',
-      'RECHAZADO': 'Rechazado',
-      'OBSERVADO': 'Observado',
-      'VENCIDO': 'Plazo Vencido',
-      'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
-      'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
-    };
-    return map[this.rtfStatus()] ?? this.rtfStatus();
-  });
+  private static readonly ESTADO_LABELS: Record<string, string> = {
+    'EN_REVISION': 'En Revisión',
+    'AUDITADO_CAMPO': 'Verificación de Campo Registrada',
+    'IN_REVISION_UN': 'En Evaluación de Gabinete',
+    'APROBADO': 'Aprobado',
+    'RECHAZADO': 'Rechazado',
+    'OBSERVADO': 'Observado',
+    'VENCIDO': 'Plazo Vencido',
+    'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
+    'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
+  };
+
+  /** Usado tanto por la fila de la bandeja como por la cabecera del detalle (rtfStatusLabel). */
+  estadoLabel(estado?: string): string {
+    if (!estado) return '';
+    return UnGabineteComponent.ESTADO_LABELS[estado] ?? estado;
+  }
+
+  rtfStatusLabel = computed(() => this.estadoLabel(this.rtfStatus()));
 
   ultimaCarta = computed<CartaDto | null>(() => {
     const cartas = this.cartas();
@@ -160,24 +257,31 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cargarBandeja();
+    this.cargarConveniosInfo();
   }
 
   ngOnDestroy() {
     this.subs.unsubscribe();
   }
 
-  getFecRegistro(rtf: any) {
-    return rtf.fecRegistro ?? null;
+  /** Mismo formato que kofix-ejecucion y un-dashboard.component.ts: NNNN-YYYY-ST. */
+  formatConvenio(info: ConvenioResumenDto): string {
+    return formatConvenioNumber(info.numeroConvenio, info.fechaFirma);
   }
 
-  estadoBadgeClass(estado?: string): string {
+  /**
+   * ui-status-pill (@agroideas/ui) tiene una paleta cerrada de estados genéricos que no incluye
+   * los estados propios del flujo RTF — se aproxima cada uno a la paleta más cercana solo para
+   * el color; la etiqueta real se pasa aparte vía `[text]="rtfStatusLabel()"`.
+   */
+  estadoPillStatus(estado?: string): StatusType {
     switch (estado) {
-      case 'IN_REVISION_UN': return 'border-primary/20 bg-primary/10 text-primary';
-      case 'AUDITADO_CAMPO': return 'border-info/20 bg-info/10 text-info';
-      case 'VENCIDO': return 'border-destructive/20 bg-destructive/10 text-destructive';
-      case 'PLAZO_LIMITE_NOTARIAL': return 'border-destructive/20 bg-destructive/10 text-destructive';
-      case 'PLAZO_INICIAL_NOTIFICACION': return 'border-warning/20 bg-warning/10 text-warning';
-      default: return 'border-warning/20 bg-warning/10 text-warning';
+      case 'IN_REVISION_UN': return 'Aprobado';
+      case 'AUDITADO_CAMPO': return 'Media';
+      case 'VENCIDO':
+      case 'PLAZO_LIMITE_NOTARIAL': return 'Rechazado';
+      case 'PLAZO_INICIAL_NOTIFICACION': return 'Pendiente';
+      default: return 'Pendiente';
     }
   }
 
@@ -188,6 +292,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
         next: () => this.loadingBandeja.set(false),
         error: () => { this.loadingBandeja.set(false); this.toast.error('Error', 'No se pudo cargar la bandeja.'); }
       })
+    );
+  }
+
+  private cargarConveniosInfo() {
+    this.subs.add(
+      this.convenioGeneralService.obtenerAsignados().subscribe(mapa => this.conveniosInfo.set(mapa))
     );
   }
 
@@ -270,17 +380,8 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   // --- Verificación de campo (Anexo 19, opcional) ---
 
-  onActaDrop(event: DragEvent) {
-    event.preventDefault();
-    const file = event.dataTransfer?.files[0];
-    if (file) this.uploadActa(file);
-  }
-
-  onActaSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.uploadActa(file);
-    input.value = '';
+  onActaFile(info: FileInfo) {
+    this.uploadActa(info.file);
   }
 
   private uploadActa(file: File) {
@@ -421,17 +522,8 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.nuevaCartaDias.set(tipo === 'CARTA_NOTARIAL' ? 30 : 15);
   }
 
-  onCartaDrop(event: DragEvent) {
-    event.preventDefault();
-    const file = event.dataTransfer?.files[0];
-    if (file) this.nuevaCartaArchivo.set(file);
-  }
-
-  onCartaSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.nuevaCartaArchivo.set(file);
-    input.value = '';
+  onCartaFile(info: FileInfo) {
+    this.nuevaCartaArchivo.set(info.file);
   }
 
   registrarCartaSubmit() {

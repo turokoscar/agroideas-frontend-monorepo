@@ -23,31 +23,27 @@ describe('UnGabineteService', () => {
   afterEach(() => httpMock.verify());
 
   describe('loadBandejaUn', () => {
-    it('combines the 6 estados into a single flat list', () => {
+    const estadosCsv = 'EN_REVISION,AUDITADO_CAMPO,IN_REVISION_UN,VENCIDO,PLAZO_INICIAL_NOTIFICACION,PLAZO_LIMITE_NOTARIAL';
+
+    it('resuelve los 6 estados de la bandeja en una sola llamada (no 6 por separado)', () => {
       let resultado: unknown;
       service.loadBandejaUn().subscribe(items => (resultado = items));
 
-      const estados = ['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN', 'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'];
-      estados.forEach(estado => {
-        httpMock.expectOne(`${apiUrl}/rtfs?estado=${estado}`).flush(ok({
-          total: 1,
-          items: [{ ideRtf: estado.length } as any] // valor cualquiera, solo para distinguir la fila
-        }));
-      });
+      httpMock.expectOne(`${apiUrl}/rtfs?estados=${estadosCsv}&cantidad=1000`).flush(ok({
+        total: 3,
+        items: [{ ideRtf: 1 }, { ideRtf: 2 }, { ideRtf: 3 }] as any
+      }));
 
-      expect(service.unRtfList()).toHaveLength(6);
+      expect(service.unRtfList()).toHaveLength(3);
       expect(resultado).toBe(service.unRtfList());
     });
 
-    it('propagates the error if any of the 6 requests fails', () => {
+    it('propaga el error si la llamada falla', () => {
       let error: unknown;
       service.loadBandejaUn().subscribe({ error: (e) => (error = e) });
 
-      // forkJoin cancela las demás peticiones en curso en cuanto una falla; alcanza con
-      // fallar la primera para verificar que el error se propaga (no queda silenciado).
-      const requests = httpMock.match(() => true);
-      expect(requests).toHaveLength(6);
-      requests[0].flush('boom', { status: 500, statusText: 'Server Error' });
+      httpMock.expectOne(`${apiUrl}/rtfs?estados=${estadosCsv}&cantidad=1000`)
+        .flush('boom', { status: 500, statusText: 'Server Error' });
 
       expect(error).toBeTruthy();
     });
