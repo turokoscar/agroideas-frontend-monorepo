@@ -212,12 +212,33 @@
           } @else {
             <div class="space-y-3">
               @for (m of metas(); track m.id) {
-                <div>
-                  <div class="flex justify-between text-xs mb-1">
-                    <span class="text-foreground font-medium truncate mr-2">{{ m.descripcion || 'Actividad' }}</span>
-                    <span class="text-muted-foreground whitespace-nowrap">{{ (m.metaFisicaEjecutada ?? 0) | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}</span>
+                <div class="rounded-lg border border-border/60 p-3">
+                  <div class="flex justify-between gap-2 text-xs mb-1">
+                    <span class="text-foreground font-medium">{{ m.descripcion || 'Actividad' }}</span>
+                    <span class="text-muted-foreground whitespace-nowrap">
+                      {{ (m.metaFisicaEjecutada ?? 0) | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}
+                      @if (m.unidadMedida) { <span class="text-[10px]">{{ m.unidadMedida }}</span> }
+                    </span>
                   </div>
                   <app-ui-progress-bar [value]="m.metaFisicaEjecutada ?? 0" [maxValue]="m.metaFisicaProgramada" [showPercentage]="false" />
+                  @if (m.comentarios) {
+                    <p class="mt-2 text-[11px] text-muted-foreground italic">"{{ m.comentarios }}"</p>
+                  }
+                  @if (evidenciasDeMeta(m.id); as evs) {
+                    @if (evs.length > 0) {
+                      <div class="mt-2 flex flex-wrap gap-1.5">
+                        @for (ev of evs; track ev.ideEvidencia) {
+                          <div class="max-w-[180px]">
+                            <ui-file-chip
+                              [name]="ev.txtNombreArchivo || 'evidencia.pdf'"
+                              [removable]="false"
+                              [viewable]="true"
+                              (onView)="descargarEvidencia(ev)" />
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
                 </div>
               }
             </div>
@@ -235,12 +256,33 @@
           } @else {
             <div class="space-y-3">
               @for (ind of indicadores(); track ind.id) {
-                <div>
-                  <div class="flex justify-between text-xs mb-1">
-                    <span class="text-foreground font-medium truncate mr-2">{{ ind.indicador || 'Indicador' }}</span>
-                    <span class="text-muted-foreground whitespace-nowrap">{{ (ind.metaEjecutada ?? 0) | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}</span>
+                <div class="rounded-lg border border-border/60 p-3">
+                  <div class="flex justify-between gap-2 text-xs mb-1">
+                    <span class="text-foreground font-medium">{{ ind.indicador || 'Indicador' }}</span>
+                    <span class="text-muted-foreground whitespace-nowrap">
+                      {{ (ind.metaEjecutada ?? 0) | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}
+                      @if (ind.unidadMedida) { <span class="text-[10px]">{{ ind.unidadMedida }}</span> }
+                    </span>
                   </div>
                   <app-ui-progress-bar [value]="ind.metaEjecutada ?? 0" [maxValue]="ind.metaProgramada" [showPercentage]="false" />
+                  @if (ind.comentarios) {
+                    <p class="mt-2 text-[11px] text-muted-foreground italic">"{{ ind.comentarios }}"</p>
+                  }
+                  @if (evidenciasDeIndicador(ind.id); as evs) {
+                    @if (evs.length > 0) {
+                      <div class="mt-2 flex flex-wrap gap-1.5">
+                        @for (ev of evs; track ev.ideEvidencia) {
+                          <div class="max-w-[180px]">
+                            <ui-file-chip
+                              [name]="ev.txtNombreArchivo || 'evidencia.pdf'"
+                              [removable]="false"
+                              [viewable]="true"
+                              (onView)="descargarEvidencia(ev)" />
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
                 </div>
               }
             </div>
@@ -529,7 +571,7 @@
           <div class="flex flex-wrap items-center gap-2">
             @if (showDevolverForm()) {
               <ui-button appearance="soft" severity="secondary" label="Cancelar" (onClick)="toggleDevolverForm()" />
-              <ui-button severity="danger" icon="undo" label="Confirmar Devolución" [disabled]="accionEjecutandose()" (onClick)="devolverRtf()" />
+              <ui-button severity="danger" icon="undo" label="Confirmar Devolución" [disabled]="accionEjecutandose() || !devolverObservacion().trim()" (onClick)="devolverRtf()" />
             } @else {
               <ui-button appearance="soft" severity="secondary" icon="undo" label="Devolver a OA" (onClick)="toggleDevolverForm()" />
             }

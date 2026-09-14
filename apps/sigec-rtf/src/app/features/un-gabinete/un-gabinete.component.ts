@@ -248,6 +248,31 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     { label: 'Cambios en el Paso', value: this.cabecera()?.txtCambiosPaso },
   ]);
 
+  /**
+   * Toda evidencia de este RTF es de una meta física o un indicador específico (nunca "sustento
+   * general" — la propia regla V2 de envío del backend lo exige así: RtfCabeceraServicio.
+   * EnviarRtfAsync valida `ideConcepto == IdeMetaPasoCritico && tipConcepto == 'METAFISICA'`).
+   * Se agrupa una sola vez por (tipConcepto, ideConcepto) para no filtrar el arreglo completo en
+   * cada fila de T1/R2.
+   */
+  private evidenciasPorConcepto = computed(() => {
+    const mapa = new Map<string, EvidenceDto[]>();
+    for (const ev of this.evidencias()) {
+      const clave = `${ev.tipConcepto}:${ev.ideConcepto}`;
+      const lista = mapa.get(clave);
+      if (lista) lista.push(ev); else mapa.set(clave, [ev]);
+    }
+    return mapa;
+  });
+
+  evidenciasDeMeta(metaId: number): EvidenceDto[] {
+    return this.evidenciasPorConcepto().get(`METAFISICA:${metaId}`) ?? [];
+  }
+
+  evidenciasDeIndicador(indicadorId: number): EvidenceDto[] {
+    return this.evidenciasPorConcepto().get(`INDICADOR:${indicadorId}`) ?? [];
+  }
+
   anexo18Empty = computed(() => !this.anexo18());
 
   anexo18FormValido = computed(() => {
