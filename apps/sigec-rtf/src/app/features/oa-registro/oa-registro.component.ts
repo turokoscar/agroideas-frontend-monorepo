@@ -47,7 +47,7 @@ export class OaRegistroComponent implements OnInit {
    * fuente de verdad.
    */
   isEditable = computed(() =>
-    ['PENDIENTE', 'EN_EDICION', 'OBSERVADO'].includes(this.rtfService.rtfStatus())
+    ['PENDIENTE', 'EN_EDICION', 'OBSERVADO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfService.rtfStatus())
   );
 
   /**
