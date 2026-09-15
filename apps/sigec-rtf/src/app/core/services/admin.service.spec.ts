@@ -113,7 +113,7 @@ describe('AdminService', () => {
   describe('obtenerReporteProductividadUn', () => {
     it('sends desde/hasta as query params and returns the items', () => {
       const items: ReporteProductividadUnItemDto[] = [
-        { ideUsuario: 7, txtUsuario: 'jperez', expedientesAtendidos: 4, promedioDias: 3.5 }
+        { ideUsuario: 7, txtUsuario: 'jperez', expedientesAtendidos: 4, promedioDias: 3.5, tasaObservacion: 25 }
       ];
       let resultado: ReporteProductividadUnItemDto[] | undefined;
 

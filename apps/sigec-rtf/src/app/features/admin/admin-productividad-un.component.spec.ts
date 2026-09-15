@@ -12,7 +12,7 @@ describe('AdminProductividadUnComponent', () => {
   const ok = <T>(datos: T): ApiResponse<T> => ({ respuesta: 'OK', mensaje: 'OK', datos });
 
   const items: ReporteProductividadUnItemDto[] = [
-    { ideUsuario: 7, txtUsuario: 'jperez', expedientesAtendidos: 4, promedioDias: 3.5 }
+    { ideUsuario: 7, txtUsuario: 'jperez', expedientesAtendidos: 4, promedioDias: 3.5, tasaObservacion: 25 }
   ];
 
   function crearComponente() {

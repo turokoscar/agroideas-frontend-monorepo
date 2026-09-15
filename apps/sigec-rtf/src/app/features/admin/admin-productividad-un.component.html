@@ -104,6 +104,7 @@
                 <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Especialista</th>
                 <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Expedientes Atendidos</th>
                 <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Promedio de Días</th>
+                <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Tasa de Observación</th>
               </tr>
             </thead>
             <tbody>
@@ -112,6 +113,7 @@
                   <td class="px-4 py-3 font-medium">{{ item.txtUsuario }}</td>
                   <td class="px-4 py-3 text-center">{{ item.expedientesAtendidos }}</td>
                   <td class="px-4 py-3 text-center">{{ item.promedioDias | number:'1.0-1' }}</td>
+                  <td class="px-4 py-3 text-center">{{ item.tasaObservacion | number:'1.0-1' }}%</td>
                 </tr>
               }
             </tbody>
