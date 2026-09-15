@@ -57,6 +57,9 @@ export class LoginComponent {
   private redirectByUserRole(role: string) {
     if (role === 'POSTULANTE') {
       this.router.navigate(['/rtf/dashboard']);
+    } else if (role === 'ADMIN') {
+      // ADR-013: el Administrador del sistema aterriza en su propio panel, no en la bandeja de UN.
+      this.router.navigate(['/rtf/admin']);
     } else if (role === 'UN' || role === 'DE' || role === 'UAJ' || role === 'USE') {
       this.router.navigate(['/rtf/evaluacion-gabinete']);
     } else {

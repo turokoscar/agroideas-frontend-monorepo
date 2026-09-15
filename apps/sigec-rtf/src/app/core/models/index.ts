@@ -21,3 +21,6 @@ export * from './carta.dto';
 export * from './notificacion.dto';
 export * from './convenio-resumen.dto';
 export * from './control-plazo.dto';
+export * from './parametro-sistema.dto';
+export * from './reporte-cumplimiento-plazos.dto';
+export * from './reporte-productividad-un-item.dto';

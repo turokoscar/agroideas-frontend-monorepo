@@ -1,0 +1,123 @@
+<div class="space-y-6 animate-fade-in">
+  <div>
+    <a routerLink="/rtf/admin" class="text-xs font-semibold text-muted-foreground hover:text-primary inline-flex items-center gap-1 mb-2">
+      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      Administración
+    </a>
+    <h2 class="text-2xl font-bold tracking-tight text-foreground">Reporte de Productividad UN</h2>
+    <p class="text-sm text-muted-foreground">Expedientes atendidos y promedio de días entre la derivación y la resolución, por especialista, en el rango de fechas seleccionado.</p>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-border rounded-xl p-5">
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="productividad-desde" class="text-[11px] font-semibold text-muted-foreground mb-1 block">Desde</label>
+        <input
+          id="productividad-desde"
+          type="date"
+          class="rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          [value]="desde()"
+          (input)="desde.set($any($event.target).value)"
+        />
+      </div>
+      <div>
+        <label for="productividad-hasta" class="text-[11px] font-semibold text-muted-foreground mb-1 block">Hasta</label>
+        <input
+          id="productividad-hasta"
+          type="date"
+          class="rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          [value]="hasta()"
+          (input)="hasta.set($any($event.target).value)"
+        />
+      </div>
+      <ui-button
+        icon="search"
+        [label]="cargando() ? 'Consultando...' : 'Consultar'"
+        [loading]="cargando()"
+        (onClick)="consultar()" />
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid gap-4 sm:grid-cols-3" aria-hidden="true">
+      @for (card of [1,2,3]; track card) {
+        <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
+          <div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div>
+          <div class="mt-4 h-6 w-14 rounded bg-surface-container animate-pulse"></div>
+        </div>
+      }
+      <span class="sr-only">Cargando reporte…</span>
+    </div>
+  } @else {
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
+        <div class="flex items-center justify-between">
+          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Especialistas</span>
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <span class="material-symbols-outlined text-[20px]">groups</span>
+          </div>
+        </div>
+        <div class="mt-3 text-2xl font-bold tracking-tight text-foreground">{{ items().length }}</div>
+        <div class="mt-1 text-xs text-muted-foreground">Con expedientes resueltos en el rango</div>
+      </div>
+
+      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
+        <div class="flex items-center justify-between">
+          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Expedientes Atendidos</span>
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
+            <span class="material-symbols-outlined text-[20px]">task_alt</span>
+          </div>
+        </div>
+        <div class="mt-3 text-2xl font-bold tracking-tight text-success">{{ totalExpedientes() }}</div>
+        <div class="mt-1 text-xs text-muted-foreground">Total en el rango seleccionado</div>
+      </div>
+
+      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
+        <div class="flex items-center justify-between">
+          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Promedio General</span>
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-info/10 text-info">
+            <span class="material-symbols-outlined text-[20px]">schedule</span>
+          </div>
+        </div>
+        <div class="mt-3 text-2xl font-bold tracking-tight text-info">{{ promedioGeneral() | number:'1.0-1' }}</div>
+        <div class="mt-1 text-xs text-muted-foreground">Días entre derivación y resolución</div>
+      </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-border rounded-xl overflow-hidden">
+      <div class="p-5 border-b border-border">
+        <h3 class="text-sm font-bold text-foreground flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-primary">leaderboard</span>
+          Detalle por Especialista
+        </h3>
+      </div>
+      @if (items().length === 0) {
+        <div class="py-8 text-center text-sm text-muted-foreground">
+          Sin expedientes resueltos en el rango seleccionado.
+          <div class="text-xs mt-1">Solo se cuentan expedientes derivados y resueltos después de habilitarse la atribución de usuario.</div>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/30">
+                <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Especialista</th>
+                <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Expedientes Atendidos</th>
+                <th class="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Promedio de Días</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items(); track item.ideUsuario) {
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors">
+                  <td class="px-4 py-3 font-medium">{{ item.txtUsuario }}</td>
+                  <td class="px-4 py-3 text-center">{{ item.expedientesAtendidos }}</td>
+                  <td class="px-4 py-3 text-center">{{ item.promedioDias | number:'1.0-1' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

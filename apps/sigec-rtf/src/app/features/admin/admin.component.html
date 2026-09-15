@@ -1,0 +1,38 @@
+<div class="space-y-6 animate-fade-in">
+  <div>
+    <h2 class="text-2xl font-bold tracking-tight text-foreground">Panel de Administración</h2>
+    <p class="text-sm text-muted-foreground">Maestros y reportes de más alto nivel para el Administrador del sistema.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a routerLink="/rtf/admin/parametros" class="block h-full">
+      <div class="bg-card border border-border rounded-xl p-5 shadow-sm h-full hover:border-primary transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-xl">tune</span>
+        </div>
+        <h3 class="text-sm font-bold text-foreground mb-1">Parámetros del Sistema</h3>
+        <p class="text-xs text-muted-foreground">Plazos legales (días) y correos de notificación por defecto.</p>
+      </div>
+    </a>
+
+    <a routerLink="/rtf/admin/productividad-un" class="block h-full">
+      <div class="bg-card border border-border rounded-xl p-5 shadow-sm h-full hover:border-primary transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-xl">insights</span>
+        </div>
+        <h3 class="text-sm font-bold text-foreground mb-1">Reporte de Productividad UN</h3>
+        <p class="text-xs text-muted-foreground">Expedientes atendidos y promedio de días por especialista.</p>
+      </div>
+    </a>
+
+    <a routerLink="/rtf/admin/cumplimiento-plazos" class="block h-full">
+      <div class="bg-card border border-border rounded-xl p-5 shadow-sm h-full hover:border-primary transition-colors">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-primary text-xl">rule</span>
+        </div>
+        <h3 class="text-sm font-bold text-foreground mb-1">Cumplimiento de Plazos</h3>
+        <p class="text-xs text-muted-foreground">RTFs vencidos, cartas emitidas y bloqueos definitivos por rango de fechas.</p>
+      </div>
+    </a>
+  </div>
+</div>

@@ -56,12 +56,32 @@ export const appRoutes: Route[] = [
         // sección más dentro de esta misma pantalla, para el mismo especialista UN.
         path: 'rtf/evaluacion-gabinete',
         loadComponent: () => import('./features/un-gabinete/un-gabinete.component').then(m => m.UnGabineteComponent),
-        canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]
+        canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE', 'ADMIN'])]
       },
       {
         path: 'rtf/dashboard-un',
         loadComponent: () => import('./features/un-dashboard/un-dashboard.component').then(m => m.UnDashboardComponent),
-        canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE'])]
+        canActivate: [roleGuard(['UN', 'DE', 'UAJ', 'USE', 'ADMIN'])]
+      },
+      {
+        path: 'rtf/admin',
+        loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
+        canActivate: [roleGuard(['ADMIN'])]
+      },
+      {
+        path: 'rtf/admin/parametros',
+        loadComponent: () => import('./features/admin/admin-parametros.component').then(m => m.AdminParametrosComponent),
+        canActivate: [roleGuard(['ADMIN'])]
+      },
+      {
+        path: 'rtf/admin/cumplimiento-plazos',
+        loadComponent: () => import('./features/admin/admin-cumplimiento-plazos.component').then(m => m.AdminCumplimientoPlazosComponent),
+        canActivate: [roleGuard(['ADMIN'])]
+      },
+      {
+        path: 'rtf/admin/productividad-un',
+        loadComponent: () => import('./features/admin/admin-productividad-un.component').then(m => m.AdminProductividadUnComponent),
+        canActivate: [roleGuard(['ADMIN'])]
       },
       {
         path: '',

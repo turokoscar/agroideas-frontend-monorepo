@@ -8,7 +8,7 @@ import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
 
 // No hay rol 'UR' (ADR-010): UN maneja todo el ciclo del expediente, no hay un actor del
 // sistema separado para la verificación de campo.
-export type UserRole = 'POSTULANTE' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO';
+export type UserRole = 'POSTULANTE' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO' | 'ADMIN';
 
 /**
  * `sel-api-seguridad` devuelve los roles tal cual están en su catálogo (texto completo en
@@ -29,7 +29,7 @@ const ROLES_SIGEC_RTF: Readonly<Record<string, UserRole>> = {
   POSTULANTE: 'POSTULANTE',
   'UNIDAD DE MONITOREO': 'UN',
   'UNIDAD DE NEGOCIOS': 'UN',
-  'ADMINISTRADOR DEL SISTEMA': 'UN'
+  'ADMINISTRADOR DEL SISTEMA': 'ADMIN'
 };
 
 function mapearRolSigecRtf(roles: readonly string[] | null | undefined): UserRole {

@@ -129,7 +129,18 @@
       </div>
     }
 
-    @if (user()?.role === 'UN' || user()?.role === 'DE' || user()?.role === 'UAJ' || user()?.role === 'USE') {
+    @if (user()?.role === 'ADMIN') {
+      <a
+        routerLink="/rtf/admin"
+        routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
+      >
+        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+        Administración
+      </a>
+    }
+
+    @if (user()?.role === 'UN' || user()?.role === 'DE' || user()?.role === 'UAJ' || user()?.role === 'USE' || user()?.role === 'ADMIN') {
       <a
         routerLink="/rtf/dashboard-un"
         routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"

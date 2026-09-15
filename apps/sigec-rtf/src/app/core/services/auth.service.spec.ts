@@ -78,7 +78,7 @@ describe('AuthService', () => {
   it.each([
     ['Unidad de Monitoreo', 'UN'],
     ['Unidad de Negocios', 'UN'],
-    ['Administrador del sistema', 'UN'],
+    ['Administrador del sistema', 'ADMIN'], // ADR-013: ya no colapsa a 'UN', tiene rol propio
     ['unidad de monitoreo', 'UN'] // case-insensitive
   ])('maps role "%s" to "%s"', (rolBackend, esperado) => {
     service.login('especialista', 'secreto').subscribe();

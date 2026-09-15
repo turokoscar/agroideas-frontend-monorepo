@@ -33,6 +33,8 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
       // maneja todo el ciclo del expediente en una sola pantalla.
       if (user?.role === 'POSTULANTE') {
         router.navigate(['/rtf/dashboard']);
+      } else if (user?.role === 'ADMIN') {
+        router.navigate(['/rtf/admin']);
       } else {
         router.navigate(['/rtf/evaluacion-gabinete']);
       }
