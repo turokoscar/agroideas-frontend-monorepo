@@ -128,44 +128,64 @@ export class OaRegistroComponent implements OnInit {
       const pasoCriticoId = Number(idpc);
       this.rtfService.loadMetasPorPasoCritico(pasoCriticoId).subscribe();
       this.rtfService.loadIndicadoresPorPasoCritico(pasoCriticoId).subscribe();
-      
-      const initializeRtfAndHeader = (rtfId: number) => {
-        if (rtfId) {
-          this.rtfService.loadDetalleRtf(rtfId).subscribe();
-          this.rtfService.loadEvidencias(rtfId).subscribe();
-          this.rtfService.loadGastosF1(rtfId).subscribe();
-          this.rtfService.loadEstadoPlazo(rtfId).subscribe();
-          // Recarga con ideRtf ya conocido para que se fusione el avance guardado localmente
-          // (ADR-009), que la primera carga (línea de arriba, sin ideRtf) no pudo traer.
-          this.rtfService.loadMetasPorPasoCritico(pasoCriticoId, rtfId).subscribe();
-          this.rtfService.loadIndicadoresPorPasoCritico(pasoCriticoId, rtfId).subscribe();
-        }
+
+      const cargarDatosDelRtf = (rtfId: number) => {
+        this.rtfService.loadEvidencias(rtfId).subscribe();
+        this.rtfService.loadGastosF1(rtfId).subscribe();
+        this.rtfService.loadEstadoPlazo(rtfId).subscribe();
+        // Recarga con ideRtf ya conocido para que se fusione el avance guardado localmente
+        // (ADR-009), que la primera carga (línea de arriba, sin ideRtf) no pudo traer.
+        this.rtfService.loadMetasPorPasoCritico(pasoCriticoId, rtfId).subscribe();
+        this.rtfService.loadIndicadoresPorPasoCritico(pasoCriticoId, rtfId).subscribe();
       };
 
-      const rtfId = this.rtfService.rtfId();
-      if (rtfId) {
-        initializeRtfAndHeader(rtfId);
-      } else {
-        // En caso de F5 / recarga, recuperar postulanteId y cargar dashboard para rellenar los tiles
+      // En caso de F5 / recarga, o si el rtfId en memoria no correspondía a este paso crítico,
+      // recuperar postulanteId y cargar dashboard para resolver el rtfId correcto y rellenar los tiles.
+      const resolverDesdeDashboard = () => {
         const usuarioId = Number(this.authService.user()?.id);
-        if (usuarioId) {
-          this.rtfService.resolvePostulanteId().subscribe({
-            next: (postulanteId) => {
-              if (postulanteId) {
-                this.rtfService.loadDashboard(postulanteId).subscribe({
-                  next: (dashData) => {
-                    const pasos = dashData?.pasos || [];
-                    const pc = pasos.find((p: any) => p.id === pasoCriticoId);
-                    if (pc?.rtfId) {
-                      this.rtfService.rtfId.set(pc.rtfId);
-                      initializeRtfAndHeader(pc.rtfId);
-                    }
-                  }
-                });
+        if (!usuarioId) return;
+        this.rtfService.resolvePostulanteId().subscribe({
+          next: (postulanteId) => {
+            if (!postulanteId) return;
+            this.rtfService.loadDashboard(postulanteId).subscribe({
+              next: (dashData) => {
+                const pasos = dashData?.pasos || [];
+                const pc = pasos.find((p: any) => p.id === pasoCriticoId);
+                if (pc?.rtfId) {
+                  this.rtfService.rtfId.set(pc.rtfId);
+                  this.rtfService.loadDetalleRtf(pc.rtfId).subscribe();
+                  cargarDatosDelRtf(pc.rtfId);
+                } else {
+                  // Ningún RTF existe todavía para este paso crítico: se limpia cualquier rtfId
+                  // de otro paso que hubiera quedado en memoria para no reutilizarlo por error.
+                  this.rtfService.rtfId.set(null);
+                }
               }
+            });
+          }
+        });
+      };
+
+      const rtfIdEnMemoria = this.rtfService.rtfId();
+      if (rtfIdEnMemoria) {
+        // `rtfId` es una señal global (RtfService/OaRtfService son singletons `providedIn: 'root'`)
+        // que no se resetea al navegar entre pantallas — puede pertenecer a un paso crítico distinto
+        // del de esta ruta (p. ej. al llegar desde el tile del dashboard tras haber abierto otro RTF
+        // por la bandeja). Se valida contra `idePasoCritico` antes de confiar en él; si no coincide
+        // (o el backend no pudo resolverlo aún), se descarta y se resuelve el rtfId correcto desde
+        // el dashboard en vez de mezclar avance/evidencia de un paso crítico con otro.
+        this.rtfService.loadDetalleRtf(rtfIdEnMemoria).subscribe({
+          next: (data) => {
+            if (data?.idePasoCritico === pasoCriticoId) {
+              cargarDatosDelRtf(rtfIdEnMemoria);
+            } else {
+              resolverDesdeDashboard();
             }
-          });
-        }
+          },
+          error: () => resolverDesdeDashboard()
+        });
+      } else {
+        resolverDesdeDashboard();
       }
     } else {
       // ADR-012: sin `idpc` en la ruta (caso ya raro: bandeja-oa ahora siempre lo incluye cuando
@@ -283,7 +303,16 @@ export class OaRegistroComponent implements OnInit {
   });
 
   modalEvidencias = computed(() => {
-    if (this.useBdSelMetas()) return [];
+    if (this.useBdSelMetas()) {
+      // Mismo esquema que el flujo legacy (ideConcepto/tipConcepto) — SubirEvidenciaYActualizarMetaAsync/
+      // ...Indicador en el backend registran la evidencia con IdeConcepto = meta.id / indicador.id.
+      if (this.modalMode() === 'meta') {
+        const meta = this.rtfService.pasoCriticoMetas()[this.modalIndex()];
+        return this.rtfService.evidencias().filter(e => e.ideConcepto === meta?.id && e.tipConcepto === 'METAFISICA');
+      }
+      const ind = this.rtfService.pasoCriticoIndicadores()[this.modalIndex()];
+      return this.rtfService.evidencias().filter(e => e.ideConcepto === ind?.id && e.tipConcepto === 'INDICADOR');
+    }
     if (this.modalMode() === 'meta') {
       const meta = this.rtfService.metas()[this.modalIndex()];
       return this.rtfService.evidencias().filter(e => e.ideConcepto === meta?.ideMetaFisica && e.tipConcepto === 'METAFISICA');
@@ -309,7 +338,7 @@ export class OaRegistroComponent implements OnInit {
         index = this.rtfService.indicadores().findIndex(i => i.ideIndicadorAvance === row.ideIndicadorAvance);
       }
     }
-    
+
     this.modalIndex.set(index);
 
     if (mode === 'meta') {
