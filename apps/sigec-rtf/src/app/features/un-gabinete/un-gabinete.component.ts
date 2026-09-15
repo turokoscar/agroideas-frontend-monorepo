@@ -303,7 +303,6 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cargarBandeja();
-    this.cargarConveniosInfo();
   }
 
   ngOnDestroy() {
@@ -335,15 +334,20 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.loadingBandeja.set(true);
     this.subs.add(
       this.rtfService.loadBandejaUn().subscribe({
-        next: () => this.loadingBandeja.set(false),
+        next: items => {
+          this.loadingBandeja.set(false);
+          this.cargarConveniosInfo(items.map(rtf => rtf.ideConvenio));
+        },
         error: () => { this.loadingBandeja.set(false); this.toast.error('Error', 'No se pudo cargar la bandeja.'); }
       })
     );
   }
 
-  private cargarConveniosInfo() {
+  // ADR-013: convenios/por-ids en vez de "mi cartera" (convenios/asignados) — la anterior
+  // devolvía vacío para un Administrador del sistema, dejando los convenios sin formatear.
+  private cargarConveniosInfo(ideConvenios: number[]) {
     this.subs.add(
-      this.convenioGeneralService.obtenerAsignados().subscribe(mapa => this.conveniosInfo.set(mapa))
+      this.convenioGeneralService.obtenerPorIds([...new Set(ideConvenios)]).subscribe(mapa => this.conveniosInfo.set(mapa))
     );
   }
 

@@ -104,8 +104,7 @@ export class UnGabineteService {
     // filtrar por cartera pero igual trunca el resultado final con `.Skip(offset).Take(limit)`
     // usando ese valor por defecto — sin este parámetro, un especialista con más de 10 RTFs en
     // un mismo estado perdía los demás en silencio (el filtrado en cliente asume que
-    // `unRtfList` ya tiene toda su cartera). Mismo patrón que
-    // `ConvenioGeneralService.obtenerAsignados`.
+    // `unRtfList` ya tiene toda su cartera).
     return this.http.get<ApiResponse<{ total: number; items: RtfCabeceraDto[] }>>(
       `${this.apiUrl}/rtfs?estados=${estados.join(',')}&cantidad=1000`
     ).pipe(

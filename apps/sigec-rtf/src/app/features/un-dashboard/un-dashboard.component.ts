@@ -36,15 +36,16 @@ export class UnDashboardComponent implements OnInit {
   });
 
   // RUC/razón social/número de convenio no existen en sigec-api-rtf (solo ideConvenio) — se
-  // resuelven contra sel-api-general. No hay endpoint por lista de ids ahí, pero sí uno de
-  // colección ya scopeado al usuario del JWT (convenios/asignados), así que se trae todo de una
-  // vez en vez de N requests (uno por convenio visible).
+  // resuelven contra sel-api-general (convenios/por-ids), una vez que se conoce la lista de
+  // ideConvenio que trajo el propio dashboard (ADR-013: antes se reutilizaba "mi cartera", que
+  // devolvía vacío para un Administrador del sistema al no tener convenios asignados
+  // personalmente).
   conveniosInfo = signal<Map<number, ConvenioResumenDto>>(new Map());
   loadingConveniosInfo = signal(false);
 
-  private cargarConveniosInfo() {
+  private cargarConveniosInfo(ideConvenios: number[]) {
     this.loadingConveniosInfo.set(true);
-    this.convenioGeneralService.obtenerAsignados().subscribe({
+    this.convenioGeneralService.obtenerPorIds([...new Set(ideConvenios)]).subscribe({
       next: mapa => {
         this.conveniosInfo.set(mapa);
         this.loadingConveniosInfo.set(false);
@@ -98,12 +99,14 @@ export class UnDashboardComponent implements OnInit {
     this.hasError.set(false);
     this.currentPage.set(1);
     this.rtfService.loadDashboardUn().subscribe({
-      next: () => this.loading.set(false),
+      next: data => {
+        this.loading.set(false);
+        this.cargarConveniosInfo((data?.convenios ?? []).map(c => c.ideConvenio));
+      },
       error: () => {
         this.loading.set(false);
         this.hasError.set(true);
       }
     });
-    this.cargarConveniosInfo();
   }
 }

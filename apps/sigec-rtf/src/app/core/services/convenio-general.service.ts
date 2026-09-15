@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { of, Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, ConvenioResumenDto, DatosPaginados } from '../models';
+import { ApiResponse, ConvenioResumenDto } from '../models';
 
 /**
  * sigec-api-rtf no tiene datos de organización (RUC/razón social/número de convenio) — esa
@@ -18,25 +18,28 @@ export class ConvenioGeneralService {
   private apiGeneral = environment.apiGeneral;
 
   /**
-   * Trae TODOS los convenios asignados al usuario autenticado en una sola llamada (no hay
-   * endpoint por lista de ids en sel-api-general, pero sí uno de colección ya scopeado al
-   * usuario del JWT — el mismo que usa sigec-api-rtf internamente, en
-   * RtfCabeceraServicio.ObtenerConveniosAsignadosAsync, para filtrar RTFs por convenio). Evita
-   * N requests (uno por convenio) al no depender de ideConvenio como parámetro de ruta.
-   * Cantidad tope de la API: 2000.
+   * Resuelve datos de presentación (RUC/razón social/número) para una lista de ideConvenio ya
+   * conocida — sin scope de cartera de usuario. Antes se reutilizaba `convenios/asignados`
+   * ("mi cartera"), que devolvía cero filas para un Administrador del sistema (no tiene
+   * convenios asignados personalmente), dejando esas filas sin formatear en pantalla — ver
+   * ADR-013. `convenios/por-ids` es un lookup genérico, sin ese problema.
    */
-  obtenerAsignados(cantidad = 2000): Observable<Map<number, ConvenioResumenDto>> {
-    return this.http.get<ApiResponse<DatosPaginados<ConvenioResumenDto>>>(
-      `${this.apiGeneral}/convenios/asignados`,
-      { params: { pagina: 1, cantidad } }
+  obtenerPorIds(ids: number[]): Observable<Map<number, ConvenioResumenDto>> {
+    if (ids.length === 0) {
+      return of(new Map<number, ConvenioResumenDto>());
+    }
+
+    return this.http.get<ApiResponse<ConvenioResumenDto[]>>(
+      `${this.apiGeneral}/convenios/por-ids`,
+      { params: { ids: ids.join(',') } }
     ).pipe(
       map(res => {
         const mapa = new Map<number, ConvenioResumenDto>();
-        (res.datos?.items ?? []).forEach(c => mapa.set(c.id, c));
+        (res.datos ?? []).forEach(c => mapa.set(c.id, c));
         return mapa;
       }),
       catchError(err => {
-        console.error('Error obteniendo convenios asignados de sel-api-general', err);
+        console.error('Error obteniendo convenios por ids de sel-api-general', err);
         return of(new Map<number, ConvenioResumenDto>());
       })
     );
