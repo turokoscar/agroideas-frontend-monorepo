@@ -14,6 +14,8 @@ export * from './dashboard-data.model';
 export * from './ur-completo.dto';
 export * from './ur-evaluacion-item.dto';
 export * from './ur-evaluacion-request.dto';
+export * from './revision.dto';
+export * from './evaluacion-ur-estado.dto';
 export * from './dashboard-un-convenio-item.dto';
 export * from './dashboard-un-data.model';
 export * from './informe-comprobacion.dto';

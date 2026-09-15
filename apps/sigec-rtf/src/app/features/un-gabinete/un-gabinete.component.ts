@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RtfService, EvidenceDto, CartaDto } from '../../core/services/rtf.service';
+import { UrEvaluacionItemDto, UrEvaluacionItemKind } from '../../core/models';
 import { ConvenioGeneralService } from '../../core/services/convenio-general.service';
 import { ConvenioResumenDto } from '../../core/models';
 import { formatConvenioNumber } from '@agroideas/utils';
@@ -194,6 +195,163 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   // Solo aplica antes de que el expediente llegue a IN_REVISION_UN.
   estaEnEvaluacionPrevia = computed(() => ['EN_REVISION', 'AUDITADO_CAMPO'].includes(this.rtfStatus()));
 
+  // --- ADR-014 Parte 4: evaluación por ítem (T1/R2/R1) ---
+  // Borrador en memoria de la evaluación en curso, sembrado desde `GET .../evaluaciones` al
+  // abrir el expediente y desde ahí editado por el evaluador antes de guardar. Clave:
+  // `${kind}:${id}` (para R1, id es el propio ideRtf — solo hace falta que sea estable, ya que
+  // cada fila ya está acotada por ide_rtf en la base de datos).
+  private evaluacionDraft = signal<Map<string, UrEvaluacionItemDto>>(new Map());
+  guardandoEvaluacion = signal(false);
+  pliegoObservaciones = this.rtfService.pliegoObservaciones;
+  devolverTempranoObservacion = signal('');
+
+  private claveItem(kind: UrEvaluacionItemKind, id: number): string {
+    return `${kind}:${id}`;
+  }
+
+  private itemDraft(kind: UrEvaluacionItemKind, id: number): UrEvaluacionItemDto | undefined {
+    return this.evaluacionDraft().get(this.claveItem(kind, id));
+  }
+
+  dictamenDe(kind: UrEvaluacionItemKind, id: number): 'CONFORME' | 'OBSERVADO' {
+    return this.itemDraft(kind, id)?.estConformidad ?? 'CONFORME';
+  }
+
+  observacionDe(kind: UrEvaluacionItemKind, id: number): string {
+    return this.itemDraft(kind, id)?.txtObservacion ?? '';
+  }
+
+  subsanableDe(kind: UrEvaluacionItemKind, id: number): boolean {
+    return this.itemDraft(kind, id)?.estSubsanable ?? true;
+  }
+
+  /** Categoría por defecto según el tipo de ítem — el evaluador no elige categoría a mano por fila. */
+  private categoriaDefecto(kind: UrEvaluacionItemKind): 'TECNICA_FISICA' | 'CUALITATIVA' {
+    return kind === 'R1' ? 'CUALITATIVA' : 'TECNICA_FISICA';
+  }
+
+  actualizarDictamen(kind: UrEvaluacionItemKind, id: number, dictamen: 'CONFORME' | 'OBSERVADO') {
+    this.evaluacionDraft.update(mapa => {
+      const nuevo = new Map(mapa);
+      const clave = this.claveItem(kind, id);
+      const actual = nuevo.get(clave);
+      nuevo.set(clave, {
+        id,
+        kind,
+        estConformidad: dictamen,
+        txtObservacion: actual?.txtObservacion,
+        txtCategoria: this.categoriaDefecto(kind),
+        estSubsanable: dictamen === 'OBSERVADO' ? (actual?.estSubsanable ?? true) : undefined,
+      });
+      return nuevo;
+    });
+  }
+
+  actualizarObservacion(kind: UrEvaluacionItemKind, id: number, texto: string) {
+    this.evaluacionDraft.update(mapa => {
+      const nuevo = new Map(mapa);
+      const clave = this.claveItem(kind, id);
+      const actual = nuevo.get(clave);
+      nuevo.set(clave, {
+        id,
+        kind,
+        estConformidad: actual?.estConformidad ?? 'CONFORME',
+        txtObservacion: texto,
+        txtCategoria: this.categoriaDefecto(kind),
+        estSubsanable: actual?.estSubsanable ?? true,
+      });
+      return nuevo;
+    });
+  }
+
+  actualizarSubsanable(kind: UrEvaluacionItemKind, id: number, subsanable: boolean) {
+    this.evaluacionDraft.update(mapa => {
+      const nuevo = new Map(mapa);
+      const clave = this.claveItem(kind, id);
+      const actual = nuevo.get(clave);
+      if (!actual) return mapa;
+      nuevo.set(clave, { ...actual, estSubsanable: subsanable });
+      return nuevo;
+    });
+  }
+
+  /** Cuadro Cualitativo (R1) — un solo veredicto para toda la sección, no por pregunta. */
+  r1Id(): number {
+    return this.rtfService.unSelectedRtfId() ?? 0;
+  }
+  dictamenR1 = computed(() => this.dictamenDe('R1', this.r1Id()));
+  observacionR1 = computed(() => this.observacionDe('R1', this.r1Id()));
+
+  /**
+   * Construye el arreglo completo a enviar: una entrada por cada meta/indicador real (default
+   * Conforme si el evaluador no la tocó, para que la cobertura la cuente sin obligar a hacer
+   * clic en cada fila) más R1 si el evaluador lo usó.
+   */
+  private construirItemsEvaluacion(rtfId: number): UrEvaluacionItemDto[] {
+    const items: UrEvaluacionItemDto[] = [
+      ...this.metas().map(m => this.itemDraft('META', m.id) ?? {
+        id: m.id, kind: 'META' as const, estConformidad: 'CONFORME' as const, txtCategoria: 'TECNICA_FISICA' as const,
+      }),
+      ...this.indicadores().map(i => this.itemDraft('INDICADOR', i.id) ?? {
+        id: i.id, kind: 'INDICADOR' as const, estConformidad: 'CONFORME' as const, txtCategoria: 'TECNICA_FISICA' as const,
+      }),
+    ];
+    const r1 = this.itemDraft('R1', rtfId);
+    if (r1) items.push(r1);
+    return items;
+  }
+
+  /** Reconstruye el borrador desde las filas ya guardadas (`GET .../evaluaciones`), al abrir el expediente. */
+  private cargarEvaluacionUr(rtfId: number) {
+    this.subs.add(
+      this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
+        next: (estado) => {
+          const mapa = new Map<string, UrEvaluacionItemDto>();
+          for (const rev of estado?.revisiones ?? []) {
+            // txt_seccion = UR_{KIND}_{ID}, p. ej. "UR_META_7" o "UR_R1_142" -- KIND nunca lleva
+            // guion bajo, así que no hay ambigüedad al partir.
+            const sinPrefijo = rev.txtSeccion.replace(/^UR_/, '');
+            const separador = sinPrefijo.indexOf('_');
+            if (separador < 0) continue;
+            const kind = sinPrefijo.slice(0, separador) as UrEvaluacionItemKind;
+            const id = Number(sinPrefijo.slice(separador + 1));
+            if (!Number.isFinite(id)) continue;
+            mapa.set(this.claveItem(kind, id), {
+              id,
+              kind,
+              estConformidad: rev.estConformidad,
+              txtObservacion: rev.txtObservacion,
+              txtCategoria: rev.txtCategoria as any,
+              estSubsanable: rev.estSubsanable,
+            });
+          }
+          this.evaluacionDraft.set(mapa);
+        },
+        error: () => { /* silencioso: la pantalla sigue usable sin evaluación previa cargada */ }
+      })
+    );
+  }
+
+  guardarEvaluacion() {
+    const rtfId = this.rtfService.unSelectedRtfId();
+    if (!rtfId) return;
+
+    this.guardandoEvaluacion.set(true);
+    this.subs.add(
+      this.rtfService.guardarEvaluacionUr(rtfId, this.construirItemsEvaluacion(rtfId)).subscribe({
+        next: () => {
+          this.guardandoEvaluacion.set(false);
+          this.toast.success('Evaluación guardada', 'Se registraron las evaluaciones por ítem.');
+          this.cargarEvaluacionUr(rtfId);
+        },
+        error: (err) => {
+          this.guardandoEvaluacion.set(false);
+          this.toast.error('Error', err.error?.mensaje || 'No se pudo guardar la evaluación.');
+        }
+      })
+    );
+  }
+
   // Control de Plazos (Fase 4): RTF vencido, con Carta de Notificación o Carta Notarial en curso.
   enControlDePlazo = computed(() =>
     ['VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfStatus())
@@ -294,6 +452,21 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     return this.evidenciasPorConcepto().get(`INDICADOR:${indicadorId}`) ?? [];
   }
 
+  /**
+   * ADR-014 Parte 4: checklist de admisibilidad derivado de reglas ya existentes (no hay
+   * catálogo administrable en v1) — Anexo 17 congelado, al menos una evidencia PDF, y Acta de
+   * Campo si el expediente ya pasó por verificación (`AUDITADO_CAMPO` en adelante).
+   */
+  checklistAdmisibilidad = computed(() => {
+    const estado = this.rtfStatus();
+    const yaAuditado = estado !== 'EN_REVISION';
+    return [
+      { label: 'Anexo 17 generado', cumple: !!this.cabecera()?.txtStoragePdf },
+      { label: 'Al menos una evidencia PDF adjunta', cumple: this.evidencias().length > 0 },
+      { label: 'Acta de Campo (Anexo 19)', cumple: !yaAuditado || this.actaSubida(), aplica: yaAuditado },
+    ];
+  });
+
   anexo18Empty = computed(() => !this.anexo18());
 
   anexo18FormValido = computed(() => {
@@ -371,6 +544,8 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.nuevaCartaFecNotificacion.set(new Date().toISOString().slice(0, 10));
     this.nuevaCartaDias.set(15);
     this.nuevaCartaArchivo.set(null);
+    this.evaluacionDraft.set(new Map());
+    this.devolverTempranoObservacion.set('');
 
     this.subs.add(
       this.rtfService.loadRtfCompleto(rtfId).subscribe({
@@ -383,6 +558,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
           this.cargarAnexo18(rtfId);
           this.cargarCartas(rtfId);
           this.cargarPlazoReevaluacion(rtfId);
+          this.cargarEvaluacionUr(rtfId);
         },
         error: () => {
           this.loadingCompleto.set(false);
@@ -462,47 +638,67 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Devuelve a la OA desde EN_REVISION/AUDITADO_CAMPO, antes de llegar a IN_REVISION_UN.
-   * ADR-012: ya no hay evaluación por fila que guardar antes de devolver (ver nota en
-   * `estaEnEvaluacionPrevia` más arriba) — se devuelve directo con observación vacía.
+   * ADR-014 Parte 4: `PoliticaEvaluacionUr` (backend) exige cobertura completa antes de Derivar
+   * o Devolver — Devolver además exige al menos una fila Observada con comentario. Se guarda el
+   * borrador actual primero para no depender de que el evaluador haya pulsado "Guardar
+   * Evaluación" por separado; si el guardado falla, no se intenta la transición.
    */
+  private guardarEvaluacionYLuego(rtfId: number, siguiente: () => void, mensajeErrorGuardado: string) {
+    this.subs.add(
+      this.rtfService.guardarEvaluacionUr(rtfId, this.construirItemsEvaluacion(rtfId)).subscribe({
+        next: () => siguiente(),
+        error: (err) => {
+          this.accionEjecutandose.set(false);
+          this.toast.error('Error', err.error?.mensaje || mensajeErrorGuardado);
+        }
+      })
+    );
+  }
+
+  /** Devuelve a la OA desde EN_REVISION/AUDITADO_CAMPO, antes de llegar a IN_REVISION_UN. */
   devolverTemprano() {
     const rtfId = this.rtfService.unSelectedRtfId();
     if (!rtfId) return;
 
     this.accionEjecutandose.set(true);
-    this.subs.add(
-      this.rtfService.devolverTemprano(rtfId, '').subscribe({
-        next: () => {
-          this.accionEjecutandose.set(false);
-          this.toast.warning('Devuelto a la OA', 'RTF devuelto como Observado.');
-          this.volverBandeja();
-        },
-        error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo devolver el RTF.'); }
-      })
-    );
+    this.guardarEvaluacionYLuego(rtfId, () => {
+      this.subs.add(
+        this.rtfService.devolverTemprano(rtfId, this.devolverTempranoObservacion()).subscribe({
+          next: () => {
+            this.accionEjecutandose.set(false);
+            this.toast.warning('Devuelto a la OA', 'RTF devuelto como Observado.');
+            this.volverBandeja();
+          },
+          error: (err) => {
+            this.accionEjecutandose.set(false);
+            this.toast.error('Error', err.error?.mensaje || 'No se pudo devolver el RTF.');
+          }
+        })
+      );
+    }, 'No se pudo guardar la evaluación antes de devolver.');
   }
 
-  /**
-   * Continúa la evaluación desde EN_REVISION/AUDITADO_CAMPO hacia IN_REVISION_UN.
-   * ADR-012: ya no hay evaluación por fila que guardar antes de continuar (ver nota en
-   * `estaEnEvaluacionPrevia` más arriba).
-   */
+  /** Continúa la evaluación desde EN_REVISION/AUDITADO_CAMPO hacia IN_REVISION_UN. */
   continuarEvaluacion() {
     const rtfId = this.rtfService.unSelectedRtfId();
     if (!rtfId) return;
 
     this.accionEjecutandose.set(true);
-    this.subs.add(
-      this.rtfService.derivarUn(rtfId).subscribe({
-        next: () => {
-          this.accionEjecutandose.set(false);
-          this.toast.success('Evaluación continuada', 'El expediente pasó a evaluación final.');
-          this.seleccionarRtf(rtfId);
-        },
-        error: () => { this.accionEjecutandose.set(false); this.toast.error('Error', 'No se pudo continuar la evaluación.'); }
-      })
-    );
+    this.guardarEvaluacionYLuego(rtfId, () => {
+      this.subs.add(
+        this.rtfService.derivarUn(rtfId).subscribe({
+          next: () => {
+            this.accionEjecutandose.set(false);
+            this.toast.success('Evaluación continuada', 'El expediente pasó a evaluación final.');
+            this.seleccionarRtf(rtfId);
+          },
+          error: (err) => {
+            this.accionEjecutandose.set(false);
+            this.toast.error('Error', err.error?.mensaje || 'No se pudo continuar la evaluación.');
+          }
+        })
+      );
+    }, 'No se pudo guardar la evaluación antes de continuar.');
   }
 
   // --- Evidencias, Anexo 18, Aprobar/Rechazar/Devolver (IN_REVISION_UN) ---

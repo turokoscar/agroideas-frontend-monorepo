@@ -15,4 +15,6 @@ export interface RtfCabeceraDto {
   txtLogros?: string;
   txtDificultades?: string;
   txtCambiosPaso?: string;
+  /** ADR-014 Parte 2: Guid (como string) del Anexo 17 congelado en sel-api-archivos, si ya se envió. */
+  txtStoragePdf?: string;
 }

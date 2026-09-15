@@ -161,6 +161,28 @@
               </div>
             }
           </div>
+
+          @if (estaEnEvaluacionPrevia()) {
+            <!-- ADR-014 Parte 4: un solo veredicto para toda la sección R1, no por pregunta. -->
+            <div class="mt-4 pt-4 border-t border-border/60">
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Dictamen de la sección cualitativa (R1)</label>
+              <select
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                [value]="dictamenR1()"
+                (change)="actualizarDictamen('R1', r1Id(), $any($event.target).value)">
+                <option value="CONFORME">Conforme</option>
+                <option value="OBSERVADO">Observar</option>
+              </select>
+              @if (dictamenR1() === 'OBSERVADO') {
+                <textarea
+                  class="mt-2 w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  rows="2"
+                  placeholder="Observación sobre R1 (obligatoria para devolver el RTF)"
+                  [value]="observacionR1()"
+                  (input)="actualizarObservacion('R1', r1Id(), $any($event.target).value)"></textarea>
+              }
+            </div>
+          }
         </div>
 
         <!-- F1 - Gastos Financieros -->
@@ -248,6 +270,30 @@
                       </div>
                     }
                   }
+                  @if (estaEnEvaluacionPrevia()) {
+                    <!-- ADR-014 Parte 4: dictamen por fila. -->
+                    <div class="mt-2 pt-2 border-t border-border/40">
+                      <select
+                        class="w-full rounded-lg border border-border bg-surface-container/20 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                        [value]="dictamenDe('META', m.id)"
+                        (change)="actualizarDictamen('META', m.id, $any($event.target).value)">
+                        <option value="CONFORME">Conforme</option>
+                        <option value="OBSERVADO">Observar</option>
+                      </select>
+                      @if (dictamenDe('META', m.id) === 'OBSERVADO') {
+                        <textarea
+                          class="mt-1.5 w-full rounded-lg border border-border bg-surface-container/20 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                          rows="2"
+                          placeholder="Observación (obligatoria)"
+                          [value]="observacionDe('META', m.id)"
+                          (input)="actualizarObservacion('META', m.id, $any($event.target).value)"></textarea>
+                        <label class="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <input type="checkbox" [checked]="subsanableDe('META', m.id)" (change)="actualizarSubsanable('META', m.id, $any($event.target).checked)" />
+                          Subsanable por la OA
+                        </label>
+                      }
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -292,6 +338,30 @@
                       </div>
                     }
                   }
+                  @if (estaEnEvaluacionPrevia()) {
+                    <!-- ADR-014 Parte 4: dictamen por fila. -->
+                    <div class="mt-2 pt-2 border-t border-border/40">
+                      <select
+                        class="w-full rounded-lg border border-border bg-surface-container/20 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                        [value]="dictamenDe('INDICADOR', ind.id)"
+                        (change)="actualizarDictamen('INDICADOR', ind.id, $any($event.target).value)">
+                        <option value="CONFORME">Conforme</option>
+                        <option value="OBSERVADO">Observar</option>
+                      </select>
+                      @if (dictamenDe('INDICADOR', ind.id) === 'OBSERVADO') {
+                        <textarea
+                          class="mt-1.5 w-full rounded-lg border border-border bg-surface-container/20 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                          rows="2"
+                          placeholder="Observación (obligatoria)"
+                          [value]="observacionDe('INDICADOR', ind.id)"
+                          (input)="actualizarObservacion('INDICADOR', ind.id, $any($event.target).value)"></textarea>
+                        <label class="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <input type="checkbox" [checked]="subsanableDe('INDICADOR', ind.id)" (change)="actualizarSubsanable('INDICADOR', ind.id, $any($event.target).checked)" />
+                          Subsanable por la OA
+                        </label>
+                      }
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -322,6 +392,47 @@
       </div>
 
       @if (estaEnEvaluacionPrevia()) {
+        <!-- ADR-014 Parte 4: guardar la evaluación por ítem, pliego de observaciones y checklist. -->
+        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px] text-primary">rate_review</span>
+              Dictamen de Gabinete
+            </h3>
+            <ui-button
+              appearance="soft"
+              severity="secondary"
+              size="sm"
+              icon="save"
+              [label]="guardandoEvaluacion() ? 'Guardando…' : 'Guardar Evaluación'"
+              [loading]="guardandoEvaluacion()"
+              (onClick)="guardarEvaluacion()" />
+          </div>
+
+          <!-- Checklist de Admisibilidad (derivado de reglas existentes, sin catálogo administrable en v1) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+            @for (item of checklistAdmisibilidad(); track item.label) {
+              @if (item.aplica === undefined || item.aplica) {
+                <div class="flex items-center gap-2 rounded-lg border border-border/60 p-2 text-xs">
+                  <span class="material-symbols-outlined text-[16px]" [class.text-secondary]="item.cumple" [class.text-destructive]="!item.cumple">
+                    {{ item.cumple ? 'check_circle' : 'priority_high' }}
+                  </span>
+                  <span [class.text-muted-foreground]="!item.cumple">{{ item.label }}</span>
+                </div>
+              }
+            }
+          </div>
+
+          @if (pliegoObservaciones()) {
+            <div class="rounded-lg bg-surface-container/40 p-3">
+              <p class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Pliego de Observaciones</p>
+              <p class="text-xs text-foreground whitespace-pre-wrap">{{ pliegoObservaciones() }}</p>
+            </div>
+          } @else {
+            <p class="text-xs text-muted-foreground">Sin observaciones registradas — marque "Observar" en las filas de T1/R2 o en R1 y guarde la evaluación.</p>
+          }
+        </div>
+
         <!-- Verificación de Campo (Anexo 19) — opcional, ADR-010 -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -562,13 +673,30 @@
       <!-- Sticky Footer Actions -->
       <div class="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-container-lowest border border-border p-4 shadow-lg">
         @if (estaEnEvaluacionPrevia()) {
-          <div class="text-sm text-muted-foreground">
-            Verificación de campo opcional (Anexo 19) · puede continuar directo o devolver a la OA
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <ui-button appearance="soft" severity="secondary" icon="undo" label="Devolver a OA (Observado)" [disabled]="accionEjecutandose()" (onClick)="devolverTemprano()" />
-            <ui-button icon="send" label="Continuar Evaluación" [disabled]="accionEjecutandose()" (onClick)="continuarEvaluacion()" />
-          </div>
+          @if (showDevolverTempranoForm()) {
+            <div class="w-full">
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                Fundamentación general (opcional — el pliego de observaciones por ítem ya se envía a la OA)
+              </label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                rows="2"
+                [value]="devolverTempranoObservacion()"
+                (input)="devolverTempranoObservacion.set($any($event.target).value)"></textarea>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <ui-button appearance="soft" severity="secondary" label="Cancelar" (onClick)="toggleDevolverTempranoForm()" />
+                <ui-button severity="danger" icon="undo" label="Confirmar Devolución" [disabled]="accionEjecutandose()" (onClick)="devolverTemprano()" />
+              </div>
+            </div>
+          } @else {
+            <div class="text-sm text-muted-foreground">
+              Verificación de campo opcional (Anexo 19) · puede continuar directo o devolver a la OA
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <ui-button appearance="soft" severity="secondary" icon="undo" label="Devolver a OA (Observado)" [disabled]="accionEjecutandose()" (onClick)="toggleDevolverTempranoForm()" />
+              <ui-button icon="send" label="Continuar Evaluación" [disabled]="accionEjecutandose()" (onClick)="continuarEvaluacion()" />
+            </div>
+          }
         } @else if (enControlDePlazo()) {
           <div class="text-sm text-muted-foreground">
             RTF en control de plazos · registre la carta correspondiente arriba

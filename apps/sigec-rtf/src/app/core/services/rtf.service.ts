@@ -156,6 +156,8 @@ export class RtfService {
   sincronizarGastosF1UN = (rtfId: number) => this.unService.sincronizarGastosF1(rtfId);
   uploadActaCampo = (rtfId: number, archivo: File) => this.unService.uploadActaCampo(rtfId, archivo);
   guardarEvaluacionUr = (rtfId: number, items: UrEvaluacionItemDto[]) => this.unService.guardarEvaluacionUr(rtfId, items);
+  obtenerEvaluacionUr = (rtfId: number) => this.unService.obtenerEvaluacionUr(rtfId);
+  pliegoObservaciones = this.unService.pliegoObservaciones;
   derivarUn = (rtfId: number) => this.unService.derivarUn(rtfId);
   devolverTemprano = (rtfId: number, observacion: string) => this.unService.devolverTemprano(rtfId, observacion);
   aprobarUn = (rtfId: number, observacion?: string) => this.unService.aprobarUn(rtfId, observacion);

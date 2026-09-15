@@ -9,6 +9,7 @@ import {
   UrCompletoDto,
   UrEvaluacionItemDto,
   UrEvaluacionRequestDto,
+  EvaluacionUrEstadoDto,
   DashboardUnData,
   ApiResponse,
   EvidenceDto,
@@ -57,8 +58,10 @@ export class UnGabineteService {
 
   rtfStatus = computed(() => this.cabeceraSeleccionada()?.estRtf ?? 'PENDIENTE');
 
-  // Verificación de campo (Anexo 19, opcional) sobre el RTF seleccionado.
+  // ADR-014 Parte 4: evaluación por ítem (T1/R2/R1) del RTF seleccionado, acumulada en memoria
+  // antes de guardar, y el pliego de observaciones que arma el backend tras guardar/consultar.
   urEvaluacionItems = signal<UrEvaluacionItemDto[]>([]);
+  pliegoObservaciones = signal<string>('');
   urActaCampoArchivo = signal<File | null>(null);
 
   // Anexo 18 - Informe de Comprobación (registrado por la UN, B-012).
@@ -210,6 +213,18 @@ export class UnGabineteService {
       }),
       catchError(err => {
         console.error('Error saving evaluation', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** ADR-014 Parte 4: filas ya guardadas + pliego de observaciones ya armado, sin transicionar estado. */
+  obtenerEvaluacionUr(rtfId: number) {
+    return this.http.get<ApiResponse<EvaluacionUrEstadoDto>>(`${this.apiUrl}/rtfs/${rtfId}/evaluaciones`).pipe(
+      map(res => res.datos),
+      tap(estado => this.pliegoObservaciones.set(estado?.pliegoObservaciones ?? '')),
+      catchError(err => {
+        console.error('Error al obtener la evaluación UR', err);
         return throwError(() => err);
       })
     );
