@@ -286,11 +286,14 @@ export class OaRtfService {
     );
   }
 
-  uploadEvidencia(rtfId: number, ideConcepto: number, tipConcepto: string, archivo: File) {
+  uploadEvidencia(rtfId: number, ideConcepto: number, tipConcepto: string, archivo: File, etiqueta?: string) {
     const formData = new FormData();
     formData.append('ideConcepto', ideConcepto.toString());
     formData.append('tipConcepto', tipConcepto);
     formData.append('archivo', archivo);
+    if (etiqueta) {
+      formData.append('etiqueta', etiqueta);
+    }
     return this.http.post<ApiResponse<EvidenceDto>>(`${this.apiUrl}/rtfs/${rtfId}/evidencias`, formData).pipe(
       map(res => {
         if (res.datos) {

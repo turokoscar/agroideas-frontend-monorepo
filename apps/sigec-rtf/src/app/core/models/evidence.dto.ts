@@ -7,5 +7,7 @@ export interface EvidenceDto {
   tipConcepto: string;
   ideArchivo: string;
   txtNombreArchivo?: string;
+  /** ADR-014 Parte 6 (Fase 1): nombre libre dado por la OA, usado en "Informes remitidos" cuando existe. */
+  txtEtiqueta?: string;
   fecRegistro?: string;
 }

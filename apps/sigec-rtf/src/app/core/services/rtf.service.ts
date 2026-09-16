@@ -140,7 +140,7 @@ export class RtfService {
   updateRtf = (rtfId: number, data: Partial<RtfCabeceraDto>) => this.oaService.updateRtf(rtfId, data);
   sincronizarGastosF1 = (rtfId: number) => this.oaService.sincronizarGastosF1(rtfId);
   enviarRtf = (rtfId: number) => this.oaService.enviarRtf(rtfId);
-  uploadEvidencia = (rtfId: number, ideConcepto: number, tipConcepto: string, archivo: File) => this.oaService.uploadEvidencia(rtfId, ideConcepto, tipConcepto, archivo);
+  uploadEvidencia = (rtfId: number, ideConcepto: number, tipConcepto: string, archivo: File, etiqueta?: string) => this.oaService.uploadEvidencia(rtfId, ideConcepto, tipConcepto, archivo, etiqueta);
   downloadEvidencia = (evidenciaId: number) => this.oaService.downloadEvidencia(evidenciaId);
   removeEvidencia = (evidenciaId: number) => this.oaService.removeEvidencia(evidenciaId);
   descargarAnexo17 = (rtfId: number) => this.oaService.descargarAnexo17(rtfId);

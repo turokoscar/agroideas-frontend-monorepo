@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { RtfService, RtfCabeceraDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, TableColumn } from '@agroideas/ui';
+import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, TIPO_FOTOGRAFIA_GEORREFERENCIADA, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
 
 @Component({
   selector: 'app-oa-registro',
@@ -211,13 +212,14 @@ export class OaRegistroComponent implements OnInit {
   }
 
   // Tab state
-  activeTab = signal<'R1' | 'T1' | 'R2' | 'F1' | 'ANEXO17'>('R1');
+  activeTab = signal<'R1' | 'T1' | 'R2' | 'F1' | 'ANEXO17' | 'ANEXOS'>('R1');
 
   tabs = [
     { key: 'R1' as const, label: 'R1 - Información Cualitativa' },
     { key: 'T1' as const, label: 'T1 - Metas Físicas' },
     { key: 'R2' as const, label: 'R2 - Indicadores' },
     { key: 'F1' as const, label: 'F1 - Consolidado Financiero' },
+    { key: 'ANEXOS' as const, label: 'Anexos' },
     { key: 'ANEXO17' as const, label: 'Anexo 17' }
   ];
 
@@ -252,6 +254,113 @@ export class OaRegistroComponent implements OnInit {
   /** Solo informativo: el circuito de firma es físico/externo al sistema (decisión ya tomada,
    * ver ADR-014), así que esto nunca bloquea el envío -- únicamente recuerda el paso a la OA. */
   anexo17FirmadoPendiente = computed(() => this.isEditable() && this.anexo17FirmadosAdjuntos().length === 0);
+
+  // Anexos (ADR-014 Parte 6, Fase 3): informes técnicos y documentos sustentatorios del Instructivo AGROIDEAS
+  tiposInforme = TIPOS_INFORME;
+  tiposSustento = TIPOS_SUSTENTO;
+  tipoOtros = TIPO_OTROS;
+  etiquetaTipoDocumento = etiquetaTipoDocumento;
+
+  anexoTipoSeleccionado = signal<string>(TIPOS_INFORME[0].value);
+  anexoEtiqueta = signal('');
+  anexoPendingFile = signal<{ name: string; size: number; file: File } | null>(null);
+  subiendoAnexo = signal(false);
+
+  anexoEsOtros = computed(() => this.anexoTipoSeleccionado() === this.tipoOtros.value);
+  anexoAceptaImagen = computed(() => this.anexoTipoSeleccionado() === TIPO_FOTOGRAFIA_GEORREFERENCIADA);
+
+  /** Todo lo que no sea sustento de una meta/indicador puntual, el acta de campo (sube la UN) o la copia firmada del propio Anexo 17. */
+  anexosSubidos = computed(() =>
+    this.rtfService.evidencias().filter(e => esDocumentoAnexo(e.tipConcepto))
+  );
+
+  anexosInformes = computed(() =>
+    this.anexosSubidos().filter(e => this.tiposInforme.some(t => t.value === e.tipConcepto))
+  );
+  anexosSustento = computed(() =>
+    this.anexosSubidos().filter(e => this.tiposSustento.some(t => t.value === e.tipConcepto) || e.tipConcepto === this.tipoOtros.value)
+  );
+
+  onAnexoFileDrop(event: DragEvent) {
+    event.preventDefault();
+    if (event.dataTransfer?.files) {
+      this.processAnexoFile(event.dataTransfer.files);
+    }
+  }
+
+  onAnexoFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      this.processAnexoFile(input.files);
+      input.value = '';
+    }
+  }
+
+  private processAnexoFile(files: FileList) {
+    const f = files[0];
+    if (!f) return;
+    const tiposValidos = this.anexoAceptaImagen()
+      ? ['application/pdf', 'image/jpeg', 'image/png']
+      : ['application/pdf'];
+    if (!tiposValidos.includes(f.type)) {
+      this.toast.error('Formato no permitido', this.anexoAceptaImagen() ? 'Se admite PDF, JPG o PNG.' : 'Solo se admiten archivos PDF.');
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      this.toast.error('Archivo muy grande', 'El archivo no debe superar los 10 MB.');
+      return;
+    }
+    this.anexoPendingFile.set({ name: f.name, size: f.size, file: f });
+  }
+
+  removeAnexoPendingFile() {
+    this.anexoPendingFile.set(null);
+  }
+
+  /** El visor (`ui-pdf-viewer`) solo sabe renderizar PDF -- una fotografía georreferenciada se descarga directo en vez de "verse" ahí. */
+  esImagen(filename?: string): boolean {
+    return !!filename && /\.(jpe?g|png)$/i.test(filename);
+  }
+
+  descargarAnexo(evidenciaId: number, filename: string) {
+    this.rtfService.downloadEvidencia(evidenciaId).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.toast.error('Error', 'No se pudo descargar el archivo.')
+    });
+  }
+
+  subirAnexo() {
+    const rtfId = this.rtfService.rtfId();
+    const pendiente = this.anexoPendingFile();
+    if (!rtfId || !pendiente) return;
+    if (this.anexoEsOtros() && !this.anexoEtiqueta().trim()) {
+      this.toast.error('Falta el nombre del documento', 'Para "Otros" debes indicar cómo se llama el documento.');
+      return;
+    }
+
+    this.subiendoAnexo.set(true);
+    const tipo = this.anexoTipoSeleccionado();
+    const etiqueta = this.anexoEtiqueta().trim() || undefined;
+    this.rtfService.uploadEvidencia(rtfId, 0, tipo, pendiente.file, etiqueta).subscribe({
+      next: () => {
+        this.subiendoAnexo.set(false);
+        this.anexoPendingFile.set(null);
+        this.anexoEtiqueta.set('');
+        this.toast.success('Anexo adjuntado', 'El documento se registró correctamente.');
+      },
+      error: err => {
+        this.subiendoAnexo.set(false);
+        this.toast.error('Error', `No se pudo adjuntar el documento: ${err.message}`);
+      }
+    });
+  }
 
   // Action states
   isSaving = signal(false);
