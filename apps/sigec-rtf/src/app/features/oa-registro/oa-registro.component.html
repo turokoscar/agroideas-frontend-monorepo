@@ -545,16 +545,147 @@
         </div>
       }
 
+      <!-- Anexo 17 -->
+      @if (activeTab() === 'ANEXO17') {
+        <div class="space-y-6 animate-fade-in">
+          <div class="flex items-start gap-3 text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
+            <span class="material-symbols-outlined text-[20px] shrink-0">info</span>
+            <div class="space-y-1">
+              <p class="font-bold text-sm">Reporte Técnico Financiero (Anexo N° 17)</p>
+              <p>Revisa la vista previa con los datos que llevas registrados, descárgala para su firma física y luego adjunta la copia ya firmada. Al enviar el RTF, el sistema genera y conserva la versión oficial con la que se envía.</p>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest border border-border rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-[32px] text-primary">picture_as_pdf</span>
+              <div>
+                <p class="text-sm font-bold text-foreground">Anexo 17 - Reporte Técnico Financiero</p>
+                <p class="text-xs text-muted-foreground">
+                  {{ isEditable() ? 'Vista previa generada con el avance actual (aún no enviado).' : 'Documento oficial generado al enviar el RTF.' }}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="w-full sm:w-auto rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+              [disabled]="cargandoAnexo17() || !rtfService.rtfId()"
+              (click)="verAnexo17()"
+            >
+              @if (cargandoAnexo17()) {
+                <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+              } @else {
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+              }
+              Ver / Descargar Anexo 17
+            </button>
+          </div>
+
+          <!-- Adjuntar copia firmada -->
+          <div class="bg-surface-container-lowest border border-border rounded-2xl p-5 shadow-sm space-y-4">
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Adjuntar Anexo 17 firmado</h4>
+              <p class="text-xs text-muted-foreground mt-1">Una vez firmado físicamente el documento descargado, adjunta aquí la copia escaneada en PDF.</p>
+            </div>
+
+            @if (anexo17FirmadosAdjuntos().length > 0) {
+              <div class="space-y-2">
+                @for (ev of anexo17FirmadosAdjuntos(); track ev.ideEvidencia) {
+                  <div class="flex items-center gap-2 rounded-xl border border-border bg-emerald-50/50 px-4 py-3 text-sm">
+                    <span class="material-symbols-outlined text-[20px] text-emerald-600">verified</span>
+                    <button
+                      class="flex-1 truncate text-left hover:underline text-foreground font-medium"
+                      (click)="viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'Anexo17_firmado.pdf')"
+                    >
+                      {{ ev.txtNombreArchivo ?? 'Anexo 17 firmado' }}
+                    </button>
+                    <span class="text-xs text-muted-foreground font-bold mr-2">PDF</span>
+                    @if (isEditable()) {
+                      <button
+                        class="rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+                        (click)="removeEvidencia(ev.ideEvidencia)"
+                        type="button"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (isEditable()) {
+              <div
+                class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-all hover:border-primary hover:bg-primary/10 shadow-sm"
+                tabindex="0" (keydown.enter)="anexo17FileInput.click()" (click)="anexo17FileInput.click()"
+                (dragover)="$event.preventDefault()"
+                (drop)="onAnexo17FileDrop($event)"
+              >
+                <span class="material-symbols-outlined text-[36px] text-primary">cloud_upload</span>
+                <div class="text-sm font-bold text-foreground">Presiona aquí o arrastra el Anexo 17 firmado</div>
+                <div class="text-xs text-muted-foreground font-semibold">Solo archivos PDF (Hasta 10 MB)</div>
+                <input
+                  #anexo17FileInput
+                  type="file"
+                  accept="application/pdf"
+                  class="hidden"
+                  (change)="onAnexo17FileSelect($event)"
+                />
+              </div>
+
+              @if (anexo17PendingFile(); as pendiente) {
+                <div class="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+                  <span class="material-symbols-outlined text-[18px] text-primary">description</span>
+                  <span class="flex-1 truncate text-foreground font-medium">{{ pendiente.name }}</span>
+                  <span class="text-xs text-muted-foreground mr-2 font-bold">{{ sizeKB(pendiente.size) }} KB</span>
+                  <button
+                    class="rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+                    (click)="removeAnexo17PendingFile()"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                  <button
+                    class="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    [disabled]="subiendoAnexo17Firmado()"
+                    (click)="subirAnexo17Firmado()"
+                    type="button"
+                  >
+                    @if (subiendoAnexo17Firmado()) {
+                      <span class="material-symbols-outlined animate-spin text-[14px]">progress_activity</span>
+                    }
+                    Adjuntar
+                  </button>
+                </div>
+              }
+            } @else {
+              <p class="text-xs text-muted-foreground italic">El RTF no puede modificarse mientras está en revisión o ya fue evaluado por AGROIDEAS.</p>
+            }
+          </div>
+        </div>
+      }
+
     </div>
   </div>
 </div>
 
 <!-- Floating Action Dock -->
 <div class="sticky bottom-6 mt-10 z-40 max-w-5xl mx-auto px-6 py-4 bg-background/80 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-  <div class="flex items-center gap-2 text-xs text-muted-foreground">
-    <span class="material-symbols-outlined text-[16px] text-primary">info</span>
-    <span>Complete todos los campos requeridos para habilitar el envío del reporte.</span>
-  </div>
+  @if (anexo17FirmadoPendiente()) {
+    <button
+      type="button"
+      class="flex items-center gap-2 text-xs text-amber-700 hover:underline text-left"
+      (click)="activeTab.set('ANEXO17')"
+    >
+      <span class="material-symbols-outlined text-[16px] text-amber-600">warning</span>
+      <span>Recuerda descargar, firmar y adjuntar el Anexo 17 antes de enviar el reporte.</span>
+    </button>
+  } @else {
+    <div class="flex items-center gap-2 text-xs text-muted-foreground">
+      <span class="material-symbols-outlined text-[16px] text-primary">info</span>
+      <span>Complete todos los campos requeridos para habilitar el envío del reporte.</span>
+    </div>
+  }
   <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
     <button
       class="w-full sm:w-auto rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"

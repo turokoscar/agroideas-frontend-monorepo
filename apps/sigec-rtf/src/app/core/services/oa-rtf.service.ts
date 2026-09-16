@@ -316,6 +316,23 @@ export class OaRtfService {
     );
   }
 
+  /**
+   * ADR-014 Parte 2: antes del envío devuelve una vista previa reconstruida al vuelo con los
+   * datos actuales (aún no hay `TxtStoragePdf`); tras el envío sirve el PDF congelado con el que
+   * se envió el RTF. `DocumentoController.DescargarAnexo17` distingue ambos casos con el header
+   * `X-Documento-Origen`, que no hace falta leer aquí.
+   */
+  descargarAnexo17(rtfId: number) {
+    return this.http.get(`${this.apiUrl}/rtfs/${rtfId}/documentos/anexo17`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(err => {
+        console.error('Error downloading Anexo 17', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
   removeEvidencia(evidenciaId: number) {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/evidencias/${evidenciaId}`).pipe(
       map(res => {

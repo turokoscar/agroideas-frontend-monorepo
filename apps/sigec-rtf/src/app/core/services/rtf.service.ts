@@ -143,6 +143,7 @@ export class RtfService {
   uploadEvidencia = (rtfId: number, ideConcepto: number, tipConcepto: string, archivo: File) => this.oaService.uploadEvidencia(rtfId, ideConcepto, tipConcepto, archivo);
   downloadEvidencia = (evidenciaId: number) => this.oaService.downloadEvidencia(evidenciaId);
   removeEvidencia = (evidenciaId: number) => this.oaService.removeEvidencia(evidenciaId);
+  descargarAnexo17 = (rtfId: number) => this.oaService.descargarAnexo17(rtfId);
   loadActividadReciente = () => this.oaService.loadActividadReciente();
   loadDisbursements = (rtfId: number) => this.oaService.loadDisbursements(rtfId);
   updateMeta = (index: number, patch: Partial<MetaFisicaDto>) => this.oaService.updateMeta(index, patch);

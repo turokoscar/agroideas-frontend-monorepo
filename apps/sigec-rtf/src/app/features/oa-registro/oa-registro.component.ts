@@ -211,13 +211,14 @@ export class OaRegistroComponent implements OnInit {
   }
 
   // Tab state
-  activeTab = signal<'R1' | 'T1' | 'R2' | 'F1'>('R1');
+  activeTab = signal<'R1' | 'T1' | 'R2' | 'F1' | 'ANEXO17'>('R1');
 
   tabs = [
     { key: 'R1' as const, label: 'R1 - Información Cualitativa' },
     { key: 'T1' as const, label: 'T1 - Metas Físicas' },
     { key: 'R2' as const, label: 'R2 - Indicadores' },
-    { key: 'F1' as const, label: 'F1 - Consolidado Financiero' }
+    { key: 'F1' as const, label: 'F1 - Consolidado Financiero' },
+    { key: 'ANEXO17' as const, label: 'Anexo 17' }
   ];
 
   // Modal state
@@ -237,6 +238,20 @@ export class OaRegistroComponent implements OnInit {
   pdfViewerFilename = signal<string | null>(null);
   pdfViewerFileUrl = signal<string | null>(null);
   pdfViewerDownloadUrl = signal<string | null>(null);
+
+  // Anexo 17 (vista previa/descarga + adjunto de la copia firmada)
+  cargandoAnexo17 = signal(false);
+  anexo17PendingFile = signal<{ name: string; size: number; file: File } | null>(null);
+  subiendoAnexo17Firmado = signal(false);
+
+  /** ideConcepto = 0, mismo convenio que ACTA_CAMPO (UnidadRegionalServicio.cs) para evidencia de RTF que no está ligada a una meta/indicador puntual. */
+  anexo17FirmadosAdjuntos = computed(() =>
+    this.rtfService.evidencias().filter(e => e.tipConcepto === 'ANEXO17_FIRMADO')
+  );
+
+  /** Solo informativo: el circuito de firma es físico/externo al sistema (decisión ya tomada,
+   * ver ADR-014), así que esto nunca bloquea el envío -- únicamente recuerda el paso a la OA. */
+  anexo17FirmadoPendiente = computed(() => this.isEditable() && this.anexo17FirmadosAdjuntos().length === 0);
 
   // Action states
   isSaving = signal(false);
@@ -545,6 +560,83 @@ export class OaRegistroComponent implements OnInit {
     this.pdfViewerOpen.set(false);
     this.pdfViewerFileUrl.set(null);
     this.pdfViewerDownloadUrl.set(null);
+  }
+
+  verAnexo17() {
+    const rtfId = this.rtfService.rtfId();
+    if (!rtfId) {
+      this.toast.error('Guarda un borrador primero', 'Necesitas registrar al menos un avance antes de generar la vista previa del Anexo 17.');
+      return;
+    }
+    this.pdfViewerFilename.set(`Anexo17_RTF_${rtfId}.pdf`);
+    this.pdfViewerOpen.set(true);
+    this.cargandoAnexo17.set(true);
+    this.rtfService.descargarAnexo17(rtfId).subscribe({
+      next: blob => {
+        this.cargandoAnexo17.set(false);
+        const url = URL.createObjectURL(blob);
+        this.pdfViewerFileUrl.set(url);
+        this.pdfViewerDownloadUrl.set(url);
+      },
+      error: () => {
+        this.cargandoAnexo17.set(false);
+        this.toast.error('Error', 'No se pudo generar la vista previa del Anexo 17.');
+        this.pdfViewerFileUrl.set(null);
+        this.pdfViewerDownloadUrl.set(null);
+      }
+    });
+  }
+
+  onAnexo17FileDrop(event: DragEvent) {
+    event.preventDefault();
+    if (event.dataTransfer?.files) {
+      this.processAnexo17File(event.dataTransfer.files);
+    }
+  }
+
+  onAnexo17FileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      this.processAnexo17File(input.files);
+      input.value = '';
+    }
+  }
+
+  private processAnexo17File(files: FileList) {
+    const f = files[0];
+    if (!f) return;
+    if (f.type !== 'application/pdf') {
+      this.toast.error('Formato no permitido', 'Solo se admite el Anexo 17 firmado en formato PDF.');
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      this.toast.error('Archivo muy grande', 'El PDF no debe superar los 10 MB.');
+      return;
+    }
+    this.anexo17PendingFile.set({ name: f.name, size: f.size, file: f });
+  }
+
+  removeAnexo17PendingFile() {
+    this.anexo17PendingFile.set(null);
+  }
+
+  subirAnexo17Firmado() {
+    const rtfId = this.rtfService.rtfId();
+    const pendiente = this.anexo17PendingFile();
+    if (!rtfId || !pendiente) return;
+
+    this.subiendoAnexo17Firmado.set(true);
+    this.rtfService.uploadEvidencia(rtfId, 0, 'ANEXO17_FIRMADO', pendiente.file).subscribe({
+      next: () => {
+        this.subiendoAnexo17Firmado.set(false);
+        this.anexo17PendingFile.set(null);
+        this.toast.success('Anexo 17 firmado adjuntado', 'La copia firmada se registró correctamente.');
+      },
+      error: err => {
+        this.subiendoAnexo17Firmado.set(false);
+        this.toast.error('Error', `No se pudo adjuntar el Anexo 17 firmado: ${err.message}`);
+      }
+    });
   }
 
   /**
