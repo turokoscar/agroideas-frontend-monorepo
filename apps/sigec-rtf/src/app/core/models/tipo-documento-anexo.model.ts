@@ -18,22 +18,21 @@ export const TIPOS_INFORME: TipoDocumentoAnexoOption[] = [
   { value: 'INFORME_CIERRE_PNT', label: 'Informe de cierre del PNT' }
 ];
 
+/**
+ * ADR-014 Parte 6 (Fase 4, reorientada 15/09/2026): se retiraron FACTURA_RHE, VOUCHER_CONTRAPARTIDA,
+ * FOTOGRAFIA_GEORREFERENCIADA y PLANILLA_PRODUCCION -- ya se capturan por otro camino (comprobantes
+ * de gasto sincronizados desde KOFIX en el tab F1, o evidencia de meta/indicador en T1/R2) y no hay
+ * caso excepcional que justifique ofrecerlas también aquí: para eso está "Otros".
+ */
 export const TIPOS_SUSTENTO: TipoDocumentoAnexoOption[] = [
   { value: 'ACTA_ENTREGA_BIENES_OBRA', label: 'Acta de entrega de bienes / recepción de obra' },
   { value: 'CONTRATO', label: 'Contrato con proveedor o asistente técnico' },
-  { value: 'FACTURA_RHE', label: 'Factura o Recibo por Honorarios' },
-  { value: 'VOUCHER_CONTRAPARTIDA', label: 'Voucher de transferencia (contrapartida OA)' },
   { value: 'GUIA_REMISION', label: 'Guía de remisión' },
   { value: 'ACTA_CONFORMIDAD', label: 'Acta de conformidad de recepción' },
-  { value: 'ACTA_ENTREGA_RECEPCION', label: 'Acta de entrega y recepción (proveedor / OA / socio)' },
-  { value: 'FOTOGRAFIA_GEORREFERENCIADA', label: 'Fotografía georreferenciada' },
-  { value: 'PLANILLA_PRODUCCION', label: 'Planilla de producción / comercialización' }
+  { value: 'ACTA_ENTREGA_RECEPCION', label: 'Acta de entrega y recepción (proveedor / OA / socio)' }
 ];
 
 export const TIPO_OTROS: TipoDocumentoAnexoOption = { value: 'OTROS', label: 'Otros' };
-
-/** Único valor que además de PDF admite JPG/PNG (ver RtfCabeceraServicio.RegistrarEvidenciaAsync). */
-export const TIPO_FOTOGRAFIA_GEORREFERENCIADA = 'FOTOGRAFIA_GEORREFERENCIADA';
 
 const TODOS_LOS_LABELS = new Map(
   [...TIPOS_INFORME, ...TIPOS_SUSTENTO, TIPO_OTROS].map(o => [o.value, o.label])

@@ -672,7 +672,31 @@
             <span class="material-symbols-outlined text-[20px] shrink-0">info</span>
             <div class="space-y-1">
               <p class="font-bold text-sm">Documentación de sustento e informes técnicos</p>
-              <p>El Instructivo AGROIDEAS pide acompañar el Anexo 17 con informes técnicos (aparecen en "Informes remitidos" de la carátula) y documentos de sustento (contratos, facturas, actas, fotografías, etc.). Adjúntalos aquí según corresponda.</p>
+              <p>El Instructivo AGROIDEAS pide acompañar el Anexo 17 con informes técnicos (aparecen en "Informes remitidos" de la carátula) y documentos de sustento como contratos, guías de remisión y actas. Las facturas/comprobantes de pago ya se sincronizan con cada gasto en el tab "F1 - Consolidado Financiero", y las fotografías o documentos que evidencian el cumplimiento de una meta o indicador se adjuntan directamente en los tabs "T1" y "R2" — no hace falta duplicarlos aquí.</p>
+            </div>
+          </div>
+
+          <!-- Checklist informativo (ADR-014 Parte 6, Fase 4 reorientada): nunca bloquea el envío del RTF.
+               Solo cubre Informes técnicos -- los documentos sustentatorios (facturas/RH, vouchers de
+               contrapartida) ya llegan adjuntos por gasto vía Gastos F1/KOFIX, y la evidencia de
+               cumplimiento de metas/indicadores (fotografías, planillas) ya se adjunta por fila en T1/R2;
+               un checklist a nivel de RTF para esos dos grupos duplicaría mecanismos que ya existen. -->
+          <div class="bg-surface-container-lowest border border-border rounded-2xl p-5 shadow-sm space-y-4">
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Checklist del Instructivo AGROIDEAS</h4>
+              <p class="text-xs text-muted-foreground mt-1">Solo informativo — no impide enviar el RTF. Revisa qué informes técnicos ya adjuntaste.</p>
+            </div>
+
+            <div class="space-y-2 max-w-md">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Informes técnicos</span>
+              @for (item of checklistInformes(); track item.tipo.value) {
+                <div class="flex items-center gap-2 text-sm">
+                  <span class="material-symbols-outlined text-[18px]" [class.text-emerald-600]="item.cumple" [class.text-muted-foreground]="!item.cumple">
+                    {{ item.cumple ? 'check_circle' : 'radio_button_unchecked' }}
+                  </span>
+                  <span [class.text-foreground]="item.cumple" [class.text-muted-foreground]="!item.cumple">{{ item.tipo.label }}</span>
+                </div>
+              }
             </div>
           </div>
 
@@ -726,13 +750,11 @@
               >
                 <span class="material-symbols-outlined text-[36px] text-primary">cloud_upload</span>
                 <div class="text-sm font-bold text-foreground">Presiona aquí o arrastra el documento</div>
-                <div class="text-xs text-muted-foreground font-semibold">
-                  {{ anexoAceptaImagen() ? 'PDF, JPG o PNG (Hasta 10 MB)' : 'Solo archivos PDF (Hasta 10 MB)' }}
-                </div>
+                <div class="text-xs text-muted-foreground font-semibold">Solo archivos PDF (Hasta 10 MB)</div>
                 <input
                   #anexoFileInput
                   type="file"
-                  [attr.accept]="anexoAceptaImagen() ? 'application/pdf,image/jpeg,image/png' : 'application/pdf'"
+                  accept="application/pdf"
                   class="hidden"
                   (change)="onAnexoFileSelect($event)"
                 />
@@ -778,7 +800,7 @@
                 <span class="material-symbols-outlined text-[20px] text-emerald-600">description</span>
                 <button
                   class="flex-1 truncate text-left hover:underline text-foreground font-medium"
-                  (click)="esImagen(ev.txtNombreArchivo) ? descargarAnexo(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento') : viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento.pdf')"
+                  (click)="viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento.pdf')"
                 >
                   {{ etiquetaTipoDocumento(ev.tipConcepto) }}: {{ ev.txtEtiqueta ?? ev.txtNombreArchivo }}
                 </button>
@@ -801,7 +823,7 @@
                 <span class="material-symbols-outlined text-[20px] text-muted-foreground">attach_file</span>
                 <button
                   class="flex-1 truncate text-left hover:underline text-foreground font-medium"
-                  (click)="esImagen(ev.txtNombreArchivo) ? descargarAnexo(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento') : viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento.pdf')"
+                  (click)="viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento.pdf')"
                 >
                   {{ etiquetaTipoDocumento(ev.tipConcepto) }}: {{ ev.txtEtiqueta ?? ev.txtNombreArchivo }}
                 </button>

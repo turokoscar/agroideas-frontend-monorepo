@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { RtfService, RtfCabeceraDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, TableColumn } from '@agroideas/ui';
-import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, TIPO_FOTOGRAFIA_GEORREFERENCIADA, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
+import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
 
 @Component({
   selector: 'app-oa-registro',
@@ -267,7 +267,6 @@ export class OaRegistroComponent implements OnInit {
   subiendoAnexo = signal(false);
 
   anexoEsOtros = computed(() => this.anexoTipoSeleccionado() === this.tipoOtros.value);
-  anexoAceptaImagen = computed(() => this.anexoTipoSeleccionado() === TIPO_FOTOGRAFIA_GEORREFERENCIADA);
 
   /** Todo lo que no sea sustento de una meta/indicador puntual, el acta de campo (sube la UN) o la copia firmada del propio Anexo 17. */
   anexosSubidos = computed(() =>
@@ -279,6 +278,19 @@ export class OaRegistroComponent implements OnInit {
   );
   anexosSustento = computed(() =>
     this.anexosSubidos().filter(e => this.tiposSustento.some(t => t.value === e.tipConcepto) || e.tipConcepto === this.tipoOtros.value)
+  );
+
+  /**
+   * ADR-014 Parte 6 (Fase 4, reorientada): checklist puramente informativo -- nunca bloquea
+   * "Enviar RTF". Solo cubre la familia Informes: los documentos sustentatorios (facturas/RH,
+   * vouchers de contrapartida) ya llegan adjuntos por gasto vía la sincronización de Gastos F1
+   * desde KOFIX (RtfGastoF1Dto.IdeArchivo), y la evidencia de cumplimiento de metas/indicadores
+   * (fotografías, planillas) ya se adjunta por fila en los tabs T1/R2 -- un checklist de
+   * "documentos sustentatorios" a nivel de RTF duplicaría mecanismos que ya existen y confundiría
+   * más de lo que ayuda.
+   */
+  checklistInformes = computed(() =>
+    this.tiposInforme.map(tipo => ({ tipo, cumple: this.anexosSubidos().some(e => e.tipConcepto === tipo.value) }))
   );
 
   onAnexoFileDrop(event: DragEvent) {
@@ -299,11 +311,8 @@ export class OaRegistroComponent implements OnInit {
   private processAnexoFile(files: FileList) {
     const f = files[0];
     if (!f) return;
-    const tiposValidos = this.anexoAceptaImagen()
-      ? ['application/pdf', 'image/jpeg', 'image/png']
-      : ['application/pdf'];
-    if (!tiposValidos.includes(f.type)) {
-      this.toast.error('Formato no permitido', this.anexoAceptaImagen() ? 'Se admite PDF, JPG o PNG.' : 'Solo se admiten archivos PDF.');
+    if (f.type !== 'application/pdf') {
+      this.toast.error('Formato no permitido', 'Solo se admiten archivos PDF.');
       return;
     }
     if (f.size > 10 * 1024 * 1024) {
@@ -315,25 +324,6 @@ export class OaRegistroComponent implements OnInit {
 
   removeAnexoPendingFile() {
     this.anexoPendingFile.set(null);
-  }
-
-  /** El visor (`ui-pdf-viewer`) solo sabe renderizar PDF -- una fotografía georreferenciada se descarga directo en vez de "verse" ahí. */
-  esImagen(filename?: string): boolean {
-    return !!filename && /\.(jpe?g|png)$/i.test(filename);
-  }
-
-  descargarAnexo(evidenciaId: number, filename: string) {
-    this.rtfService.downloadEvidencia(evidenciaId).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-      error: () => this.toast.error('Error', 'No se pudo descargar el archivo.')
-    });
   }
 
   subirAnexo() {
