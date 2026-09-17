@@ -535,9 +535,26 @@
                 [paginator]="true"
                 [rows]="10"
                 [showIndex]="true"
-                [hasActions]="false"
+                [hasActions]="true"
+                [actionsTemplate]="gastoActionsTpl"
                 emptyMessage="No se encontraron gastos F1 registrados."
-              />
+              >
+                <ng-template #gastoActionsTpl let-g>
+                  @if (g.ideArchivo) {
+                    <button
+                      type="button"
+                      class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      title="Ver documento de sustento"
+                      [attr.aria-label]="'Ver documento de sustento de ' + (g.txtItemNombre ?? 'este gasto')"
+                      (click)="verDocumentoGasto(g)"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                    </button>
+                  } @else {
+                    <span class="text-[10px] text-muted-foreground italic">Sin documento</span>
+                  }
+                </ng-template>
+              </app-ui-data-table>
             </div>
 
             <!-- Vista Móvil para Gastos F1 -->
@@ -562,6 +579,16 @@
                       <span>S/ {{ g.numPrecioAdjudicado | number:'1.2-2' }}</span>
                     </div>
                   </div>
+                  @if (g.ideArchivo) {
+                    <button
+                      type="button"
+                      class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-border py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-surface-container transition-colors"
+                      (click)="verDocumentoGasto(g)"
+                    >
+                      <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                      Ver documento de sustento
+                    </button>
+                  }
                 </div>
               }
               @if (rtfService.gastosF1().length === 0) {

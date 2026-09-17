@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { RtfService, RtfCabeceraDto } from '../../core/services/rtf.service';
+import { RtfService, RtfCabeceraDto, GastoF1Dto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, TableColumn } from '@agroideas/ui';
 import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
@@ -682,6 +682,32 @@ export class OaRegistroComponent implements OnInit {
     this.pdfViewerOpen.set(false);
     this.pdfViewerFileUrl.set(null);
     this.pdfViewerDownloadUrl.set(null);
+  }
+
+  // Documento de sustento (factura/RH, voucher) de un gasto F1 sincronizado desde KOFIX.
+  cargandoGastoF1 = signal(false);
+
+  verDocumentoGasto(gasto: GastoF1Dto) {
+    const rtfId = this.rtfService.rtfId();
+    if (!rtfId || !gasto.ideArchivo) return;
+
+    this.pdfViewerFilename.set(`GastoF1_${gasto.ideGastoF1}.pdf`);
+    this.pdfViewerOpen.set(true);
+    this.cargandoGastoF1.set(true);
+    this.rtfService.descargarGastoF1(rtfId, gasto.ideGastoF1).subscribe({
+      next: blob => {
+        this.cargandoGastoF1.set(false);
+        const url = URL.createObjectURL(blob);
+        this.pdfViewerFileUrl.set(url);
+        this.pdfViewerDownloadUrl.set(url);
+      },
+      error: () => {
+        this.cargandoGastoF1.set(false);
+        this.toast.error('Error', 'No se pudo descargar el documento de este gasto.');
+        this.pdfViewerFileUrl.set(null);
+        this.pdfViewerDownloadUrl.set(null);
+      }
+    });
   }
 
   verAnexo17() {

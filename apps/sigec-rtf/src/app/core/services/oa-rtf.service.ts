@@ -354,6 +354,22 @@ export class OaRtfService {
   }
 
   /**
+   * Documento de sustento (factura/RH, voucher) que KOFIX adjuntó a un gasto F1 al sincronizar
+   * -- no todos los gastos lo traen (`GastoF1Dto.ideArchivo` es opcional), el backend responde
+   * 400 explícito si no hay ninguno.
+   */
+  descargarGastoF1(rtfId: number, ideGastoF1: number) {
+    return this.http.get(`${this.apiUrl}/rtfs/${rtfId}/gastos-f1/${ideGastoF1}/contenido`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(err => {
+        console.error('Error downloading Gasto F1', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
    * ADR-016 Fase 3 (sigec-api-rtf): la OA marca como atendida cada observación de la UN antes
    * de reenviar. Vive en `RtfController`/`oa-rtf.service.ts` (no en
    * `UnidadRegionalController`/`un-gabinete.service.ts`) porque es una acción de la OA sobre su
