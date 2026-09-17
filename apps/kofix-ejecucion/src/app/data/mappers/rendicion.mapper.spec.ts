@@ -6,6 +6,7 @@ describe('RendicionMapper', () => {
         solicitudDesembolsoId: 10,
         sunatCpeId: 20,
         numeroSolicitud: 'SOL-001',
+        fechaSolicitud: '2026-07-25',
         tipoCpe: 'FACTURA',
         serie: 'F001',
         numero: '000123',

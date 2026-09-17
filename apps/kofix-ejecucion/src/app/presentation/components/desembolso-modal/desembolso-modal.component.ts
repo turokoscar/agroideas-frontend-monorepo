@@ -47,6 +47,18 @@ export class DesembolsoModalComponent implements OnInit {
         return `${formatConvenioNumber(c.numeroConvenio, c.fechaInicio)} · ${c.razonSocial}`;
     });
 
+    readonly fechaInicioConvenio = computed(() => {
+        const c = this.stateService.convenio();
+        if (!c?.fechaInicio) return '';
+        return typeof c.fechaInicio === 'string' ? c.fechaInicio.substring(0, 10) : new Date(c.fechaInicio).toISOString().substring(0, 10);
+    });
+
+    readonly fechaFinConvenio = computed(() => {
+        const c = this.stateService.convenio();
+        if (!c?.fechaFin) return '';
+        return typeof c.fechaFin === 'string' ? c.fechaFin.substring(0, 10) : new Date(c.fechaFin).toISOString().substring(0, 10);
+    });
+
     form: FormGroup = this.fb.group({
         numeroSolicitud: ['', Validators.required],
         tipoPagoId: ['', Validators.required],
@@ -124,6 +136,7 @@ export class DesembolsoModalComponent implements OnInit {
             const itemGroup = this.fb.group({
                 itemAdjudicadoId: [det.noObjecionDetId, Validators.required],
                 noObjecionCodigo: [original.noObjecionCodigo],
+                fechaDocumento: [original.fechaDocumento ? String(original.fechaDocumento).substring(0, 10) : ''],
                 proveedorNombre: [original.proveedorNombre],
                 itemNombre: [original.itemNombre],
                 montoTotal: [original.montoAdjudicado],
@@ -169,6 +182,7 @@ export class DesembolsoModalComponent implements OnInit {
         const itemGroup = this.fb.group({
             itemAdjudicadoId: ['', Validators.required],
             noObjecionCodigo: [''],
+            fechaDocumento: [''],
             proveedorNombre: [''],
             itemNombre: [''],
             montoTotal: [0],
@@ -191,6 +205,32 @@ export class DesembolsoModalComponent implements OnInit {
         return this.itemsDisponibles().filter(item => item.id == selectedId || !otherSelectedIds.some(id => id == item.id));
     }
 
+    get minFechaDesembolso(): string {
+        let maxDate = this.fechaInicioConvenio();
+        for (const c of this.itemsFormArray.controls) {
+            const f = c.get('fechaDocumento')?.value;
+            if (f) {
+                const dateStr = typeof f === 'string' ? f.substring(0, 10) : new Date(f).toISOString().substring(0, 10);
+                if (!maxDate || dateStr > maxDate) {
+                    maxDate = dateStr;
+                }
+            }
+        }
+        return maxDate;
+    }
+
+    get maxFechaDesembolso(): string {
+        return this.fechaFinConvenio();
+    }
+
+    private updateMinFechaValidation(): void {
+        const min = this.minFechaDesembolso;
+        const current = this.form.get('fechaDesembolso')?.value;
+        if (min && current && current < min) {
+            this.form.get('fechaDesembolso')?.setValue(min);
+        }
+    }
+
     onItemChange(index: number): void {
         const control = this.itemsFormArray.at(index);
         const selectedId = control.get('itemAdjudicadoId')?.value;
@@ -199,6 +239,7 @@ export class DesembolsoModalComponent implements OnInit {
 
         control.patchValue({
             noObjecionCodigo: item.noObjecionCodigo,
+            fechaDocumento: item.fechaDocumento ? (typeof item.fechaDocumento === 'string' ? item.fechaDocumento.substring(0, 10) : item.fechaDocumento) : '',
             proveedorNombre: item.proveedorNombre,
             itemNombre: item.itemNombre,
             montoTotal: item.montoAdjudicado,
@@ -209,10 +250,12 @@ export class DesembolsoModalComponent implements OnInit {
         const montoControl = control.get('montoSolicitado');
         montoControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(item.saldoDisponible)]);
         montoControl?.updateValueAndValidity();
+        this.updateMinFechaValidation();
     }
 
     removeItem(index: number): void {
         this.itemsFormArray.removeAt(index);
+        this.updateMinFechaValidation();
     }
 
     totalSolicitado(): number {
@@ -228,8 +271,23 @@ export class DesembolsoModalComponent implements OnInit {
             return;
         }
 
-        this.isSubmitting.set(true);
         const v = this.form.value;
+        const inicioConv = this.fechaInicioConvenio();
+        const finConv = this.fechaFinConvenio();
+        if (inicioConv && v.fechaDesembolso && v.fechaDesembolso < inicioConv) {
+            this.alertService.toast(`La fecha de solicitud (${v.fechaDesembolso}) no puede ser anterior al inicio de vigencia del convenio (${inicioConv}).`);
+            return;
+        }
+        if (this.minFechaDesembolso && v.fechaDesembolso && v.fechaDesembolso < this.minFechaDesembolso) {
+            this.alertService.toast(`La fecha de solicitud (${v.fechaDesembolso}) no puede ser anterior a la fecha de la No Objeción (${this.minFechaDesembolso}).`);
+            return;
+        }
+        if (finConv && v.fechaDesembolso && v.fechaDesembolso > finConv) {
+            this.alertService.toast(`La fecha de solicitud (${v.fechaDesembolso}) no puede ser posterior al fin de vigencia del convenio (${finConv}).`);
+            return;
+        }
+
+        this.isSubmitting.set(true);
         const payload = {
             postulanteId: Number(this.convenioId()),
             numeroSolicitud: v.numeroSolicitud,

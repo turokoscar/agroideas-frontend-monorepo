@@ -23,7 +23,7 @@
 
       <div class="form-field">
         <label class="form-label" for="desembolso-fecha">Fecha Solicitud</label>
-        <input id="desembolso-fecha" type="date" formControlName="fechaDesembolso" class="form-input" />
+        <input id="desembolso-fecha" type="date" formControlName="fechaDesembolso" [min]="minFechaDesembolso" [max]="maxFechaDesembolso" class="form-input" />
       </div>
     </div>
 

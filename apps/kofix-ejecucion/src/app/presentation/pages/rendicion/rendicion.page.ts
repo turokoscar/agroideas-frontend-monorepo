@@ -1,5 +1,6 @@
 import { TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
+import { formatSolicitudNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -56,12 +57,16 @@ export class RendicionPageComponent implements OnInit {
 
   columns: TableColumn[] = [
     { field: 'fechaEmision', header: 'Fecha Emisión', type: 'date', width: '120px' },
-    { field: 'numeroSolicitud', header: 'Solicitud Origen', width: '180px' },
+    { field: 'numeroSolicitud', header: 'Solicitud Origen', type: 'custom', width: '180px' },
     { field: 'tipoCpe', header: 'Tipo Comprobante', width: '200px' },
     { field: 'serieNumero', header: 'Serie-Número', width: '180px' },
     { field: 'total', header: 'Monto Rendido', type: 'custom', width: '150px', align: 'right' },
     { field: 'estado', header: 'Estado', type: 'custom', width: '120px', align: 'center' },
   ];
+
+  formatSolicitudNumber(row: Rendicion): string {
+    return formatSolicitudNumber(row.numeroSolicitud, row.fechaSolicitud || row.fechaEmision);
+  }
 
   ngOnInit(): void {
     this.loadCatalogs();

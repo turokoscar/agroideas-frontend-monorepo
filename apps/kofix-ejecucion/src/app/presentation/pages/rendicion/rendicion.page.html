@@ -56,6 +56,9 @@
     emptyMessage="No se han registrado rendiciones para este convenio.">
 
     <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'numeroSolicitud') {
+        {{ formatSolicitudNumber(row) }}
+      }
       @if (col.field === 'estado') {
         <app-ui-status-pill
           [status]="row.estado === 1 ? 'Activo' : 'Rechazado'"

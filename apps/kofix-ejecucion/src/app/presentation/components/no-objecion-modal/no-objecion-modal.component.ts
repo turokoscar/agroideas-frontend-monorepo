@@ -42,6 +42,18 @@ export class NoObjecionModalComponent implements OnInit {
         return `${formatConvenioNumber(c.numeroConvenio, c.fechaInicio)} · ${c.razonSocial}`;
     });
 
+    readonly minFechaDocumento = computed(() => {
+        const c = this.convenioStateService.convenio();
+        if (!c?.fechaInicio) return '';
+        return typeof c.fechaInicio === 'string' ? c.fechaInicio.substring(0, 10) : new Date(c.fechaInicio).toISOString().substring(0, 10);
+    });
+
+    readonly maxFechaDocumento = computed(() => {
+        const c = this.convenioStateService.convenio();
+        if (!c?.fechaFin) return '';
+        return typeof c.fechaFin === 'string' ? c.fechaFin.substring(0, 10) : new Date(c.fechaFin).toISOString().substring(0, 10);
+    });
+
     visible = signal(true);
     noObjecionForm: FormGroup;
     selectedFile = signal<File | null>(null);
@@ -325,6 +337,18 @@ export class NoObjecionModalComponent implements OnInit {
         if (this.noObjecionForm.invalid) {
             this.noObjecionForm.markAllAsTouched();
             this.alertService.show('Formulario Incompleto', 'Por favor, verifique los campos obligatorios del formulario.', 'warning');
+            return;
+        }
+
+        const fechaDoc = this.noObjecionForm.get('fechaDocumento')?.value;
+        const min = this.minFechaDocumento();
+        const max = this.maxFechaDocumento();
+        if (min && fechaDoc && fechaDoc < min) {
+            this.alertService.toast(`La fecha del documento (${fechaDoc}) no puede ser anterior al inicio de vigencia del convenio (${min}).`, 'warning');
+            return;
+        }
+        if (max && fechaDoc && fechaDoc > max) {
+            this.alertService.toast(`La fecha del documento (${fechaDoc}) no puede ser posterior al fin de vigencia del convenio (${max}).`, 'warning');
             return;
         }
 

@@ -43,6 +43,40 @@ export class RendicionModalComponent implements OnInit {
   desembolsosPendientes = signal<any[]>([]);
   selectedDesembolso = signal<any>(null);
 
+  readonly fechaInicioConvenio = computed(() => {
+    const c = this.convenioStateService.convenio();
+    if (!c?.fechaInicio) return '';
+    return typeof c.fechaInicio === 'string'
+      ? c.fechaInicio.substring(0, 10)
+      : new Date(c.fechaInicio).toISOString().substring(0, 10);
+  });
+
+  readonly fechaFinConvenio = computed(() => {
+    const c = this.convenioStateService.convenio();
+    if (!c?.fechaFin) return '';
+    return typeof c.fechaFin === 'string'
+      ? c.fechaFin.substring(0, 10)
+      : new Date(c.fechaFin).toISOString().substring(0, 10);
+  });
+
+  readonly minFechaEmision = computed(() => {
+    const sol = this.selectedDesembolso();
+    const fechaSol = sol?.fechaSolicitud
+      ? (typeof sol.fechaSolicitud === 'string'
+        ? sol.fechaSolicitud.substring(0, 10)
+        : new Date(sol.fechaSolicitud).toISOString().substring(0, 10))
+      : '';
+    const fechaInicioConv = this.fechaInicioConvenio();
+    if (fechaSol && fechaInicioConv) {
+      return fechaSol > fechaInicioConv ? fechaSol : fechaInicioConv;
+    }
+    return fechaSol || fechaInicioConv || '';
+  });
+
+  readonly maxFechaEmision = computed(() => {
+    return this.fechaFinConvenio();
+  });
+
   formatSolicitudNumber(item: { numeroSolicitud?: string; fechaSolicitud?: string }): string {
     return formatSolicitudNumber(item.numeroSolicitud, item.fechaSolicitud);
   }
@@ -98,6 +132,12 @@ export class RendicionModalComponent implements OnInit {
     if (solId) {
         const match = this.desembolsosPendientes().find(d => d.id === solId);
         this.selectedDesembolso.set(match);
+        
+        const min = this.minFechaEmision();
+        const current = this.form.get('fechaEmision')?.value;
+        if (min && current && current < min) {
+            this.form.get('fechaEmision')?.setValue(min);
+        }
         
         // Limpiar y poblar FormArray
         const arr = this.detallesFormArray;
@@ -245,6 +285,28 @@ export class RendicionModalComponent implements OnInit {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    const fechaEmision = this.form.value.fechaEmision;
+    const min = this.minFechaEmision();
+    const max = this.maxFechaEmision();
+
+    if (min && fechaEmision && fechaEmision < min) {
+      const fechaInicioConv = this.fechaInicioConvenio();
+      const msg = (fechaInicioConv && fechaEmision < fechaInicioConv)
+        ? `La fecha de emisión del comprobante (${fechaEmision}) no puede ser anterior al inicio de vigencia del convenio (${fechaInicioConv}).`
+        : `La fecha de emisión del comprobante (${fechaEmision}) no puede ser anterior a la fecha de la solicitud de desembolso (${min}).`;
+      this.alertService.show('Fecha no válida', msg, 'warning');
+      return;
+    }
+
+    if (max && fechaEmision && fechaEmision > max) {
+      this.alertService.show(
+        'Fecha no válida',
+        `La fecha de emisión del comprobante (${fechaEmision}) no puede ser posterior al fin de vigencia del convenio (${max}).`,
+        'warning'
+      );
       return;
     }
 

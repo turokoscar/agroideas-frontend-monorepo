@@ -3,6 +3,7 @@ export interface Rendicion {
     solicitudDesembolsoId: number;
     sunatCpeId: number;
     numeroSolicitud: string;
+    fechaSolicitud?: string | Date;
     tipoCpe: string;
     serie: string;
     numero: string;

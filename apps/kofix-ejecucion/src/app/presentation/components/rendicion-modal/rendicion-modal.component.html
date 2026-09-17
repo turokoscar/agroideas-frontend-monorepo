@@ -71,7 +71,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div class="form-field">
             <label class="form-label" for="rendicion-fecha-emision">Fecha Emisión</label>
-            <input id="rendicion-fecha-emision" type="date" formControlName="fechaEmision" class="form-input">
+            <input id="rendicion-fecha-emision" type="date" formControlName="fechaEmision" [min]="minFechaEmision()" [max]="maxFechaEmision()" class="form-input">
           </div>
           <div class="form-field">
             <label class="form-label" for="rendicion-total-comprobante">Monto Total Factura</label>

@@ -47,7 +47,7 @@
         <label class="form-label" for="no-objecion-fecha-documento">
           Fecha Emisión <span class="form-label-required">*</span>
         </label>
-        <input id="no-objecion-fecha-documento" formControlName="fechaDocumento" type="date" class="form-input" />
+        <input id="no-objecion-fecha-documento" formControlName="fechaDocumento" type="date" [min]="minFechaDocumento()" [max]="maxFechaDocumento()" class="form-input" />
       </div>
     </div>
 

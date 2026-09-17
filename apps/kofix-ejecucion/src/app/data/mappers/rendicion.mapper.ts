@@ -7,6 +7,7 @@ export class RendicionMapper {
             solicitudDesembolsoId: dto.solicitudDesembolsoId,
             sunatCpeId: dto.sunatCpeId,
             numeroSolicitud: dto.numeroSolicitud,
+            fechaSolicitud: dto.fechaSolicitud,
             tipoCpe: dto.tipoCpe,
             serie: dto.serie,
             numero: dto.numero,
