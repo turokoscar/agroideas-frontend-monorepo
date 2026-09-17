@@ -1,16 +1,16 @@
 # ADR-014: Pliego de Observaciones real para la OA y rediseño de la Bandeja RTF
 
 ## Estado
-Parcialmente implementado. **Fases 2, 3, 4, 7 y 7b implementadas el 17/09/2026** (parser
-`txt_seccion` compartido; pliego de observaciones real en modo lectura; banner en
-`oa-registro` + tile corregido en `oa-dashboard`; rediseño de `bandeja-oa`; fix de
-aislamiento entre organizaciones en `sigec-api-rtf`) — ver "Fase 7 — estado real" más abajo.
-Fases 1, 5-6 (backend de ADR-016 y habilitar "atender" en el pliego) siguen propuestas:
-dependen de `sigec-api-rtf` **ADR-016**
-(`docs/ADR-016_Pliego_Observaciones_OA_y_Atencion_por_Item.md`), que a su vez está en estado
-"Propuesto" (0 de 8 fases hechas, verificado contra el schema y el código C# el 17/09/2026: no
-existe `est_atencion` en `SRT_TMD_REVISION`, no existe `POST rtfs/{id}/evaluaciones/atencion`,
-no existe `ValidarAtencionCompleta`).
+Parcialmente implementado. **Fases 1, 2, 3, 4, 7 y 7b implementadas el 17/09/2026** (backend de
+ADR-016 completo salvo su Fase 6; parser `txt_seccion` compartido; pliego de observaciones real
+en modo lectura; banner en `oa-registro` + tile corregido en `oa-dashboard`; rediseño de
+`bandeja-oa`; fix de aislamiento entre organizaciones) — ver "Fase 1 — estado real" y "Fase 7 —
+estado real" más abajo. Solo queda **Fase 5-6**: habilitar "atender" en el pliego del lado OA
+(ya no bloqueada — el backend existe) y mostrar `txtRespuestaOa` en `UnGabineteComponent`.
+`sigec-api-rtf` **ADR-016**
+(`docs/ADR-016_Pliego_Observaciones_OA_y_Atencion_por_Item.md`) pasó de "Propuesto" a
+"Parcialmente implementado" el mismo día — sus Fases 1-5, 7-8 ya están hechas y verificadas en
+vivo.
 
 ## Relacionado con
 - **sigec-api-rtf ADR-016** — diseña el modelo de datos y los endpoints que este ADR consume
@@ -107,6 +107,30 @@ migración (`est_atencion`, `txt_respuesta_oa`, `fec_atencion` en `SRT_TMD_REVIS
 `POST rtfs/{id}/evaluaciones/atencion` en `RtfController`, y el gate
 `PoliticaEvaluacionUr.ValidarAtencionCompleta` en `EnviarRtfAsync`. Ese trabajo se rastrea en
 el propio ADR-016 (repo `sigec-api-rtf`), no se repite aquí.
+
+### Fase 1 — estado real (implementado 17/09/2026)
+
+Las 4 fases se implementaron tal como las diseña ADR-016 (detalle completo en ese documento,
+repo `sigec-api-rtf`): migración + SP, `RevisionDto` extendido, endpoint de escritura y gate en
+`EnviarRtfAsync`. De paso se creó `RolesSigecRtf.PersonalMidagri` (constante compartida que
+reemplaza la lista de roles que `NotificacionController` tenía duplicada y ligeramente
+distinta de la de `RtfController` — la clase de deuda que ADR-015 ya había señalado). 12 tests
+nuevos de backend, suite completa **302/302 en verde**.
+
+**Verificado en vivo, no solo con mocks** — migración aplicada contra `sqlserver_dev` (Docker) y
+API reiniciada con el binario nuevo; ciclo lectura→escritura→lectura probado con peticiones HTTP
+reales (JWT firmado con el secret real de `user-secrets`) contra el RTF 10001, revisión
+`UR_META_27162` (`ide_revision=21`). **Encontró y corrigió un bug real**:
+`ActualizarAtencionRevisionAsync` devolvía `false` aunque el `UPDATE` sí se ejecutaba — el SP
+tiene `SET NOCOUNT ON` (como todos los de ese repositorio), lo que hace que `ExecuteAsync` del
+lado ADO.NET devuelva -1 en vez del conteo real; se corrigió agregando `SELECT @@ROWCOUNT;` al
+SP y usando `ExecuteScalarAsync<int>`, el mismo patrón que ya usaban
+`ActualizarRtfCabeceraAsync`/`ActualizarEstadoRtfAsync` en ese repo. **Este bug no lo habría
+atrapado la suite de tests unitarios** (mockea el repositorio, nunca toca Dapper/SQL real) —
+exactamente el tipo de gap que la verificación en vivo existe para atrapar. Detalle completo en
+`docs/ADR-016_...md` (repo `sigec-api-rtf`), sección "Nota de verificación en vivo". El RTF 10001
+se dejó restaurado a su estado anterior (revisión 21 de vuelta a `PENDIENTE`) para no afectar
+otras verificaciones en vivo que ya lo usan como expediente de referencia (ADR-013/014).
 
 ### 2. Frontend — extraer el parser de `txt_seccion` a un lugar compartido
 
@@ -268,7 +292,7 @@ repo autocontenido.
 
 | Fase | Alcance | Repo | Depende de |
 |---|---|---|---|
-| 1 | Backend: Fases 1-4 de ADR-016 (`sigec-api-rtf`) — SQL, lectura, escritura, gate de reenvío | `sigec-api-rtf` | — |
+| 1 | ✅ **Hecho (17/09/2026)** — Backend: Fases 1-4 de ADR-016 (`sigec-api-rtf`) — SQL, lectura, escritura, gate de reenvío. Verificado en vivo contra `sqlserver_dev`; encontró y corrigió un bug real (ver nota abajo) | `sigec-api-rtf` | — |
 | 2 | ✅ **Hecho (17/09/2026)** — Frontend: extraer parser `txt_seccion` compartido (`revision-seccion.util.ts`, con specs); `un-gabinete.component.ts` pasa a importarlo | este repo | — |
 | 3 | ✅ **Hecho (17/09/2026)** — Frontend: `oa-observaciones.component.ts` reescrito en modo lectura (pliego real, sin "atender" todavía, reusa `GET rtfs/{id}/evaluaciones` sin cambios de backend); retirado el signal muerto `observacionesUR`; 6 specs nuevos | este repo | Fase 2 |
 | 4 | ✅ **Hecho (17/09/2026)** — Frontend: banner de observaciones en `oa-registro` (con conteo, visible solo en `OBSERVADO`); tile de `oa-dashboard` corregido (label real, badge de conteo, ya fija `rtfId` antes de navegar — no lo hacía antes); 4 specs nuevos | este repo | Fase 3 |
