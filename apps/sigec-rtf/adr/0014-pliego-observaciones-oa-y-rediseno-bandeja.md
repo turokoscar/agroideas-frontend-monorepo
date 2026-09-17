@@ -1,13 +1,13 @@
 # ADR-014: Pliego de Observaciones real para la OA y rediseño de la Bandeja RTF
 
 ## Estado
-Parcialmente implementado. **Fases 1, 2, 3, 4, 7 y 7b implementadas el 17/09/2026** (backend de
-ADR-016 completo salvo su Fase 6; parser `txt_seccion` compartido; pliego de observaciones real
-en modo lectura; banner en `oa-registro` + tile corregido en `oa-dashboard`; rediseño de
-`bandeja-oa`; fix de aislamiento entre organizaciones) — ver "Fase 1 — estado real" y "Fase 7 —
-estado real" más abajo. Solo queda **Fase 5-6**: habilitar "atender" en el pliego del lado OA
-(ya no bloqueada — el backend existe) y mostrar `txtRespuestaOa` en `UnGabineteComponent`.
-`sigec-api-rtf` **ADR-016**
+Parcialmente implementado. **Fases 1, 2, 3, 4, 5, 7 y 7b implementadas el 17/09/2026** (backend
+de ADR-016 completo salvo su Fase 6; parser `txt_seccion` compartido; pliego de observaciones
+real, ahora con atención por ítem habilitada; banner en `oa-registro` + tile corregido en
+`oa-dashboard`; gate de reenvío en la UI; rediseño de `bandeja-oa`; fix de aislamiento entre
+organizaciones) — ver "Fase 1 — estado real" y "Fase 7 — estado real" más abajo. **Solo queda
+la Fase 6**: `UnGabineteComponent` mostrando `txtRespuestaOa` de solo lectura al reabrir el
+gabinete. `sigec-api-rtf` **ADR-016**
 (`docs/ADR-016_Pliego_Observaciones_OA_y_Atencion_por_Item.md`) pasó de "Propuesto" a
 "Parcialmente implementado" el mismo día — sus Fases 1-5, 7-8 ya están hechas y verificadas en
 vivo.
@@ -296,7 +296,7 @@ repo autocontenido.
 | 2 | ✅ **Hecho (17/09/2026)** — Frontend: extraer parser `txt_seccion` compartido (`revision-seccion.util.ts`, con specs); `un-gabinete.component.ts` pasa a importarlo | este repo | — |
 | 3 | ✅ **Hecho (17/09/2026)** — Frontend: `oa-observaciones.component.ts` reescrito en modo lectura (pliego real, sin "atender" todavía, reusa `GET rtfs/{id}/evaluaciones` sin cambios de backend); retirado el signal muerto `observacionesUR`; 6 specs nuevos | este repo | Fase 2 |
 | 4 | ✅ **Hecho (17/09/2026)** — Frontend: banner de observaciones en `oa-registro` (con conteo, visible solo en `OBSERVADO`); tile de `oa-dashboard` corregido (label real, badge de conteo, ya fija `rtfId` antes de navegar — no lo hacía antes); 4 specs nuevos | este repo | Fase 3 |
-| 5 | Frontend: habilitar "atender" en `oa-observaciones` + gate de UI en `canSubmit()`/`enviarRtf()` | este repo | Fase 1, Fase 3 |
+| 5 | ✅ **Hecho (17/09/2026)** — Frontend: habilitar "atender" en `oa-observaciones` (respuesta + botón por fila) + gate de UI en `canSubmit()`/`enviarRtf()` de `oa-registro`, con mensaje explícito | este repo | Fase 1, Fase 3 |
 | 6 | Frontend: `un-gabinete.component.ts` muestra `txtRespuestaOa` de solo lectura | este repo | Fase 1 |
 | 7 | ✅ **Hecho (17/09/2026)** — Frontend: rediseño de `bandeja-oa` (tab Observado, `estados=` CSV, `UiDataTableComponent`, búsqueda, columna de plazo, acciones contextuales, `descargarAnexo18`) | este repo | independiente — puede ir en paralelo a 1-6 |
 | 7b | ✅ **Hecho (17/09/2026)** — Backend: `esBandejaEspecialistaUn` ahora exige rol de personal MIDAGRI; se descubrió y corrigió además un problema mayor de aislamiento entre organizaciones (`ideConvenio` nunca se forzaba para una OA) — ver "Fase 7 — estado real" arriba | `sigec-api-rtf` | — |

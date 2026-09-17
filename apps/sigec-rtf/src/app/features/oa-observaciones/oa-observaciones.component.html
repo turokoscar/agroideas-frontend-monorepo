@@ -4,7 +4,7 @@
   <div>
     <h1 class="text-2xl font-bold tracking-tight text-foreground">Pliego de Observaciones</h1>
     <p class="text-sm text-muted-foreground">
-      Detalle, ítem por ítem, de lo que la Unidad de Negocios observó en este RTF.
+      Responde cada observación de la Unidad de Negocios; el RTF no se puede reenviar hasta que todas queden atendidas.
     </p>
   </div>
 
@@ -39,22 +39,74 @@
     </div>
   }
 
+  <!-- Todas atendidas -->
+  @if (!isLoading() && !hasError() && todasAtendidas()) {
+    <div class="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success-soft p-4 text-sm font-medium text-success-foreground">
+      <span class="material-symbols-outlined text-[20px] text-success">check_circle</span>
+      Ya respondiste todas las observaciones de este ciclo. Puedes volver al formulario y reenviar el RTF.
+    </div>
+  }
+
   <!-- Observaciones -->
   @if (!isLoading() && !hasError() && hayObservaciones()) {
     <div class="space-y-3">
-      @for (obs of observacionesPendientes(); track obs.kind + '-' + obs.id) {
-        <div class="bg-card border border-border rounded-xl p-5 space-y-2.5">
+      @for (obs of observaciones(); track obs.ideRevision) {
+        <div class="bg-card border rounded-xl p-5 space-y-2.5" [class.border-border]="obs.atendida" [class.border-warning]="!obs.atendida">
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <h3 class="text-sm font-bold text-foreground">{{ obs.titulo }}</h3>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase tracking-wider">
-              {{ categoriaLabel(obs.categoria) }}
-            </span>
+            <div class="flex items-center gap-2">
+              @if (obs.atendida) {
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success-soft text-success-foreground text-[10px] font-bold uppercase tracking-wider">
+                  <span class="material-symbols-outlined text-[12px]">check</span>
+                  Atendida
+                </span>
+              }
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase tracking-wider">
+                {{ categoriaLabel(obs.categoria) }}
+              </span>
+            </div>
           </div>
           <p class="text-xs leading-relaxed text-muted-foreground">{{ obs.observacion || 'Sin texto de observación.' }}</p>
           @if (obs.subsanable) {
             <div class="flex items-center gap-1.5 text-[11px] font-medium text-primary">
               <span class="material-symbols-outlined text-[14px]">check_circle</span>
               Subsanable por la organización agraria
+            </div>
+          }
+
+          @if (obs.atendida) {
+            <div class="rounded-lg bg-surface-container/40 border border-border p-3 space-y-1">
+              <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tu respuesta</span>
+              <p class="text-xs text-foreground leading-relaxed">{{ obs.respuestaOa }}</p>
+            </div>
+          } @else {
+            <div class="space-y-1.5 pt-1">
+              <label [attr.for]="'respuesta-' + obs.ideRevision" class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                Respuesta / sustento
+              </label>
+              <textarea
+                [id]="'respuesta-' + obs.ideRevision"
+                rows="3"
+                placeholder="Describe cómo corregiste o sustentaste esta observación..."
+                class="w-full text-xs p-3 rounded-lg border border-border bg-surface-container/20 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                [ngModel]="respuestaDe(obs.ideRevision)"
+                (ngModelChange)="actualizarRespuesta(obs.ideRevision, $event)"
+              ></textarea>
+              <div class="flex justify-end">
+                <button
+                  type="button"
+                  class="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  [disabled]="!respuestaDe(obs.ideRevision).trim() || atendiendoId() === obs.ideRevision"
+                  (click)="atenderObservacion(obs.ideRevision)"
+                >
+                  @if (atendiendoId() === obs.ideRevision) {
+                    <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                  } @else {
+                    <span class="material-symbols-outlined text-[16px]">check</span>
+                  }
+                  Marcar como atendida
+                </button>
+              </div>
             </div>
           }
         </div>
@@ -64,9 +116,7 @@
     <div class="bg-surface-container/40 border border-border rounded-xl p-4 flex items-start gap-2.5">
       <span class="material-symbols-outlined text-[18px] text-muted-foreground">info</span>
       <p class="text-xs text-muted-foreground leading-relaxed">
-        Corrige cada observación en el formulario del RTF y vuelve a enviarlo. La respuesta
-        estructurada por ítem (marcar cada observación como atendida) estará disponible
-        próximamente en esta pantalla.
+        Corrige cada observación en el formulario del RTF y responde aquí antes de reenviarlo.
       </p>
     </div>
   }

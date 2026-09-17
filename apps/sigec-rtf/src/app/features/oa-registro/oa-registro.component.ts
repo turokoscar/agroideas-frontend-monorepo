@@ -62,13 +62,17 @@ export class OaRegistroComponent implements OnInit {
       : 'Plazo para envío del RTF'
   );
 
-  /** ADR-014 (frontend) Fase 4: cuántas observaciones de la UN siguen abiertas en este RTF. */
+  /**
+   * ADR-014 (frontend) Fase 4/5: cuántas observaciones de la UN siguen sin atender en este RTF.
+   * Antes de la Fase 5 (backend de ADR-016) contaba todo `OBSERVADO` sin distinguir atendidas --
+   * ahora que `estAtencion` existe, solo cuenta las que de verdad bloquean el reenvío.
+   */
   observacionesPendientes = signal(0);
 
   private cargarObservacionesPendientes(rtfId: number) {
     this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
       next: estado => {
-        const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO').length;
+        const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO' && r.estAtencion !== 'ATENDIDA').length;
         this.observacionesPendientes.set(count);
       },
       error: () => { /* silencioso: el banner simplemente no muestra conteo */ }
@@ -374,6 +378,10 @@ export class OaRegistroComponent implements OnInit {
   // Computed
   canSubmit = computed(() => {
     if (!this.isEditable()) return false;
+    // ADR-014 (frontend) Fase 5: gate de UI espejando ValidarAtencionCompleta en el backend
+    // (ADR-016 sigec-api-rtf) -- el backend sigue siendo la fuente de verdad, esto solo evita
+    // el viaje redondo de un 400 cuando ya se sabe de antemano que va a fallar.
+    if (this.observacionesPendientes() > 0) return false;
     if (this.useBdSelMetas()) {
       const metasConAvance = this.rtfService.pasoCriticoMetas().filter(m => m.metaFisicaEjecutada != null).length;
       const indicadoresConAvance = this.rtfService.pasoCriticoIndicadores().filter(i => i.metaEjecutada != null).length;
@@ -824,6 +832,10 @@ export class OaRegistroComponent implements OnInit {
   }
 
   enviarRtf() {
+    if (this.observacionesPendientes() > 0) {
+      this.toast.error('Observaciones pendientes', 'Debes responder todas las observaciones de AGROIDEAS en el Pliego de Observaciones antes de reenviar el RTF.');
+      return;
+    }
     if (!this.canSubmit()) return;
     this.isSubmitting.set(true);
 

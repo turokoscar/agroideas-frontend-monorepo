@@ -871,7 +871,15 @@
 
 <!-- Floating Action Dock -->
 <div class="sticky bottom-6 mt-10 z-40 max-w-5xl mx-auto px-6 py-4 bg-background/80 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-  @if (anexo17FirmadoPendiente()) {
+  @if (observacionesPendientes() > 0) {
+    <a
+      routerLink="/rtf/pasos-criticos/observaciones"
+      class="flex items-center gap-2 text-xs text-warning hover:underline text-left"
+    >
+      <span class="material-symbols-outlined text-[16px] text-warning">feedback</span>
+      <span>Responde las {{ observacionesPendientes() }} observación{{ observacionesPendientes() === 1 ? '' : 'es' }} pendiente{{ observacionesPendientes() === 1 ? '' : 's' }} antes de reenviar el reporte.</span>
+    </a>
+  } @else if (anexo17FirmadoPendiente()) {
     <button
       type="button"
       class="flex items-center gap-2 text-xs text-amber-700 hover:underline text-left"

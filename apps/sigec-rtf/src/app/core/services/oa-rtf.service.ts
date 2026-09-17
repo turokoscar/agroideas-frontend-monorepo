@@ -15,7 +15,8 @@ import {
   DashboardData,
   ApiResponse,
   DatosPaginados,
-  ControlPlazoDto
+  ControlPlazoDto,
+  RevisionAtencionItem
 } from '../models';
 
 @Injectable({
@@ -347,6 +348,23 @@ export class OaRtfService {
     }).pipe(
       catchError(err => {
         console.error('Error downloading Anexo 18', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
+   * ADR-016 Fase 3 (sigec-api-rtf): la OA marca como atendida cada observación de la UN antes
+   * de reenviar. Vive en `RtfController`/`oa-rtf.service.ts` (no en
+   * `UnidadRegionalController`/`un-gabinete.service.ts`) porque es una acción de la OA sobre su
+   * propio expediente, no una evaluación de la UN — mismo criterio de ubicación que el resto de
+   * este servicio.
+   */
+  atenderObservaciones(rtfId: number, respuestas: RevisionAtencionItem[]) {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/rtfs/${rtfId}/evaluaciones/atencion`, { respuestas }).pipe(
+      map(res => res.datos),
+      catchError(err => {
+        console.error('Error al atender observaciones', err);
         return throwError(() => err);
       })
     );

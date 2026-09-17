@@ -82,7 +82,7 @@ export class OaDashboardComponent implements OnInit {
     }
     this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
       next: estado => {
-        const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO').length;
+        const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO' && r.estAtencion !== 'ATENDIDA').length;
         this.observacionesPendientes.set(count);
       },
       error: () => { /* silencioso: el tile simplemente no muestra el badge de conteo */ }

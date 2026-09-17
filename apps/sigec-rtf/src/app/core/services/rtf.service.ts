@@ -20,6 +20,7 @@ import {
   DashboardUnData,
   InformeComprobacionDto,
   CartaDto,
+  RevisionAtencionItem,
 } from '../models';
 
 export type {
@@ -143,6 +144,7 @@ export class RtfService {
   removeEvidencia = (evidenciaId: number) => this.oaService.removeEvidencia(evidenciaId);
   descargarAnexo17 = (rtfId: number) => this.oaService.descargarAnexo17(rtfId);
   descargarAnexo18 = (rtfId: number) => this.oaService.descargarAnexo18(rtfId);
+  atenderObservaciones = (rtfId: number, respuestas: RevisionAtencionItem[]) => this.oaService.atenderObservaciones(rtfId, respuestas);
   loadActividadReciente = () => this.oaService.loadActividadReciente();
   loadDisbursements = (rtfId: number) => this.oaService.loadDisbursements(rtfId);
   updateMeta = (index: number, patch: Partial<MetaFisicaDto>) => this.oaService.updateMeta(index, patch);
