@@ -81,7 +81,6 @@ export class RtfService {
   evidencias = this.oaService.evidencias;
   gastosF1 = this.oaService.gastosF1;
   ultimaSincronizacionGastosF1 = this.oaService.ultimaSincronizacionGastosF1;
-  observacionesUR = this.oaService.observacionesUR;
   actividadReciente = this.oaService.actividadReciente;
 
 

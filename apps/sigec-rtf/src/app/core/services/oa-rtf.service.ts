@@ -64,7 +64,6 @@ export class OaRtfService {
     const fechas = this.gastosF1().map(g => g.fecRegistro).filter((f): f is string => !!f);
     return fechas.length ? fechas.reduce((max, f) => (f > max ? f : max)) : null;
   });
-  observacionesUR = signal('');
   actividadReciente = signal<ActividadReciente[]>([]);
 
 

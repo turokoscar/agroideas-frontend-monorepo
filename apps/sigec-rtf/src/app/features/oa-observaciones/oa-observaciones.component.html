@@ -1,74 +1,97 @@
 <div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
+
   <!-- Header -->
   <div>
-    <h1 class="text-2xl font-bold tracking-tight text-foreground">Levantar Observaciones</h1>
+    <h1 class="text-2xl font-bold tracking-tight text-foreground">Pliego de Observaciones</h1>
     <p class="text-sm text-muted-foreground">
-      Atienda las observaciones emitidas por la Unidad Regional antes del plazo de subsanación.
+      Detalle, ítem por ítem, de lo que la Unidad de Negocios observó en este RTF.
     </p>
   </div>
 
-  <!-- Observations Box -->
-  <div class="bg-amber-500/10 border border-amber-500/35 p-5 rounded-xl text-amber-600 space-y-2">
-    <div class="flex items-center gap-2 font-bold text-sm">
-      <span class="material-symbols-outlined text-[20px]">warning</span>
-      Observaciones Técnicas Registradas (Especialista Regional)
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="space-y-3" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="bg-card border border-border rounded-xl p-5 space-y-2">
+          <div class="h-3 w-40 rounded bg-surface-container animate-pulse"></div>
+          <div class="h-3 w-full rounded bg-surface-container animate-pulse"></div>
+          <div class="h-3 w-2/3 rounded bg-surface-container animate-pulse"></div>
+        </div>
+      }
     </div>
-    <p class="text-xs leading-relaxed pl-7">
-      "{{ rtfService.observacionesUR() }}"
-    </p>
-  </div>
+  }
 
-  <!-- Form to lift -->
-  <div class="bg-surface-container-lowest border border-border rounded-xl p-6 space-y-4">
-    <h3 class="text-sm font-bold text-foreground flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary text-[18px]">rate_review</span>
-      Detalle de la Subsanación
-    </h3>
+  <!-- Error -->
+  @if (!isLoading() && hasError()) {
+    <div class="flex flex-col items-center justify-center py-16 text-center gap-2">
+      <span class="material-symbols-outlined text-4xl text-destructive/60">error</span>
+      <p class="text-sm font-medium text-foreground">No se pudo cargar el pliego de observaciones.</p>
+      <p class="text-xs text-muted-foreground">Intenta nuevamente en unos minutos.</p>
+    </div>
+  }
 
-    <!-- Textarea response -->
-    <div class="space-y-1.5">
-      <label for="sustento-textarea" class="text-xs font-semibold text-muted-foreground block">Sustento / Informe de Levantamiento</label>
-      <textarea
-        id="sustento-textarea"
-        rows="5"
-        placeholder="Describa brevemente los cambios realizados o la justificación técnica..."
-        class="w-full text-xs p-3 rounded-lg border border-border bg-surface-container/20 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-      ></textarea>
+  <!-- Empty -->
+  @if (!isLoading() && !hasError() && !hayObservaciones()) {
+    <div class="flex flex-col items-center justify-center py-16 text-center gap-2">
+      <span class="material-symbols-outlined text-4xl text-muted-foreground/40">task_alt</span>
+      <p class="text-sm font-medium text-foreground">No hay observaciones abiertas para este RTF.</p>
+      <p class="text-xs text-muted-foreground">Si este RTF estuvo observado, ya fue reevaluado en un ciclo posterior.</p>
+    </div>
+  }
+
+  <!-- Observaciones -->
+  @if (!isLoading() && !hasError() && hayObservaciones()) {
+    <div class="space-y-3">
+      @for (obs of observacionesPendientes(); track obs.kind + '-' + obs.id) {
+        <div class="bg-card border border-border rounded-xl p-5 space-y-2.5">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h3 class="text-sm font-bold text-foreground">{{ obs.titulo }}</h3>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase tracking-wider">
+              {{ categoriaLabel(obs.categoria) }}
+            </span>
+          </div>
+          <p class="text-xs leading-relaxed text-muted-foreground">{{ obs.observacion || 'Sin texto de observación.' }}</p>
+          @if (obs.subsanable) {
+            <div class="flex items-center gap-1.5 text-[11px] font-medium text-primary">
+              <span class="material-symbols-outlined text-[14px]">check_circle</span>
+              Subsanable por la organización agraria
+            </div>
+          }
+        </div>
+      }
     </div>
 
-    <!-- File upload for backing documents -->
-    <div class="space-y-1.5 pt-2">
-      <label for="obs-pdf" class="text-xs font-semibold text-muted-foreground block">Cargar Documento de Sustento (Opcional)</label>
-      <div class="border border-dashed border-border rounded-lg p-5 text-center bg-surface-container/5 hover:bg-surface-container/10 transition-all cursor-pointer">
-        <input type="file" id="obs-pdf" class="hidden" (change)="onFileSelected($event)" accept=".pdf">
-        <label for="obs-pdf" class="cursor-pointer space-y-1.5 block">
-          <span class="material-symbols-outlined text-[24px] text-muted-foreground block">upload_file</span>
-          <span class="text-xs font-medium text-primary block">Adjuntar PDF adicional de sustento</span>
-        </label>
-      </div>
-      <div *ngIf="fileName" class="flex items-center justify-between bg-surface-container/30 border border-border p-2 rounded mt-2 text-xs">
-        <span class="font-medium text-foreground truncate max-w-xs">{{ fileName }}</span>
-        <button (click)="removeFile()" class="text-muted-foreground hover:text-danger">
-          <span class="material-symbols-outlined text-[16px]">close</span>
-        </button>
-      </div>
+    <div class="bg-surface-container/40 border border-border rounded-xl p-4 flex items-start gap-2.5">
+      <span class="material-symbols-outlined text-[18px] text-muted-foreground">info</span>
+      <p class="text-xs text-muted-foreground leading-relaxed">
+        Corrige cada observación en el formulario del RTF y vuelve a enviarlo. La respuesta
+        estructurada por ítem (marcar cada observación como atendida) estará disponible
+        próximamente en esta pantalla.
+      </p>
     </div>
-  </div>
+  }
 
   <!-- Controls -->
-  <div class="flex items-center justify-end gap-3 pt-4">
-    <button
-      (click)="onCancel()"
-      class="px-4 py-2 border border-border rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors"
-    >
-      Volver
-    </button>
-    <button
-      (click)="onSubmit()"
-      class="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/95 shadow transition-all flex items-center gap-1.5"
-    >
-      <span class="material-symbols-outlined text-[16px]">check</span>
-      Levantar y Enviar Observaciones
-    </button>
-  </div>
+  @if (!isLoading()) {
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button
+        type="button"
+        (click)="volver()"
+        class="px-4 py-2 border border-border rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors"
+      >
+        Volver a la bandeja
+      </button>
+      @if (hayObservaciones()) {
+        <button
+          type="button"
+          (click)="irACorregir()"
+          class="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/95 shadow transition-all flex items-center gap-1.5"
+        >
+          <span class="material-symbols-outlined text-[16px]">edit_document</span>
+          Ir a corregir el RTF
+        </button>
+      }
+    </div>
+  }
+
 </div>
