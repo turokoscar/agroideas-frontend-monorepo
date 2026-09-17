@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { STORAGE_KEYS } from '@agroideas/utils';
 import { SelLoginResponse, SelUsuarioDto } from '@agroideas/auth';
-import { AuthService } from './auth.service';
+import { AuthService, LoginResult } from './auth.service';
 import { environment } from '../../../environments/environment';
 
 describe('AuthService', () => {
@@ -60,7 +60,7 @@ describe('AuthService', () => {
   });
 
   it('maps a user without recognized roles to POSTULANTE and persists the session', () => {
-    let resultado: boolean | undefined;
+    let resultado: LoginResult | undefined;
     service.login('pyataco', 'secreto').subscribe(ok => (resultado = ok));
 
     const req = httpMock.expectOne(`${environment.apiAuth}/login`);
@@ -68,7 +68,7 @@ describe('AuthService', () => {
     expect(req.request.body).toEqual({ username: 'pyataco', password: 'secreto', deviceId: 'web-admin' });
     req.flush(buildRespuesta(buildUsuario({ roles: ['Algún otro rol'] })));
 
-    expect(resultado).toBe(true);
+    expect(resultado?.success).toBe(true);
     expect(service.user()?.role).toBe('POSTULANTE');
     expect(service.user()?.nombre).toBe('Piero Yataco Figueroa');
     expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBe('token-123');
@@ -88,12 +88,27 @@ describe('AuthService', () => {
   });
 
   it('returns false and does not set a user when the backend responds with an error envelope', () => {
-    let resultado: boolean | undefined;
+    let resultado: LoginResult | undefined;
     service.login('pyataco', 'malo').subscribe(ok => (resultado = ok));
 
     httpMock.expectOne(`${environment.apiAuth}/login`).flush({ respuesta: 'ERROR', mensaje: 'Credenciales inválidas', datos: null });
 
-    expect(resultado).toBe(false);
+    expect(resultado?.success).toBe(false);
+    expect(resultado?.mensaje).toBe('Credenciales inválidas');
+    expect(service.user()).toBeNull();
+  });
+
+  it('handles HTTP 400 error and returns the server error message', () => {
+    let resultado: LoginResult | undefined;
+    service.login('pyataco', 'bloqueado').subscribe(res => (resultado = res));
+
+    httpMock.expectOne(`${environment.apiAuth}/login`).flush(
+      { respuesta: 'ERROR', mensaje: 'Cuenta bloqueada por múltiples intentos fallidos. Intente más tarde.' },
+      { status: 400, statusText: 'Bad Request' }
+    );
+
+    expect(resultado?.success).toBe(false);
+    expect(resultado?.mensaje).toBe('Cuenta bloqueada por múltiples intentos fallidos. Intente más tarde.');
     expect(service.user()).toBeNull();
   });
 

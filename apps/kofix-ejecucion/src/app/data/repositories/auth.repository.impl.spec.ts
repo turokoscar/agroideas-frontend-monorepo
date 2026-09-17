@@ -197,6 +197,23 @@ describe('AuthRepositoryImpl', () => {
             expect(service.isAuthenticated$()).toBe(false);
             expect(result?.exitoso).toBe(false);
         });
+
+        it('should handle HTTP 400 error and return the server error message', () => {
+            const service = createService();
+
+            let result: { exitoso: boolean; mensaje?: string } | undefined;
+            service.login({ usuario: 'ana', clave: 'bad' }).subscribe((res) => (result = res));
+
+            httpMock.expectOne(`${environment.apiSeguridad}/auth/login`).flush(
+                { respuesta: 'ERROR', mensaje: 'Cuenta bloqueada por múltiples intentos fallidos. Intente más tarde.' },
+                { status: 400, statusText: 'Bad Request' }
+            );
+
+            expect(service.getToken()).toBeNull();
+            expect(service.isAuthenticated$()).toBe(false);
+            expect(result?.exitoso).toBe(false);
+            expect(result?.mensaje).toBe('Cuenta bloqueada por múltiples intentos fallidos. Intente más tarde.');
+        });
     });
 
     describe('fetchPermissions', () => {

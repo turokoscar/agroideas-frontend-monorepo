@@ -32,7 +32,7 @@ export class LoginPageComponent {
                 }
             },
             error: (err) => {
-                this.errorMessage.set('No se pudo conectar con el servidor de seguridad');
+                this.errorMessage.set(err?.error?.mensaje || 'No se pudo conectar con el servidor de seguridad');
             }
         });
     }

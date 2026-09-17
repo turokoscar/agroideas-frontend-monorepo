@@ -35,20 +35,20 @@ export class LoginComponent {
     this.errorMessage.set(null);
 
     this.authService.login(this.username, this.password).subscribe({
-      next: (success) => {
+      next: (res) => {
         this.loading.set(false);
-        if (success) {
+        if (res.success) {
           const user = this.authService.user();
           if (user) {
             this.redirectByUserRole(user.role);
           }
         } else {
-          this.errorMessage.set('Usuario o contraseña incorrectos.');
+          this.errorMessage.set(res.mensaje || 'Usuario o contraseña incorrectos.');
         }
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.errorMessage.set('Error de conexión con el servidor de seguridad.');
+        this.errorMessage.set(err?.error?.mensaje || 'Error de conexión con el servidor de seguridad.');
       }
     });
   }

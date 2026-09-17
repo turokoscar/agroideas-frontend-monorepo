@@ -1,7 +1,7 @@
 import { ResponseDto, STORAGE_KEYS, decodeJwt, extractRoles, getExpiration, isExpired, isSuccess } from '@agroideas/utils';
 import { AlertService } from '@agroideas/feedback';
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, of, switchMap, catchError, map } from 'rxjs';
 import { AuthRepository } from '../../domain/repositories/auth.repository';
 import { AuthResponse, User } from '../../domain/models/auth/auth.model';
@@ -81,6 +81,15 @@ export class AuthRepositoryImpl implements AuthRepository {
                     );
                 }
                 return of(authRes);
+            }),
+            catchError((err: HttpErrorResponse | any) => {
+                const mensaje = err?.error?.mensaje || (err?.status === 0
+                    ? 'No se pudo conectar con el servidor de seguridad'
+                    : (err?.error?.message || 'Error en la autenticación'));
+                return of<AuthResponse>({
+                    exitoso: false,
+                    mensaje
+                });
             })
         );
     }

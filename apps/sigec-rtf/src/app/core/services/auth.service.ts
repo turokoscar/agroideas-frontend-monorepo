@@ -1,10 +1,15 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
 import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
+
+export interface LoginResult {
+  success: boolean;
+  mensaje?: string;
+}
 
 // No hay rol 'UR' (ADR-010): UN maneja todo el ciclo del expediente, no hay un actor del
 // sistema separado para la verificación de campo.
@@ -85,7 +90,7 @@ export class AuthService {
     return localStorage.getItem(STORAGE_KEYS.SAT_TOKEN);
   }
 
-  login(usuario: string, password: string): Observable<boolean> {
+  login(usuario: string, password: string): Observable<LoginResult> {
     return this.http.post<SelLoginResponse>(`${this.apiUrl}/login`, {
       username: usuario,
       password: password,
@@ -109,9 +114,15 @@ export class AuthService {
           localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, data.accessToken);
           localStorage.setItem(STORAGE_KEYS.SAT_USER_SESSION, JSON.stringify(user));
           this._user.set(user);
-          return true;
+          return { success: true, mensaje: res.mensaje };
         }
-        return false;
+        return { success: false, mensaje: res?.mensaje || 'Credenciales inválidas.' };
+      }),
+      catchError((err: HttpErrorResponse | any) => {
+        const mensaje = err?.error?.mensaje || (err?.status === 0
+          ? 'Error de conexión con el servidor de seguridad.'
+          : (err?.error?.message || 'Error en la autenticación.'));
+        return of({ success: false, mensaje });
       })
     );
   }
