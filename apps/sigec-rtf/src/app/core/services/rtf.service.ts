@@ -88,7 +88,6 @@ export class RtfService {
   oaBandejaList = this.oaService.oaBandejaList;
   oaBandejaTotal = this.oaService.oaBandejaTotal;
   oaBandejaEstado = this.oaService.oaBandejaEstado;
-  oaBandejaPagina = this.oaService.oaBandejaPagina;
 
   // UN proxies (ADR-010: UN maneja todo el ciclo EN_REVISION → IN_REVISION_UN, sin actor UR
   // separado — un-gabinete.service.ts absorbió lo que vivía en ur-auditoria.service.ts)
@@ -144,11 +143,12 @@ export class RtfService {
   downloadEvidencia = (evidenciaId: number) => this.oaService.downloadEvidencia(evidenciaId);
   removeEvidencia = (evidenciaId: number) => this.oaService.removeEvidencia(evidenciaId);
   descargarAnexo17 = (rtfId: number) => this.oaService.descargarAnexo17(rtfId);
+  descargarAnexo18 = (rtfId: number) => this.oaService.descargarAnexo18(rtfId);
   loadActividadReciente = () => this.oaService.loadActividadReciente();
   loadDisbursements = (rtfId: number) => this.oaService.loadDisbursements(rtfId);
   updateMeta = (index: number, patch: Partial<MetaFisicaDto>) => this.oaService.updateMeta(index, patch);
   updateIndicador = (index: number, patch: Partial<IndicadorDto>) => this.oaService.updateIndicador(index, patch);
-  loadBandejaOA = (estado: string, pagina?: number, cantidad?: number) => this.oaService.loadBandejaOA(estado, pagina, cantidad);
+  loadBandejaOA = (estados: string[], cantidad?: number) => this.oaService.loadBandejaOA(estados, cantidad);
 
   // Delegaciones UN (incluye la verificación de campo opcional — ver comentario arriba)
   loadDashboardUn = () => this.unService.loadDashboardUn();

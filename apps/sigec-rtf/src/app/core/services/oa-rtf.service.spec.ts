@@ -171,10 +171,10 @@ describe('OaRtfService', () => {
   });
 
   describe('loadBandejaOA', () => {
-    it('populates the bandeja list, total, estado and pagina', () => {
-      service.loadBandejaOA('EN_EDICION', 2, 5).subscribe();
+    it('populates the bandeja list, total and estado for a single estado', () => {
+      service.loadBandejaOA(['EN_EDICION'], 5).subscribe();
 
-      httpMock.expectOne(`${apiUrl}/rtfs?estado=EN_EDICION&pagina=2&cantidad=5`).flush(ok({
+      httpMock.expectOne(`${apiUrl}/rtfs?estados=EN_EDICION&cantidad=5`).flush(ok({
         total: 12,
         items: [{ ideRtf: 1 } as any]
       }));
@@ -182,7 +182,17 @@ describe('OaRtfService', () => {
       expect(service.oaBandejaList()).toHaveLength(1);
       expect(service.oaBandejaTotal()).toBe(12);
       expect(service.oaBandejaEstado()).toBe('EN_EDICION');
-      expect(service.oaBandejaPagina()).toBe(2);
+    });
+
+    it('consolidates several estados into one CSV request', () => {
+      service.loadBandejaOA(['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN']).subscribe();
+
+      httpMock.expectOne(`${apiUrl}/rtfs?estados=EN_REVISION,AUDITADO_CAMPO,IN_REVISION_UN&cantidad=200`).flush(ok({
+        total: 0,
+        items: []
+      }));
+
+      expect(service.oaBandejaEstado()).toBe('EN_REVISION,AUDITADO_CAMPO,IN_REVISION_UN');
     });
   });
 

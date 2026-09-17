@@ -6,25 +6,24 @@
       <h2 class="text-2xl font-bold tracking-tight text-foreground">Bandeja RTF</h2>
       <p class="text-sm text-muted-foreground">Todos los reportes técnico-financieros registrados</p>
     </div>
-    <a
-      routerLink="/rtf/pasos-criticos/registrar"
-      class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-    >
-      <span class="material-symbols-outlined text-[16px]">add</span>
-      Nuevo RTF
-    </a>
+    <ui-button
+      icon="add"
+      label="Nuevo RTF"
+      (onClick)="nuevoRtf()"
+    />
   </div>
 
-  <!-- Tabs by estado -->
+  <!-- Tabs por estado -->
   <div class="flex flex-wrap gap-2">
     @for (tab of tabs; track tab.key) {
       <button
+        type="button"
         class="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
-        [class.bg-primary]="activeTab() === tab.key"
-        [class.text-primary-foreground]="activeTab() === tab.key"
-        [class.bg-surface-container]="activeTab() !== tab.key"
-        [class.text-muted-foreground]="activeTab() !== tab.key"
-        [class.hover:bg-muted]="activeTab() !== tab.key"
+        [class.bg-primary]="activeTabKey() === tab.key"
+        [class.text-primary-foreground]="activeTabKey() === tab.key"
+        [class.bg-surface-container]="activeTabKey() !== tab.key"
+        [class.text-muted-foreground]="activeTabKey() !== tab.key"
+        [class.hover:bg-muted]="activeTabKey() !== tab.key"
         (click)="cambiarTab(tab.key)"
       >
         {{ tab.label }}
@@ -32,144 +31,124 @@
     }
   </div>
 
-  <!-- Loading -->
-  @if (loading()) {
-    <div class="bg-card border border-border rounded-xl overflow-hidden shadow-sm" aria-hidden="true">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-border bg-muted/30">
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">ID</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Convenio</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Crítico</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Estado</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Límite</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Registro</th>
-              <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of [1,2,3,4,5]; track row) {
-              <tr class="border-b border-border">
-                <td class="px-4 py-3"><div class="h-3 w-10 rounded bg-surface-container animate-pulse"></div></td>
-                <td class="px-4 py-3"><div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div></td>
-                <td class="px-4 py-3"><div class="h-3 w-16 rounded bg-surface-container animate-pulse"></div></td>
-                <td class="px-4 py-3"><div class="h-4 w-20 rounded-full bg-surface-container animate-pulse"></div></td>
-                <td class="px-4 py-3"><div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div></td>
-                <td class="px-4 py-3"><div class="h-3 w-20 rounded bg-surface-container animate-pulse"></div></td>
-                <td class="px-4 py-3"><div class="h-3 w-16 rounded bg-surface-container animate-pulse ml-auto"></div></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <span class="sr-only">Cargando RTFs…</span>
-    </div>
-  }
-
-  <!-- Empty state -->
-  @if (!loading() && rtfService.oaBandejaList().length === 0) {
-    <div class="flex flex-col items-center justify-center py-20 text-center">
-      <span class="material-symbols-outlined text-5xl text-muted-foreground/40 mb-4">inbox</span>
-      <p class="text-sm font-medium text-foreground">No hay RTFs en {{ activeTabLabel() }}</p>
-      <p class="text-xs text-muted-foreground mt-1">Los RTFs aparecerán aquí según su estado.</p>
-    </div>
-  }
-
-  <!-- Table -->
-  @if (!loading() && rtfService.oaBandejaList().length > 0) {
-    <div class="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-border bg-muted/30">
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">ID</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Convenio</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Paso Crítico</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Estado</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Límite</th>
-              <th class="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fec. Registro</th>
-              <th class="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (rtf of rtfService.oaBandejaList(); track rtf.ideRtf) {
-              <tr class="border-b border-border hover:bg-muted/20 transition-colors">
-                <td class="px-4 py-3 font-mono text-xs">{{ rtf.ideRtf }}</td>
-                <td class="px-4 py-3 font-medium">{{ rtf.ideConvenio }}</td>
-                <td class="px-4 py-3">{{ rtf.numPasoCritico }}</td>
-                <td class="px-4 py-3">
-                  <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" [class]="estadoBadgeClass(rtf.estRtf)">
-                    {{ statusLabel(rtf.estRtf) }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-xs">{{ rtf.fecLimite | date:'dd/MM/yyyy' }}</td>
-                <td class="px-4 py-3 text-xs">{{ rtf.fecRegistro | date:'dd/MM/yyyy' }}</td>
-                <td class="px-4 py-3 text-right">
-                  <div class="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      (click)="abrirRtf(rtf)"
-                      class="rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-muted transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
-                      title="Ver RTF"
-                      [attr.aria-label]="'Ver RTF ' + rtf.ideRtf"
-                    >
-                      <span class="material-symbols-outlined text-[16px]" aria-hidden="true">visibility</span>
-                    </button>
-                    @if (rtf.estRtf === 'PENDIENTE' || rtf.estRtf === 'EN_EDICION') {
-                      <button
-                        type="button"
-                        (click)="abrirRtf(rtf)"
-                        class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
-                        title="Editar RTF"
-                        [attr.aria-label]="'Editar RTF ' + rtf.ideRtf"
-                      >
-                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
-                      </button>
-                      <button
-                        type="button"
-                        (click)="enviarRtf(rtf)"
-                        class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-success hover:bg-success/10 transition-colors focus-visible:outline-2 focus-visible:outline-success focus-visible:outline-offset-2"
-                        title="Enviar RTF"
-                        [attr.aria-label]="'Enviar RTF ' + rtf.ideRtf"
-                      >
-                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">send</span>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+  <!-- Búsqueda -->
+  <app-ui-filter-bar [showSearch]="false">
+    <div class="filter-group filter-group--search flex-1">
+      <label class="filter-label" for="bandeja-oa-search">Buscar</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input
+          id="bandeja-oa-search"
+          type="text"
+          class="filter-input filter-input--search"
+          placeholder="ID de RTF o paso crítico..."
+          [value]="filtroTexto()"
+          (input)="filtroTexto.set($any($event.target).value)"
+        />
       </div>
     </div>
+  </app-ui-filter-bar>
 
-    <!-- Pagination -->
-    @if (totalPages() > 1) {
-      <div class="flex items-center justify-between">
-        <p class="text-xs text-muted-foreground">
-          Mostrando {{ rtfService.oaBandejaList().length }} de {{ rtfService.oaBandejaTotal() }} RTFs
-        </p>
-        <div class="flex items-center gap-2">
-          <button
-            class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-30"
-            [disabled]="rtfService.oaBandejaPagina() <= 1"
-            (click)="irPagina(rtfService.oaBandejaPagina() - 1)"
+  <!-- Tabla -->
+  <app-ui-data-table
+    [columns]="columns"
+    [data]="listaFiltrada()"
+    [loading]="loading()"
+    [rows]="10"
+    [hasActions]="true"
+    [rowTemplate]="rowTpl"
+    [actionsTemplate]="actionsTpl"
+    emptyIcon="inbox"
+    [emptyMessage]="'No hay RTFs en ' + activeTabLabel()"
+    emptySubMessage="Los RTFs aparecerán aquí según su estado."
+  >
+
+    <ng-template #rowTpl let-row let-col="col">
+      @if (col.field === 'estRtf') {
+        <app-ui-status-pill [text]="statusLabel(row.estRtf)" [status]="estadoPillStatus(row.estRtf)" />
+      }
+      @if (col.field === 'plazo') {
+        @if (diasRestantes(row.fecLimite); as plazo) {
+          <span
+            class="text-xs font-semibold"
+            [class.text-destructive]="plazo.urgente"
+            [class.text-muted-foreground]="!plazo.urgente"
           >
-            Anterior
-          </button>
-          <span class="text-xs text-muted-foreground">Página {{ rtfService.oaBandejaPagina() }}</span>
-          <button
-            class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-30"
-            [disabled]="rtfService.oaBandejaPagina() >= totalPages()"
-            (click)="irPagina(rtfService.oaBandejaPagina() + 1)"
-          >
-            Siguiente
-          </button>
-        </div>
+            {{ plazo.texto }}
+          </span>
+        }
+      }
+    </ng-template>
+
+    <ng-template #actionsTpl let-row>
+      <div class="flex items-center justify-end gap-1">
+        <ui-button
+          iconOnly
+          size="sm"
+          appearance="soft"
+          severity="secondary"
+          icon="visibility"
+          [ariaLabel]="'Ver RTF ' + row.ideRtf"
+          (onClick)="abrirRtf(row)"
+        />
+        @if (row.estRtf === 'PENDIENTE' || row.estRtf === 'EN_EDICION' || row.estRtf === 'OBSERVADO') {
+          <ui-button
+            iconOnly
+            size="sm"
+            appearance="soft"
+            severity="primary"
+            icon="edit"
+            [ariaLabel]="'Editar RTF ' + row.ideRtf"
+            (onClick)="abrirRtf(row)"
+          />
+        }
+        @if (row.estRtf === 'OBSERVADO') {
+          <ui-button
+            size="sm"
+            appearance="soft"
+            severity="warning"
+            icon="feedback"
+            label="Atender"
+            [ariaLabel]="'Atender observaciones del RTF ' + row.ideRtf"
+            (onClick)="atenderObservaciones(row)"
+          />
+        }
+        @if (row.estRtf === 'PENDIENTE' || row.estRtf === 'EN_EDICION' || row.estRtf === 'OBSERVADO') {
+          <ui-button
+            iconOnly
+            size="sm"
+            appearance="soft"
+            severity="success"
+            icon="send"
+            [ariaLabel]="'Enviar RTF ' + row.ideRtf"
+            (onClick)="enviarRtf(row)"
+          />
+        }
+        @if (row.estRtf === 'APROBADO') {
+          <ui-button
+            iconOnly
+            size="sm"
+            appearance="soft"
+            severity="secondary"
+            icon="verified"
+            [ariaLabel]="'Ver Anexo 18 del RTF ' + row.ideRtf"
+            (onClick)="verAnexo18(row)"
+          />
+        }
       </div>
-    }
+    </ng-template>
+
+  </app-ui-data-table>
+
+  <!-- PDF Viewer Modal (Anexo 18) -->
+  @if (pdfViewerOpen()) {
+    <ui-pdf-viewer
+      [open]="pdfViewerOpen()"
+      [filename]="pdfViewerFilename()"
+      [fileUrl]="pdfViewerFileUrl()"
+      [downloadUrl]="pdfViewerDownloadUrl()"
+      (onOpenChange)="onPdfViewerClose()"
+    />
   }
 
 </div>

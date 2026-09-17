@@ -72,7 +72,6 @@ export class OaRtfService {
   oaBandejaList = signal<RtfCabeceraDto[]>([]);
   oaBandejaTotal = signal(0);
   oaBandejaEstado = signal<string>('PENDIENTE');
-  oaBandejaPagina = signal(1);
 
   resolvePostulanteId() {
     return this.http.get<ApiResponse<{ postulanteId: number }>>(`${this.apiUrl}/postulantes/actual`).pipe(
@@ -336,6 +335,24 @@ export class OaRtfService {
     );
   }
 
+  /**
+   * ADR-014 (frontend) Fase 7: mismo endpoint que ya usa `un-gabinete.service.ts` vía
+   * `cargarAnexo18` para traer el formulario, pero aquí solo se necesita el PDF ya emitido —
+   * `DocumentoController.DescargarAnexo18`, sin restricción de rol. Si el Anexo 18 todavía no
+   * se generó (`informe == null` en `PdfService.GenerarAnexo18PdfAsync`), el backend devuelve
+   * un PDF vacío en vez de 404; el visor ya maneja ese caso como error de carga.
+   */
+  descargarAnexo18(rtfId: number) {
+    return this.http.get(`${this.apiUrl}/rtfs/${rtfId}/documentos/anexo18`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(err => {
+        console.error('Error downloading Anexo 18', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
   removeEvidencia(evidenciaId: number) {
     return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/evidencias/${evidenciaId}`).pipe(
       map(res => {
@@ -387,14 +404,33 @@ export class OaRtfService {
     this.indicadores.update(prev => prev.map((ind, i) => i === index ? { ...ind, ...patch } : ind));
   }
 
-  loadBandejaOA(estado: string, pagina = 1, cantidad = 10) {
-    return this.http.get<ApiResponse<DatosPaginados<RtfCabeceraDto>>>(`${this.apiUrl}/rtfs?estado=${estado}&pagina=${pagina}&cantidad=${cantidad}`).pipe(
+  /**
+   * ADR-014 (frontend) Fase 7: `estados` (CSV) reemplaza el `estado` singular para poder
+   * consolidar varios estados backend en un solo tab de la bandeja (p. ej. "En Revisión en
+   * AGROIDEAS" = EN_REVISION+AUDITADO_CAMPO+IN_REVISION_UN) en una sola llamada — mismo
+   * mecanismo que `UnGabineteService.loadBandejaUn` ya usa en producción (ver ADR-013).
+   * `cantidad=200` (antes 10) trae toda la cartera del postulante en una sola página; con eso,
+   * `UiDataTableComponent` pagina y `filtroTexto` filtra 100% en cliente, sin más round-trips.
+   *
+   * OJO — riesgo conocido, no introducido por este cambio: `RtfController.Listar` marca
+   * `esBandejaEspecialistaUn = true` en cuanto TODOS los estados pedidos están en
+   * `EstadoRtf.EstadosBandejaUn` (incluye EN_REVISION/AUDITADO_CAMPO/IN_REVISION_UN) — sin
+   * distinguir si quien llama es un especialista UN o una OA. Para una OA eso dispara
+   * `soloConveniosAsignados=true` y el backend intenta resolver "convenios asignados" (cartera)
+   * contra `sel-api-general` para un usuario que no tiene ese concepto — ya le pasaba al tab
+   * "En Revisión" de esta bandeja ANTES de este cambio (un solo `estado=EN_REVISION` ya activa
+   * la misma condición). Resultado esperado hoy: ese tab vuelve vacío (o error si
+   * `ObtenerConveniosAsignadosAsync` lanza) hasta que se corrija `RtfController.Listar` para
+   * distinguir el rol del caller, no solo la forma de `estados`. Ver ADR-014 (frontend).
+   */
+  loadBandejaOA(estados: string[], cantidad = 200) {
+    return this.http.get<ApiResponse<DatosPaginados<RtfCabeceraDto>>>(`${this.apiUrl}/rtfs?estados=${estados.join(',')}&cantidad=${cantidad}`).pipe(
       map(res => {
-        this.oaBandejaList.set(res.datos?.items || []);
-        this.oaBandejaTotal.set(res.datos?.total || 0);
-        this.oaBandejaEstado.set(estado);
-        this.oaBandejaPagina.set(pagina);
-        return res.datos;
+        const items = res.datos?.items ?? [];
+        this.oaBandejaList.set(items);
+        this.oaBandejaTotal.set(res.datos?.total ?? items.length);
+        this.oaBandejaEstado.set(estados.join(','));
+        return items;
       }),
       catchError(err => {
         console.error('Error loading OA bandeja', err);
