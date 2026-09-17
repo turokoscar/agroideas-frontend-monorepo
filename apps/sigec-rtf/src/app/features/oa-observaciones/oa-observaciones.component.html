@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
+<div class="space-y-6 animate-fade-in">
 
   <!-- Header -->
   <div>
@@ -41,7 +41,7 @@
 
   <!-- Todas atendidas -->
   @if (!isLoading() && !hasError() && todasAtendidas()) {
-    <div class="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success-soft p-4 text-sm font-medium text-success-foreground">
+    <div class="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success-soft p-4 text-sm font-medium text-success">
       <span class="material-symbols-outlined text-[20px] text-success">check_circle</span>
       Ya respondiste todas las observaciones de este ciclo. Puedes volver al formulario y reenviar el RTF.
     </div>
@@ -56,7 +56,7 @@
             <h3 class="text-sm font-bold text-foreground">{{ obs.titulo }}</h3>
             <div class="flex items-center gap-2">
               @if (obs.atendida) {
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success-soft text-success-foreground text-[10px] font-bold uppercase tracking-wider">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success-soft text-success text-[10px] font-bold uppercase tracking-wider">
                   <span class="material-symbols-outlined text-[12px]">check</span>
                   Atendida
                 </span>
