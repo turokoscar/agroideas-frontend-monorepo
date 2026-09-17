@@ -293,18 +293,31 @@
           <div class="text-xs text-muted-foreground">Metas programadas vs ejecutadas</div>
         </div>
       </a>
-      <a
-        routerLink="/rtf/pasos-criticos/observaciones"
-        class="flex items-center gap-3 rounded-xl border border-border bg-surface-container-lowest p-4 hover:bg-surface-container/40 transition-colors"
+      <button
+        type="button"
+        (click)="irAObservaciones()"
+        class="flex items-center gap-3 rounded-xl border p-4 text-left transition-colors hover:bg-surface-container/40"
+        [class]="observacionesPendientes() > 0 ? 'border-warning bg-warning-soft' : 'border-border bg-surface-container-lowest'"
       >
-        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10 text-warning">
+        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
           <span class="material-symbols-outlined text-[22px]">feedback</span>
+          @if (observacionesPendientes() > 0) {
+            <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[9px] font-bold text-warning-foreground">
+              {{ observacionesPendientes() }}
+            </span>
+          }
         </div>
         <div>
-          <div class="text-sm font-semibold text-foreground">Observaciones</div>
-          <div class="text-xs text-muted-foreground">Levantar observaciones UR/UN</div>
+          <div class="text-sm font-semibold text-foreground">Pliego de Observaciones</div>
+          <div class="text-xs text-muted-foreground">
+            @if (observacionesPendientes() > 0) {
+              {{ observacionesPendientes() }} ítem{{ observacionesPendientes() === 1 ? '' : 's' }} observado{{ observacionesPendientes() === 1 ? '' : 's' }} por AGROIDEAS
+            } @else {
+              Ver detalle de observaciones
+            }
+          </div>
         </div>
-      </a>
+      </button>
     </div>
 
   }

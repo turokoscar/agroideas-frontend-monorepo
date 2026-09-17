@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { RtfService, RtfCabeceraDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, TableColumn } from '@agroideas/ui';
@@ -10,7 +10,7 @@ import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTi
 @Component({
   selector: 'app-oa-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent],
   providers: [DecimalPipe],
   templateUrl: './oa-registro.component.html'
 })
@@ -61,6 +61,19 @@ export class OaRegistroComponent implements OnInit {
       ? 'Plazo para subsanar observaciones'
       : 'Plazo para envío del RTF'
   );
+
+  /** ADR-014 (frontend) Fase 4: cuántas observaciones de la UN siguen abiertas en este RTF. */
+  observacionesPendientes = signal(0);
+
+  private cargarObservacionesPendientes(rtfId: number) {
+    this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
+      next: estado => {
+        const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO').length;
+        this.observacionesPendientes.set(count);
+      },
+      error: () => { /* silencioso: el banner simplemente no muestra conteo */ }
+    });
+  }
 
   filteredPasoCriticoMetas = computed(() => {
     return this.rtfService.pasoCriticoMetas().filter(meta => meta.metaFisicaProgramada > 0);
@@ -134,6 +147,7 @@ export class OaRegistroComponent implements OnInit {
         this.rtfService.loadEvidencias(rtfId).subscribe();
         this.rtfService.loadGastosF1(rtfId).subscribe();
         this.rtfService.loadEstadoPlazo(rtfId).subscribe();
+        this.cargarObservacionesPendientes(rtfId);
         // Recarga con ideRtf ya conocido para que se fusione el avance guardado localmente
         // (ADR-009), que la primera carga (línea de arriba, sin ideRtf) no pudo traer.
         this.rtfService.loadMetasPorPasoCritico(pasoCriticoId, rtfId).subscribe();
@@ -207,6 +221,7 @@ export class OaRegistroComponent implements OnInit {
         this.rtfService.loadEvidencias(rtfId).subscribe();
         this.rtfService.loadGastosF1(rtfId).subscribe();
         this.rtfService.loadEstadoPlazo(rtfId).subscribe();
+        this.cargarObservacionesPendientes(rtfId);
       }
     }
   }

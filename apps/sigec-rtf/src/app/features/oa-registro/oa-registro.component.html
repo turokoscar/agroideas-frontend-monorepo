@@ -7,6 +7,33 @@
     [label]="plazoBannerLabel()"
   />
 
+  <!-- Observaciones Banner (ADR-014 frontend Fase 4) -->
+  @if (rtfService.rtfStatus() === 'OBSERVADO') {
+    <div class="flex items-center justify-between gap-4 rounded-2xl border border-warning bg-warning-soft p-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 text-warning">
+          <span class="material-symbols-outlined text-[20px]">feedback</span>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-warning">Observaciones de AGROIDEAS</div>
+          <div class="text-sm font-semibold text-warning-foreground">
+            @if (observacionesPendientes() > 0) {
+              {{ observacionesPendientes() }} observación{{ observacionesPendientes() === 1 ? '' : 'es' }} por revisar antes de reenviar
+            } @else {
+              Este RTF fue devuelto con observaciones
+            }
+          </div>
+        </div>
+      </div>
+      <a
+        routerLink="/rtf/pasos-criticos/observaciones"
+        class="shrink-0 px-4 py-2 rounded-lg bg-warning text-warning-foreground text-xs font-semibold hover:bg-warning/90 transition-colors"
+      >
+        Ver pliego de observaciones
+      </a>
+    </div>
+  }
+
   <!-- Header Info Cards -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
     <div class="bg-surface-container-lowest border border-border rounded-xl p-4 space-y-1">

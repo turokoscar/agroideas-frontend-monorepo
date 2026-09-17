@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FormatConvenioPipe } from '../../core/pipes/format-convenio.pipe';
@@ -17,14 +17,23 @@ import { of } from 'rxjs';
 export class OaDashboardComponent implements OnInit {
   rtfService = inject(RtfService);
   authService = inject(AuthService);
+  private router = inject(Router);
 
   isLoading = signal(true);
   hasError = signal(false);
+  observacionesPendientes = signal(0);
 
   activePasoCriticoId = computed(() => {
     const pasos = this.rtfService.pasos();
     const active = pasos.find(p => p.status === 'Activo') || pasos[0];
     return active?.id ?? this.rtfService.activePasoNumero();
+  });
+
+  /** ADR-014 (frontend) Fase 4: rtfId del paso activo, para poder abrir su pliego de observaciones. */
+  private activeRtfId = computed(() => {
+    const pasos = this.rtfService.pasos();
+    const active = pasos.find(p => p.status === 'Activo') || pasos[0];
+    return active?.rtfId ?? null;
   });
 
   ngOnInit() {
@@ -49,12 +58,44 @@ export class OaDashboardComponent implements OnInit {
       }),
       switchMap(() => this.rtfService.loadActividadReciente())
     ).subscribe({
-      next: () => this.isLoading.set(false),
+      next: () => {
+        this.isLoading.set(false);
+        this.cargarObservacionesPendientes();
+      },
       error: () => {
         this.isLoading.set(false);
         this.hasError.set(true);
       }
     });
+  }
+
+  /**
+   * ADR-014 (frontend) Fase 4: cuenta las observaciones abiertas del RTF activo, para el badge
+   * del tile "Pliego de Observaciones" -- solo tiene sentido pedirlo si el paso activo está
+   * OBSERVADO; en cualquier otro estado no hay nada que contar.
+   */
+  private cargarObservacionesPendientes() {
+    const rtfId = this.activeRtfId();
+    if (this.rtfService.rtfStatus() !== 'OBSERVADO' || !rtfId) {
+      this.observacionesPendientes.set(0);
+      return;
+    }
+    this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
+      next: estado => {
+        const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO').length;
+        this.observacionesPendientes.set(count);
+      },
+      error: () => { /* silencioso: el tile simplemente no muestra el badge de conteo */ }
+    });
+  }
+
+  /** El tile de observaciones necesita fijar el rtfId correcto antes de navegar -- `rtfId` es una
+   * señal global que puede haber quedado apuntando a otro RTF visto antes (mismo criterio que
+   * `BandejaOAComponent.atenderObservaciones`). */
+  irAObservaciones() {
+    const rtfId = this.activeRtfId();
+    if (rtfId) this.rtfService.rtfId.set(rtfId);
+    this.router.navigate(['/rtf/pasos-criticos/observaciones']);
   }
 
   get financialProgress(): number {
