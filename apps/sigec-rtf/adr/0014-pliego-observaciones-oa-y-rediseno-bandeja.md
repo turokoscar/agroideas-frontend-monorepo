@@ -1,10 +1,10 @@
 # ADR-014: Pliego de Observaciones real para la OA y rediseño de la Bandeja RTF
 
 ## Estado
-Parcialmente implementado. **Fases 7 y 7b (rediseño de `bandeja-oa` + fix de aislamiento
-entre organizaciones en `sigec-api-rtf`) implementadas el 17/09/2026** — ver "Fase 7 — estado
-real" más abajo. Fases 1-6 (pliego de observaciones real) siguen propuestas: dependen de
-`sigec-api-rtf` **ADR-016**
+Parcialmente implementado. **Fases 2, 7 y 7b implementadas el 17/09/2026** (parser
+`txt_seccion` compartido; rediseño de `bandeja-oa`; fix de aislamiento entre organizaciones en
+`sigec-api-rtf`) — ver "Fase 7 — estado real" más abajo. Fases 1, 3-6 (pliego de observaciones
+real para la OA) siguen propuestas: dependen de `sigec-api-rtf` **ADR-016**
 (`docs/ADR-016_Pliego_Observaciones_OA_y_Atencion_por_Item.md`), que a su vez está en estado
 "Propuesto" (0 de 8 fases hechas, verificado contra el schema y el código C# el 17/09/2026: no
 existe `est_atencion` en `SRT_TMD_REVISION`, no existe `POST rtfs/{id}/evaluaciones/atencion`,
@@ -267,7 +267,7 @@ repo autocontenido.
 | Fase | Alcance | Repo | Depende de |
 |---|---|---|---|
 | 1 | Backend: Fases 1-4 de ADR-016 (`sigec-api-rtf`) — SQL, lectura, escritura, gate de reenvío | `sigec-api-rtf` | — |
-| 2 | Frontend: extraer parser `txt_seccion` compartido (`revision-seccion.util.ts`); `un-gabinete.component.ts` pasa a importarlo | este repo | — |
+| 2 | ✅ **Hecho (17/09/2026)** — Frontend: extraer parser `txt_seccion` compartido (`revision-seccion.util.ts`, con specs); `un-gabinete.component.ts` pasa a importarlo | este repo | — |
 | 3 | Frontend: reescribir `oa-observaciones.component.ts` en modo lectura (pliego sin "atender" todavía); nuevos métodos de lectura en `oa-rtf.service.ts` | este repo | Fase 2 |
 | 4 | Frontend: banner en `oa-registro`, corregir tile de `oa-dashboard` | este repo | Fase 3 |
 | 5 | Frontend: habilitar "atender" en `oa-observaciones` + gate de UI en `canSubmit()`/`enviarRtf()` | este repo | Fase 1, Fase 3 |

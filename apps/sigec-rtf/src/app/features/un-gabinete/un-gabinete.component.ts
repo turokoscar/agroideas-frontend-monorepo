@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RtfService, EvidenceDto, CartaDto } from '../../core/services/rtf.service';
-import { UrEvaluacionItemDto, UrEvaluacionItemKind } from '../../core/models';
+import { UrEvaluacionItemDto, UrEvaluacionItemKind, parseSeccionRevision } from '../../core/models';
 import { ConvenioGeneralService } from '../../core/services/convenio-general.service';
 import { ConvenioResumenDto } from '../../core/models';
 import { formatConvenioNumber } from '@agroideas/utils';
@@ -308,14 +308,9 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
         next: (estado) => {
           const mapa = new Map<string, UrEvaluacionItemDto>();
           for (const rev of estado?.revisiones ?? []) {
-            // txt_seccion = UR_{KIND}_{ID}, p. ej. "UR_META_7" o "UR_R1_142" -- KIND nunca lleva
-            // guion bajo, así que no hay ambigüedad al partir.
-            const sinPrefijo = rev.txtSeccion.replace(/^UR_/, '');
-            const separador = sinPrefijo.indexOf('_');
-            if (separador < 0) continue;
-            const kind = sinPrefijo.slice(0, separador) as UrEvaluacionItemKind;
-            const id = Number(sinPrefijo.slice(separador + 1));
-            if (!Number.isFinite(id)) continue;
+            const parsed = parseSeccionRevision(rev.txtSeccion);
+            if (!parsed) continue;
+            const { kind, id } = parsed;
             mapa.set(this.claveItem(kind, id), {
               id,
               kind,
