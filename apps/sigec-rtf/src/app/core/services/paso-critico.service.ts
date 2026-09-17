@@ -6,7 +6,8 @@ import { map, catchError } from 'rxjs/operators';
 import {
   PasoCriticoMeta,
   PasoCriticoIndicador,
-  ApiResponse
+  ApiResponse,
+  AvanceFinancieroPasoCriticoDto
 } from '../models';
 
 @Injectable({
@@ -23,6 +24,11 @@ export class PasoCriticoService {
   // ADR-003 — Indicadores BD_SEL state
   pasoCriticoIndicadores = signal<PasoCriticoIndicador[]>([]);
 
+  // Programado/Ejecutado financiero acotado al Paso Crítico (mismo denominador que usan las
+  // metas físicas arriba) — distinto de RtfService.budget()/disbursed(), que son totales del
+  // convenio completo.
+  avanceFinancieroPC = signal<AvanceFinancieroPasoCriticoDto | null>(null);
+
   // ADR-002 — Metas físicas/financieras desde BD_SEL vía sel-api-general (programado);
   // el avance ejecutado se fusiona localmente por RTF cuando se pasa ideRtf (ADR-009).
   loadMetasPorPasoCritico(pasoCriticoId: number, ideRtf?: number | null) {
@@ -35,6 +41,21 @@ export class PasoCriticoService {
       }),
       catchError(err => {
         console.error('Error loading metas BD_SEL', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  // El backend resuelve `ideConvenio` server-side para quien no es personal MIDAGRI (ignora lo
+  // que se envíe aquí), así que para la OA basta con pasar el suyo propio si ya se conoce.
+  loadAvanceFinancieroPasoCritico(pasoCriticoId: number, ideConvenio: number) {
+    return this.http.get<ApiResponse<AvanceFinancieroPasoCriticoDto>>(`${this.apiUrl}/pasos-criticos/${pasoCriticoId}/avance-financiero?ideConvenio=${ideConvenio}`).pipe(
+      map(res => {
+        this.avanceFinancieroPC.set(res.datos || null);
+        return res.datos;
+      }),
+      catchError(err => {
+        console.error('Error loading avance financiero del paso crítico', err);
         return throwError(() => err);
       })
     );

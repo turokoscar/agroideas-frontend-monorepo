@@ -1,6 +1,9 @@
 export interface GastoF1Dto {
   ideGastoF1: number;
   ideRtf: number;
+  /** Id del ítem de marco lógico en BD_SEL (ADR-017). Llave de unión para agrupar este gasto
+   * bajo su línea presupuestal — ver RelacionGastosF1Dto. */
+  ideItemMl?: number;
   txtItemNombre?: string;
   txtUnidadMedida?: string;
   canCantidad: number;

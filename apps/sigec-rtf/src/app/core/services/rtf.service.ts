@@ -21,6 +21,8 @@ import {
   InformeComprobacionDto,
   CartaDto,
   RevisionAtencionItem,
+  AvanceFinancieroPasoCriticoDto,
+  RelacionGastosF1Dto,
 } from '../models';
 
 export type {
@@ -41,6 +43,8 @@ export type {
   DashboardUnData,
   InformeComprobacionDto,
   CartaDto,
+  AvanceFinancieroPasoCriticoDto,
+  RelacionGastosF1Dto,
 };
 
 @Injectable({
@@ -82,6 +86,7 @@ export class RtfService {
   evidencias = this.oaService.evidencias;
   gastosF1 = this.oaService.gastosF1;
   ultimaSincronizacionGastosF1 = this.oaService.ultimaSincronizacionGastosF1;
+  relacionGastosF1 = this.oaService.relacionGastosF1;
   actividadReciente = this.oaService.actividadReciente;
 
 
@@ -111,6 +116,7 @@ export class RtfService {
   pasoCriticoMetas = this.pasoService.pasoCriticoMetas;
   pasoCriticoId = this.pasoService.pasoCriticoId;
   pasoCriticoIndicadores = this.pasoService.pasoCriticoIndicadores;
+  avanceFinancieroPC = this.pasoService.avanceFinancieroPC;
 
   rtfStatusLabel = computed(() => {
     const map: Record<string, string> = {
@@ -134,6 +140,7 @@ export class RtfService {
   loadDetalleRtf = (rtfId: number) => this.oaService.loadDetalleRtf(rtfId);
   loadEvidencias = (rtfId: number) => this.oaService.loadEvidencias(rtfId);
   loadGastosF1 = (rtfId: number) => this.oaService.loadGastosF1(rtfId);
+  loadRelacionGastosF1 = (rtfId: number) => this.oaService.loadRelacionGastosF1(rtfId);
   loadEstadoPlazo = (rtfId: number) => this.oaService.loadEstadoPlazo(rtfId);
   registrarRtf = (data: Partial<RtfCabeceraDto>) => this.oaService.registrarRtf(data);
   updateRtf = (rtfId: number, data: Partial<RtfCabeceraDto>) => this.oaService.updateRtf(rtfId, data);
@@ -185,4 +192,6 @@ export class RtfService {
     this.pasoService.actualizarEjecucionIndicador(id, ideRtf, metaProgramada, metaEjecutada, comentarios);
   subirEvidenciaIndicador = (indicadorId: number, ideRtf: number, archivo: File) =>
     this.pasoService.subirEvidenciaIndicador(indicadorId, ideRtf, archivo);
+  loadAvanceFinancieroPasoCritico = (pasoCriticoId: number, ideConvenio: number) =>
+    this.pasoService.loadAvanceFinancieroPasoCritico(pasoCriticoId, ideConvenio);
 }

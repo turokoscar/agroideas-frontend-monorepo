@@ -27,3 +27,5 @@ export * from './control-plazo.dto';
 export * from './parametro-sistema.dto';
 export * from './reporte-cumplimiento-plazos.dto';
 export * from './reporte-productividad-un-item.dto';
+export * from './avance-financiero.dto';
+export * from './relacion-gastos-f1.dto';

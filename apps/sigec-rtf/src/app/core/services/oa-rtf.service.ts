@@ -16,7 +16,8 @@ import {
   ApiResponse,
   DatosPaginados,
   ControlPlazoDto,
-  RevisionAtencionItem
+  RevisionAtencionItem,
+  RelacionGastosF1Dto
 } from '../models';
 
 @Injectable({
@@ -65,6 +66,9 @@ export class OaRtfService {
     const fechas = this.gastosF1().map(g => g.fecRegistro).filter((f): f is string => !!f);
     return fechas.length ? fechas.reduce((max, f) => (f > max ? f : max)) : null;
   });
+  /** Formato "4. Relación de Gastos Realizados - F1" (ADR-017), gastosF1() agrupado por ítem
+   * con el desglose Monto Aprobado OA/AGROIDEAS real. */
+  relacionGastosF1 = signal<RelacionGastosF1Dto | null>(null);
   actividadReciente = signal<ActividadReciente[]>([]);
 
 
@@ -217,6 +221,21 @@ export class OaRtfService {
       }),
       catchError(err => {
         console.error('Error sincronizando gastos F1', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** ADR-017: vista agrupada por ítem del snapshot de gastos F1, con el desglose real Monto
+   * Aprobado OA/AGROIDEAS por ítem. Se recarga junto con gastosF1() (misma fuente). */
+  loadRelacionGastosF1(rtfId: number) {
+    return this.http.get<ApiResponse<RelacionGastosF1Dto>>(`${this.apiUrl}/rtfs/${rtfId}/gastos-f1/relacion`).pipe(
+      map(res => {
+        this.relacionGastosF1.set(res.datos || null);
+        return res.datos;
+      }),
+      catchError(err => {
+        console.error('Error loading relación de gastos F1', err);
         return throwError(() => err);
       })
     );

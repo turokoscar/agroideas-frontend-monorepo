@@ -440,19 +440,23 @@
           <!-- Executed financial metrics card -->
           <div class="bg-surface-container-lowest border border-border rounded-2xl p-5 shadow-sm space-y-4">
             <h4 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Progreso del Presupuesto</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Presupuesto Aprobado</span>
+                <span class="text-[10px] text-muted-foreground block">Presupuesto Aprobado (Convenio)</span>
                 <span class="text-xl font-bold text-foreground">S/ {{ rtfService.budget() | number:'1.2-2' }}</span>
               </div>
               <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Monto Desembolsado / Ejecutado</span>
-                <span class="text-xl font-bold text-primary">S/ {{ rtfService.disbursed() | number:'1.2-2' }}</span>
+                <span class="text-[10px] text-muted-foreground block">Programado (Paso Crítico)</span>
+                <span class="text-xl font-bold text-foreground">S/ {{ (rtfService.avanceFinancieroPC()?.programado ?? 0) | number:'1.2-2' }}</span>
+              </div>
+              <div class="space-y-1">
+                <span class="text-[10px] text-muted-foreground block">Ejecutado (Paso Crítico)</span>
+                <span class="text-xl font-bold text-primary">S/ {{ (rtfService.avanceFinancieroPC()?.ejecutado ?? 0) | number:'1.2-2' }}</span>
               </div>
               <div class="space-y-1">
                 <span class="text-[10px] text-muted-foreground block">Porcentaje de Avance</span>
                 <span class="text-xl font-bold text-foreground">
-                  {{ (rtfService.budget() > 0 ? (rtfService.disbursed() / rtfService.budget()) : 0) | percent:'1.0-0' }}
+                  {{ ((rtfService.avanceFinancieroPC()?.porcentajeAvance ?? 0) / 100) | percent:'1.0-0' }}
                 </span>
               </div>
             </div>
@@ -460,7 +464,7 @@
             <div class="w-full bg-muted rounded-full h-2">
               <div
                 class="bg-primary h-2 rounded-full transition-all duration-500"
-                [style.width.%]="rtfService.budget() > 0 ? (rtfService.disbursed() / rtfService.budget() * 100) : 0"
+                [style.width.%]="rtfService.avanceFinancieroPC()?.porcentajeAvance ?? 0"
               ></div>
             </div>
           </div>
@@ -526,73 +530,119 @@
               <span class="text-sm text-muted-foreground">Total desembolsado: </span>
               <span class="text-lg font-bold text-foreground">S/ {{ rtfService.disbursed() | number:'1.2-2' }}</span>
             </div>
-          } @else {
-            <!-- Vista Escritorio para Gastos F1 -->
-            <div class="hidden md:block">
-              <app-ui-data-table
-                [columns]="gastosColumns"
-                [data]="rtfService.gastosF1()"
-                [paginator]="true"
-                [rows]="10"
-                [showIndex]="true"
-                [hasActions]="true"
-                [actionsTemplate]="gastoActionsTpl"
-                emptyMessage="No se encontraron gastos F1 registrados."
-              >
-                <ng-template #gastoActionsTpl let-g>
-                  @if (g.ideArchivo) {
-                    <button
-                      type="button"
-                      class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                      title="Ver documento de sustento"
-                      [attr.aria-label]="'Ver documento de sustento de ' + (g.txtItemNombre ?? 'este gasto')"
-                      (click)="verDocumentoGasto(g)"
-                    >
-                      <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-                    </button>
-                  } @else {
-                    <span class="text-[10px] text-muted-foreground italic">Sin documento</span>
-                  }
-                </ng-template>
-              </app-ui-data-table>
-            </div>
-
-            <!-- Vista Móvil para Gastos F1 -->
-            <div class="grid grid-cols-1 gap-4 md:hidden">
-              @for (g of rtfService.gastosF1(); track g.txtItemNombre) {
-                <div class="bg-card border border-border rounded-2xl p-4 space-y-3 shadow-sm">
-                  <div class="flex justify-between items-start">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">
-                      📦 Bien / Servicio
-                    </span>
-                    <span class="text-xs font-bold text-foreground">S/ {{ g.numMontoRendido | number:'1.2-2' }}</span>
-                  </div>
-                  <h3 class="text-sm font-bold text-foreground">{{ g.txtItemNombre }}</h3>
-                  <p class="text-xs text-muted-foreground">Proveedor: <span class="font-semibold text-foreground">{{ g.txtProveedorNombre || 'No especificado' }}</span></p>
-                  <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-[11px] text-muted-foreground">
+          } @else if (rtfService.relacionGastosF1()) {
+            <!-- Relación de Gastos Realizados - F1 (ADR-017): un ítem presupuestal por bloque,
+                 con sus comprobantes reales anidados debajo -- mismo agrupamiento que el formato
+                 normativo del Instructivo SEL (p. 101). -->
+            @let relacion = rtfService.relacionGastosF1()!;
+            <div class="space-y-3">
+              @for (item of relacion.items; track item.marcoLogicoID) {
+                <div class="border border-border rounded-2xl overflow-hidden shadow-sm">
+                  <div class="bg-surface-container-low p-4 grid grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div class="col-span-2 lg:col-span-1">
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Ítem</span>
+                      <span class="text-sm font-bold text-foreground">{{ item.descripcion || '—' }}</span>
+                      <span class="text-[11px] text-muted-foreground block">
+                        {{ item.cantidad | number:'1.0-2' }} {{ item.unidadMedida }}
+                        @if (item.costoUnitario) { · C.U. S/ {{ item.costoUnitario | number:'1.2-2' }} }
+                      </span>
+                    </div>
                     <div>
-                      <span class="block text-[9px] uppercase font-bold">Cantidad</span>
-                      <span>{{ g.canCantidad }} {{ g.txtUnidadMedida }}</span>
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Aprob. OA / AGROIDEAS</span>
+                      <span class="text-xs font-semibold text-foreground">S/ {{ item.montoAprobadoOa | number:'1.2-2' }} / S/ {{ item.montoAprobadoAgroideas | number:'1.2-2' }}</span>
+                      <span class="text-[11px] text-muted-foreground block">Total: S/ {{ item.montoAprobadoTotal | number:'1.2-2' }}</span>
                     </div>
-                    <div class="text-right">
-                      <span class="block text-[9px] uppercase font-bold">P. Adjudicado</span>
-                      <span>S/ {{ g.numPrecioAdjudicado | number:'1.2-2' }}</span>
+                    <div>
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Facturado</span>
+                      <span class="text-sm font-bold text-primary">S/ {{ item.montoFacturado | number:'1.2-2' }}</span>
+                      <span class="text-[11px] text-muted-foreground block">{{ item.porcentajeEjecucion | number:'1.0-1' }}% ejecutado</span>
+                    </div>
+                    <div>
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Diferencial</span>
+                      <span class="text-sm font-bold" [class.text-error]="item.montoDiferencial < 0" [class.text-foreground]="item.montoDiferencial >= 0">
+                        S/ {{ item.montoDiferencial | number:'1.2-2' }}
+                      </span>
+                    </div>
+                    <div class="lg:text-right">
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Comprobantes</span>
+                      <span class="text-xs font-semibold text-foreground">{{ item.comprobantes.length }}</span>
                     </div>
                   </div>
-                  @if (g.ideArchivo) {
-                    <button
-                      type="button"
-                      class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-border py-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-surface-container transition-colors"
-                      (click)="verDocumentoGasto(g)"
-                    >
-                      <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
-                      Ver documento de sustento
-                    </button>
+
+                  @if (item.comprobantes.length > 0) {
+                    <div class="divide-y divide-border">
+                      @for (c of item.comprobantes; track c.ideGastoF1) {
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-[11px]">
+                          <span class="text-muted-foreground w-20 shrink-0">{{ c.fecEmision | date:'dd/MM/yyyy' }}</span>
+                          <span class="font-mono shrink-0">{{ c.txtSerieNumero || '—' }}</span>
+                          <span class="text-muted-foreground shrink-0">{{ c.txtTipoCpe || '—' }}</span>
+                          <span class="flex-1 min-w-[10rem] truncate text-foreground">{{ c.txtProveedorNombre || 'Sin proveedor' }} · {{ c.txtProveedorRuc || '—' }}</span>
+                          <span class="font-semibold text-foreground shrink-0">S/ {{ c.numMontoRendido | number:'1.2-2' }}</span>
+                          @if (c.ideArchivo) {
+                            <button
+                              type="button"
+                              class="shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                              title="Ver documento de sustento"
+                              [attr.aria-label]="'Ver documento de sustento de ' + (c.txtItemNombre ?? 'este gasto')"
+                              (click)="verDocumentoGasto(c)"
+                            >
+                              <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="px-4 py-2.5 text-[11px] text-muted-foreground italic border-t border-border">Sin comprobantes sincronizados todavía para este ítem.</p>
                   }
                 </div>
               }
-              @if (rtfService.gastosF1().length === 0) {
-                <p class="text-center text-xs text-muted-foreground py-6">No se encontraron gastos F1 registrados.</p>
+              @if (relacion.items.length === 0) {
+                <p class="text-center text-xs text-muted-foreground py-6">No se encontraron ítems programados para este paso crítico.</p>
+              }
+
+              @if (relacion.gastosSinClasificar.length > 0) {
+                <div class="border border-warning bg-warning-soft rounded-2xl p-4 space-y-2">
+                  <p class="text-xs font-bold text-warning">
+                    ⚠ Gastos sin clasificar ({{ relacion.gastosSinClasificar.length }})
+                  </p>
+                  <p class="text-[11px] text-muted-foreground">
+                    Sincronizados antes de esta actualización, o de otro ítem/paso crítico. Vuelve a sincronizar para intentar resolverlos.
+                  </p>
+                  @for (g of relacion.gastosSinClasificar; track g.ideGastoF1) {
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] pt-1">
+                      <span class="text-muted-foreground w-20 shrink-0">{{ g.fecEmision | date:'dd/MM/yyyy' }}</span>
+                      <span class="flex-1 min-w-[10rem] truncate text-foreground">{{ g.txtItemNombre || 'Sin concepto' }}</span>
+                      <span class="font-semibold text-foreground shrink-0">S/ {{ g.numMontoRendido | number:'1.2-2' }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Fila TOTAL, igual que el formato normativo -->
+              <div class="border-t-2 border-primary pt-3 grid grid-cols-2 lg:grid-cols-5 gap-3">
+                <div class="col-span-2 lg:col-span-1">
+                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Total S/.</span>
+                </div>
+                <div>
+                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Aprob. OA / AGROIDEAS</span>
+                  <span class="text-xs font-bold text-foreground">S/ {{ relacion.totalAprobadoOa | number:'1.2-2' }} / S/ {{ relacion.totalAprobadoAgroideas | number:'1.2-2' }}</span>
+                  <span class="text-[11px] text-muted-foreground block">Total: S/ {{ relacion.totalAprobado | number:'1.2-2' }}</span>
+                </div>
+                <div>
+                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Facturado</span>
+                  <span class="text-sm font-bold text-primary">S/ {{ relacion.totalFacturado | number:'1.2-2' }}</span>
+                </div>
+                <div>
+                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Diferencial</span>
+                  <span class="text-sm font-bold" [class.text-error]="relacion.totalDiferencial < 0" [class.text-foreground]="relacion.totalDiferencial >= 0">
+                    S/ {{ relacion.totalDiferencial | number:'1.2-2' }}
+                  </span>
+                </div>
+              </div>
+
+              @if (hayExcedenteGastosF1()) {
+                <p class="text-[11px] italic text-muted-foreground">*** Los montos excedentes a los aprobados serán asumidos por la OA.</p>
               }
             </div>
           }

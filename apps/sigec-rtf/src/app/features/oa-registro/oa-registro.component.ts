@@ -32,6 +32,7 @@ export class OaRegistroComponent implements OnInit {
       next: () => {
         this.sincronizandoGastosF1.set(false);
         this.toast.success('Gastos F1 sincronizados', 'Se actualizó el detalle desde KOFIX.');
+        this.rtfService.loadRelacionGastosF1(rtfId).subscribe();
       },
       error: () => {
         this.sincronizandoGastosF1.set(false);
@@ -49,6 +50,12 @@ export class OaRegistroComponent implements OnInit {
    */
   isEditable = computed(() =>
     ['PENDIENTE', 'EN_EDICION', 'OBSERVADO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfService.rtfStatus())
+  );
+
+  /** ADR-017: activa la nota "*** Los montos excedentes a los aprobados serán asumidos por la OA"
+   * cuando algún ítem de la Relación de Gastos F1 facturó más de lo aprobado. */
+  hayExcedenteGastosF1 = computed(() =>
+    (this.rtfService.relacionGastosF1()?.items ?? []).some(i => i.montoDiferencial < 0)
   );
 
   /**
@@ -130,15 +137,6 @@ export class OaRegistroComponent implements OnInit {
     { field: 'status', header: 'Estado', align: 'left', type: 'custom' }
   ];
 
-  gastosColumns: TableColumn[] = [
-    { field: 'txtItemNombre', header: 'Item', align: 'left' },
-    { field: 'txtUnidadMedida', header: 'Unidad', align: 'left', width: '100px' },
-    { field: 'canCantidad', header: 'Cantidad', align: 'right', type: 'number' },
-    { field: 'numPrecioAdjudicado', header: 'P. Adjudicado', align: 'right', type: 'currency' },
-    { field: 'numMontoRendido', header: 'Monto Rendido', align: 'right', type: 'currency' },
-    { field: 'txtProveedorNombre', header: 'Proveedor', align: 'left' }
-  ];
-
   ngOnInit() {
     const idpc = this.route.snapshot.paramMap.get('idpc');
     if (idpc) {
@@ -146,10 +144,14 @@ export class OaRegistroComponent implements OnInit {
       const pasoCriticoId = Number(idpc);
       this.rtfService.loadMetasPorPasoCritico(pasoCriticoId).subscribe();
       this.rtfService.loadIndicadoresPorPasoCritico(pasoCriticoId).subscribe();
+      // El backend resuelve el ideConvenio real desde el JWT para la OA (ignora lo que se
+      // mande aquí); el valor local solo importa para roles de personal MIDAGRI.
+      this.rtfService.loadAvanceFinancieroPasoCritico(pasoCriticoId, this.rtfService.postulanteId() ?? 0).subscribe();
 
       const cargarDatosDelRtf = (rtfId: number) => {
         this.rtfService.loadEvidencias(rtfId).subscribe();
         this.rtfService.loadGastosF1(rtfId).subscribe();
+        this.rtfService.loadRelacionGastosF1(rtfId).subscribe();
         this.rtfService.loadEstadoPlazo(rtfId).subscribe();
         this.cargarObservacionesPendientes(rtfId);
         // Recarga con ideRtf ya conocido para que se fusione el avance guardado localmente
@@ -219,11 +221,13 @@ export class OaRegistroComponent implements OnInit {
               this.useBdSelMetas.set(true);
               this.rtfService.loadMetasPorPasoCritico(data.idePasoCritico, rtfId).subscribe();
               this.rtfService.loadIndicadoresPorPasoCritico(data.idePasoCritico, rtfId).subscribe();
+              this.rtfService.loadAvanceFinancieroPasoCritico(data.idePasoCritico, this.rtfService.postulanteId() ?? 0).subscribe();
             }
           }
         });
         this.rtfService.loadEvidencias(rtfId).subscribe();
         this.rtfService.loadGastosF1(rtfId).subscribe();
+        this.rtfService.loadRelacionGastosF1(rtfId).subscribe();
         this.rtfService.loadEstadoPlazo(rtfId).subscribe();
         this.cargarObservacionesPendientes(rtfId);
       }
