@@ -12,24 +12,32 @@ design system. It supersedes two legacy single-repo UIs being migrated in:
 Migration is phased (see `docs/adr/0001-*.md` and `docs/plan-implementacion-monorepo.md`).
 **Done:** Fase 0 (foundation), Fase 1 (`@agroideas/theme`), Fase 2 (KOFIX imported).
 **In progress (Fase 3):** `ui`, `auth`, `feedback`, `security`, `utils` are populated and
-consumed by both `kofix-ejecucion` and `sat-ui` — neither app imports PrimeNG/SweetAlert2/
-Leaflet/Material/CDK/Bootstrap directly anymore (enforced as `error` by `no-restricted-imports`
-in root `eslint.config.js`). **Still pending:** `@agroideas/http` is unused Nx scaffolding
-(its `index.ts` only re-exports `ResponseDto` from `@agroideas/utils`) — no app consumes it yet.
+consumed across all four apps (`kofix-ejecucion`, `sat-ui`, `sigec-rtf`, `sigec-cierre`) —
+none of them imports PrimeNG/SweetAlert2/Leaflet/Material/CDK/Bootstrap directly anymore
+(enforced as `error` by `no-restricted-imports` in root `eslint.config.js`). **Still
+pending:** `@agroideas/http` and `@agroideas/menu` are unused Nx scaffolding — no app
+consumes either yet (see "State of the libs" below).
 
 ## Commands
 
 Use `npx nx` — there are no npm scripts.
 
 ```sh
-npx nx serve kofix-ejecucion        # dev server on :7100 (sat-ui defaults to :4200)
-npx nx build <project>              # production build
+npx nx serve kofix-ejecucion        # dev server on :7100
+npx nx serve sat-ui                 # dev server on :4200 (default)
+npx nx serve sigec-rtf               # dev server on :4300
+npx nx serve sigec-cierre            # dev server on :4400
+npx nx build <project>              # production build → dist/apps/<app>/browser/
 npx nx lint <project>              # lint one project
 npx nx test <project>              # unit tests (Jest) for one project
+npx nx e2e <project>-e2e            # Playwright e2e
 npx nx run-many -t lint,test,build  # everything
 npx nx affected -t lint,test,build  # only what your changes touched
 npx nx graph                        # dependency graph
 ```
+
+No CI/CD is configured (no GitHub workflows, Jenkinsfile, husky, or lint-staged) — lint/test/build
+are run manually or via the commands above.
 
 Run a single test file / single test:
 ```sh
@@ -42,16 +50,19 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
 ## Architecture — the big picture
 
 ### Workspace layout & module boundaries
-- `apps/kofix-ejecucion` (`scope:kofix`) and `apps/sat-ui` (`scope:sat`) — never import each other.
-- `libs/{theme,ui,auth,http,feedback,security,utils}` — all `scope:shared`, imported as `@agroideas/*`.
+- `apps/{kofix-ejecucion, sat-ui, sigec-rtf, sigec-cierre}` (scopes `kofix`/`sat`/`sigec`) —
+  apps in different scopes never import each other.
+- `libs/{theme,ui,auth,http,feedback,security,utils,menu}` — all `scope:shared`, imported as
+  `@agroideas/*`.
 - Every `project.json` carries `scope:*` + `type:*` tags. `@nx/enforce-module-boundaries`
   (root `eslint.config.js`) enforces direction:
-  - `scope:kofix|sat|sigec` → `scope:shared` only.
+  - `scope:kofix|sat|sigec` → same scope or `scope:shared` only.
   - `type:app|feature` → `feature | ui | data-access | util`.
   - `type:ui` → `ui | util`; `type:data-access` → `data-access | util`; `type:util` → `util`.
   - `apps/sigec-cierre` and `apps/sigec-rtf` are `scope:sigec`; `kofix-ejecucion` is
-    `scope:kofix` (untagged projects would skip the constraint — an empty `tags: []` does
-    **not**, it blocks every lib import — but every app in this workspace is tagged).
+    `scope:kofix`; `sat-ui` is `scope:sat` (untagged projects would skip the constraint — an
+    empty `tags: []` does **not**, it blocks every lib import — but every app in this
+    workspace is tagged).
 - Apps **must not** import `primeng`, `@angular/material`/`@angular/cdk`, `bootstrap`,
   `sweetalert2`, `leaflet` directly — those are banned as `error` in `apps/**` via
   `no-restricted-imports` in root `eslint.config.js` and must be consumed through
@@ -108,6 +119,25 @@ it requires reading across these layers:
 - **Composition root:** `app.config.ts` binds each abstract repository to its impl with
   `{ provide: XRepository, useExisting: XRepositoryImpl }`. Don't re-provide these elsewhere.
 
+### The other three apps — feature-based, not Clean Architecture
+Unlike kofix-ejecucion, `sat-ui`, `sigec-rtf`, and `sigec-cierre` use a flatter
+`core/` (guards, services, interceptors) + `features/` (one folder per screen/flow) +
+`layout/app-shell/` structure — no `domain/data/presentation` split.
+- **sat-ui** (`:4200`, `scope:sat`): its own backend (port 7081, fields `txtNombres`/
+  `codUsuario`) — does **not** use `sel-usuario.mapper.ts`. Its `permissionGuard` provider is
+  a stub (`of([])` in `app.config.ts`), not wired to a real backend yet.
+- **sigec-rtf** (`:4300`, `scope:sigec`): `features/` includes `oa-dashboard`,
+  `oa-registro`, `oa-observaciones`, `oa-enviar`, `bandeja-oa`, `un-dashboard`,
+  `un-gabinete`, `reportes`, `admin`, `login`. Has its own `core/error-handler.ts`
+  (`GlobalErrorHandler`). Session comes from `sel-api-seguridad` (port 7101) through the
+  shared `sel-usuario` mapper (see below).
+- **sigec-cierre** (`:4400`, `scope:sigec`): `features/` has `login` and `cierre-registro`.
+  Same auth backend and mapper usage as sigec-rtf.
+
+All four apps wire `provideHttpClient(withInterceptors([authInterceptor]))` from
+`@agroideas/auth` in their `app.config.ts` — kofix-ejecucion is not the only consumer of the
+shared interceptor.
+
 ### Auth & backend
 - JWT stored in `localStorage` (key `kDX_TOKEN`); `auth.interceptor.ts` attaches the Bearer
   token and redirects to `/login` on 401; `authGuard` protects authenticated routes.
@@ -120,6 +150,7 @@ it requires reading across these layers:
 - **Pinned lint stack — upgrade together, never individually:** `eslint 9.14.0` +
   `typescript-eslint 8.13.0` + `angular-eslint 18.4.3`, forced via `overrides` in
   `package.json`. Mismatches crash linting. Rationale: `docs/phase-0/version-pins.md`.
+  TypeScript is also pinned (`~5.5.2`, not 5.6+) for the same compatibility reason.
 - `@typescript-eslint/ban-ts-comment` is turned **off for `**/*.html`** in root
   `eslint.config.js` (a fileless TS rule from the Nx preset leaks onto Angular templates).
 - **Nx generators:** always pass `--projectNameAndRootFormat=as-provided`, or Nx 19.x derives
@@ -141,13 +172,18 @@ it requires reading across these layers:
   `@angular/localize/init` polyfill (in its build `polyfills`) — do not remove it.
 
 ## State of the libs (Fase 3 in progress)
-`@agroideas/theme` is implemented and consumed by both apps. `ui`, `auth`, `feedback`,
-`security`, and `utils` are populated with real code and consumed by both `kofix-ejecucion`
-and `sat-ui` (e.g. `authInterceptor`/`AUTH_TOKEN_KEY` from `auth`, `permissionGuard` from
-`security`, `AlertService` from `feedback`, and `ui-modal`/`ui-button`/`ui-select-search`/
-`ui-map` from `ui` wrapping PrimeNG/Leaflet so apps never touch the provider directly).
+`@agroideas/theme` is implemented and consumed by all four apps. `ui`, `auth`, `feedback`,
+`security`, and `utils` are populated with real code and consumed across `kofix-ejecucion`,
+`sat-ui`, `sigec-rtf`, and `sigec-cierre` (e.g. `authInterceptor`/`AUTH_TOKEN_KEY` from
+`auth`, `permissionGuard` from `security`, `AlertService` from `feedback`, and
+`ui-modal`/`ui-button`/`ui-select-search`/`ui-map` from `ui` wrapping PrimeNG/Leaflet so apps
+never touch the provider directly). Not every app wires every lib the same way — e.g.
+`sat-ui`'s permission provider is a stub and it doesn't use the `sel-usuario` mapper (see
+"The other three apps" above).
 `@agroideas/http` is still Nx scaffolding (an unused placeholder component) — nothing
-depends on it yet.
+depends on it yet. `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` models and a menu
+component stub from `index.ts`, but its `MenuRepository` (in `domain/repositories/`) is not
+exported and no app consumes the lib yet — treat it the same as `http`, not as a populated lib.
 
 ## Key references
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — decisions + implementation log.

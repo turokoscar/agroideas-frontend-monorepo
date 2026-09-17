@@ -1,6 +1,6 @@
 # AGROIDEAS Frontend Monorepo — Agent Guide
 
-**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (SIGEC apps, lib export tables) — kept in sync as of 2026-09-10.
+**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (SIGEC apps, lib export tables) — kept in sync as of 2026-09-17.
 
 ## Commands (use `npx nx` — no npm scripts)
 
@@ -50,7 +50,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 ## App architectures
 
 - **kofix-ejecucion** (:7100, `scope:kofix`): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. `inlineStyleLanguage: "css"` (global, but most components use `.sass`). Auth via shared `@agroideas/auth` interceptor. Real backend permission provider. Talks to three .NET APIs (`apiSeguridad`, `apiEjecucion`, `apiGeneral`). Needs `@angular/localize/init` polyfill. Allows `sweetalert2` and `leaflet` as CommonJS deps.
-- **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards, interceptors), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth via local `core/interceptors/jwt.interceptor.ts` (NOT `@agroideas/auth` interceptor, though it imports `AUTH_LOGOUT_HANDLER` from that lib). Permissions provider is a stub (`of([])`). Its backend is a different one (:7081, `txtNombres`/`codUsuario`), so it does not use the `sel-usuario` mapper — only `inicialesDeNombre`.
+- **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth now goes through the shared `authInterceptor`/`AUTH_LOGOUT_HANDLER` from `@agroideas/auth` (no local interceptor anymore). Permissions provider is a stub (`of([])`). Its backend is a different one (:7081, `txtNombres`/`codUsuario`), so it does not use the `sel-usuario` mapper — only `inicialesDeNombre`.
 - **sigec-rtf** (:4300, `scope:sigec`): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure. Session comes from `sel-api-seguridad` (:7101) via the shared mapper.
 - **sigec-cierre** (:4400, `scope:sigec`): Feature-based with `core/` and `features/` (login, cierre-registro). Same structure and same auth backend as sigec-rtf.
 
@@ -73,7 +73,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto Angular templates).
 - **Design system chain:** `libs/theme/src/styles/tokens.css` (HSL CSS vars) → `tailwind-preset.js` → `base.css`. No brand hex outside this lib. Apps wire `base.css` in `project.json` `styles` array (NOT `@import` in `.scss` — that leaves `@tailwind` unprocessed). No `postcss.config.js` (managed via Angular build).
 - **kofix-ejecucion lint** passes with 0 errors but 259 warnings (intentional style debt — mostly `no-explicit-any`/`no-unused-vars`). Its `eslint.config.js` has transitional overrides downgrading style rules to `warn` — it does **not** relax `no-restricted-imports`; direct provider imports (PrimeNG/SweetAlert2/Leaflet) are still an error and kofix has none. The a11y template rules were fully remediated under [ADR 0008](docs/adr/0008-remediacion-ui-kofix-ejecucion.md).
-- **sat-ui** uses a local `jwt.interceptor.ts`, NOT the shared `@agroideas/auth` interceptor. Its permissions provider is not connected to backend.
+- **sat-ui** now uses the shared `@agroideas/auth` interceptor (no local `jwt.interceptor.ts`). Its permissions provider is not connected to backend.
 - **All components** are `standalone: true` (no NgModules).
 - **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names.
 - **In Angular templates,** literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).
