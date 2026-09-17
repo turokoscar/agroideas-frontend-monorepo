@@ -205,6 +205,16 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   pliegoObservaciones = this.rtfService.pliegoObservaciones;
   devolverTempranoObservacion = signal('');
 
+  /**
+   * ADR-016 Fase 6 (sigec-api-rtf): respuesta de la OA a cada observación, de solo lectura --
+   * vive separada de `evaluacionDraft` a propósito, para que nunca se reenvíe por accidente en
+   * `guardarEvaluacion()` (ese payload es exclusivamente lo que la UN edita). Misma clave
+   * `${kind}:${id}` que el borrador. Se pierde junto con el resto del ciclo cuando la UN vuelve
+   * a evaluar (`EliminarRevisionesPorPrefijoAsync` purga y recrea todo) -- solo el ciclo
+   * vigente es visible, por diseño (ADR-016 punto 6).
+   */
+  private respuestasOa = signal<Map<string, string>>(new Map());
+
   private claveItem(kind: UrEvaluacionItemKind, id: number): string {
     return `${kind}:${id}`;
   }
@@ -223,6 +233,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   subsanableDe(kind: UrEvaluacionItemKind, id: number): boolean {
     return this.itemDraft(kind, id)?.estSubsanable ?? true;
+  }
+
+  /** ADR-016 Fase 6: respuesta que dejó la OA al atender esta observación, si ya lo hizo. */
+  respuestaOaDe(kind: UrEvaluacionItemKind, id: number): string | undefined {
+    return this.respuestasOa().get(this.claveItem(kind, id));
   }
 
   /** Categoría por defecto según el tipo de ítem — el evaluador no elige categoría a mano por fila. */
@@ -281,6 +296,8 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   }
   dictamenR1 = computed(() => this.dictamenDe('R1', this.r1Id()));
   observacionR1 = computed(() => this.observacionDe('R1', this.r1Id()));
+  /** ADR-016 Fase 6. */
+  respuestaOaR1 = computed(() => this.respuestaOaDe('R1', this.r1Id()));
 
   /**
    * Construye el arreglo completo a enviar: una entrada por cada meta/indicador real (default
@@ -307,11 +324,13 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
       this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
         next: (estado) => {
           const mapa = new Map<string, UrEvaluacionItemDto>();
+          const respuestas = new Map<string, string>();
           for (const rev of estado?.revisiones ?? []) {
             const parsed = parseSeccionRevision(rev.txtSeccion);
             if (!parsed) continue;
             const { kind, id } = parsed;
-            mapa.set(this.claveItem(kind, id), {
+            const clave = this.claveItem(kind, id);
+            mapa.set(clave, {
               id,
               kind,
               estConformidad: rev.estConformidad,
@@ -319,8 +338,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
               txtCategoria: rev.txtCategoria as any,
               estSubsanable: rev.estSubsanable,
             });
+            if (rev.txtRespuestaOa) {
+              respuestas.set(clave, rev.txtRespuestaOa);
+            }
           }
           this.evaluacionDraft.set(mapa);
+          this.respuestasOa.set(respuestas);
         },
         error: () => { /* silencioso: la pantalla sigue usable sin evaluación previa cargada */ }
       })

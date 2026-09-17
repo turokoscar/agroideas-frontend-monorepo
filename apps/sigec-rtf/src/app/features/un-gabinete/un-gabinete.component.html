@@ -181,6 +181,13 @@
                   [value]="observacionR1()"
                   (input)="actualizarObservacion('R1', r1Id(), $any($event.target).value)"></textarea>
               }
+              @if (respuestaOaR1(); as respuesta) {
+                <!-- ADR-016 Fase 6: respuesta de la OA, de solo lectura -- solo visible al reabrir para reevaluar. -->
+                <div class="mt-2 rounded-xl bg-primary/5 border border-primary/15 px-3 py-2">
+                  <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Respuesta de la OA</span>
+                  <p class="text-xs text-foreground leading-snug">{{ respuesta }}</p>
+                </div>
+              }
             </div>
           }
         </div>
@@ -292,6 +299,13 @@
                           Subsanable por la OA
                         </label>
                       }
+                      @if (respuestaOaDe('META', m.id); as respuesta) {
+                        <!-- ADR-016 Fase 6: respuesta de la OA, de solo lectura -- solo visible al reabrir para reevaluar. -->
+                        <div class="mt-1.5 rounded-lg bg-primary/5 border border-primary/15 px-2 py-1.5">
+                          <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Respuesta de la OA</span>
+                          <p class="text-[11px] text-foreground leading-snug">{{ respuesta }}</p>
+                        </div>
+                      }
                     </div>
                   }
                 </div>
@@ -359,6 +373,13 @@
                           <input type="checkbox" [checked]="subsanableDe('INDICADOR', ind.id)" (change)="actualizarSubsanable('INDICADOR', ind.id, $any($event.target).checked)" />
                           Subsanable por la OA
                         </label>
+                      }
+                      @if (respuestaOaDe('INDICADOR', ind.id); as respuesta) {
+                        <!-- ADR-016 Fase 6: respuesta de la OA, de solo lectura -- solo visible al reabrir para reevaluar. -->
+                        <div class="mt-1.5 rounded-lg bg-primary/5 border border-primary/15 px-2 py-1.5">
+                          <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Respuesta de la OA</span>
+                          <p class="text-[11px] text-foreground leading-snug">{{ respuesta }}</p>
+                        </div>
                       }
                     </div>
                   }
