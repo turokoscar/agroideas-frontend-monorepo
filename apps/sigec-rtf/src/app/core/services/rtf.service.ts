@@ -23,6 +23,7 @@ import {
   RevisionAtencionItem,
   AvanceFinancieroPasoCriticoDto,
   RelacionGastosF1Dto,
+  RelacionGastosF1ItemDto,
 } from '../models';
 
 export type {
@@ -45,6 +46,7 @@ export type {
   CartaDto,
   AvanceFinancieroPasoCriticoDto,
   RelacionGastosF1Dto,
+  RelacionGastosF1ItemDto,
 };
 
 @Injectable({

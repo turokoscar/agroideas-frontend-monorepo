@@ -2,15 +2,15 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { RtfService, RtfCabeceraDto, GastoF1Dto } from '../../core/services/rtf.service';
+import { RtfService, RtfCabeceraDto, GastoF1Dto, RelacionGastosF1ItemDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, TableColumn } from '@agroideas/ui';
+import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, StatusType, TableColumn } from '@agroideas/ui';
 import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
 
 @Component({
   selector: 'app-oa-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent],
   providers: [DecimalPipe],
   templateUrl: './oa-registro.component.html'
 })
@@ -33,6 +33,13 @@ export class OaRegistroComponent implements OnInit {
         this.sincronizandoGastosF1.set(false);
         this.toast.success('Gastos F1 sincronizados', 'Se actualizó el detalle desde KOFIX.');
         this.rtfService.loadRelacionGastosF1(rtfId).subscribe();
+        // Sin esto, "Progreso del Presupuesto" (Programado/Ejecutado/Saldo por Rendir) queda
+        // con los valores previos a la sincronización hasta recargar la página -- solo el
+        // kardex de abajo (relacionGastosF1) se refrescaba.
+        const pasoCriticoId = this.rtfService.pasoCriticoId();
+        if (pasoCriticoId) {
+          this.rtfService.loadAvanceFinancieroPasoCritico(pasoCriticoId, this.rtfService.postulanteId() ?? 0).subscribe();
+        }
       },
       error: () => {
         this.sincronizandoGastosF1.set(false);
@@ -52,10 +59,35 @@ export class OaRegistroComponent implements OnInit {
     ['PENDIENTE', 'EN_EDICION', 'OBSERVADO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfService.rtfStatus())
   );
 
-  /** ADR-017: activa la nota "*** Los montos excedentes a los aprobados serán asumidos por la OA"
-   * cuando algún ítem de la Relación de Gastos F1 facturó más de lo aprobado. */
+  /**
+   * ADR-0011: en este sistema solo se rinde el dinero que AGROIDEAS entrega a la OA -- la
+   * contrapartida propia (`montoAprobadoOa`) es solo informativa y nunca participa de ningún
+   * cálculo de rendición. "Saldo por Rendir" es siempre `montoAprobadoAgroideas - facturado`,
+   * nunca contra el total aprobado (AGROIDEAS + OA).
+   */
+  saldoPorRendir(aprobadoAgroideas: number, facturado: number): number {
+    return aprobadoAgroideas - facturado;
+  }
+
+  /** ADR-0011: saldo corrido tipo kardex -- ordena los comprobantes por fecha de emisión y
+   * acumula el saldo restante de AGROIDEAS después de cada uno, en vez de un total repetido. */
+  comprobantesConSaldo(item: RelacionGastosF1ItemDto): { comprobante: GastoF1Dto; saldoDespues: number }[] {
+    const ordenados = [...item.comprobantes].sort((a, b) => {
+      const fa = a.fecEmision ? new Date(a.fecEmision).getTime() : 0;
+      const fb = b.fecEmision ? new Date(b.fecEmision).getTime() : 0;
+      return fa - fb || a.ideGastoF1 - b.ideGastoF1;
+    });
+    let saldo = item.montoAprobadoAgroideas;
+    return ordenados.map(comprobante => {
+      saldo -= comprobante.numMontoRendido;
+      return { comprobante, saldoDespues: saldo };
+    });
+  }
+
+  /** ADR-017/ADR-0011: activa la nota "*** Los montos excedentes a los aprobados serán asumidos
+   * por la OA" cuando algún ítem factura más de lo que AGROIDEAS aprobó para él. */
   hayExcedenteGastosF1 = computed(() =>
-    (this.rtfService.relacionGastosF1()?.items ?? []).some(i => i.montoDiferencial < 0)
+    (this.rtfService.relacionGastosF1()?.items ?? []).some(i => this.saldoPorRendir(i.montoAprobadoAgroideas, i.montoFacturado) < 0)
   );
 
   /**
@@ -94,13 +126,70 @@ export class OaRegistroComponent implements OnInit {
     return this.rtfService.metas().filter(meta => meta.canProgramada > 0);
   });
 
+  private calcularEstadoAvance(ejecutado: number | null | undefined, programado: number): 'SIN_INICIAR' | 'EN_PROGRESO' | 'CUMPLIDA' | 'SUPERADA' {
+    if (!ejecutado || ejecutado <= 0) return 'SIN_INICIAR';
+    if (programado > 0 && ejecutado > programado) return 'SUPERADA';
+    if (programado > 0 && ejecutado >= programado) return 'CUMPLIDA';
+    return 'EN_PROGRESO';
+  }
+
+  /**
+   * ADR-0010: `UiStatusPillComponent` (@agroideas/ui) tiene una paleta cerrada de estados
+   * genéricos que no incluye avance de metas -- se aproxima cada estado al `StatusType` más
+   * cercano solo para el color; la etiqueta real viaja aparte por `estadoAvanceLabel()`. Mismo
+   * criterio ya documentado en `BandejaOAComponent.estadoPillStatus`/`UnGabineteComponent.estadoPillStatus`.
+   */
+  estadoAvancePillStatus(ejecutado: number | null | undefined, programado: number): StatusType {
+    switch (this.calcularEstadoAvance(ejecutado, programado)) {
+      case 'SUPERADA': return 'Media';
+      case 'CUMPLIDA': return 'Aprobado';
+      case 'EN_PROGRESO': return 'Pendiente';
+      default: return 'Baja';
+    }
+  }
+
+  estadoAvanceLabel(ejecutado: number | null | undefined, programado: number): string {
+    switch (this.calcularEstadoAvance(ejecutado, programado)) {
+      case 'SUPERADA': return 'Meta superada';
+      case 'CUMPLIDA': return 'Meta cumplida';
+      case 'EN_PROGRESO': return 'En progreso';
+      default: return 'Sin iniciar';
+    }
+  }
+
+  private contarEstados(items: { ejecutado: number | null | undefined; programado: number }[]) {
+    const conteo = { sinIniciar: 0, enProgreso: 0, cumplida: 0, superada: 0 };
+    for (const item of items) {
+      switch (this.calcularEstadoAvance(item.ejecutado, item.programado)) {
+        case 'SIN_INICIAR': conteo.sinIniciar++; break;
+        case 'EN_PROGRESO': conteo.enProgreso++; break;
+        case 'CUMPLIDA': conteo.cumplida++; break;
+        case 'SUPERADA': conteo.superada++; break;
+      }
+    }
+    return conteo;
+  }
+
+  resumenMetas = computed(() => this.contarEstados(
+    this.useBdSelMetas()
+      ? this.filteredPasoCriticoMetas().map(m => ({ ejecutado: m.metaFisicaEjecutada, programado: m.metaFisicaProgramada }))
+      : this.filteredLegacyMetas().map(m => ({ ejecutado: m.canEjecutada, programado: m.canProgramada }))
+  ));
+
+  resumenIndicadores = computed(() => this.contarEstados(
+    this.useBdSelMetas()
+      ? this.rtfService.pasoCriticoIndicadores().map(i => ({ ejecutado: i.metaEjecutada, programado: i.metaProgramada }))
+      : this.rtfService.indicadores().map(i => ({ ejecutado: i.canEjecutado, programado: i.canProgramado }))
+  ));
+
   // Column definitions for UiDataTableComponent
   metasSelColumns: TableColumn[] = [
     { field: 'descripcion', header: 'Actividad', align: 'left' },
     { field: 'unidadMedida', header: 'Unidad', align: 'left', width: '100px' },
     { field: 'metaFisicaProgramada', header: 'Física Prog.', align: 'right', type: 'number' },
     { field: 'metaFisicaEjecutada', header: 'Física Ejec.', align: 'right', type: 'custom' },
-    { field: 'metaFisicaAvance', header: '%', align: 'right', type: 'custom' }
+    { field: 'metaFisicaAvance', header: '%', align: 'right', type: 'custom' },
+    { field: 'estadoAvance', header: 'Estado', align: 'center', type: 'custom', width: '140px' }
   ];
 
   metasLegacyColumns: TableColumn[] = [
@@ -108,7 +197,8 @@ export class OaRegistroComponent implements OnInit {
     { field: 'unidad', header: 'Unidad', align: 'left', width: '120px' },
     { field: 'canProgramada', header: 'Programado', align: 'right', type: 'number' },
     { field: 'canEjecutada', header: 'Ejecutado', align: 'right', type: 'custom' },
-    { field: 'avancePct', header: '% Avance', align: 'right', type: 'custom' }
+    { field: 'avancePct', header: '% Avance', align: 'right', type: 'custom' },
+    { field: 'estadoAvance', header: 'Estado', align: 'center', type: 'custom', width: '140px' }
   ];
 
   indicadoresSelColumns: TableColumn[] = [
@@ -118,7 +208,8 @@ export class OaRegistroComponent implements OnInit {
     { field: 'lineaBase', header: 'Línea Base', align: 'right', type: 'number' },
     { field: 'metaProgramada', header: 'Programado', align: 'right', type: 'number' },
     { field: 'metaEjecutada', header: 'Ejecutado', align: 'right', type: 'custom' },
-    { field: 'avancePct', header: '% Avance', align: 'right', type: 'custom' }
+    { field: 'avancePct', header: '% Avance', align: 'right', type: 'custom' },
+    { field: 'estadoAvance', header: 'Estado', align: 'center', type: 'custom', width: '140px' }
   ];
 
   indicadoresLegacyColumns: TableColumn[] = [
@@ -127,7 +218,8 @@ export class OaRegistroComponent implements OnInit {
     { field: 'lineaBase', header: 'Línea Base', align: 'right', type: 'number' },
     { field: 'canProgramado', header: 'Programado', align: 'right', type: 'number' },
     { field: 'canEjecutado', header: 'Ejecutado', align: 'right', type: 'custom' },
-    { field: 'avancePct', header: '% Avance', align: 'right', type: 'custom' }
+    { field: 'avancePct', header: '% Avance', align: 'right', type: 'custom' },
+    { field: 'estadoAvance', header: 'Estado', align: 'center', type: 'custom', width: '140px' }
   ];
 
   desembolsosColumns: TableColumn[] = [
@@ -367,6 +459,7 @@ export class OaRegistroComponent implements OnInit {
         this.anexoPendingFile.set(null);
         this.anexoEtiqueta.set('');
         this.toast.success('Anexo adjuntado', 'El documento se registró correctamente.');
+        this.rtfService.loadEvidencias(rtfId).subscribe();
       },
       error: err => {
         this.subiendoAnexo.set(false);
@@ -601,6 +694,9 @@ export class OaRegistroComponent implements OnInit {
       if (files.length > 0) {
         for (const f of files) {
           this.rtfService.subirEvidenciaMeta(meta.id, rtfIdBdSel!, f.file).subscribe({
+            // Sin esto, evidenciasDe()/el botón "Descargar evidencia" quedan con la lista vieja
+            // hasta recargar la página -- evidencias() solo se puebla en ngOnInit.
+            next: () => this.rtfService.loadEvidencias(rtfIdBdSel!).subscribe(),
             error: err => this.toast.error('Error', `No se pudo subir ${f.name}: ${err.message}`)
           });
         }
@@ -610,6 +706,7 @@ export class OaRegistroComponent implements OnInit {
       if (files.length > 0) {
         for (const f of files) {
           this.rtfService.subirEvidenciaIndicador(ind.id, rtfIdBdSel!, f.file).subscribe({
+            next: () => this.rtfService.loadEvidencias(rtfIdBdSel!).subscribe(),
             error: err => this.toast.error('Error', `No se pudo subir ${f.name}: ${err.message}`)
           });
         }
@@ -623,6 +720,7 @@ export class OaRegistroComponent implements OnInit {
       if (rtfId && files.length > 0) {
         for (const f of files) {
           this.rtfService.uploadEvidencia(rtfId, ideConcepto, tipConcepto, f.file).subscribe({
+            next: () => this.rtfService.loadEvidencias(rtfId).subscribe(),
             error: err => this.toast.error('Error', `No se pudo subir ${f.name}: ${err.message}`)
           });
         }
@@ -686,6 +784,28 @@ export class OaRegistroComponent implements OnInit {
     this.pdfViewerOpen.set(false);
     this.pdfViewerFileUrl.set(null);
     this.pdfViewerDownloadUrl.set(null);
+  }
+
+  private ideConceptoDe(mode: 'meta' | 'indicador', row: any) {
+    if (this.useBdSelMetas()) return row.id;
+    return mode === 'meta' ? row.ideMetaFisica : row.ideIndicadorAvance;
+  }
+
+  /** Mismo esquema ideConcepto/tipConcepto que modalEvidencias() (SubirEvidenciaYActualizarMetaAsync). */
+  evidenciasDe(mode: 'meta' | 'indicador', row: any) {
+    const ideConcepto = this.ideConceptoDe(mode, row);
+    const tipConcepto = mode === 'meta' ? 'METAFISICA' : 'INDICADOR';
+    return this.rtfService.evidencias().filter(e => e.ideConcepto === ideConcepto && e.tipConcepto === tipConcepto);
+  }
+
+  /** Un solo archivo: lo abre directo. Varios: abre el modal de avance, que ya lista y permite ver cada uno. */
+  descargarEvidencias(mode: 'meta' | 'indicador', row: any) {
+    const evidencias = this.evidenciasDe(mode, row);
+    if (evidencias.length === 1) {
+      this.viewPdf(evidencias[0].ideEvidencia, evidencias[0].txtNombreArchivo ?? 'evidencia.pdf');
+    } else if (evidencias.length > 1) {
+      this.openModal(mode, row);
+    }
   }
 
   // Documento de sustento (factura/RH, voucher) de un gasto F1 sincronizado desde KOFIX.
@@ -783,6 +903,7 @@ export class OaRegistroComponent implements OnInit {
         this.subiendoAnexo17Firmado.set(false);
         this.anexo17PendingFile.set(null);
         this.toast.success('Anexo 17 firmado adjuntado', 'La copia firmada se registró correctamente.');
+        this.rtfService.loadEvidencias(rtfId).subscribe();
       },
       error: err => {
         this.subiendoAnexo17Firmado.set(false);

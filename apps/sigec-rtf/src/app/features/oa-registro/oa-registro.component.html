@@ -172,6 +172,22 @@
             </div>
           </div>
 
+          <!-- ADR-0010: resumen de avance por estado -->
+          <div class="flex flex-wrap gap-2 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/30 text-muted-foreground">
+              <span class="h-2 w-2 rounded-full bg-muted-foreground/50"></span> Sin iniciar: {{ resumenMetas().sinIniciar }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning-soft text-warning">
+              <span class="h-2 w-2 rounded-full bg-warning"></span> En progreso: {{ resumenMetas().enProgreso }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success-soft text-success">
+              <span class="h-2 w-2 rounded-full bg-success"></span> Cumplidas: {{ resumenMetas().cumplida }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-info-soft text-info">
+              <span class="h-2 w-2 rounded-full bg-info"></span> Superadas: {{ resumenMetas().superada }}
+            </span>
+          </div>
+
           @if (useBdSelMetas()) {
             <!-- Vista Escritorio -->
             <div class="hidden md:block">
@@ -194,20 +210,38 @@
                 <div class="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm hover:border-primary/30 transition-all">
                   <div class="flex justify-between items-start gap-3">
                     <div class="space-y-1">
-                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
-                        🌱 Actividad
-                      </span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
+                          🌱 Actividad
+                        </span>
+                        <app-ui-status-pill
+                          [status]="estadoAvancePillStatus(meta.metaFisicaEjecutada, meta.metaFisicaProgramada)"
+                          [text]="estadoAvanceLabel(meta.metaFisicaEjecutada, meta.metaFisicaProgramada)"
+                        />
+                      </div>
                       <h3 class="text-sm font-bold text-foreground">{{ meta.descripcion }}</h3>
                     </div>
-                    <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
-                      [disabled]="!isEditable()"
-                      (click)="openModal('meta', meta)"
-                      title="Anotar avance"
-                      [attr.aria-label]="'Anotar avance de ' + meta.descripcion"
-                    >
-                      <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
-                    </button>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      @if (evidenciasDe('meta', meta).length > 0) {
+                        <button
+                          class="inline-flex items-center justify-center rounded-xl bg-emerald-50 border border-emerald-200 p-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all focus-visible:outline-2 focus-visible:outline-emerald-600 focus-visible:outline-offset-2"
+                          (click)="descargarEvidencias('meta', meta)"
+                          title="Descargar evidencia"
+                          [attr.aria-label]="'Descargar evidencia de ' + meta.descripcion"
+                        >
+                          <span class="material-symbols-outlined text-[20px]" aria-hidden="true">picture_as_pdf</span>
+                        </button>
+                      }
+                      <button
+                        class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+                        [disabled]="!isEditable()"
+                        (click)="openModal('meta', meta)"
+                        title="Anotar avance"
+                        [attr.aria-label]="'Anotar avance de ' + meta.descripcion"
+                      >
+                        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-3 gap-2 bg-muted/20 rounded-xl p-3 text-center">
@@ -221,7 +255,7 @@
                     </div>
                     <div class="space-y-0.5">
                       <span class="text-[9px] uppercase font-bold text-muted-foreground block">Avance</span>
-                      <span class="text-xs font-bold" [class.text-success]="(meta.metaFisicaEjecutada / meta.metaFisicaProgramada) >= 1" [class.text-warning]="(meta.metaFisicaEjecutada / meta.metaFisicaProgramada) < 1">
+                      <span class="text-xs font-bold text-foreground">
                         {{ (meta.metaFisicaProgramada > 0 ? (meta.metaFisicaEjecutada / meta.metaFisicaProgramada) : 0) | percent:'1.0-0' }}
                       </span>
                     </div>
@@ -255,18 +289,35 @@
                 <div class="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm hover:border-primary/30 transition-all">
                   <div class="flex justify-between items-start gap-3">
                     <div class="space-y-1">
-                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
-                        🌾 Meta
-                      </span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
+                          🌾 Meta
+                        </span>
+                        <app-ui-status-pill
+                          [status]="estadoAvancePillStatus(meta.canEjecutada, meta.canProgramada)"
+                          [text]="estadoAvanceLabel(meta.canEjecutada, meta.canProgramada)"
+                        />
+                      </div>
                       <h3 class="text-sm font-bold text-foreground">{{ meta.actividad }}</h3>
                     </div>
-                    <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                      [disabled]="!isEditable()"
-                      (click)="openModal('meta', meta)"
-                    >
-                      <span class="material-symbols-outlined text-[20px]">edit_note</span>
-                    </button>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      @if (evidenciasDe('meta', meta).length > 0) {
+                        <button
+                          class="inline-flex items-center justify-center rounded-xl bg-emerald-50 border border-emerald-200 p-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
+                          (click)="descargarEvidencias('meta', meta)"
+                          title="Descargar evidencia"
+                        >
+                          <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                        </button>
+                      }
+                      <button
+                        class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        [disabled]="!isEditable()"
+                        (click)="openModal('meta', meta)"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-3 gap-2 bg-muted/20 rounded-xl p-3 text-center">
@@ -280,7 +331,7 @@
                     </div>
                     <div class="space-y-0.5">
                       <span class="text-[9px] uppercase font-bold text-muted-foreground block">Avance</span>
-                      <span class="text-xs font-bold" [class.text-success]="((meta.canEjecutada ?? 0) / (meta.canProgramada || 1)) >= 1" [class.text-warning]="((meta.canEjecutada ?? 0) / (meta.canProgramada || 1)) < 1">
+                      <span class="text-xs font-bold text-foreground">
                         {{ (meta.canProgramada > 0 ? ((meta.canEjecutada ?? 0) / meta.canProgramada) : 0) | percent:'1.0-0' }}
                       </span>
                     </div>
@@ -307,6 +358,22 @@
             </div>
           </div>
 
+          <!-- ADR-0010: resumen de avance por estado -->
+          <div class="flex flex-wrap gap-2 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/30 text-muted-foreground">
+              <span class="h-2 w-2 rounded-full bg-muted-foreground/50"></span> Sin iniciar: {{ resumenIndicadores().sinIniciar }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning-soft text-warning">
+              <span class="h-2 w-2 rounded-full bg-warning"></span> En progreso: {{ resumenIndicadores().enProgreso }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success-soft text-success">
+              <span class="h-2 w-2 rounded-full bg-success"></span> Cumplidas: {{ resumenIndicadores().cumplida }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-info-soft text-info">
+              <span class="h-2 w-2 rounded-full bg-info"></span> Superadas: {{ resumenIndicadores().superada }}
+            </span>
+          </div>
+
           @if (useBdSelMetas()) {
             <!-- Vista Escritorio -->
             <div class="hidden md:block">
@@ -329,22 +396,39 @@
                 <div class="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm hover:border-primary/30 transition-all">
                   <div class="flex justify-between items-start gap-3">
                     <div class="space-y-1">
-                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
-                        🌱 Indicador
-                      </span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
+                          🌱 Indicador
+                        </span>
+                        <app-ui-status-pill
+                          [status]="estadoAvancePillStatus(ind.metaEjecutada, ind.metaProgramada)"
+                          [text]="estadoAvanceLabel(ind.metaEjecutada, ind.metaProgramada)"
+                        />
+                      </div>
                       <h3 class="text-sm font-bold text-foreground">{{ ind.indicador }}</h3>
                       <p class="text-[10px] text-muted-foreground font-semibold">Cadena: {{ ind.cadenaProductiva }}</p>
                     </div>
-                    <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                      [disabled]="!isEditable()"
-                      (click)="openModal('indicador', ind)"
-                    >
-                      <span class="material-symbols-outlined text-[20px]">edit_note</span>
-                    </button>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      @if (evidenciasDe('indicador', ind).length > 0) {
+                        <button
+                          class="inline-flex items-center justify-center rounded-xl bg-emerald-50 border border-emerald-200 p-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
+                          (click)="descargarEvidencias('indicador', ind)"
+                          title="Descargar evidencia"
+                        >
+                          <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                        </button>
+                      }
+                      <button
+                        class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        [disabled]="!isEditable()"
+                        (click)="openModal('indicador', ind)"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div class="grid grid-cols-3 gap-2 bg-muted/20 rounded-xl p-3 text-center">
+                  <div class="grid grid-cols-4 gap-2 bg-muted/20 rounded-xl p-3 text-center">
                     <div class="space-y-0.5">
                       <span class="text-[9px] uppercase font-bold text-muted-foreground block">L. Base</span>
                       <span class="text-xs font-bold text-foreground">{{ ind.lineaBase }}</span>
@@ -356,6 +440,12 @@
                     <div class="space-y-0.5">
                       <span class="text-[9px] uppercase font-bold text-muted-foreground block">Logrado</span>
                       <span class="text-xs font-bold text-foreground">{{ ind.metaEjecutada || 0 }} <span class="text-[10px] text-muted-foreground font-normal">{{ ind.unidadMedida }}</span></span>
+                    </div>
+                    <div class="space-y-0.5">
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Avance</span>
+                      <span class="text-xs font-bold text-foreground">
+                        {{ (ind.metaProgramada > 0 ? (ind.metaEjecutada / ind.metaProgramada) : 0) | percent:'1.0-0' }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -387,21 +477,38 @@
                 <div class="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm hover:border-primary/30 transition-all">
                   <div class="flex justify-between items-start gap-3">
                     <div class="space-y-1">
-                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
-                        📈 Medida
-                      </span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary uppercase">
+                          📈 Medida
+                        </span>
+                        <app-ui-status-pill
+                          [status]="estadoAvancePillStatus(ind.canEjecutado, ind.canProgramado)"
+                          [text]="estadoAvanceLabel(ind.canEjecutado, ind.canProgramado)"
+                        />
+                      </div>
                       <h3 class="text-sm font-bold text-foreground">{{ ind.nombre }}</h3>
                     </div>
-                    <button
-                      class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                      [disabled]="!isEditable()"
-                      (click)="openModal('indicador', ind)"
-                    >
-                      <span class="material-symbols-outlined text-[20px]">edit_note</span>
-                    </button>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      @if (evidenciasDe('indicador', ind).length > 0) {
+                        <button
+                          class="inline-flex items-center justify-center rounded-xl bg-emerald-50 border border-emerald-200 p-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
+                          (click)="descargarEvidencias('indicador', ind)"
+                          title="Descargar evidencia"
+                        >
+                          <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                        </button>
+                      }
+                      <button
+                        class="inline-flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        [disabled]="!isEditable()"
+                        (click)="openModal('indicador', ind)"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div class="grid grid-cols-3 gap-2 bg-muted/20 rounded-xl p-3 text-center">
+                  <div class="grid grid-cols-4 gap-2 bg-muted/20 rounded-xl p-3 text-center">
                     <div class="space-y-0.5">
                       <span class="text-[9px] uppercase font-bold text-muted-foreground block">L. Base</span>
                       <span class="text-xs font-bold text-foreground">{{ ind.lineaBase }}</span>
@@ -413,6 +520,12 @@
                     <div class="space-y-0.5">
                       <span class="text-[9px] uppercase font-bold text-muted-foreground block">Logrado</span>
                       <span class="text-xs font-bold text-foreground">{{ ind.canEjecutado || 0 }} <span class="text-[10px] text-muted-foreground font-normal">{{ ind.unidad }}</span></span>
+                    </div>
+                    <div class="space-y-0.5">
+                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Avance</span>
+                      <span class="text-xs font-bold text-foreground">
+                        {{ (ind.canProgramado > 0 ? ((ind.canEjecutado ?? 0) / ind.canProgramado) : 0) | percent:'1.0-0' }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -440,7 +553,7 @@
           <!-- Executed financial metrics card -->
           <div class="bg-surface-container-lowest border border-border rounded-2xl p-5 shadow-sm space-y-4">
             <h4 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Progreso del Presupuesto</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div class="space-y-1">
                 <span class="text-[10px] text-muted-foreground block">Presupuesto Aprobado (Convenio)</span>
                 <span class="text-xl font-bold text-foreground">S/ {{ rtfService.budget() | number:'1.2-2' }}</span>
@@ -452,6 +565,12 @@
               <div class="space-y-1">
                 <span class="text-[10px] text-muted-foreground block">Ejecutado (Paso Crítico)</span>
                 <span class="text-xl font-bold text-primary">S/ {{ (rtfService.avanceFinancieroPC()?.ejecutado ?? 0) | number:'1.2-2' }}</span>
+              </div>
+              <div class="space-y-1">
+                <span class="text-[10px] text-muted-foreground block">Saldo por Rendir (Paso Crítico)</span>
+                <span class="text-xl font-bold" [class.text-success]="saldoPorRendir(rtfService.avanceFinancieroPC()?.programado ?? 0, rtfService.avanceFinancieroPC()?.ejecutado ?? 0) >= 0" [class.text-danger]="saldoPorRendir(rtfService.avanceFinancieroPC()?.programado ?? 0, rtfService.avanceFinancieroPC()?.ejecutado ?? 0) < 0">
+                  S/ {{ saldoPorRendir(rtfService.avanceFinancieroPC()?.programado ?? 0, rtfService.avanceFinancieroPC()?.ejecutado ?? 0) | number:'1.2-2' }}
+                </span>
               </div>
               <div class="space-y-1">
                 <span class="text-[10px] text-muted-foreground block">Porcentaje de Avance</span>
@@ -469,17 +588,24 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-2">
-            <p class="text-[10px] text-muted-foreground">
-              Última sincronización de Gastos F1: {{ rtfService.ultimaSincronizacionGastosF1() ? (rtfService.ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}
+          <!-- ADR-0011: la sincronización con KOFIX es la acción que mantiene "Ejecutado"/"Monto
+               Facturado" al día -- se le da peso de botón real, no de link de texto, para que no
+               pase desapercibida antes de registrar/enviar el RTF. -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low rounded-2xl p-4">
+            <p class="text-[11px] text-muted-foreground">
+              Última sincronización de Gastos F1: <strong class="text-foreground">{{ rtfService.ultimaSincronizacionGastosF1() ? (rtfService.ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}</strong>
             </p>
             <button
               type="button"
-              class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+              class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm shrink-0"
               [disabled]="sincronizandoGastosF1()"
               (click)="sincronizarGastosF1()">
-              <span class="material-symbols-outlined text-[14px]">sync</span>
-              {{ sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar' }}
+              @if (sincronizandoGastosF1()) {
+                <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+              } @else {
+                <span class="material-symbols-outlined text-[16px]">sync</span>
+              }
+              {{ sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar con KOFIX' }}
             </button>
           </div>
 
@@ -536,63 +662,102 @@
                  normativo del Instructivo SEL (p. 101). -->
             @let relacion = rtfService.relacionGastosF1()!;
             <div class="space-y-3">
+              <!-- ADR-0011: kardex de rendición -- solo se rinde el monto AGROIDEAS, la
+                   contrapartida OA es informativa (memoria de proyecto
+                   project_rendicion_solo_monto_agroideas). -->
               @for (item of relacion.items; track item.marcoLogicoID) {
                 <div class="border border-border rounded-2xl overflow-hidden shadow-sm">
-                  <div class="bg-surface-container-low p-4 grid grid-cols-2 lg:grid-cols-5 gap-3">
-                    <div class="col-span-2 lg:col-span-1">
-                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Ítem</span>
-                      <span class="text-sm font-bold text-foreground">{{ item.descripcion || '—' }}</span>
-                      <span class="text-[11px] text-muted-foreground block">
-                        {{ item.cantidad | number:'1.0-2' }} {{ item.unidadMedida }}
-                        @if (item.costoUnitario) { · C.U. S/ {{ item.costoUnitario | number:'1.2-2' }} }
-                      </span>
+                  <div class="bg-surface-container-low p-4 space-y-3">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div class="col-span-2 lg:col-span-1">
+                        <span class="text-[9px] uppercase font-bold text-muted-foreground block">Actividad</span>
+                        <span class="text-sm font-bold text-foreground">{{ item.descripcion || '—' }}</span>
+                        <span class="text-[11px] text-muted-foreground block">
+                          {{ item.cantidad | number:'1.0-2' }} {{ item.unidadMedida }}
+                          @if (item.costoUnitario) { · C.U. S/ {{ item.costoUnitario | number:'1.2-2' }} }
+                        </span>
+                      </div>
+                      <div>
+                        <span class="text-[9px] uppercase font-bold text-muted-foreground block">Meta Programada AGROIDEAS</span>
+                        <span class="text-sm font-bold text-foreground">S/ {{ item.montoAprobadoAgroideas | number:'1.2-2' }}</span>
+                      </div>
+                      <div>
+                        <span class="text-[9px] uppercase font-bold text-muted-foreground block">Monto Facturado</span>
+                        <span class="text-sm font-bold text-primary">S/ {{ item.montoFacturado | number:'1.2-2' }}</span>
+                        <span class="text-[11px] text-muted-foreground block">{{ item.porcentajeEjecucion | number:'1.0-1' }}% ejecutado</span>
+                      </div>
+                      <div>
+                        <span class="text-[9px] uppercase font-bold text-muted-foreground block">Saldo por Rendir</span>
+                        <span class="text-sm font-bold" [class.text-success]="saldoPorRendir(item.montoAprobadoAgroideas, item.montoFacturado) >= 0" [class.text-danger]="saldoPorRendir(item.montoAprobadoAgroideas, item.montoFacturado) < 0">
+                          S/ {{ saldoPorRendir(item.montoAprobadoAgroideas, item.montoFacturado) | number:'1.2-2' }}
+                        </span>
+                      </div>
                     </div>
+
+                    <!-- Barra de progreso: facturado vs. meta programada AGROIDEAS -->
                     <div>
-                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Monto Facturado</span>
-                      <span class="text-sm font-bold text-primary">S/ {{ item.montoFacturado | number:'1.2-2' }}</span>
-                      <span class="text-[11px] text-muted-foreground block">{{ item.porcentajeEjecucion | number:'1.0-1' }}% ejecutado (vs. AGROIDEAS)</span>
-                    </div>
-                    <div>
-                      <span class="text-[9px] uppercase font-bold text-muted-foreground block" title="La contrapartida OA es solo informativa -- no se ejecuta por KOFIX">Aprob. OA / AGROIDEAS</span>
-                      <span class="text-xs font-semibold text-foreground">S/ {{ item.montoAprobadoOa | number:'1.2-2' }} / S/ {{ item.montoAprobadoAgroideas | number:'1.2-2' }}</span>
-                      <span class="text-[11px] text-muted-foreground block">Total: S/ {{ item.montoAprobadoTotal | number:'1.2-2' }}</span>
-                    </div>
-                    <div>
-                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Diferencial</span>
-                      <span class="text-sm font-bold" [class.text-error]="item.montoDiferencial < 0" [class.text-foreground]="item.montoDiferencial >= 0">
-                        S/ {{ item.montoDiferencial | number:'1.2-2' }}
-                      </span>
-                    </div>
-                    <div class="lg:text-right">
-                      <span class="text-[9px] uppercase font-bold text-muted-foreground block">Comprobantes</span>
-                      <span class="text-xs font-semibold text-foreground">{{ item.comprobantes.length }}</span>
+                      <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                        <div
+                          class="h-1.5 rounded-full transition-all duration-500"
+                          [class.bg-primary]="saldoPorRendir(item.montoAprobadoAgroideas, item.montoFacturado) >= 0"
+                          [class.bg-danger]="saldoPorRendir(item.montoAprobadoAgroideas, item.montoFacturado) < 0"
+                          [style.width.%]="item.montoAprobadoAgroideas > 0 ? (item.montoFacturado / item.montoAprobadoAgroideas * 100) : 0"
+                        ></div>
+                      </div>
+                      <p class="text-[10px] text-muted-foreground mt-1">
+                        Contrapartida OA (informativa, no se rinde): S/ {{ item.montoAprobadoOa | number:'1.2-2' }} · {{ item.comprobantes.length }} comprobante(s)
+                      </p>
                     </div>
                   </div>
 
                   @if (item.comprobantes.length > 0) {
-                    <div class="divide-y divide-border">
-                      @for (c of item.comprobantes; track c.ideGastoF1) {
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-[11px]">
-                          <span class="font-semibold text-foreground shrink-0 w-20">S/ {{ c.numMontoRendido | number:'1.2-2' }}</span>
-                          <span class="text-muted-foreground w-20 shrink-0">{{ c.fecEmision | date:'dd/MM/yyyy' }}</span>
-                          <span class="font-mono shrink-0">{{ c.txtSerieNumero || '—' }}</span>
-                          <span class="text-muted-foreground shrink-0">{{ c.txtTipoCpe || '—' }}</span>
-                          <span class="flex-1 min-w-[8rem] truncate text-foreground">{{ c.txtItemNombre || 'Sin concepto' }}</span>
-                          <span class="min-w-[8rem] truncate text-foreground">{{ c.txtProveedorNombre || 'Sin proveedor' }}</span>
-                          <span class="text-muted-foreground shrink-0">{{ c.txtProveedorRuc || '—' }}</span>
-                          @if (c.ideArchivo) {
-                            <button
-                              type="button"
-                              class="shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                              title="Ver documento de sustento"
-                              [attr.aria-label]="'Ver documento de sustento de ' + (c.txtItemNombre ?? 'este gasto')"
-                              (click)="verDocumentoGasto(c)"
-                            >
-                              <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
-                            </button>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left border-collapse text-[11px]">
+                        <thead class="bg-muted/30 text-[9px] uppercase font-bold text-muted-foreground">
+                          <tr>
+                            <th class="py-2 px-4 font-bold">Fecha Emisión</th>
+                            <th class="py-2 px-4 font-bold">Comprobante</th>
+                            <th class="py-2 px-4 font-bold">Proveedor</th>
+                            <th class="py-2 px-4 font-bold text-right">Monto</th>
+                            <th class="py-2 px-4 font-bold text-right">Saldo por Rendir</th>
+                            <th class="py-2 px-4 font-bold text-center">Sustento</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                          @for (fila of comprobantesConSaldo(item); track fila.comprobante.ideGastoF1) {
+                            <tr class="hover:bg-muted/10 transition-colors">
+                              <td class="py-2.5 px-4 text-muted-foreground whitespace-nowrap">{{ fila.comprobante.fecEmision | date:'dd/MM/yyyy' }}</td>
+                              <td class="py-2.5 px-4">
+                                <span class="font-mono text-foreground">{{ fila.comprobante.txtSerieNumero || '—' }}</span>
+                                <span class="block text-muted-foreground">{{ fila.comprobante.txtTipoCpe || '—' }}</span>
+                              </td>
+                              <td class="py-2.5 px-4">
+                                <span class="text-foreground">{{ fila.comprobante.txtProveedorNombre || 'Sin proveedor' }}</span>
+                                <span class="block text-muted-foreground">{{ fila.comprobante.txtProveedorRuc || '—' }}</span>
+                              </td>
+                              <td class="py-2.5 px-4 text-right font-semibold text-foreground whitespace-nowrap">S/ {{ fila.comprobante.numMontoRendido | number:'1.2-2' }}</td>
+                              <td class="py-2.5 px-4 text-right font-bold whitespace-nowrap" [class.text-success]="fila.saldoDespues >= 0" [class.text-danger]="fila.saldoDespues < 0">
+                                S/ {{ fila.saldoDespues | number:'1.2-2' }}
+                              </td>
+                              <td class="py-2.5 px-4 text-center">
+                                @if (fila.comprobante.ideArchivo) {
+                                  <button
+                                    type="button"
+                                    class="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                    title="Ver documento de sustento"
+                                    [attr.aria-label]="'Ver documento de sustento de ' + (fila.comprobante.txtItemNombre ?? 'este gasto')"
+                                    (click)="verDocumentoGasto(fila.comprobante)"
+                                  >
+                                    <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                                  </button>
+                                } @else {
+                                  <span class="text-muted-foreground/40">—</span>
+                                }
+                              </td>
+                            </tr>
                           }
-                        </div>
-                      }
+                        </tbody>
+                      </table>
                     </div>
                   } @else {
                     <p class="px-4 py-2.5 text-[11px] text-muted-foreground italic border-t border-border">Sin comprobantes sincronizados todavía para este ítem.</p>
@@ -621,30 +786,17 @@
                 </div>
               }
 
-              <!-- Fila TOTAL, igual que el formato normativo -->
-              <div class="border-t-2 border-primary pt-3 grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <div class="col-span-2 lg:col-span-1">
-                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Total S/.</span>
-                </div>
-                <div>
-                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Monto Facturado</span>
-                  <span class="text-sm font-bold text-primary">S/ {{ relacion.totalFacturado | number:'1.2-2' }}</span>
-                </div>
-                <div>
-                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Aprob. OA / AGROIDEAS</span>
-                  <span class="text-xs font-bold text-foreground">S/ {{ relacion.totalAprobadoOa | number:'1.2-2' }} / S/ {{ relacion.totalAprobadoAgroideas | number:'1.2-2' }}</span>
-                  <span class="text-[11px] text-muted-foreground block">Total: S/ {{ relacion.totalAprobado | number:'1.2-2' }}</span>
-                </div>
-                <div>
-                  <span class="text-[9px] uppercase font-bold text-muted-foreground block">Diferencial</span>
-                  <span class="text-sm font-bold" [class.text-error]="relacion.totalDiferencial < 0" [class.text-foreground]="relacion.totalDiferencial >= 0">
-                    S/ {{ relacion.totalDiferencial | number:'1.2-2' }}
-                  </span>
-                </div>
+              <!-- ADR-0011: sin fila de Total -- Programado/Ejecutado/Saldo por Rendir del Paso
+                   Crítico ya se muestran una sola vez en "Progreso del Presupuesto" (arriba),
+                   que usa exactamente los mismos totales (totalAprobadoAgroideas/totalFacturado). -->
+              <div class="border-t-2 border-primary pt-3">
+                <p class="text-[10px] text-muted-foreground">
+                  Contrapartida OA total (informativa, no se rinde): S/ {{ relacion.totalAprobadoOa | number:'1.2-2' }}
+                </p>
               </div>
 
               @if (hayExcedenteGastosF1()) {
-                <p class="text-[11px] italic text-muted-foreground">*** Los montos excedentes a los aprobados serán asumidos por la OA.</p>
+                <p class="text-[11px] italic text-muted-foreground">*** Los montos excedentes a lo aprobado por AGROIDEAS serán asumidos por la OA.</p>
               }
             </div>
           }
@@ -1194,31 +1346,59 @@
 
 <!-- Templates para las celdas personalizadas y acciones de las tablas -->
 <ng-template #metasActionsTpl let-row>
-  <button
-    class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-    [style.width]="'36px'"
-    [style.height]="'36px'"
-    [disabled]="!isEditable()"
-    (click)="openModal('meta', row)"
-    title="Registrar avance"
-    [attr.aria-label]="'Registrar avance de ' + row.descripcion"
-  >
-    <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
-  </button>
+  <div class="flex items-center gap-1.5">
+    @if (evidenciasDe('meta', row).length > 0) {
+      <button
+        class="inline-flex items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 p-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
+        [style.width]="'36px'"
+        [style.height]="'36px'"
+        (click)="descargarEvidencias('meta', row)"
+        title="Descargar evidencia"
+        [attr.aria-label]="'Descargar evidencia de ' + row.descripcion"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">picture_as_pdf</span>
+      </button>
+    }
+    <button
+      class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+      [style.width]="'36px'"
+      [style.height]="'36px'"
+      [disabled]="!isEditable()"
+      (click)="openModal('meta', row)"
+      title="Registrar avance"
+      [attr.aria-label]="'Registrar avance de ' + row.descripcion"
+    >
+      <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
+    </button>
+  </div>
 </ng-template>
 
 <ng-template #indicadoresActionsTpl let-row>
-  <button
-    class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-    [style.width]="'36px'"
-    [style.height]="'36px'"
-    [disabled]="!isEditable()"
-    (click)="openModal('indicador', row)"
-    title="Registrar avance"
-    [attr.aria-label]="'Registrar avance de ' + row.descripcion"
-  >
-    <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
-  </button>
+  <div class="flex items-center gap-1.5">
+    @if (evidenciasDe('indicador', row).length > 0) {
+      <button
+        class="inline-flex items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 p-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all duration-200 shadow-sm"
+        [style.width]="'36px'"
+        [style.height]="'36px'"
+        (click)="descargarEvidencias('indicador', row)"
+        title="Descargar evidencia"
+        [attr.aria-label]="'Descargar evidencia de ' + row.descripcion"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">picture_as_pdf</span>
+      </button>
+    }
+    <button
+      class="inline-flex items-center justify-center rounded-full bg-primary/10 border border-primary/20 p-2 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+      [style.width]="'36px'"
+      [style.height]="'36px'"
+      [disabled]="!isEditable()"
+      (click)="openModal('indicador', row)"
+      title="Registrar avance"
+      [attr.aria-label]="'Registrar avance de ' + row.descripcion"
+    >
+      <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit_note</span>
+    </button>
+  </div>
 </ng-template>
 
 <ng-template #metasSelRowTpl let-row let-col="col">
@@ -1231,12 +1411,18 @@
   }
   @if (col.field === 'metaFisicaAvance') {
     @if (row.metaFisicaEjecutada > 0 && row.metaFisicaProgramada > 0) {
-      <span class="text-xs font-bold" [class.text-success]="(row.metaFisicaEjecutada / row.metaFisicaProgramada) >= 1" [class.text-warning]="(row.metaFisicaEjecutada / row.metaFisicaProgramada) < 1">
+      <span class="text-xs font-bold">
         {{ (row.metaFisicaEjecutada / row.metaFisicaProgramada) | percent:'1.0-0' }}
       </span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
+  }
+  @if (col.field === 'estadoAvance') {
+    <app-ui-status-pill
+      [status]="estadoAvancePillStatus(row.metaFisicaEjecutada, row.metaFisicaProgramada)"
+      [text]="estadoAvanceLabel(row.metaFisicaEjecutada, row.metaFisicaProgramada)"
+    />
   }
 </ng-template>
 
@@ -1250,12 +1436,18 @@
   }
   @if (col.field === 'avancePct') {
     @if (row.canEjecutada !== null && row.canEjecutada !== undefined && row.canProgramada > 0) {
-      <span class="text-xs font-bold" [class.text-success]="(row.canEjecutada / row.canProgramada) >= 1" [class.text-warning]="(row.canEjecutada / row.canProgramada) < 1">
+      <span class="text-xs font-bold">
         {{ (row.canEjecutada / row.canProgramada) | percent:'1.0-0' }}
       </span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
+  }
+  @if (col.field === 'estadoAvance') {
+    <app-ui-status-pill
+      [status]="estadoAvancePillStatus(row.canEjecutada, row.canProgramada)"
+      [text]="estadoAvanceLabel(row.canEjecutada, row.canProgramada)"
+    />
   }
 </ng-template>
 
@@ -1269,12 +1461,18 @@
   }
   @if (col.field === 'avancePct') {
     @if (row.metaEjecutada !== null && row.metaEjecutada !== undefined && row.metaProgramada > 0) {
-      <span class="text-xs font-bold" [class.text-success]="(row.metaEjecutada / row.metaProgramada) >= 1" [class.text-warning]="(row.metaEjecutada / row.metaProgramada) < 1">
+      <span class="text-xs font-bold">
         {{ (row.metaEjecutada / row.metaProgramada) | percent:'1.0-0' }}
       </span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
+  }
+  @if (col.field === 'estadoAvance') {
+    <app-ui-status-pill
+      [status]="estadoAvancePillStatus(row.metaEjecutada, row.metaProgramada)"
+      [text]="estadoAvanceLabel(row.metaEjecutada, row.metaProgramada)"
+    />
   }
 </ng-template>
 
@@ -1288,12 +1486,18 @@
   }
   @if (col.field === 'avancePct') {
     @if (row.canEjecutado !== null && row.canEjecutado !== undefined && row.canProgramado > 0) {
-      <span class="text-xs font-bold" [class.text-success]="(row.canEjecutado / row.canProgramado) >= 1" [class.text-warning]="(row.canEjecutado / row.canProgramado) < 1">
+      <span class="text-xs font-bold">
         {{ (row.canEjecutado / row.canProgramado) | percent:'1.0-0' }}
       </span>
     } @else {
       <span class="text-muted-foreground/50">—</span>
     }
+  }
+  @if (col.field === 'estadoAvance') {
+    <app-ui-status-pill
+      [status]="estadoAvancePillStatus(row.canEjecutado, row.canProgramado)"
+      [text]="estadoAvanceLabel(row.canEjecutado, row.canProgramado)"
+    />
   }
 </ng-template>
 
