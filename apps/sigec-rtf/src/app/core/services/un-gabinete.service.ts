@@ -253,7 +253,9 @@ export class UnGabineteService {
   }
 
   aprobarUn(rtfId: number, observacion?: string) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/aprobaciones`, observacion ? JSON.stringify(observacion) : {}, {
+    // El backend hace binding de esto a `string?` -- {} no deserializa a string (400/error de
+    // conversión JSON), tiene que ser el literal JSON `null` cuando no hay observación.
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/aprobaciones`, JSON.stringify(observacion ?? null), {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {
@@ -268,7 +270,7 @@ export class UnGabineteService {
   }
 
   rechazarUn(rtfId: number, observacion?: string) {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/rechazos`, observacion ? JSON.stringify(observacion) : {}, {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/un/rtfs/${rtfId}/rechazos`, JSON.stringify(observacion ?? null), {
       headers: { 'Content-Type': 'application/json' }
     }).pipe(
       map(res => {

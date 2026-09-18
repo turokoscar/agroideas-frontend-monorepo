@@ -153,6 +153,8 @@ export class RtfService {
   removeEvidencia = (evidenciaId: number) => this.oaService.removeEvidencia(evidenciaId);
   descargarAnexo17 = (rtfId: number) => this.oaService.descargarAnexo17(rtfId);
   descargarAnexo18 = (rtfId: number) => this.oaService.descargarAnexo18(rtfId);
+  listarDocumentos = (rtfId: number) => this.oaService.listarDocumentos(rtfId);
+  descargarDocumentacionZip = (rtfId: number) => this.oaService.descargarDocumentacionZip(rtfId);
   descargarGastoF1 = (rtfId: number, ideGastoF1: number) => this.oaService.descargarGastoF1(rtfId, ideGastoF1);
   atenderObservaciones = (rtfId: number, respuestas: RevisionAtencionItem[]) => this.oaService.atenderObservaciones(rtfId, respuestas);
   loadActividadReciente = () => this.oaService.loadActividadReciente();

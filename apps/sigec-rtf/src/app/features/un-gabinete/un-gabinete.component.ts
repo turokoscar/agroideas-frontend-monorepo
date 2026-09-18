@@ -23,10 +23,16 @@ import {
 } from '@agroideas/ui';
 import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { DocumentacionRtfModalComponent } from '../documentacion-rtf/documentacion-rtf-modal.component';
 
 interface Anexo18FormValue {
   txtNumeroInforme: string;
   txtRepresentanteUn: string;
+  txtInformeUn: string;
+  txtInformeVisita: string;
+  txtInformeAmbiental: string;
+  txtInformeFinanciero: string;
+  txtDificultades: string;
   txtConclusiones: string;
   txtRecomendaciones: string;
   estCalificacion: '' | 'APROBADO_CONFORME' | 'RECHAZADO_OBSERVACIONES';
@@ -55,6 +61,7 @@ interface Anexo18FormValue {
     UiDropzoneComponent,
     UiFileChipComponent,
     UiFilterBarComponent,
+    DocumentacionRtfModalComponent,
   ],
   providers: [DecimalPipe, DatePipe],
   templateUrl: './un-gabinete.component.html',
@@ -149,6 +156,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   anexo18Form = signal<Anexo18FormValue>({
     txtNumeroInforme: '',
     txtRepresentanteUn: '',
+    txtInformeUn: '',
+    txtInformeVisita: '',
+    txtInformeAmbiental: '',
+    txtInformeFinanciero: '',
+    txtDificultades: '',
     txtConclusiones: '',
     txtRecomendaciones: '',
     estCalificacion: '',
@@ -492,6 +504,14 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     return !!f.txtNumeroInforme.trim() && !!f.txtRepresentanteUn.trim();
   });
 
+  // Copia escaneada del Anexo 18 ya firmado — mismo patrón que el Anexo 17 firmado de la OA
+  // (evidencia genérica, tipConcepto ANEXO18_FIRMADO), para que quede junto al resto de la
+  // documentación del expediente (evidencias, informes, Anexo 17) consultable por PC.
+  anexo18FirmadosAdjuntos = computed(() =>
+    this.evidencias().filter(e => e.tipConcepto === 'ANEXO18_FIRMADO')
+  );
+  subiendoAnexo18Firmado = signal(false);
+
   ngOnInit() {
     this.cargarBandeja();
   }
@@ -552,6 +572,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.anexo18Form.set({
       txtNumeroInforme: '',
       txtRepresentanteUn: '',
+      txtInformeUn: '',
+      txtInformeVisita: '',
+      txtInformeAmbiental: '',
+      txtInformeFinanciero: '',
+      txtDificultades: '',
       txtConclusiones: '',
       txtRecomendaciones: '',
       estCalificacion: '',
@@ -606,6 +631,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
             this.anexo18Form.set({
               txtNumeroInforme: informe.txtNumeroInforme ?? '',
               txtRepresentanteUn: informe.txtRepresentanteUn ?? '',
+              txtInformeUn: informe.txtInformeUn ?? '',
+              txtInformeVisita: informe.txtInformeVisita ?? '',
+              txtInformeAmbiental: informe.txtInformeAmbiental ?? '',
+              txtInformeFinanciero: informe.txtInformeFinanciero ?? '',
+              txtDificultades: informe.txtDificultades ?? '',
               txtConclusiones: informe.txtConclusiones ?? '',
               txtRecomendaciones: informe.txtRecomendaciones ?? '',
               estCalificacion: (informe.estCalificacion as any) ?? '',
@@ -770,6 +800,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
       this.rtfService.guardarAnexo18(rtfId, {
         txtNumeroInforme: f.txtNumeroInforme,
         txtRepresentanteUn: f.txtRepresentanteUn,
+        txtInformeUn: f.txtInformeUn,
+        txtInformeVisita: f.txtInformeVisita,
+        txtInformeAmbiental: f.txtInformeAmbiental,
+        txtInformeFinanciero: f.txtInformeFinanciero,
+        txtDificultades: f.txtDificultades,
         txtConclusiones: f.txtConclusiones,
         txtRecomendaciones: f.txtRecomendaciones,
         estCalificacion: f.estCalificacion || undefined,
@@ -781,6 +816,26 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.guardandoAnexo18.set(false);
           this.toast.error('Error', err.error?.mensaje || 'No se pudo guardar el Anexo 18.');
+        }
+      })
+    );
+  }
+
+  onAnexo18FirmadoFile(info: FileInfo) {
+    const rtfId = this.rtfService.unSelectedRtfId();
+    if (!rtfId) return;
+
+    this.subiendoAnexo18Firmado.set(true);
+    this.subs.add(
+      this.rtfService.uploadEvidencia(rtfId, 0, 'ANEXO18_FIRMADO', info.file).subscribe({
+        next: () => {
+          this.subiendoAnexo18Firmado.set(false);
+          this.toast.success('Anexo 18 firmado adjuntado', 'La copia firmada se registró correctamente.');
+          this.rtfService.loadRtfCompleto(rtfId).subscribe();
+        },
+        error: (err) => {
+          this.subiendoAnexo18Firmado.set(false);
+          this.toast.error('Error', err.error?.mensaje || 'No se pudo adjuntar el Anexo 18 firmado.');
         }
       })
     );

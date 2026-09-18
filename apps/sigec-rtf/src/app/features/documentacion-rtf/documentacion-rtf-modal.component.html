@@ -1,0 +1,89 @@
+@if (open()) {
+  <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="cerrar()">
+    <div
+      class="mx-4 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-border bg-background shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center justify-between border-b border-border px-6 py-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] text-primary">folder_open</span>
+          <h2 class="text-base font-semibold text-foreground">Documentación del RTF {{ rtfId() }}</h2>
+        </div>
+        <button
+          class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          (click)="cerrar()"
+          type="button"
+          aria-label="Cerrar"
+        >
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-6 py-4">
+        @if (cargando()) {
+          <p class="text-sm text-muted-foreground text-center py-8">Cargando documentos...</p>
+        } @else if (documentos().length === 0) {
+          <p class="text-sm text-muted-foreground text-center py-8">No hay documentos registrados para este RTF.</p>
+        } @else {
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs text-muted-foreground uppercase tracking-wide border-b border-border">
+                <th class="py-2 pr-2">Documento</th>
+                <th class="py-2 pr-2">Categoría</th>
+                <th class="py-2 pr-2">Fecha</th>
+                <th class="py-2 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (doc of documentos(); track doc.ideEvidencia ?? doc.categoria) {
+                <tr class="border-b border-border/60">
+                  <td class="py-2 pr-2 truncate max-w-[220px]" [title]="doc.txtNombreArchivo">{{ doc.txtNombreArchivo }}</td>
+                  <td class="py-2 pr-2 text-muted-foreground">{{ etiquetaCategoria(doc) }}</td>
+                  <td class="py-2 pr-2 text-muted-foreground whitespace-nowrap">{{ doc.fecRegistro | date: 'dd/MM/yyyy' }}</td>
+                  <td class="py-2 text-right whitespace-nowrap">
+                    <button
+                      class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-primary"
+                      (click)="verDocumento(doc)"
+                      type="button"
+                      aria-label="Ver documento"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    </button>
+                    <button
+                      class="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-primary"
+                      (click)="descargarDocumento(doc)"
+                      type="button"
+                      aria-label="Descargar documento"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">download</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <div class="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
+        <ui-button
+          appearance="soft"
+          severity="secondary"
+          icon="folder_zip"
+          [label]="descargandoZip() ? 'Descargando...' : 'Descargar todo (.zip)'"
+          [loading]="descargandoZip()"
+          [disabled]="documentos().length === 0"
+          (onClick)="descargarZip()"
+        />
+      </div>
+    </div>
+  </div>
+}
+
+<ui-pdf-viewer
+  [open]="pdfViewerOpen()"
+  [filename]="pdfViewerFilename()"
+  [fileUrl]="pdfViewerFileUrl()"
+  [downloadUrl]="pdfViewerDownloadUrl()"
+  (onOpenChange)="cerrarPreview()"
+/>

@@ -135,10 +135,23 @@
             (onClick)="verAnexo18(row)"
           />
         }
+        @if (row.estRtf !== 'PENDIENTE') {
+          <ui-button
+            iconOnly
+            size="sm"
+            appearance="soft"
+            severity="secondary"
+            icon="folder_open"
+            [ariaLabel]="'Ver documentación del RTF ' + row.ideRtf"
+            (onClick)="documentacionModal.abrir(row.ideRtf)"
+          />
+        }
       </div>
     </ng-template>
 
   </app-ui-data-table>
+
+  <app-documentacion-rtf-modal #documentacionModal />
 
   <!-- PDF Viewer Modal (Anexo 18) -->
   @if (pdfViewerOpen()) {

@@ -16,3 +16,4 @@ export * from './lib/ui-dropzone/ui-dropzone.component';
 export * from './lib/ui-file-chip/ui-file-chip.component';
 export * from './lib/ui-pdf-viewer/ui-pdf-viewer.component';
 export * from './lib/toast.service';
+export * from './lib/ui-toast/ui-toast-container.component';

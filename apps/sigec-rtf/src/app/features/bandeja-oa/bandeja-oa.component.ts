@@ -13,6 +13,7 @@ import {
   UiPdfViewerComponent,
   UIButtonComponent
 } from '@agroideas/ui';
+import { DocumentacionRtfModalComponent } from '../documentacion-rtf/documentacion-rtf-modal.component';
 
 interface BandejaTab {
   key: string;
@@ -30,7 +31,8 @@ interface BandejaTab {
     UiFilterBarComponent,
     UiStatusPillComponent,
     UiPdfViewerComponent,
-    UIButtonComponent
+    UIButtonComponent,
+    DocumentacionRtfModalComponent
   ],
   templateUrl: './bandeja-oa.component.html'
 })

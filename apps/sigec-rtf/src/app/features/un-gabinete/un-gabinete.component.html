@@ -10,9 +10,20 @@
       <p class="text-sm text-muted-foreground">Especialista UN Central / Dirección Ejecutiva / USE</p>
     </div>
     @if (viewState() === 'audit') {
-      <ui-button appearance="soft" severity="secondary" icon="arrow_back" label="Volver a la bandeja" (onClick)="volverBandeja()" />
+      <div class="flex items-center gap-2">
+        <ui-button
+          appearance="soft"
+          severity="secondary"
+          icon="folder_open"
+          label="Ver documentación"
+          (onClick)="documentacionModal.abrir(rtfService.unSelectedRtfId()!)"
+        />
+        <ui-button appearance="soft" severity="secondary" icon="arrow_back" label="Volver a la bandeja" (onClick)="volverBandeja()" />
+      </div>
     }
   </div>
+
+  <app-documentacion-rtf-modal #documentacionModal />
 
   <!-- Bandeja (lista) -->
   @if (viewState() === 'list') {
@@ -614,12 +625,56 @@
           </div>
 
           <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Conclusiones</label>
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de la UN (relacionado al cumplimiento de Paso Crítico)</label>
             <textarea
               class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Conclusiones de la evaluación..."
-              [value]="anexo18Form().txtConclusiones"
-              (input)="updateAnexo18Form({ txtConclusiones: $any($event.target).value })"
+              placeholder="Cumplimiento del paso crítico evaluado..."
+              [value]="anexo18Form().txtInformeUn"
+              (input)="updateAnexo18Form({ txtInformeUn: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de la Visita (calidad de funcionamiento y adopción de la tecnología)</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Resultado de la visita de campo..."
+              [value]="anexo18Form().txtInformeVisita"
+              (input)="updateAnexo18Form({ txtInformeVisita: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe sobre indicadores del Plan de Responsabilidad Ambiental</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Desarrollo de los indicadores ambientales..."
+              [value]="anexo18Form().txtInformeAmbiental"
+              (input)="updateAnexo18Form({ txtInformeAmbiental: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de aspectos Financieros (cofinanciamiento y solicitud de transferencia)</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Verificación del cofinanciamiento y la solicitud de transferencia..."
+              [value]="anexo18Form().txtInformeFinanciero"
+              (input)="updateAnexo18Form({ txtInformeFinanciero: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Dificultades encontradas</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Dificultades encontradas durante la evaluación..."
+              [value]="anexo18Form().txtDificultades"
+              (input)="updateAnexo18Form({ txtDificultades: $any($event.target).value })"
               rows="3"
             ></textarea>
           </div>
@@ -631,6 +686,17 @@
               placeholder="Recomendaciones para la OA..."
               [value]="anexo18Form().txtRecomendaciones"
               (input)="updateAnexo18Form({ txtRecomendaciones: $any($event.target).value })"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Conclusiones</label>
+            <textarea
+              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              placeholder="Conclusiones de la evaluación..."
+              [value]="anexo18Form().txtConclusiones"
+              (input)="updateAnexo18Form({ txtConclusiones: $any($event.target).value })"
               rows="3"
             ></textarea>
           </div>
@@ -667,6 +733,31 @@
               [disabled]="anexo18Empty()"
               [ariaLabel]="anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : ''"
               (onClick)="generarAnexo18()" />
+          </div>
+
+          <!-- Copia escaneada del Anexo 18 ya firmado -- queda junto al resto de la documentación
+               del expediente (evidencias, informes, Anexo 17), igual que el Anexo 17 firmado de la OA. -->
+          <div class="mt-4">
+            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Anexo 18 firmado (copia escaneada)</label>
+            @if (anexo18FirmadosAdjuntos().length > 0) {
+              <div class="flex flex-col gap-2 mb-2">
+                @for (ev of anexo18FirmadosAdjuntos(); track ev.ideEvidencia) {
+                  <ui-file-chip
+                    [name]="ev.txtNombreArchivo ?? 'Anexo18_firmado.pdf'"
+                    [viewable]="true"
+                    [removable]="false"
+                    (onView)="descargarEvidencia(ev)"
+                  />
+                }
+              </div>
+            }
+            <ui-dropzone
+              label="Cargar Anexo 18 firmado"
+              [maxMB]="10"
+              [multiple]="false"
+              [disabled]="subiendoAnexo18Firmado()"
+              (onFile)="onAnexo18FirmadoFile($event)"
+            />
           </div>
         </div>
 

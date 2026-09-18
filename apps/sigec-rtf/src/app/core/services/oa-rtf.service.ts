@@ -17,7 +17,8 @@ import {
   DatosPaginados,
   ControlPlazoDto,
   RevisionAtencionItem,
-  RelacionGastosF1Dto
+  RelacionGastosF1Dto,
+  DocumentoRepositorioDto
 } from '../models';
 
 @Injectable({
@@ -367,6 +368,29 @@ export class OaRtfService {
     }).pipe(
       catchError(err => {
         console.error('Error downloading Anexo 18', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Repositorio consolidado (Anexo 17, evidencias, informes, Anexo 18) para la vista "Ver documentación". */
+  listarDocumentos(rtfId: number) {
+    return this.http.get<ApiResponse<DocumentoRepositorioDto[]>>(`${this.apiUrl}/rtfs/${rtfId}/documentos`).pipe(
+      map(res => res.datos || []),
+      catchError(err => {
+        console.error('Error listing documentos', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /** Anexo 17 + Anexo 18 + toda la evidencia adjunta, empaquetados en un único .zip. */
+  descargarDocumentacionZip(rtfId: number) {
+    return this.http.get(`${this.apiUrl}/rtfs/${rtfId}/documentos/zip`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(err => {
+        console.error('Error downloading documentacion zip', err);
         return throwError(() => err);
       })
     );
