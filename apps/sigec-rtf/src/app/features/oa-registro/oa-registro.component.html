@@ -1,11 +1,13 @@
 <div class="space-y-6 animate-fade-in">
 
-  <!-- Countdown Banner -->
-  <ui-countdown-banner
-    [hours]="rtfService.rtfDeadlineHours()"
-    [tone]="'warning'"
-    [label]="plazoBannerLabel()"
-  />
+  <!-- Countdown Banner: solo tiene sentido mientras la OA puede seguir actuando sobre el RTF -->
+  @if (isEditable()) {
+    <ui-countdown-banner
+      [hours]="rtfService.rtfDeadlineHours()"
+      [tone]="'warning'"
+      [label]="plazoBannerLabel()"
+    />
+  }
 
   <!-- Observaciones Banner (ADR-014 frontend Fase 4) -->
   @if (rtfService.rtfStatus() === 'OBSERVADO') {
