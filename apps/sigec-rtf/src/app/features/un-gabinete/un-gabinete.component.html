@@ -480,6 +480,61 @@
             <ui-dropzone label="Cargar Acta de Campo" [maxMB]="10" [multiple]="false" (onFile)="onActaFile($event)" />
           }
         </div>
+      } @else if (enBloqueoDefinitivo()) {
+        <!-- Bloqueo Definitivo (ADR-018 Fase F): ya no hay más cartas que registrar, solo la
+             acción manual de marcar el convenio como resuelto. -->
+        <div class="bg-card border border-destructive/30 rounded-xl p-5 shadow-sm">
+          <h3 class="text-xs font-bold text-destructive uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">block</span>
+            Bloqueo Definitivo
+          </h3>
+          <p class="text-sm text-muted-foreground mb-4">
+            Venció el plazo de la Carta Notarial sin que la OA regularizara el envío del RTF. El acceso de la
+            organización quedó bloqueado. Corresponde iniciar el proceso de Resolución del Convenio.
+          </p>
+
+          @if (cartas().length > 0) {
+            <div class="space-y-2 mb-4">
+              @for (carta of cartas(); track carta.ideCarta) {
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm">
+                  <div class="min-w-0">
+                    <div class="font-medium text-foreground">
+                      {{ carta.tipCarta === 'CARTA_NOTARIAL' ? 'Carta Notarial' : 'Carta de Notificación' }}
+                      <span class="ml-2 font-mono text-xs text-muted-foreground">{{ carta.numDocumento }}</span>
+                    </div>
+                    <div class="text-xs text-muted-foreground">
+                      Notificada el {{ carta.fecNotificacion | date:'dd/MM/yyyy' }} · {{ carta.canDiasOtorgados }} días otorgados
+                    </div>
+                  </div>
+                  <ui-button iconOnly appearance="soft" severity="secondary" size="sm" icon="visibility" ariaLabel="{{ 'Ver documento ' + carta.numDocumento }}" (onClick)="descargarCarta(carta)" />
+                </div>
+              }
+            </div>
+          }
+
+          <ui-button
+            severity="danger"
+            icon="gavel"
+            label="Marcar convenio como resuelto"
+            (onClick)="toggleConfirmarResueltoModal()"
+          />
+        </div>
+
+        <app-ui-modal
+          [visible]="showConfirmarResueltoModal()"
+          title="Marcar convenio como resuelto"
+          subtitle="Esta acción no se puede deshacer desde aquí"
+          icon="gavel"
+          saveLabel="Sí, marcar como resuelto"
+          (onHide)="toggleConfirmarResueltoModal()"
+          (onSave)="marcarConvenioResuelto()"
+        >
+          <p class="text-sm text-foreground">
+            Se registrará al convenio con el estado situacional <strong>CONVENIO RESUELTO</strong> en el
+            sistema de gestión de postulantes, como consecuencia del incumplimiento del plazo de la
+            Carta Notarial. Confirma que corresponde iniciar la Resolución del Convenio.
+          </p>
+        </app-ui-modal>
       } @else if (enControlDePlazo()) {
         <!-- Control de Plazos - Cartas de Notificación/Notarial (Fase 4) -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
@@ -809,6 +864,10 @@
               <ui-button icon="send" label="Continuar Evaluación" [disabled]="accionEjecutandose()" (onClick)="continuarEvaluacion()" />
             </div>
           }
+        } @else if (enBloqueoDefinitivo()) {
+          <div class="text-sm text-muted-foreground">
+            RTF en bloqueo definitivo · use el botón "Marcar convenio como resuelto" arriba
+          </div>
         } @else if (enControlDePlazo()) {
           <div class="text-sm text-muted-foreground">
             RTF en control de plazos · registre la carta correspondiente arriba

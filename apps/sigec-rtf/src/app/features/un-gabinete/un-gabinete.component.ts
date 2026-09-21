@@ -20,6 +20,7 @@ import {
   UiFileChipComponent,
   FileInfo,
   UiFilterBarComponent,
+  UIModalComponent,
 } from '@agroideas/ui';
 import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -62,6 +63,7 @@ interface Anexo18FormValue {
     UiFileChipComponent,
     UiFilterBarComponent,
     DocumentacionRtfModalComponent,
+    UIModalComponent,
   ],
   providers: [DecimalPipe, DatePipe],
   templateUrl: './un-gabinete.component.html',
@@ -97,7 +99,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   // límite ya están completos en memoria (unRtfList + conveniosInfo), sin volver al backend.
   readonly estadosBandeja = [
     'EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN',
-    'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL',
+    'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL', 'BLOQUEO_DEFINITIVO',
   ] as const;
 
   filtroTexto = signal('');
@@ -382,10 +384,16 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Control de Plazos (Fase 4): RTF vencido, con Carta de Notificación o Carta Notarial en curso.
+  // Control de Plazos (Fase 4; ADR-018 Fase C suma EN_DESACATO): RTF vencido, con Carta de
+  // Notificación o Carta Notarial en curso -- todavía tiene sentido seguir emitiendo cartas.
+  // BLOQUEO_DEFINITIVO es un estado terminal aparte (ver enBloqueoDefinitivo): ya no hay más
+  // cartas que registrar, solo queda la acción manual de marcar el convenio como resuelto.
   enControlDePlazo = computed(() =>
-    ['VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfStatus())
+    ['VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL'].includes(this.rtfStatus())
   );
+
+  /** ADR-018 Fase F: estado terminal del escalamiento de plazos -- ver marcarConvenioResuelto(). */
+  enBloqueoDefinitivo = computed(() => this.rtfStatus() === 'BLOQUEO_DEFINITIVO');
 
   private static readonly ESTADO_LABELS: Record<string, string> = {
     'EN_REVISION': 'En Revisión',
@@ -396,7 +404,9 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     'OBSERVADO': 'Observado',
     'VENCIDO': 'Plazo Vencido',
     'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
+    'EN_DESACATO': 'En Desacato',
     'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
+    'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
   };
 
   /** Usado tanto por la fila de la bandeja como por la cabecera del detalle (rtfStatusLabel). */
@@ -535,7 +545,9 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
       case 'IN_REVISION_UN': return 'Aprobado';
       case 'AUDITADO_CAMPO': return 'Media';
       case 'VENCIDO':
-      case 'PLAZO_LIMITE_NOTARIAL': return 'Rechazado';
+      case 'EN_DESACATO':
+      case 'PLAZO_LIMITE_NOTARIAL':
+      case 'BLOQUEO_DEFINITIVO': return 'Rechazado';
       case 'PLAZO_INICIAL_NOTIFICACION': return 'Pendiente';
       default: return 'Pendiente';
     }
@@ -850,6 +862,26 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   onCartaFile(info: FileInfo) {
     this.nuevaCartaArchivo.set(info.file);
+  }
+
+  // --- Marcar convenio como resuelto (ADR-018 Fase F) ---
+  // Acción manual del especialista sobre un RTF en BLOQUEO_DEFINITIVO -- el sistema nunca lo
+  // dispara solo (decisión explícita del usuario, ver ADR-018 punto 6 de "Decisión"). El botón
+  // vive acá, con confirmación modal por ser una acción legal irreversible, pero el backend que
+  // de verdad actualiza `postulante_estado_situacional` (Fases G/H del ADR) todavía no existe --
+  // por eso confirma y avisa que queda pendiente, en vez de intentar una llamada que fallaría.
+  showConfirmarResueltoModal = signal(false);
+
+  toggleConfirmarResueltoModal() {
+    this.showConfirmarResueltoModal.update(v => !v);
+  }
+
+  marcarConvenioResuelto() {
+    this.showConfirmarResueltoModal.set(false);
+    this.toast.warning(
+      'Pendiente de implementación',
+      'El backend que actualiza el estado situacional del convenio (ADR-018 Fases G/H) todavía no existe. La confirmación quedó registrada solo en este mensaje.'
+    );
   }
 
   registrarCartaSubmit() {

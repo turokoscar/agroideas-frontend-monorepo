@@ -92,8 +92,10 @@ export class UnGabineteService {
     const estados = [
       'EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN',
       // Control de plazos (Fase 4): RTFs vencidos, con Carta de Notificación o Carta Notarial
-      // registrada, también son responsabilidad del especialista UN de la cartera.
-      'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'PLAZO_LIMITE_NOTARIAL'
+      // registrada, también son responsabilidad del especialista UN de la cartera. EN_DESACATO
+      // y BLOQUEO_DEFINITIVO (ADR-018 Fases C/E, sigec-api-rtf) se suman aquí -- ambos ya están
+      // en EstadoRtf.EstadosBandejaUn del backend, así que el filtro por cartera los cubre igual.
+      'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL', 'BLOQUEO_DEFINITIVO'
     ];
     // Antes: un forkJoin de 6 GET /rtfs?estado=X, uno por estado. Multiplicaba por 6, en cada
     // carga de bandeja, tanto los round-trips HTTP como las llamadas del backend a

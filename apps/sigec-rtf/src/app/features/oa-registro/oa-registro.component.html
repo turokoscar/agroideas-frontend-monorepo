@@ -1163,177 +1163,125 @@
 <!-- Avance Modal -->
 <app-ui-modal
   [visible]="modalOpen()"
-  [title]="'Registrar mi Avance Real'"
+  [title]="'Registrar Avance'"
   [subtitle]="modalTitle()"
   [icon]="'edit_note'"
-  [saveLabel]="'Confirmar y Guardar'"
+  [saveLabel]="'Guardar'"
   [saveDisabled]="editEjecutado() === null || editEjecutado() === undefined || editEjecutado()! < 0 || !isEditable()"
   [isSubmitting]="isSaving()"
   (onHide)="closeModal()"
   (onSave)="saveModalAvance()"
 >
-  <div class="space-y-6">
+  <div class="space-y-4">
 
-    <!-- Context Summary Panel (Fitted with institutional colors and soft design) -->
-    <div class="bg-primary/5 border border-primary/10 rounded-2xl p-5 space-y-4">
-      <div class="flex items-center gap-2">
-        <span class="text-lg">🎯</span>
-        <span class="text-xs font-bold text-primary uppercase tracking-wider">Metas que debemos alcanzar (Tu Plan)</span>
-      </div>
-      <div class="grid grid-cols-2 gap-4 bg-white/60 p-4 rounded-xl border border-primary/5">
+    <!-- Contexto: solo lectura, no editable desde aquí -->
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-surface-container/30 px-3 py-2 text-xs">
+      @if (modalMode() === 'indicador') {
+        <span class="text-muted-foreground">
+          Línea de base:
+          <span class="font-semibold text-foreground">{{ asAny(activeModalItem())?.lineaBase ?? '0' }} {{ modalUnidad() }}</span>
+        </span>
+      }
+      <span class="text-muted-foreground">
+        Programado:
+        <span class="font-semibold text-foreground">
+          @if (modalMode() === 'meta') {
+            {{ useBdSelMetas() ? asAny(activeModalItem())?.metaFisicaProgramada : asAny(activeModalItem())?.canProgramada }}
+          } @else {
+            {{ useBdSelMetas() ? asAny(activeModalItem())?.metaProgramada : asAny(activeModalItem())?.canProgramado }}
+          }
+          {{ modalUnidad() }}
+        </span>
+      </span>
+    </div>
 
-        <!-- Physical Goal Context -->
-        <div class="space-y-0.5">
-          <span class="text-[10px] uppercase font-bold text-muted-foreground block">Meta Programada:</span>
-          <p class="text-base font-bold text-foreground">
-            @if (modalMode() === 'meta') {
-              {{ useBdSelMetas() ? asAny(activeModalItem())?.metaFisicaProgramada : asAny(activeModalItem())?.canProgramada }}
-            } @else {
-              {{ useBdSelMetas() ? asAny(activeModalItem())?.metaProgramada : asAny(activeModalItem())?.canProgramado }}
-            }
-            <span class="text-xs font-medium text-muted-foreground ml-1">{{ modalUnidad() }}</span>
-          </p>
-        </div>
-
-        @if (modalMode() === 'indicador') {
-          <div class="space-y-0.5">
-            <span class="text-[10px] uppercase font-bold text-muted-foreground block">Línea de Base:</span>
-            <p class="text-base font-bold text-foreground">
-              {{ asAny(activeModalItem())?.lineaBase ?? '0' }}
-              <span class="text-xs font-medium text-muted-foreground ml-1">{{ modalUnidad() }}</span>
-            </p>
-          </div>
-        }
-
+    <!-- Avance ejecutado -->
+    <div class="space-y-1.5">
+      <label class="block text-sm font-semibold text-foreground">
+        Avance ejecutado <span class="text-destructive">*</span>
+      </label>
+      <div class="relative">
+        <input
+          type="number"
+          class="w-full rounded-lg border border-border bg-background px-3 py-2.5 pr-16 text-base font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          placeholder="0"
+          [(ngModel)]="editEjecutado"
+        />
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground pointer-events-none">{{ modalUnidad() }}</span>
       </div>
     </div>
 
-    <!-- Input Fields Group -->
-    <div class="space-y-5">
+    <!-- Comentario -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-semibold text-foreground">Comentario (opcional)</label>
+      <textarea
+        class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-y min-h-[70px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+        placeholder="Explica brevemente el avance, si aplica..."
+        [(ngModel)]="editComentario"
+      ></textarea>
+    </div>
 
-      <!-- Cantidad Ejecutada -->
-      <div class="space-y-2">
-        <label class="block text-sm font-bold text-foreground flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[20px] text-success">analytics</span>
-          ¿Cuánto has avanzado realmente en tu campo?
-          <span class="text-destructive">*</span>
-        </label>
-        <p class="text-xs text-muted-foreground">Escribe la cantidad de unidades cosechadas o ejecutadas en este periodo.</p>
+    <!-- Evidencias -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-semibold text-foreground">Evidencias (PDF)</label>
 
-        <div class="relative flex items-center">
-          <input
-            type="number"
-            class="w-full rounded-2xl border-2 border-border bg-surface-container/10 px-5 py-4 pr-16 text-lg focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary font-bold text-foreground shadow-inner"
-            placeholder="Ej. 10"
-            [(ngModel)]="editEjecutado"
-          />
-          <span class="absolute right-5 text-sm font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg pointer-events-none">{{ modalUnidad() }}</span>
-        </div>
-      </div>
-
-      <!-- Meta Programada (BD_SEL Indicador - Edit Programado Target) -->
-      @if (useBdSelMetas() && modalMode() === 'indicador') {
-        <div class="space-y-2">
-          <label class="block text-sm font-bold text-foreground flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-[20px] text-primary">edit_calendar</span>
-            Corregir Meta Planificada (Opcional)
-          </label>
-          <p class="text-xs text-muted-foreground">Si deseas modificar la meta planificada originalmente, hazlo aquí.</p>
-          <input
-            type="number"
-            step="0.01"
-            class="w-full rounded-2xl border-2 border-border bg-surface-container/10 px-5 py-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary font-bold text-foreground"
-            placeholder="Ingrese la nueva meta programada"
-            [(ngModel)]="editMetaProgramada"
-          />
+      @if (modalEvidencias().length > 0) {
+        <div class="space-y-1.5">
+          @for (ev of modalEvidencias(); track ev.ideEvidencia) {
+            <div class="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+              <span class="material-symbols-outlined text-[16px] text-success">check_circle</span>
+              <button
+                class="flex-1 truncate text-left hover:underline text-foreground"
+                (click)="viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento.pdf')"
+              >
+                {{ ev.txtNombreArchivo ?? 'Documento cargado' }}
+              </button>
+              <button
+                class="rounded p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+                (click)="removeEvidencia(ev.ideEvidencia)"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+            </div>
+          }
         </div>
       }
 
-      <!-- Comentario -->
-      <div class="space-y-2">
-        <label class="block text-sm font-bold text-foreground flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[20px] text-muted-foreground">comment</span>
-          ¿Tienes algún comentario o explicación sobre tu avance?
-        </label>
-        <p class="text-xs text-muted-foreground">Ej: "Tuvimos buena cosecha por clima", "Retraso por lluvias".</p>
-        <textarea
-          class="w-full rounded-2xl border-2 border-border bg-surface-container/10 px-5 py-3 text-sm resize-y min-h-[100px] focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary"
-          placeholder="Escribe aquí de forma libre y detallada..."
-          [(ngModel)]="editComentario"
-        ></textarea>
-      </div>
-
-      <!-- Evidencias -->
-      <div class="space-y-2">
-        <label class="block text-sm font-bold text-foreground flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[20px] text-primary font-bold">attach_file</span>
-          Documentos de Sustento o Evidencias (PDF)
-        </label>
-        <p class="text-xs text-muted-foreground">Sube tus fotos, actas, boletas o facturas en formato PDF.</p>
-
-        <!-- Existing evidencias -->
-        @if (modalEvidencias().length > 0) {
-          <div class="space-y-2 mb-3">
-            @for (ev of modalEvidencias(); track ev.ideEvidencia) {
-              <div class="flex items-center gap-2 rounded-xl border border-border bg-emerald-50/50 px-4 py-3 text-sm">
-                <span class="material-symbols-outlined text-[20px] text-emerald-600">verified</span>
-                <button
-                  class="flex-1 truncate text-left hover:underline text-foreground font-medium"
-                  (click)="viewPdf(ev.ideEvidencia, ev.txtNombreArchivo ?? 'documento.pdf')"
-                >
-                  {{ ev.txtNombreArchivo ?? 'Documento cargado' }}
-                </button>
-                <span class="text-xs text-muted-foreground font-bold mr-2">PDF</span>
-                <button
-                  class="rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
-                  (click)="removeEvidencia(ev.ideEvidencia)"
-                  type="button"
-                >
-                  <span class="material-symbols-outlined text-[18px]">delete</span>
-                </button>
-              </div>
-            }
-          </div>
-        }
-
-        <!-- New evidence upload -->
-        <div
-          class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-all hover:border-primary hover:bg-primary/10 shadow-sm"
-          tabindex="0" (keydown.enter)="fileInput.click()" (click)="fileInput.click()"
-          (dragover)="$event.preventDefault()"
-          (drop)="onModalFileDrop($event)"
-        >
-          <span class="material-symbols-outlined text-[36px] text-primary">cloud_upload</span>
-          <div class="text-sm font-bold text-foreground">Presiona aquí o arrastra tu archivo para subirlo</div>
-          <div class="text-xs text-muted-foreground font-semibold">Solo archivos PDF (Hasta 10 MB)</div>
-          <input
-            #fileInput
-            type="file"
-            accept="application/pdf"
-            class="hidden"
-            (change)="onModalFileSelect($event)"
-          />
+      @if (pendingFiles().length > 0) {
+        <div class="space-y-1.5">
+          @for (f of pendingFiles(); track f.name) {
+            <div class="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+              <span class="material-symbols-outlined text-[16px] text-primary">description</span>
+              <span class="flex-1 truncate text-foreground">{{ f.name }}</span>
+              <span class="text-xs text-muted-foreground">{{ sizeKB(f.size) }} KB</span>
+              <button
+                class="rounded p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+                (click)="removePendingFile(f.name)"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+            </div>
+          }
         </div>
+      }
 
-        <!-- Pending files -->
-        @if (pendingFiles().length > 0) {
-          <div class="space-y-2 mt-3">
-            @for (f of pendingFiles(); track f.name) {
-              <div class="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
-                <span class="material-symbols-outlined text-[18px] text-primary">description</span>
-                <span class="flex-1 truncate text-foreground font-medium">{{ f.name }}</span>
-                <span class="text-xs text-muted-foreground mr-2 font-bold">{{ sizeKB(f.size) }} KB</span>
-                <button
-                  class="rounded-full p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
-                  (click)="removePendingFile(f.name)"
-                  type="button"
-                >
-                  <span class="material-symbols-outlined text-[18px]">delete</span>
-                </button>
-              </div>
-            }
-          </div>
-        }
+      <div
+        class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        tabindex="0" (keydown.enter)="fileInput.click()" (click)="fileInput.click()"
+        (dragover)="$event.preventDefault()"
+        (drop)="onModalFileDrop($event)"
+      >
+        <span class="material-symbols-outlined text-[16px]">attach_file</span>
+        Adjuntar PDF (hasta 10 MB)
+        <input
+          #fileInput
+          type="file"
+          accept="application/pdf"
+          class="hidden"
+          (change)="onModalFileSelect($event)"
+        />
       </div>
     </div>
   </div>

@@ -23,7 +23,7 @@ describe('UnGabineteService', () => {
   afterEach(() => httpMock.verify());
 
   describe('loadBandejaUn', () => {
-    const estadosCsv = 'EN_REVISION,AUDITADO_CAMPO,IN_REVISION_UN,VENCIDO,PLAZO_INICIAL_NOTIFICACION,PLAZO_LIMITE_NOTARIAL';
+    const estadosCsv = 'EN_REVISION,AUDITADO_CAMPO,IN_REVISION_UN,VENCIDO,PLAZO_INICIAL_NOTIFICACION,EN_DESACATO,PLAZO_LIMITE_NOTARIAL,BLOQUEO_DEFINITIVO';
 
     it('resuelve los 6 estados de la bandeja en una sola llamada (no 6 por separado)', () => {
       let resultado: unknown;
