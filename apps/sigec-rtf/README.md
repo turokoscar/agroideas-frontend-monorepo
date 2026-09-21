@@ -45,6 +45,8 @@ features/
                 verificación de campo opcional (Anexo 19, ver ADR-010)
   admin/        Panel de administración (rol ADMIN): parámetros del sistema,
                 reporte de cumplimiento de plazos, reporte de productividad UN
+  documentacion-rtf/ Modal compartido de subida/previsualización de documentos,
+                usado desde oa-registro y un-gabinete (no es una ruta propia)
 layout/
   app-shell/    AppShellComponent — llena los slots de UiAppShellComponent
   notificacion-bell/ NotificacionBellComponent
@@ -133,6 +135,12 @@ ADRs propios de esta app, en `apps/sigec-rtf/adr/`:
 - `0011-estado-deuda-tecnica-lint-sigec-rtf.md` y `plan-remediacion-lint.md` — deuda de lint.
 - `0012-t1-r2-bd-sel-y-snapshot-f1.md` — snapshot F1 y datos de sel-api-general.
 - `0013-filtros-busqueda-bandeja-evaluacion-gabinete.md` — filtros de bandeja/gabinete.
+- `0014-pliego-observaciones-oa-y-rediseno-bandeja.md` — pliego de observaciones real con
+  atención por ítem, gate de reenvío en `oa-registro` y rediseño de `bandeja-oa` (implementado
+  por completo el 17/09/2026; consume `sigec-api-rtf` ADR-016).
+- `0015-rediseno-institucional-pantalla-login.md` — rediseño institucional (MIDAGRI/AGROIDEAS)
+  de `/login`: ayudas contextuales por tipo de usuario, toggle mostrar/ocultar contraseña,
+  aviso regulatorio de acceso/auditoría y cobertura de specs para `LoginComponent`.
 
 Los ADR-012 (plazos legales del Instructivo SEL) y ADR-013 (Panel de Administración) que
 motivaron el rol `ADMIN` y sus reportes viven en el repositorio del backend

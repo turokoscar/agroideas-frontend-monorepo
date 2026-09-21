@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
@@ -18,6 +19,7 @@ export class OaDashboardComponent implements OnInit {
   rtfService = inject(RtfService);
   authService = inject(AuthService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   isLoading = signal(true);
   hasError = signal(false);
@@ -56,7 +58,8 @@ export class OaDashboardComponent implements OnInit {
         if (!postulanteId) return of(null);
         return this.rtfService.loadDashboard(postulanteId);
       }),
-      switchMap(() => this.rtfService.loadActividadReciente())
+      switchMap(() => this.rtfService.loadActividadReciente()),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: () => {
         this.isLoading.set(false);
@@ -80,7 +83,9 @@ export class OaDashboardComponent implements OnInit {
       this.observacionesPendientes.set(0);
       return;
     }
-    this.rtfService.obtenerEvaluacionUr(rtfId).subscribe({
+    this.rtfService.obtenerEvaluacionUr(rtfId).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: estado => {
         const count = (estado?.revisiones ?? []).filter(r => r.estConformidad === 'OBSERVADO' && r.estAtencion !== 'ATENDIDA').length;
         this.observacionesPendientes.set(count);
@@ -105,7 +110,9 @@ export class OaDashboardComponent implements OnInit {
   }
 
   get currentMonthPct(): number {
-    return (this.rtfService.currentMonth() / this.rtfService.durationMonths()) * 100;
+    const duration = this.rtfService.durationMonths();
+    if (duration <= 0) return 0;
+    return (this.rtfService.currentMonth() / duration) * 100;
   }
 
   get monthLabels(): number[] {
@@ -124,14 +131,50 @@ export class OaDashboardComponent implements OnInit {
   statusLabel(): string {
     const status = this.rtfService.rtfStatus();
     switch (status) {
-      case 'PENDIENTE': return 'En Edición';
+      case 'PENDIENTE':
+      case 'EN_EDICION': return 'En Edición';
       case 'ENVIADO': return 'Enviado a UR';
       case 'EN_REVISION': return 'En Revisión';
+      case 'AUDITADO_CAMPO': return 'Auditado en Campo';
+      case 'IN_REVISION_UN': return 'En Evaluación de Gabinete';
       case 'APROBADO': return 'Aprobado';
       case 'RECHAZADO': return 'Rechazado';
       case 'VENCIDO': return 'Vencido';
       case 'OBSERVADO': return 'Con Observaciones';
       default: return status;
+    }
+  }
+
+  /** Mismo agrupamiento de severidad que `BandejaOAComponent.estadoPillStatus`. */
+  statusColorClass(): string {
+    switch (this.rtfService.rtfStatus()) {
+      case 'APROBADO':
+      case 'ENVIADO': return 'text-success';
+      case 'RECHAZADO':
+      case 'VENCIDO': return 'text-destructive';
+      case 'OBSERVADO': return 'text-warning';
+      case 'EN_REVISION':
+      case 'AUDITADO_CAMPO':
+      case 'IN_REVISION_UN': return 'text-info';
+      case 'PENDIENTE':
+      case 'EN_EDICION':
+      default: return 'text-amber-500';
+    }
+  }
+
+  statusDotClass(): string {
+    switch (this.rtfService.rtfStatus()) {
+      case 'APROBADO':
+      case 'ENVIADO': return 'bg-success';
+      case 'RECHAZADO':
+      case 'VENCIDO': return 'bg-destructive';
+      case 'OBSERVADO': return 'bg-warning';
+      case 'EN_REVISION':
+      case 'AUDITADO_CAMPO':
+      case 'IN_REVISION_UN': return 'bg-info';
+      case 'PENDIENTE':
+      case 'EN_EDICION':
+      default: return 'bg-amber-500 animate-pulse';
     }
   }
 

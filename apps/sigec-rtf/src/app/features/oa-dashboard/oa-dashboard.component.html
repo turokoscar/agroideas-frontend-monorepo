@@ -26,25 +26,27 @@
 
   <!-- Loading State -->
   @if (isLoading()) {
-    <div class="space-y-6" aria-hidden="true">
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        @for (card of [1,2,3,4]; track card) {
-          <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-            <div class="flex items-center justify-between">
-              <div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div>
-              <div class="h-8 w-8 rounded-lg bg-surface-container animate-pulse"></div>
+    <div class="space-y-6" role="status" aria-live="polite">
+      <div class="space-y-6" aria-hidden="true">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (card of [1,2,3,4]; track card) {
+            <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
+              <div class="flex items-center justify-between">
+                <div class="h-3 w-24 rounded bg-surface-container animate-pulse"></div>
+                <div class="h-8 w-8 rounded-lg bg-surface-container animate-pulse"></div>
+              </div>
+              <div class="mt-4 h-6 w-16 rounded bg-surface-container animate-pulse"></div>
+              <div class="mt-2 h-3 w-20 rounded bg-surface-container animate-pulse"></div>
             </div>
-            <div class="mt-4 h-6 w-16 rounded bg-surface-container animate-pulse"></div>
-            <div class="mt-2 h-3 w-20 rounded bg-surface-container animate-pulse"></div>
-          </div>
-        }
-      </div>
-      <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
-        <div class="h-4 w-64 rounded bg-surface-container animate-pulse mb-6"></div>
-        <div class="space-y-3">
-          @for (row of [1,2,3]; track row) {
-            <div class="h-8 rounded bg-surface-container animate-pulse"></div>
           }
+        </div>
+        <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
+          <div class="h-4 w-64 rounded bg-surface-container animate-pulse mb-6"></div>
+          <div class="space-y-3">
+            @for (row of [1,2,3]; track row) {
+              <div class="h-8 rounded bg-surface-container animate-pulse"></div>
+            }
+          </div>
         </div>
       </div>
       <span class="sr-only">Cargando datos del dashboard…</span>
@@ -117,12 +119,8 @@
           {{ rtfService.activePasoNumero() }} de {{ rtfService.totalPasos() }}
         </div>
         <div class="mt-1 flex items-center gap-2">
-          <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-          <span class="text-xs font-semibold uppercase" [ngClass]="{
-            'text-success': rtfService.rtfStatus() === 'APROBADO' || rtfService.rtfStatus() === 'ENVIADO',
-            'text-amber-500': rtfService.rtfStatus() === 'PENDIENTE',
-            'text-destructive': rtfService.rtfStatus() === 'VENCIDO'
-          }">
+          <span class="h-1.5 w-1.5 rounded-full" [class]="statusDotClass()"></span>
+          <span class="text-xs font-semibold uppercase" [class]="statusColorClass()">
             {{ statusLabel() }}
           </span>
         </div>

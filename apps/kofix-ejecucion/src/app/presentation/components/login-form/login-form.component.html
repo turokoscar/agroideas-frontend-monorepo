@@ -1,71 +1,253 @@
-<div class="min-h-screen flex">
-  <!-- Left Panel - Verde con branding -->
-  <div class="left-panel hidden lg:flex lg:w-1/2 bg-primary items-center justify-center relative overflow-hidden">
-    <!-- Círculos decorativos -->
-    <div class="absolute inset-0 opacity-10">
-      <div class="absolute rounded-full border border-primary-foreground/20"
-        style="width: 200px; height: 200px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-      <div class="absolute rounded-full border border-primary-foreground/20"
-        style="width: 320px; height: 320px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-      <div class="absolute rounded-full border border-primary-foreground/20"
-        style="width: 440px; height: 440px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-      <div class="absolute rounded-full border border-primary-foreground/20"
-        style="width: 560px; height: 560px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-      <div class="absolute rounded-full border border-primary-foreground/20"
-        style="width: 680px; height: 680px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-      <div class="absolute rounded-full border border-primary-foreground/20"
-        style="width: 800px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+<main class="flex-1 flex flex-col lg:flex-row min-h-screen">
+  <!-- BEGIN: LeftHeroSection (Institutional Branding KOFIX) -->
+  <section class="hidden lg:flex lg:w-5/12 xl:w-1/2 relative text-white flex-col justify-between p-8 sm:p-12 lg:p-16 overflow-hidden hero-pattern" aria-label="Identidad Institucional KOFIX">
+    <!-- Decorative Organic Geometry SVG -->
+    <div aria-hidden="true" class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+      <svg class="absolute -bottom-24 -left-20 w-[600px] h-[600px] text-white" fill="none" viewBox="0 0 400 400">
+        <circle cx="200" cy="200" opacity="0.6" r="180" stroke="currentColor" stroke-dasharray="8 8" stroke-width="1.5"></circle>
+        <circle cx="200" cy="200" opacity="0.4" r="130" stroke="currentColor" stroke-width="2"></circle>
+        <circle cx="200" cy="200" opacity="0.8" r="80" stroke="currentColor" stroke-width="1"></circle>
+        <path d="M 50,200 Q 200,50 350,200 T 50,200" opacity="0.3" stroke="currentColor" stroke-width="1.5"></path>
+      </svg>
+      <div class="absolute top-1/3 -right-20 w-96 h-96 rounded-full watermark-leaf"></div>
     </div>
 
-    <!-- Contenido centrado -->
-    <div class="left-panel-content text-center z-10 px-12">
-      <span class="material-symbols-outlined text-primary-foreground text-6xl mb-6">eco</span>
-      <h1 class="text-4xl font-bold text-primary-foreground mb-3">KOFIX</h1>
-      <p class="text-primary-foreground/80 text-lg">Sistema de Monitoreo Financiero</p>
-      <p class="text-primary-foreground/60 text-sm mt-2">Planes de Negocio — INIA</p>
+    <!-- Top Header in Left Column -->
+    <div class="relative z-10">
+      <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold tracking-wide uppercase text-emerald-100 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Plataforma Oficial KOFIX
+      </div>
     </div>
-  </div>
 
-  <!-- Right Panel - Formulario -->
-  <div class="right-panel flex-1 flex items-center justify-center p-8 bg-background">
-    <div class="right-panel-content w-full max-w-sm">
-      <!-- Logo móvil -->
-      <div class="lg:hidden flex items-center gap-2 mb-8 justify-center">
-        <span class="material-symbols-outlined text-primary text-3xl">eco</span>
-        <span class="text-2xl font-bold text-foreground">KOFIX</span>
+    <!-- Center Branding / System Identity -->
+    <div class="relative z-10 py-12 my-auto max-w-xl">
+      <!-- Logo Emblem -->
+      <div class="w-20 h-20 sm:w-24 sm:h-24 mb-8 rounded-3xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center p-0.5 shadow-2xl shadow-emerald-950/60 ring-4 ring-white/10">
+        <div class="w-full h-full bg-emerald-950/90 rounded-[22px] flex items-center justify-center backdrop-blur-sm">
+          <svg class="w-10 h-10 sm:w-12 sm:h-12 text-emerald-400 transform -rotate-12 hover:rotate-0 transition-transform duration-300" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+          </svg>
+        </div>
+      </div>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-3">
+        KOFIX
+      </h1>
+      <p class="text-xl sm:text-2xl font-medium text-emerald-200 tracking-normal mb-4">
+        Sistema de Monitoreo Financiero y Kardex
+      </p>
+      <p class="text-sm sm:text-base text-slate-200/90 leading-relaxed font-normal">
+        Módulo centralizado para la gestión de convenios, programación financiera, desembolsos, rendiciones y control de cartera para los
+        <span class="text-white font-semibold underline decoration-emerald-400/60 decoration-2 underline-offset-4">Planes de Negocio AGROIDEAS</span>.
+      </p>
+    </div>
+
+    <!-- Bottom Pillar in Left Column -->
+    <div class="relative z-10 pt-4 flex flex-wrap items-center justify-between gap-4 text-xs text-emerald-200/80 border-t border-white/10">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+        Canal Cifrado y Verificado
+      </span>
+      <span class="text-emerald-100/90 font-medium">Mesa de Ayuda KOFIX</span>
+    </div>
+  </section>
+  <!-- END: LeftHeroSection -->
+
+  <!-- BEGIN: RightAuthSection -->
+  <section class="lg:w-7/12 xl:w-1/2 bg-white flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16" aria-label="Formulario de Inicio de Sesión KOFIX">
+    <!-- Header Institucional / Logos Oficiales -->
+    <header class="flex flex-wrap items-center justify-between gap-6 pb-6 border-b border-slate-100">
+      <div class="flex items-center">
+        <img
+          alt="Gobierno del Perú - Ministerio de Desarrollo Agrario y Riego"
+          class="h-10 sm:h-12 w-auto object-contain max-w-[240px] sm:max-w-[280px]"
+          loading="eager"
+          src="img/LOGO_MIDAGRI-1.png"
+        />
+      </div>
+      <div class="flex items-center">
+        <img
+          alt="AGROIDEAS - Programa de Compensaciones para la Competitividad"
+          class="h-12 sm:h-14 w-auto object-contain max-w-[190px] sm:max-w-[220px]"
+          loading="eager"
+          src="img/AGROIDEAS_LOGO.png"
+        />
+      </div>
+    </header>
+
+    <!-- Contenido Central del Formulario -->
+    <div class="max-w-md w-full mx-auto my-auto py-8">
+      <!-- Mobile Brand Indicator -->
+      <div class="lg:hidden flex items-center gap-2 mb-6">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-800 text-white font-black text-sm">
+          K
+        </span>
+        <span class="font-bold text-slate-900 text-lg">KOFIX · Monitoreo Financiero</span>
       </div>
 
-      <h2 class="text-2xl font-semibold text-foreground mb-1">Iniciar sesión</h2>
-      <p class="text-muted-foreground text-sm mb-6">Ingrese sus credenciales para acceder al sistema</p>
+      <div class="mb-8 text-left">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mb-2">
+          Iniciar sesión
+        </h2>
+        <p class="text-sm text-slate-500">
+          Ingrese sus credenciales institucionales para acceder a KOFIX.
+        </p>
+      </div>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
-        <div class="space-y-1.5">
-          <label for="username" class="text-sm font-medium text-foreground">Usuario</label>
-          <input id="username" type="text" formControlName="username"
-            placeholder="nombre.usuario"
-            [style.border-color]="isFieldInvalid('username') ? 'hsl(var(--destructive))' : ''"
-            class="w-full px-3 py-2 bg-background border rounded-md focus:outline-none focus:ring-2 transition-colors"
-            [style.--tw-ring-color]="isFieldInvalid('username') ? 'hsl(var(--destructive))' : 'hsl(var(--ring))'">
+      <!-- Alerta de Error -->
+      @if (errorMessage) {
+        <div class="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs text-center font-medium flex items-center justify-center gap-2 animate-fade-in" role="alert">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg>
+          <span>{{ errorMessage }}</span>
         </div>
-        <div class="space-y-1.5">
-          <label for="password" class="text-sm font-medium text-foreground">Contraseña</label>
-          <input id="password" type="password" formControlName="password"
-            placeholder="••••••"
-            [style.border-color]="isFieldInvalid('password') ? 'hsl(var(--destructive))' : ''"
-            class="w-full px-3 py-2 bg-background border rounded-md focus:outline-none focus:ring-2 transition-colors"
-            [style.--tw-ring-color]="isFieldInvalid('password') ? 'hsl(var(--destructive))' : 'hsl(var(--ring))'">
-        </div>
+      }
 
-        @if (errorMessage) {
-          <div class="flex items-center gap-2 text-destructive text-sm font-medium">
-            <span class="material-symbols-outlined text-sm">error</span>
-            {{ errorMessage }}
+      <!-- Formulario de Autenticación -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5" method="POST">
+        <!-- Campo Usuario / Identidad -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5" for="username-input">
+            Usuario o Correo Institucional
+          </label>
+          <div class="relative rounded-lg shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </div>
+            <input
+              id="username-input"
+              type="text"
+              formControlName="username"
+              placeholder="Ej. usuario@agroideas.gob.pe o usuario"
+              class="block w-full pl-11 pr-4 py-3 bg-white border rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-emerald-700 transition-colors"
+              [class.border-slate-300]="!isFieldInvalid('username')"
+              [class.border-red-500]="isFieldInvalid('username')"
+            />
           </div>
-        }
+          @if (isFieldInvalid('username')) {
+            <p class="mt-1 text-xs text-red-600">El usuario debe tener al menos 3 caracteres.</p>
+          } @else {
+            <p class="mt-1 text-xs text-slate-500">Acceso exclusivo para especialistas y personal del Programa AGROIDEAS.</p>
+          }
+        </div>
 
-        <ui-button type="submit" [label]="loading ? 'Ingresando...' : 'Ingresar'" [loading]="loading"
-          [disabled]="loading" [block]="true"></ui-button>
+        <!-- Campo Contraseña -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700" for="password-input">
+              Contraseña
+            </label>
+          </div>
+          <div class="relative rounded-lg shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </div>
+            <input
+              id="password-input"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="••••••••••••"
+              class="block w-full pl-11 pr-11 py-3 bg-white border rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-emerald-700 transition-colors"
+              [class.border-slate-300]="!isFieldInvalid('password')"
+              [class.border-red-500]="isFieldInvalid('password')"
+            />
+            <button
+              type="button"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-700 rounded-r-lg"
+            >
+              @if (showPassword()) {
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+              } @else {
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (isFieldInvalid('password')) {
+            <p class="mt-1 text-xs text-red-600">La contraseña debe tener al menos 6 caracteres.</p>
+          }
+        </div>
+
+        <!-- Opciones Auxiliares (Recordar + Indicador de Seguridad) -->
+        <div class="flex items-center justify-between">
+          <label class="flex items-center cursor-pointer" for="remember-me">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              [checked]="rememberMe()"
+              (change)="rememberMe.set($any($event.target).checked)"
+              class="h-4 w-4 rounded border-slate-300 text-emerald-800 focus:ring-emerald-700"
+            />
+            <span class="ml-2 text-xs text-slate-600 select-none">Recordar en este equipo</span>
+          </label>
+
+          <span class="text-xs text-slate-400 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path clip-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" fill-rule="evenodd"></path>
+            </svg>
+            SSL 256-bit
+          </span>
+        </div>
+
+        <!-- Botón de Envío -->
+        <div class="pt-2">
+          <button
+            type="submit"
+            [disabled]="loading || loginForm.invalid"
+            class="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl bg-emerald-800 hover:bg-emerald-900 active:bg-emerald-950 text-white text-sm font-semibold tracking-wide shadow-md shadow-emerald-900/20 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (loading) {
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Iniciando sesión...</span>
+            } @else {
+              <span>Iniciar Sesión</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            }
+          </button>
+        </div>
       </form>
+
+      <!-- Cuadro Informativo Institucional Regulatorio -->
+      <div class="mt-8 p-3 rounded-lg bg-slate-50 border border-slate-200/60 flex items-start gap-2.5 text-slate-500 text-xs">
+        <svg class="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+        <p class="leading-relaxed">
+          Acceso regulado conforme a la Directiva de Monitoreo y Rendición de Cuentas vigente. Toda acción queda auditada.
+        </p>
+      </div>
     </div>
-  </div>
-</div>
+
+    <!-- Footer Institucional -->
+    <footer class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <div>
+        © 2026 MIDAGRI - AGROIDEAS. Todos los derechos reservados.
+      </div>
+      <div class="flex items-center gap-3 font-mono font-medium text-slate-500">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span>VERSION 2.5.0 Enterprise</span>
+      </div>
+    </footer>
+  </section>
+  <!-- END: RightAuthSection -->
+</main>

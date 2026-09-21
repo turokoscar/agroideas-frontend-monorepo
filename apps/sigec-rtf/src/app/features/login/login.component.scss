@@ -1,0 +1,20 @@
+/* ==========================================================================
+   Fondo Institucional Orgánico (Hero Section)
+   Combina la base oscura institucional con el gradiente verde profundo
+   y los radiales sutiles para que no se sobreescriban entre sí.
+   ========================================================================== */
+
+.hero-pattern {
+  background-color: #032e19;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.12) 0%, transparent 65%),
+    linear-gradient(135deg, #064e2b 0%, #0b6e3f 50%, #032e19 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.watermark-leaf {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 20%, transparent 70%);
+}

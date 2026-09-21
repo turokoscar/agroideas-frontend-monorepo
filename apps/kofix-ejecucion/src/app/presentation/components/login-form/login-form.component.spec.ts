@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { LoginFormComponent } from './login-form.component';
+import { LoginFormComponent, STORAGE_KEY_KOFIX_USER } from './login-form.component';
 
 describe('LoginFormComponent', () => {
     let component: LoginFormComponent;
     let fixture: ComponentFixture<LoginFormComponent>;
 
     beforeEach(async () => {
+        localStorage.clear();
+
         await TestBed.configureTestingModule({
             imports: [LoginFormComponent]
         }).compileComponents();
@@ -13,6 +15,10 @@ describe('LoginFormComponent', () => {
         fixture = TestBed.createComponent(LoginFormComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
+    });
+
+    afterEach(() => {
+        localStorage.clear();
     });
 
     it('should create', () => {
@@ -68,5 +74,45 @@ describe('LoginFormComponent', () => {
         component.onSubmit();
 
         expect(spy).toHaveBeenCalledWith({ username: 'admin', password: 'secret1' });
+    });
+
+    it('should toggle password visibility', () => {
+        expect(component.showPassword()).toBe(false);
+
+        component.togglePasswordVisibility();
+        expect(component.showPassword()).toBe(true);
+
+        component.togglePasswordVisibility();
+        expect(component.showPassword()).toBe(false);
+    });
+
+    it('should save username in localStorage when rememberMe is true', () => {
+        component.loginForm.setValue({ username: 'especialista.agro', password: 'password123' });
+        component.rememberMe.set(true);
+
+        component.onSubmit();
+
+        expect(localStorage.getItem(STORAGE_KEY_KOFIX_USER)).toBe('especialista.agro');
+    });
+
+    it('should remove username from localStorage when rememberMe is false', () => {
+        localStorage.setItem(STORAGE_KEY_KOFIX_USER, 'usuario.antiguo');
+        component.loginForm.setValue({ username: 'especialista.agro', password: 'password123' });
+        component.rememberMe.set(false);
+
+        component.onSubmit();
+
+        expect(localStorage.getItem(STORAGE_KEY_KOFIX_USER)).toBeNull();
+    });
+
+    it('should load saved username on ngOnInit if present', () => {
+        localStorage.setItem(STORAGE_KEY_KOFIX_USER, 'usuario.recordado');
+
+        const newFixture = TestBed.createComponent(LoginFormComponent);
+        const newComp = newFixture.componentInstance;
+        newFixture.detectChanges();
+
+        expect(newComp.loginForm.get('username')?.value).toBe('usuario.recordado');
+        expect(newComp.rememberMe()).toBe(true);
     });
 });

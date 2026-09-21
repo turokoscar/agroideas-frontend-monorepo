@@ -50,7 +50,7 @@ describe('OaRegistroComponent — Relación de Gastos F1 (ADR-017)', () => {
       const rtfService = TestBed.inject(RtfService);
       rtfService.relacionGastosF1.set({
         ...relacionVacia,
-        items: [{ marcoLogicoID: 1, cantidad: 1, montoAprobadoOa: 100, montoAprobadoAgroideas: 200, montoAprobadoTotal: 300, montoFacturado: 300, porcentajeEjecucion: 100, montoDiferencial: 0, comprobantes: [] }]
+        items: [{ marcoLogicoID: 1, cantidad: 1, montoAprobadoOa: 100, montoAprobadoAgroideas: 200, montoAprobadoTotal: 300, montoFacturado: 200, porcentajeEjecucion: 100, montoDiferencial: 0, comprobantes: [] }]
       });
 
       expect(fixture.componentInstance.hayExcedenteGastosF1()).toBe(false);
