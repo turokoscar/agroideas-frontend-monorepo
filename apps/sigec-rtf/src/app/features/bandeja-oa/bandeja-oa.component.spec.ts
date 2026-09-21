@@ -109,13 +109,22 @@ describe('BandejaOAComponent', () => {
       const ayer = new Date();
       ayer.setDate(ayer.getDate() - 1);
       const resultado = fixture.componentInstance.diasRestantes(ayer.toISOString());
-      expect(resultado.urgente).toBe(true);
-      expect(resultado.texto).toContain('Vencido');
+      expect(resultado?.urgente).toBe(true);
+      expect(resultado?.texto).toContain('Vencido');
     });
 
     it('returns a neutral placeholder when fecLimite is missing', () => {
       const fixture = crearComponente();
       expect(fixture.componentInstance.diasRestantes(undefined)).toEqual({ texto: '—', urgente: false });
+    });
+
+    it('hides the plazo once the evaluation concluded (APROBADO/RECHAZADO)', () => {
+      const fixture = crearComponente();
+      const manana = new Date();
+      manana.setDate(manana.getDate() + 3);
+      expect(fixture.componentInstance.diasRestantes(manana.toISOString(), 'APROBADO')).toBeNull();
+      expect(fixture.componentInstance.diasRestantes(manana.toISOString(), 'RECHAZADO')).toBeNull();
+      expect(fixture.componentInstance.diasRestantes(manana.toISOString(), 'PENDIENTE')).not.toBeNull();
     });
   });
 });

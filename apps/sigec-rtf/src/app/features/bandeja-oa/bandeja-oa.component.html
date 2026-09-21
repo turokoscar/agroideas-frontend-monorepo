@@ -68,7 +68,7 @@
         <app-ui-status-pill [text]="statusLabel(row.estRtf)" [status]="estadoPillStatus(row.estRtf)" />
       }
       @if (col.field === 'plazo') {
-        @if (diasRestantes(row.fecLimite); as plazo) {
+        @if (diasRestantes(row.fecLimite, row.estRtf); as plazo) {
           <span
             class="text-xs font-semibold"
             [class.text-destructive]="plazo.urgente"

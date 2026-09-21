@@ -226,8 +226,17 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * El plazo solo tiene sentido mientras la evaluación sigue abierta -- en `APROBADO`/`RECHAZADO`
+   * el proceso ya concluyó y `fecLimite` puede seguir viajando en el backend con el último plazo
+   * activo antes del cierre, así que se oculta explícitamente en vez de confiar en que el backend
+   * lo limpie.
+   */
+  private static readonly ESTADOS_SIN_PLAZO = new Set(['APROBADO', 'RECHAZADO']);
+
   /** Cálculo 100% cliente sobre `fecLimite`, que ya viaja en cada fila del listado. */
-  diasRestantes(fecLimite?: string): { texto: string; urgente: boolean } {
+  diasRestantes(fecLimite?: string, estRtf?: string): { texto: string; urgente: boolean } | null {
+    if (estRtf && BandejaOAComponent.ESTADOS_SIN_PLAZO.has(estRtf)) return null;
     if (!fecLimite) return { texto: '—', urgente: false };
     const hoy = new Date();
     const limite = new Date(fecLimite);
