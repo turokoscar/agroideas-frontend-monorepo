@@ -1,7 +1,11 @@
 <div class="space-y-6 animate-fade-in">
 
-  <!-- Countdown Banner: solo tiene sentido mientras la OA puede seguir actuando sobre el RTF -->
-  @if (isEditable()) {
+  <!-- Countdown Banner: solo tiene sentido mientras la OA puede seguir actuando sobre el RTF,
+       y solo una vez que existe un RTF real del que se cargó el plazo -- antes de guardar el
+       primer borrador, rtfDeadlineHours() se queda en su valor por defecto (0), indistinguible
+       de "vencido", así que hay que gatear también por rtfId() en vez de confiar solo en
+       isEditable() (que ya es true por defecto: rtfStatus() arranca en 'PENDIENTE'). -->
+  @if (isEditable() && rtfService.rtfId()) {
     <ui-countdown-banner
       [hours]="rtfService.rtfDeadlineHours()"
       [tone]="'warning'"

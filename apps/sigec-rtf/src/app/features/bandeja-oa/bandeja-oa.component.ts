@@ -77,11 +77,13 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
   });
 
   columns: TableColumn[] = [
-    { field: 'ideRtf', header: 'ID RTF', align: 'left', width: '90px' },
-    { field: 'numPasoCritico', header: 'Paso Crítico', align: 'left', width: '120px' },
-    { field: 'estRtf', header: 'Estado', align: 'left', type: 'custom' },
+    { field: 'ideRtf', header: 'ID', align: 'left', width: '80px' },
+    { field: 'numPasoCritico', header: 'N° Paso Crítico', align: 'left', width: '130px' },
+    { field: 'fecInicioPeriodo', header: 'Fecha de Inicio', align: 'left', type: 'date' },
+    { field: 'fecFinPeriodo', header: 'Fecha de Término', align: 'left', type: 'date' },
+    { field: 'fecEnvio', header: 'Fecha de Presentación', align: 'left', type: 'date' },
     { field: 'plazo', header: 'Plazo', align: 'left', type: 'custom' },
-    { field: 'fecRegistro', header: 'Fec. Registro', align: 'left', type: 'date' },
+    { field: 'estRtf', header: 'Estado', align: 'left', type: 'custom' },
   ];
 
   ngOnInit() {
