@@ -95,12 +95,74 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     { field: 'accion', header: 'Acción', type: 'custom', align: 'right' },
   ];
 
-  // Filtros de la bandeja (ADR-013): se resuelven en el cliente — texto, estado y fecha
-  // límite ya están completos en memoria (unRtfList + conveniosInfo), sin volver al backend.
-  readonly estadosBandeja = [
-    'EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN',
+  /** Columnas de la pestaña "Plazos y Cobranza" (ADR-017 frontend): reemplaza Fec. Límite en texto
+   *  plano por una columna de urgencia calculada (`diasRestantes`). */
+  bandejaColumnasPlazos: TableColumn[] = [
+    { field: 'ideRtf', header: 'ID RTF', type: 'text' },
+    { field: 'ideConvenio', header: 'Convenio', type: 'custom' },
+    { field: 'numPasoCritico', header: 'Paso Crítico', type: 'text' },
+    { field: 'estRtf', header: 'Estado', type: 'custom' },
+    { field: 'plazo', header: 'Plazo', type: 'custom' },
+    { field: 'fecRegistro', header: 'Fec. Recepción', type: 'date' },
+    { field: 'accion', header: 'Acción', type: 'custom', align: 'right' },
+  ];
+
+  /**
+   * ADR-017 (frontend, apps/sigec-rtf/adr): separa la bandeja en dos pestañas -- "Evaluación" (revisión técnica del informe) y
+   * "Plazos y Cobranza" (seguimiento administrativo/legal por incumplimiento, ADR-018 de
+   * sigec-api-rtf). La unión de ambos sets debe seguir siendo exactamente los estados que
+   * `UnGabineteService.loadBandejaUn()` consulta -- si se agrega un estado nuevo a
+   * `EstadosBandejaUn` en el backend, hay que clasificarlo acá también, no hay validación
+   * automática que lo fuerce.
+   */
+  private static readonly ESTADOS_EVALUACION = ['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN'] as const;
+  private static readonly ESTADOS_PLAZOS = [
     'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL', 'BLOQUEO_DEFINITIVO',
   ] as const;
+
+  /** Orden de severidad dentro de la pestaña de plazos -- más crítico primero, no por fecha. */
+  private static readonly SEVERIDAD_ESTADO: Record<string, number> = {
+    'BLOQUEO_DEFINITIVO': 0,
+    'PLAZO_LIMITE_NOTARIAL': 1,
+    'EN_DESACATO': 2,
+    'PLAZO_INICIAL_NOTIFICACION': 3,
+    'VENCIDO': 4,
+  };
+
+  activeTab = signal<'evaluacion' | 'plazos'>('evaluacion');
+
+  cambiarTab(tab: 'evaluacion' | 'plazos') {
+    this.activeTab.set(tab);
+    // Un estado seleccionado en la pestaña anterior no existe en el dropdown de la nueva --
+    // se resetea para no dejar un filtro "fantasma" que no matchea ninguna opción visible.
+    this.filtroEstado.set('');
+  }
+
+  /** Estados que corresponden a la pestaña activa (alimenta el filtro y el dropdown "Estado"). */
+  estadosPestanaActiva = computed(() =>
+    this.activeTab() === 'evaluacion' ? UnGabineteComponent.ESTADOS_EVALUACION : UnGabineteComponent.ESTADOS_PLAZOS
+  );
+
+  columnasPestanaActiva = computed(() =>
+    this.activeTab() === 'evaluacion' ? this.bandejaColumns : this.bandejaColumnasPlazos
+  );
+
+  conteoEvaluacion = computed(() =>
+    this.unRtfList().filter(rtf => (UnGabineteComponent.ESTADOS_EVALUACION as readonly string[]).includes(rtf.estRtf ?? '')).length
+  );
+  conteoPlazos = computed(() =>
+    this.unRtfList().filter(rtf => (UnGabineteComponent.ESTADOS_PLAZOS as readonly string[]).includes(rtf.estRtf ?? '')).length
+  );
+
+  /** Fila-fuente de la pestaña activa, antes de aplicar texto/estado/fecha (ver `bandejaFiltrada`). */
+  private bandejaPorPestana = computed(() => {
+    const estados = this.estadosPestanaActiva() as readonly string[];
+    return this.unRtfList().filter(rtf => estados.includes(rtf.estRtf ?? ''));
+  });
+
+  // Filtros de la bandeja (ADR-013): se resuelven en el cliente — texto, estado y fecha
+  // límite ya están completos en memoria (unRtfList + conveniosInfo), sin volver al backend.
+  readonly estadosBandeja = [...UnGabineteComponent.ESTADOS_EVALUACION, ...UnGabineteComponent.ESTADOS_PLAZOS] as const;
 
   filtroTexto = signal('');
   filtroEstado = signal('');
@@ -122,7 +184,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     const fecHasta = this.filtroFecHasta();
     const conveniosInfo = this.conveniosInfo();
 
-    return this.unRtfList().filter(rtf => {
+    const filtradas = this.bandejaPorPestana().filter(rtf => {
       if (estado && rtf.estRtf !== estado) return false;
 
       if (fecDesde && rtf.fecLimite < fecDesde) return false;
@@ -140,7 +202,27 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
       return true;
     });
+
+    if (this.activeTab() === 'plazos') {
+      return [...filtradas].sort((a, b) =>
+        (UnGabineteComponent.SEVERIDAD_ESTADO[a.estRtf ?? ''] ?? 99) - (UnGabineteComponent.SEVERIDAD_ESTADO[b.estRtf ?? ''] ?? 99)
+      );
+    }
+    return filtradas;
   });
+
+  /** ADR-017 (frontend): mismo criterio que `BandejaOAComponent.diasRestantes` -- urgencia calculada sobre
+   *  `fecLimite` (el plazo original de 15 días; los escalones posteriores no lo actualizan, ver
+   *  ADR-018 de sigec-api-rtf, así que el número crece con cada etapa mas no reinicia). */
+  diasRestantes(fecLimite?: string): { texto: string; urgente: boolean } {
+    if (!fecLimite) return { texto: '—', urgente: false };
+    const hoy = new Date();
+    const limite = new Date(fecLimite);
+    const dias = Math.ceil((limite.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    if (dias < 0) return { texto: `Vencido hace ${Math.abs(dias)}d`, urgente: true };
+    if (dias === 0) return { texto: 'Vence hoy', urgente: true };
+    return { texto: `Vence en ${dias}d`, urgente: dias <= 3 };
+  }
 
   // UN signals (self-contained, ver un-gabinete.service.ts)
   unRtfList = this.rtfService.unRtfList;
@@ -208,6 +290,19 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
 
   // Solo aplica antes de que el expediente llegue a IN_REVISION_UN.
   estaEnEvaluacionPrevia = computed(() => ['EN_REVISION', 'AUDITADO_CAMPO'].includes(this.rtfStatus()));
+
+  /** ADR-019 (frontend): pestañas del contenido siempre-visible (R1/T1/R2/F1) del detalle del
+   *  RTF -- se reinicia a 'r1' en `seleccionarRtf` al abrir un expediente distinto. */
+  activeContentTab = signal<'r1' | 't1' | 'r2' | 'f1'>('r1');
+
+  /** Badges de las pestañas T1/R2 (ADR-019): cuántas filas ya se marcaron OBSERVADO en el
+   *  borrador de evaluación en curso -- solo tiene sentido mientras se puede evaluar. */
+  metasObservadasCount = computed(() =>
+    this.estaEnEvaluacionPrevia() ? this.metas().filter(m => this.dictamenDe('META', m.id) === 'OBSERVADO').length : 0
+  );
+  indicadoresObservadasCount = computed(() =>
+    this.estaEnEvaluacionPrevia() ? this.indicadores().filter(i => this.dictamenDe('INDICADOR', i.id) === 'OBSERVADO').length : 0
+  );
 
   // --- ADR-014 Parte 4: evaluación por ítem (T1/R2/R1) ---
   // Borrador en memoria de la evaluación en curso, sembrado desde `GET .../evaluaciones` al
@@ -578,6 +673,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.rtfService.unSelectedRtfId.set(rtfId);
     this.loadingCompleto.set(true);
     this.viewState.set('audit');
+    this.activeContentTab.set('r1');
     this.showDevolverForm.set(false);
     this.showDevolverTempranoForm.set(false);
     this.devolverObservacion.set('');

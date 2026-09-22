@@ -27,6 +27,38 @@
 
   <!-- Bandeja (lista) -->
   @if (viewState() === 'list') {
+    <!-- Pestañas (ADR-017 frontend): mismo patrón que BandejaOAComponent, sin componente compartido. -->
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+        [class.bg-primary]="activeTab() === 'evaluacion'"
+        [class.text-primary-foreground]="activeTab() === 'evaluacion'"
+        [class.bg-surface-container]="activeTab() !== 'evaluacion'"
+        [class.text-muted-foreground]="activeTab() !== 'evaluacion'"
+        [class.hover:bg-muted]="activeTab() !== 'evaluacion'"
+        (click)="cambiarTab('evaluacion')">
+        Evaluación
+        <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none"
+          [class.bg-primary-foreground]="activeTab() === 'evaluacion'"
+          [class.text-primary]="activeTab() === 'evaluacion'"
+          [class.bg-surface-container-high]="activeTab() !== 'evaluacion'">{{ conteoEvaluacion() }}</span>
+      </button>
+      <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+        [class.bg-primary]="activeTab() === 'plazos'"
+        [class.text-primary-foreground]="activeTab() === 'plazos'"
+        [class.bg-surface-container]="activeTab() !== 'plazos'"
+        [class.text-muted-foreground]="activeTab() !== 'plazos'"
+        [class.hover:bg-muted]="activeTab() !== 'plazos'"
+        (click)="cambiarTab('plazos')">
+        Plazos y Cobranza
+        <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none"
+          [class.bg-primary-foreground]="activeTab() === 'plazos' && conteoPlazos() === 0"
+          [class.text-primary]="activeTab() === 'plazos' && conteoPlazos() === 0"
+          [class.bg-destructive]="conteoPlazos() > 0"
+          [class.text-destructive-foreground]="conteoPlazos() > 0"
+          [class.bg-surface-container-high]="activeTab() !== 'plazos' && conteoPlazos() === 0">{{ conteoPlazos() }}</span>
+      </button>
+    </div>
+
     <app-ui-filter-bar [showSearch]="false">
       <div class="filter-group filter-group--search flex-1">
         <label class="filter-label" for="bandeja-search">Buscar</label>
@@ -45,7 +77,7 @@
           [value]="filtroEstado()"
           (change)="filtroEstado.set($any($event.target).value)">
           <option value="">Todos los estados</option>
-          @for (est of estadosBandeja; track est) {
+          @for (est of estadosPestanaActiva(); track est) {
             <option [value]="est">{{ estadoLabel(est) }}</option>
           }
         </select>
@@ -67,13 +99,13 @@
     </app-ui-filter-bar>
 
     <app-ui-data-table
-      [columns]="bandejaColumns"
+      [columns]="columnasPestanaActiva()"
       [data]="bandejaFiltrada()"
       [loading]="loadingBandeja()"
       [rows]="10"
       [rowTemplate]="bandejaRowTemplate"
       emptyIcon="fact_check"
-      emptyMessage="No hay RTFs pendientes de evaluación"
+      [emptyMessage]="activeTab() === 'evaluacion' ? 'No hay RTFs pendientes de evaluación' : 'No hay RTFs con plazos vencidos'"
       emptySubMessage="Los RTFs enviados por la OA aparecerán aquí automáticamente.">
 
       <ng-template #bandejaRowTemplate let-row let-col="col">
@@ -89,6 +121,13 @@
         }
         @if (col.field === 'estRtf') {
           <app-ui-status-pill [text]="estadoLabel(row.estRtf)" [status]="estadoPillStatus(row.estRtf)" />
+        }
+        @if (col.field === 'plazo') {
+          @if (diasRestantes(row.fecLimite); as plazo) {
+            <span class="text-xs font-semibold"
+              [class.text-destructive]="plazo.urgente"
+              [class.text-muted-foreground]="!plazo.urgente">{{ plazo.texto }}</span>
+          }
         }
         @if (col.field === 'accion') {
           <ui-button size="sm" label="Revisar" (onClick)="seleccionarRtf(row.ideRtf)" />
@@ -156,14 +195,60 @@
         />
       }
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Contenido siempre-visible R1/T1/R2/F1 (ADR-019): pestañas en vez de grilla 2x2 --
+           mismo patrón de pestañas que ADR-017 (bandeja), sin componente compartido nuevo. -->
+      <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            [class.bg-primary]="activeContentTab() === 'r1'"
+            [class.text-primary-foreground]="activeContentTab() === 'r1'"
+            [class.bg-surface-container]="activeContentTab() !== 'r1'"
+            [class.text-muted-foreground]="activeContentTab() !== 'r1'"
+            [class.hover:bg-muted]="activeContentTab() !== 'r1'"
+            (click)="activeContentTab.set('r1')">
+            <span class="material-symbols-outlined text-[16px]">description</span>
+            R1 · Cualitativa
+          </button>
+          <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            [class.bg-primary]="activeContentTab() === 't1'"
+            [class.text-primary-foreground]="activeContentTab() === 't1'"
+            [class.bg-surface-container]="activeContentTab() !== 't1'"
+            [class.text-muted-foreground]="activeContentTab() !== 't1'"
+            [class.hover:bg-muted]="activeContentTab() !== 't1'"
+            (click)="activeContentTab.set('t1')">
+            <span class="material-symbols-outlined text-[16px]">checklist</span>
+            T1 · Metas Físicas
+            @if (metasObservadasCount() > 0) {
+              <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">{{ metasObservadasCount() }}</span>
+            }
+          </button>
+          <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            [class.bg-primary]="activeContentTab() === 'r2'"
+            [class.text-primary-foreground]="activeContentTab() === 'r2'"
+            [class.bg-surface-container]="activeContentTab() !== 'r2'"
+            [class.text-muted-foreground]="activeContentTab() !== 'r2'"
+            [class.hover:bg-muted]="activeContentTab() !== 'r2'"
+            (click)="activeContentTab.set('r2')">
+            <span class="material-symbols-outlined text-[16px]">analytics</span>
+            R2 · Indicadores
+            @if (indicadoresObservadasCount() > 0) {
+              <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">{{ indicadoresObservadasCount() }}</span>
+            }
+          </button>
+          <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            [class.bg-primary]="activeContentTab() === 'f1'"
+            [class.text-primary-foreground]="activeContentTab() === 'f1'"
+            [class.bg-surface-container]="activeContentTab() !== 'f1'"
+            [class.text-muted-foreground]="activeContentTab() !== 'f1'"
+            [class.hover:bg-muted]="activeContentTab() !== 'f1'"
+            (click)="activeContentTab.set('f1')">
+            <span class="material-symbols-outlined text-[16px]">account_balance</span>
+            F1 · Gastos Financieros
+          </button>
+        </div>
 
-        <!-- R1 - Información Cualitativa -->
-        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px] text-primary">description</span>
-            R1 - Información Cualitativa
-          </h3>
+        @if (activeContentTab() === 'r1') {
+          <!-- R1 - Información Cualitativa -->
           <div class="space-y-3">
             @for (item of r1Items(); track item.label) {
               <div>
@@ -201,61 +286,10 @@
               }
             </div>
           }
-        </div>
+        }
 
-        <!-- F1 - Gastos Financieros -->
-        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <div class="flex items-center justify-between gap-2 mb-4">
-            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-              <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
-              F1 - Gastos Financieros
-            </h3>
-            <ui-button
-              appearance="soft"
-              severity="secondary"
-              size="sm"
-              icon="sync"
-              [label]="sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar'"
-              [loading]="sincronizandoGastosF1()"
-              (onClick)="sincronizarGastosF1()" />
-          </div>
-          <p class="text-[10px] text-muted-foreground mb-3">
-            Última sincronización: {{ ultimaSincronizacionGastosF1() ? (ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}
-          </p>
-          @if (gastosF1().length === 0) {
-            <p class="text-sm text-muted-foreground">Sin gastos registrados.</p>
-          } @else {
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs">
-                <thead>
-                  <tr class="border-b border-border">
-                    <th class="text-left py-1.5 font-semibold text-muted-foreground">Item</th>
-                    <th class="text-right py-1.5 font-semibold text-muted-foreground">Cant.</th>
-                    <th class="text-right py-1.5 font-semibold text-muted-foreground">P. Adjud.</th>
-                    <th class="text-right py-1.5 font-semibold text-muted-foreground">Monto Rendido</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (g of gastosF1(); track g.ideGastoF1) {
-                    <tr class="border-b border-border/40">
-                      <td class="py-1.5">{{ g.txtItemNombre }}</td>
-                      <td class="text-right py-1.5">{{ g.canCantidad | number:'1.0-0' }}</td>
-                      <td class="text-right py-1.5">{{ g.numPrecioAdjudicado | number:'1.2-2' }}</td>
-                      <td class="text-right py-1.5">{{ g.numMontoRendido | number:'1.2-2' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-
-        <!-- T1 - Metas Físicas -->
-        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px] text-primary">checklist</span>
-            T1 - Metas Físicas
-          </h3>
+        @if (activeContentTab() === 't1') {
+          <!-- T1 - Metas Físicas -->
           @if (metas().length === 0) {
             <p class="text-sm text-muted-foreground">Sin metas registradas.</p>
           } @else {
@@ -323,14 +357,10 @@
               }
             </div>
           }
-        </div>
+        }
 
-        <!-- R2 - Indicadores -->
-        <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px] text-primary">analytics</span>
-            R2 - Indicadores
-          </h3>
+        @if (activeContentTab() === 'r2') {
+          <!-- R2 - Indicadores -->
           @if (indicadores().length === 0) {
             <p class="text-sm text-muted-foreground">Sin indicadores registrados.</p>
           } @else {
@@ -398,8 +428,50 @@
               }
             </div>
           }
-        </div>
+        }
 
+        @if (activeContentTab() === 'f1') {
+          <!-- F1 - Gastos Financieros -->
+          <div class="flex items-center justify-end gap-2 mb-4">
+            <ui-button
+              appearance="soft"
+              severity="secondary"
+              size="sm"
+              icon="sync"
+              [label]="sincronizandoGastosF1() ? 'Sincronizando…' : 'Sincronizar'"
+              [loading]="sincronizandoGastosF1()"
+              (onClick)="sincronizarGastosF1()" />
+          </div>
+          <p class="text-[10px] text-muted-foreground mb-3">
+            Última sincronización: {{ ultimaSincronizacionGastosF1() ? (ultimaSincronizacionGastosF1() | date:'dd/MM/yyyy HH:mm') : 'nunca' }}
+          </p>
+          @if (gastosF1().length === 0) {
+            <p class="text-sm text-muted-foreground">Sin gastos registrados.</p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-border">
+                    <th class="text-left py-1.5 font-semibold text-muted-foreground">Item</th>
+                    <th class="text-right py-1.5 font-semibold text-muted-foreground">Cant.</th>
+                    <th class="text-right py-1.5 font-semibold text-muted-foreground">P. Adjud.</th>
+                    <th class="text-right py-1.5 font-semibold text-muted-foreground">Monto Rendido</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (g of gastosF1(); track g.ideGastoF1) {
+                    <tr class="border-b border-border/40">
+                      <td class="py-1.5">{{ g.txtItemNombre }}</td>
+                      <td class="text-right py-1.5">{{ g.canCantidad | number:'1.0-0' }}</td>
+                      <td class="text-right py-1.5">{{ g.numPrecioAdjudicado | number:'1.2-2' }}</td>
+                      <td class="text-right py-1.5">{{ g.numMontoRendido | number:'1.2-2' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
       </div>
 
       <!-- Evidencias -->

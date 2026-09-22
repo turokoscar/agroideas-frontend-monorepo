@@ -90,3 +90,135 @@ describe('UnGabineteComponent — respuesta de la OA (ADR-016 Fase 6)', () => {
     expect(items.some((i: any) => 'txtRespuestaOa' in i)).toBe(false);
   });
 });
+
+/** ADR-017 (frontend): separación de la bandeja en pestañas "Evaluación" / "Plazos y Cobranza". */
+describe('UnGabineteComponent — pestañas de la bandeja (ADR-017)', () => {
+  function crearComponente() {
+    TestBed.configureTestingModule({
+      imports: [UnGabineteComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
+    });
+    return TestBed.createComponent(UnGabineteComponent);
+  }
+
+  function rtf(ideRtf: number, estRtf: string, fecLimite = '2026-01-01'): RtfCabeceraDto {
+    return {
+      ideRtf, ideConvenio: 1, numPasoCritico: 1, idePasoCritico: null as unknown as number,
+      fecInicioPeriodo: '2026-01-01', fecFinPeriodo: '2026-06-01', estRtf,
+      fecHabilitacion: '2026-01-01', fecLimite,
+    };
+  }
+
+  it('defaults to the "evaluacion" tab', () => {
+    const fixture = crearComponente();
+    expect(fixture.componentInstance.activeTab()).toBe('evaluacion');
+  });
+
+  it('only shows evaluation-track states in the "evaluacion" tab', () => {
+    const fixture = crearComponente();
+    const rtfService = TestBed.inject(RtfService);
+    rtfService.unRtfList.set([
+      rtf(1, 'EN_REVISION'), rtf(2, 'IN_REVISION_UN'), rtf(3, 'VENCIDO'), rtf(4, 'BLOQUEO_DEFINITIVO'),
+    ]);
+
+    const ids = fixture.componentInstance.bandejaFiltrada().map(r => r.ideRtf);
+    expect(ids.sort()).toEqual([1, 2]);
+  });
+
+  it('only shows deadline-escalation states in the "plazos" tab', () => {
+    const fixture = crearComponente();
+    const rtfService = TestBed.inject(RtfService);
+    rtfService.unRtfList.set([
+      rtf(1, 'EN_REVISION'), rtf(2, 'VENCIDO'), rtf(3, 'EN_DESACATO'), rtf(4, 'BLOQUEO_DEFINITIVO'),
+    ]);
+
+    fixture.componentInstance.cambiarTab('plazos');
+
+    const ids = fixture.componentInstance.bandejaFiltrada().map(r => r.ideRtf);
+    expect(ids.sort()).toEqual([2, 3, 4]);
+  });
+
+  it('sorts the "plazos" tab by escalation severity, most critical first', () => {
+    const fixture = crearComponente();
+    const rtfService = TestBed.inject(RtfService);
+    rtfService.unRtfList.set([
+      rtf(1, 'VENCIDO'), rtf(2, 'BLOQUEO_DEFINITIVO'), rtf(3, 'EN_DESACATO'), rtf(4, 'PLAZO_LIMITE_NOTARIAL'),
+    ]);
+
+    fixture.componentInstance.cambiarTab('plazos');
+
+    const ids = fixture.componentInstance.bandejaFiltrada().map(r => r.ideRtf);
+    expect(ids).toEqual([2, 4, 3, 1]);
+  });
+
+  it('does not reorder the "evaluacion" tab (keeps arrival order)', () => {
+    const fixture = crearComponente();
+    const rtfService = TestBed.inject(RtfService);
+    rtfService.unRtfList.set([rtf(5, 'IN_REVISION_UN'), rtf(1, 'EN_REVISION')]);
+
+    const ids = fixture.componentInstance.bandejaFiltrada().map(r => r.ideRtf);
+    expect(ids).toEqual([5, 1]);
+  });
+
+  it('counts each tab independently, regardless of which tab is active', () => {
+    const fixture = crearComponente();
+    const rtfService = TestBed.inject(RtfService);
+    rtfService.unRtfList.set([
+      rtf(1, 'EN_REVISION'), rtf(2, 'AUDITADO_CAMPO'), rtf(3, 'VENCIDO'),
+    ]);
+
+    expect(fixture.componentInstance.conteoEvaluacion()).toBe(2);
+    expect(fixture.componentInstance.conteoPlazos()).toBe(1);
+  });
+
+  it('resets filtroEstado when switching tabs, to avoid a filter that does not match the new dropdown', () => {
+    const fixture = crearComponente();
+    fixture.componentInstance.filtroEstado.set('EN_REVISION');
+
+    fixture.componentInstance.cambiarTab('plazos');
+
+    expect(fixture.componentInstance.filtroEstado()).toBe('');
+  });
+
+  it('exposes only the active tab\'s states for the "Estado" dropdown', () => {
+    const fixture = crearComponente();
+    expect(fixture.componentInstance.estadosPestanaActiva()).toEqual(['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN']);
+
+    fixture.componentInstance.cambiarTab('plazos');
+    expect(fixture.componentInstance.estadosPestanaActiva()).toEqual([
+      'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL', 'BLOQUEO_DEFINITIVO',
+    ]);
+  });
+
+  it('estadosBandeja (used by loadBandejaUn) still covers the union of both tabs', () => {
+    const fixture = crearComponente();
+    const todos = fixture.componentInstance.estadosBandeja;
+    expect(todos).toEqual([
+      'EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN',
+      'VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL', 'BLOQUEO_DEFINITIVO',
+    ]);
+  });
+
+  describe('diasRestantes', () => {
+    it('returns "—" when there is no fecLimite', () => {
+      const fixture = crearComponente();
+      expect(fixture.componentInstance.diasRestantes(undefined).texto).toBe('—');
+    });
+
+    it('flags an overdue date as urgent', () => {
+      const fixture = crearComponente();
+      const ayer = new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10);
+      const resultado = fixture.componentInstance.diasRestantes(ayer);
+      expect(resultado.urgente).toBe(true);
+      expect(resultado.texto).toContain('Vencido hace');
+    });
+
+    it('does not flag a far-future date as urgent', () => {
+      const fixture = crearComponente();
+      const lejos = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+      const resultado = fixture.componentInstance.diasRestantes(lejos);
+      expect(resultado.urgente).toBe(false);
+      expect(resultado.texto).toContain('Vence en');
+    });
+  });
+});

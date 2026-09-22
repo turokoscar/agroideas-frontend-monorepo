@@ -47,7 +47,14 @@ features/
                 Recordatoria → En Desacato → Carta Notarial → Bloqueo
                 Definitivo, ver "Máquina de estados del RTF" abajo) con el
                 botón "Marcar convenio como resuelto" (acción manual e
-                irreversible de la UN, con confirmación)
+                irreversible de la UN, con confirmación). La bandeja está
+                separada en pestañas "Evaluación" / "Plazos y Cobranza" (ADR-017
+                de esta app), cada una con su propio conteo, columnas y filtro
+                de estado. El contenido siempre-visible del detalle de un RTF
+                (R1/T1/R2/F1) también está en pestañas, con badge de ítems
+                observados en T1/R2 (ADR-019 de esta app) — el panel inferior
+                (dictamen/checklist, plazos, bloqueo, Anexo 18) sigue sin
+                tabular, varía según el estado del RTF, no es contenido fijo
   admin/        Panel de administración (rol ADMIN): parámetros del sistema,
                 reporte de cumplimiento de plazos, reporte de productividad UN
   documentacion-rtf/ Modal compartido de subida/previsualización de documentos,
@@ -173,6 +180,19 @@ ADRs propios de esta app, en `apps/sigec-rtf/adr/`:
 - `0015-rediseno-institucional-pantalla-login.md` — rediseño institucional (MIDAGRI/AGROIDEAS)
   de `/login`: ayudas contextuales por tipo de usuario, toggle mostrar/ocultar contraseña,
   aviso regulatorio de acceso/auditoría y cobertura de specs para `LoginComponent`.
+- `0017-separacion-bandeja-evaluacion-gabinete-en-pestanas.md` — separa `/rtf/evaluacion-gabinete`
+  en pestañas "Evaluación" / "Plazos y Cobranza" (a partir de una revisión UX), con badges de
+  conteo, columna de urgencia y filtro de estado contextual por pestaña; implementado y
+  verificado en vivo el 22/09/2026. Numerado 0017, no 0016, para no chocar con las referencias ya
+  existentes en este código a "ADR-016" del *backend* (Pliego de Observaciones) — ver la nota de
+  numeración al inicio del documento.
+- `0019-pestanas-contenido-detalle-evaluacion-gabinete.md` — Fase 2 de la misma revisión UX: el
+  contenido siempre-visible del detalle de un RTF (R1/T1/R2/F1, antes una grilla 2×2 apilada) pasa
+  a pestañas dentro de una sola tarjeta, con badge de ítems observados en T1/R2. Explica por qué
+  el panel inferior de estado (dictamen/checklist, plazos, bloqueo, Anexo 18) **no** se tabuló —
+  es contenido que varía según el estado del RTF, no contenido fijo, tabularlo habría sido
+  semánticamente incorrecto. Numerado 0019 (salta 0016 y 0018 por la misma razón que ADR-017);
+  implementado y verificado en vivo el 22/09/2026.
 
 Los ADR-012 (plazos legales del Instructivo SEL), ADR-013 (Panel de Administración) y ADR-018
 (máquina de estados completa, bandeja de plazos de la UN y Resolución de Convenio — la fuente de
