@@ -124,12 +124,18 @@ export class RtfService {
     const map: Record<string, string> = {
       'PENDIENTE': 'En Edición',
       'EN_EDICION': 'En Edición',
+      'ENVIADO': 'Enviado a UR',
       'EN_REVISION': 'En Revisión',
+      'OBSERVADO': 'Observado',
       'AUDITADO_CAMPO': 'Auditado en Campo',
       'IN_REVISION_UN': 'En Evaluación de Gabinete',
       'APROBADO': 'Aprobado',
       'RECHAZADO': 'Rechazado',
       'VENCIDO': 'Vencido',
+      'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
+      'EN_DESACATO': 'En Desacato',
+      'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
+      'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
     };
     return map[this.rtfStatus()] ?? this.rtfStatus();
   });
@@ -184,6 +190,7 @@ export class RtfService {
   registrarCarta = (rtfId: number, tipCarta: string, numDocumento: string, fecNotificacion: string, canDiasOtorgados: number, archivo: File) =>
     this.unService.registrarCarta(rtfId, tipCarta, numDocumento, fecNotificacion, canDiasOtorgados, archivo);
   descargarCarta = (rtfId: number, ideCarta: number) => this.unService.descargarCarta(rtfId, ideCarta);
+  marcarConvenioResuelto = (rtfId: number) => this.unService.marcarConvenioResuelto(rtfId);
 
   // Delegaciones BD_SEL — lo programado sigue viniendo de BD_SEL; el avance ejecutado y la
   // evidencia se guardan localmente por RTF (ADR-009), de ahí el ideRtf en cada llamada.

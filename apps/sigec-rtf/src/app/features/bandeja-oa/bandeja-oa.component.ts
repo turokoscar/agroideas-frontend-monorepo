@@ -56,7 +56,10 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
     { key: 'EN_REVISION', label: 'En Revisión en AGROIDEAS', estados: ['EN_REVISION', 'AUDITADO_CAMPO', 'IN_REVISION_UN'] },
     { key: 'APROBADO', label: 'Aprobado', estados: ['APROBADO'] },
     { key: 'RECHAZADO', label: 'Rechazado', estados: ['RECHAZADO'] },
-    { key: 'VENCIDO', label: 'Vencido', estados: ['VENCIDO'] },
+    // ADR-018 Fase I: la OA no necesita un tab por cada escalón de la cobranza (recordatoria →
+    // desacato → notarial → bloqueo) -- igual criterio que ya usa `EN_REVISION` arriba, se
+    // consolidan en el tab "Vencido" que ya tenía.
+    { key: 'VENCIDO', label: 'Vencido', estados: ['VENCIDO', 'PLAZO_INICIAL_NOTIFICACION', 'EN_DESACATO', 'PLAZO_LIMITE_NOTARIAL', 'BLOQUEO_DEFINITIVO'] },
   ];
 
   activeTabKey = signal<string>('PENDIENTE');
@@ -203,6 +206,10 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
       'APROBADO': 'Aprobado',
       'RECHAZADO': 'Rechazado',
       'VENCIDO': 'Vencido',
+      'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
+      'EN_DESACATO': 'En Desacato',
+      'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
+      'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
     };
     return map[estado ?? ''] ?? estado ?? '';
   }
@@ -217,11 +224,15 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
     switch (estado) {
       case 'APROBADO': return 'Aprobado';
       case 'RECHAZADO':
-      case 'VENCIDO': return 'Rechazado';
+      case 'VENCIDO':
+      case 'EN_DESACATO':
+      case 'PLAZO_LIMITE_NOTARIAL':
+      case 'BLOQUEO_DEFINITIVO': return 'Rechazado';
       case 'OBSERVADO': return 'Alta';
       case 'EN_REVISION':
       case 'AUDITADO_CAMPO':
       case 'IN_REVISION_UN': return 'Media';
+      case 'PLAZO_INICIAL_NOTIFICACION':
       case 'PENDIENTE':
       case 'EN_EDICION':
       default: return 'Pendiente';

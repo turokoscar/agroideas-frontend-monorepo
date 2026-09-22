@@ -395,4 +395,14 @@ export class UnGabineteService {
       })
     );
   }
+
+  /** ADR-018 Fase H: confirma la Resolución del Convenio de un RTF en BLOQUEO_DEFINITIVO. */
+  marcarConvenioResuelto(rtfId: number) {
+    return this.http.post<ApiResponse<null>>(`${this.apiUrl}/rtfs/${rtfId}/marcar-convenio-resuelto`, {}).pipe(
+      catchError(err => {
+        console.error('Error marcando el convenio como resuelto', err);
+        return throwError(() => err);
+      })
+    );
+  }
 }

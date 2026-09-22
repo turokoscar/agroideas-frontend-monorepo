@@ -141,6 +141,10 @@ export class OaDashboardComponent implements OnInit {
       case 'RECHAZADO': return 'Rechazado';
       case 'VENCIDO': return 'Vencido';
       case 'OBSERVADO': return 'Con Observaciones';
+      case 'PLAZO_INICIAL_NOTIFICACION': return 'Carta de Notificación Enviada';
+      case 'EN_DESACATO': return 'En Desacato';
+      case 'PLAZO_LIMITE_NOTARIAL': return 'Carta Notarial - Plazo Final';
+      case 'BLOQUEO_DEFINITIVO': return 'Bloqueo Definitivo';
       default: return status;
     }
   }
@@ -151,8 +155,12 @@ export class OaDashboardComponent implements OnInit {
       case 'APROBADO':
       case 'ENVIADO': return 'text-success';
       case 'RECHAZADO':
-      case 'VENCIDO': return 'text-destructive';
-      case 'OBSERVADO': return 'text-warning';
+      case 'VENCIDO':
+      case 'EN_DESACATO':
+      case 'PLAZO_LIMITE_NOTARIAL':
+      case 'BLOQUEO_DEFINITIVO': return 'text-destructive';
+      case 'OBSERVADO':
+      case 'PLAZO_INICIAL_NOTIFICACION': return 'text-warning';
       case 'EN_REVISION':
       case 'AUDITADO_CAMPO':
       case 'IN_REVISION_UN': return 'text-info';
@@ -167,8 +175,12 @@ export class OaDashboardComponent implements OnInit {
       case 'APROBADO':
       case 'ENVIADO': return 'bg-success';
       case 'RECHAZADO':
-      case 'VENCIDO': return 'bg-destructive';
-      case 'OBSERVADO': return 'bg-warning';
+      case 'VENCIDO':
+      case 'EN_DESACATO':
+      case 'PLAZO_LIMITE_NOTARIAL':
+      case 'BLOQUEO_DEFINITIVO': return 'bg-destructive';
+      case 'OBSERVADO':
+      case 'PLAZO_INICIAL_NOTIFICACION': return 'bg-warning';
       case 'EN_REVISION':
       case 'AUDITADO_CAMPO':
       case 'IN_REVISION_UN': return 'bg-info';

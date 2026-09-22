@@ -864,12 +864,11 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.nuevaCartaArchivo.set(info.file);
   }
 
-  // --- Marcar convenio como resuelto (ADR-018 Fase F) ---
+  // --- Marcar convenio como resuelto (ADR-018 Fase H) ---
   // Acción manual del especialista sobre un RTF en BLOQUEO_DEFINITIVO -- el sistema nunca lo
-  // dispara solo (decisión explícita del usuario, ver ADR-018 punto 6 de "Decisión"). El botón
-  // vive acá, con confirmación modal por ser una acción legal irreversible, pero el backend que
-  // de verdad actualiza `postulante_estado_situacional` (Fases G/H del ADR) todavía no existe --
-  // por eso confirma y avisa que queda pendiente, en vez de intentar una llamada que fallaría.
+  // dispara solo (decisión explícita del usuario, ver ADR-018 punto 6 de "Decisión"). Confirmación
+  // modal por ser una acción legal irreversible; el resultado (éxito o error) siempre se confirma
+  // con un toast, nunca en silencio.
   showConfirmarResueltoModal = signal(false);
 
   toggleConfirmarResueltoModal() {
@@ -877,10 +876,26 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   }
 
   marcarConvenioResuelto() {
+    const rtfId = this.rtfService.unSelectedRtfId();
     this.showConfirmarResueltoModal.set(false);
-    this.toast.warning(
-      'Pendiente de implementación',
-      'El backend que actualiza el estado situacional del convenio (ADR-018 Fases G/H) todavía no existe. La confirmación quedó registrada solo en este mensaje.'
+    if (!rtfId) return;
+
+    this.accionEjecutandose.set(true);
+    this.subs.add(
+      this.rtfService.marcarConvenioResuelto(rtfId).subscribe({
+        next: () => {
+          this.accionEjecutandose.set(false);
+          this.toast.success(
+            'Convenio marcado como resuelto',
+            'Se registró la Resolución del Convenio en el sistema de gestión de postulantes.'
+          );
+          this.volverBandeja();
+        },
+        error: (err) => {
+          this.accionEjecutandose.set(false);
+          this.toast.error('Error', err.error?.mensaje || 'No se pudo marcar el convenio como resuelto.');
+        }
+      })
     );
   }
 

@@ -56,8 +56,21 @@ Requires three backend APIs running to exercise real flows: `apiAuth` (sel-api-s
   `no-non-null-assertion`, and three template a11y rules to `warn` — same shape as kofix's
   override, don't assume it's fully clean.
 - **App-local ADRs live in `apps/sigec-rtf/adr/`**, separate from the monorepo's
-  `docs/adr/`. The legal-deadline ADRs (ADR-012) and Admin Panel ADR (ADR-013) that motivated
-  the `ADMIN` role and its reports live in the *backend* repo (`sigec-api-rtf`), not here or
-  in `docs/adr/` — don't go looking for them in this repo.
+  `docs/adr/`. The legal-deadline ADRs (ADR-012), Admin Panel ADR (ADR-013), and the full RTF
+  state-machine/deadline-escalation ADR (ADR-018 — `ENVIADO`/`SUBSANADO`/`EN_DESACATO`/
+  `PLAZO_INICIAL_NOTIFICACION`/`PLAZO_LIMITE_NOTARIAL`/`BLOQUEO_DEFINITIVO`, all 10 phases done
+  and live-verified as of 2026-09-22) live in the *backend* repo (`sigec-api-rtf`), not here or
+  in `docs/adr/` — don't go looking for them in this repo. This app has **no local ADR for that
+  work**; the README's "Máquina de estados del RTF" table is the frontend-facing summary.
+- **`un-gabinete`'s "Marcar convenio como resuelto" button is fully wired**, not a placeholder —
+  it calls `UnGabineteService.marcarConvenioResuelto()` → `POST rtfs/{id}/marcar-convenio-resuelto`
+  (only reachable on `BLOQUEO_DEFINITIVO`, gated to UN/ADMIN roles server-side) and always shows a
+  toast (success or error), never silently. If you see it referred to as a placeholder in old
+  session notes, that was true only before 2026-09-22.
+- **`ENVIADO`/`SUBSANADO` are real backend states but you will basically never observe them** —
+  the backend resolves them to `EN_REVISION` within the same HTTP request that creates them
+  (no manual "asignar UN" step exists, by explicit decision). They exist only so
+  `SRT_TMD_ACTIVIDAD` has a distinct audit row; don't build any UI that expects to catch an RTF
+  "sitting" in either state.
 - **`GlobalErrorHandler`** is app-specific (`core/error-handler.ts`), not shared — don't
   confuse it with anything in `@agroideas/feedback`.
