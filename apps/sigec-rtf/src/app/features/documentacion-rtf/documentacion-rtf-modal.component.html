@@ -72,7 +72,7 @@
           icon="folder_zip"
           [label]="descargandoZip() ? 'Descargando...' : 'Descargar todo (.zip)'"
           [loading]="descargandoZip()"
-          [disabled]="documentos().length === 0"
+          [disabled]="documentosOrdenados().length === 0"
           (onClick)="descargarZip()"
         />
       </div>

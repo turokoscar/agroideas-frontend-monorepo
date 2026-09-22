@@ -99,6 +99,9 @@ export class RtfService {
   // UN proxies (ADR-010: UN maneja todo el ciclo EN_REVISION → IN_REVISION_UN, sin actor UR
   // separado — un-gabinete.service.ts absorbió lo que vivía en ur-auditoria.service.ts)
   unRtfList = this.unService.unRtfList;
+  unPendientesCount = this.unService.pendientesCount;
+  iniciarPollingBandejaUn = (intervaloMs?: number) => this.unService.iniciarPollingBandeja(intervaloMs);
+  detenerPollingBandejaUn = () => this.unService.detenerPollingBandeja();
   unSelectedRtfId = this.unService.unSelectedRtfId;
   dashboardUnData = this.unService.dashboardUnData;
   unCabeceraSeleccionada = this.unService.cabeceraSeleccionada;
@@ -120,25 +123,39 @@ export class RtfService {
   pasoCriticoIndicadores = this.pasoService.pasoCriticoIndicadores;
   avanceFinancieroPC = this.pasoService.avanceFinancieroPC;
 
-  rtfStatusLabel = computed(() => {
-    const map: Record<string, string> = {
-      'PENDIENTE': 'En Edición',
-      'EN_EDICION': 'En Edición',
-      'ENVIADO': 'Enviado a UR',
-      'EN_REVISION': 'En Revisión',
-      'OBSERVADO': 'Observado',
-      'AUDITADO_CAMPO': 'Auditado en Campo',
-      'IN_REVISION_UN': 'En Evaluación de Gabinete',
-      'APROBADO': 'Aprobado',
-      'RECHAZADO': 'Rechazado',
-      'VENCIDO': 'Vencido',
-      'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
-      'EN_DESACATO': 'En Desacato',
-      'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
-      'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
-    };
-    return map[this.rtfStatus()] ?? this.rtfStatus();
-  });
+  /**
+   * Fuente única de las etiquetas de `estRtf` -- hallazgo #8 de la revisión UX (ver ADR-017/019
+   * de `un-gabinete`): antes de esto, `bandeja-oa`, `oa-dashboard` y `un-gabinete` mantenían cada
+   * uno su propio mapa copiado a mano y habían divergido (p.ej. "Auditado en Campo" vs.
+   * "Verificación de Campo Registrada" para `AUDITADO_CAMPO`, "Vencido" vs. "Plazo Vencido" para
+   * `VENCIDO`). Todas las pantallas deben consumir `estadoLabel()`/`rtfStatusLabel` de aquí en vez
+   * de declarar su propio mapa.
+   */
+  private static readonly ESTADO_LABELS: Record<string, string> = {
+    'PENDIENTE': 'Pendiente',
+    'EN_EDICION': 'En Edición',
+    // Transitorio -- el backend lo resuelve a EN_REVISION dentro del mismo request (ver
+    // CLAUDE.md de sigec-rtf); solo se observa un instante en el cliente justo tras "Enviar RTF".
+    'ENVIADO': 'Enviado',
+    'EN_REVISION': 'En Revisión',
+    'OBSERVADO': 'Con Observaciones',
+    'AUDITADO_CAMPO': 'Verificación de Campo Registrada',
+    'IN_REVISION_UN': 'En Evaluación de Gabinete',
+    'APROBADO': 'Aprobado',
+    'RECHAZADO': 'Rechazado',
+    'VENCIDO': 'Plazo Vencido',
+    'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
+    'EN_DESACATO': 'En Desacato',
+    'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
+    'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
+  };
+
+  estadoLabel(estado?: string): string {
+    if (!estado) return '';
+    return RtfService.ESTADO_LABELS[estado] ?? estado;
+  }
+
+  rtfStatusLabel = computed(() => this.estadoLabel(this.rtfStatus()));
 
   // Delegaciones OA
   resolvePostulanteId = () => this.oaService.resolvePostulanteId();

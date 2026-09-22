@@ -67,15 +67,15 @@ describe('OaDashboardComponent', () => {
 
   describe('statusLabel', () => {
     it.each([
-      ['PENDIENTE', 'En Edición'],
-      ['ENVIADO', 'Enviado a UR'],
+      ['PENDIENTE', 'Pendiente'],
+      ['ENVIADO', 'Enviado'],
       ['EN_REVISION', 'En Revisión'],
       ['APROBADO', 'Aprobado'],
       ['RECHAZADO', 'Rechazado'],
-      ['VENCIDO', 'Vencido'],
+      ['VENCIDO', 'Plazo Vencido'],
       ['OBSERVADO', 'Con Observaciones'],
       ['ALGO_RARO', 'ALGO_RARO']
-    ])('maps %s to "%s"', (estado, esperado) => {
+    ])('maps %s to "%s" (delegado a RtfService.estadoLabel, hallazgo #8)', (estado, esperado) => {
       const fixture = crearComponente('1');
       fixture.componentInstance.rtfService.rtfStatus.set(estado);
 

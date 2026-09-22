@@ -21,6 +21,7 @@ import {
   FileInfo,
   UiFilterBarComponent,
   UIModalComponent,
+  UiInfoTooltipComponent,
 } from '@agroideas/ui';
 import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -64,6 +65,7 @@ interface Anexo18FormValue {
     UiFilterBarComponent,
     DocumentacionRtfModalComponent,
     UIModalComponent,
+    UiInfoTooltipComponent,
   ],
   providers: [DecimalPipe, DatePipe],
   templateUrl: './un-gabinete.component.html',
@@ -490,24 +492,13 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   /** ADR-018 Fase F: estado terminal del escalamiento de plazos -- ver marcarConvenioResuelto(). */
   enBloqueoDefinitivo = computed(() => this.rtfStatus() === 'BLOQUEO_DEFINITIVO');
 
-  private static readonly ESTADO_LABELS: Record<string, string> = {
-    'EN_REVISION': 'En Revisión',
-    'AUDITADO_CAMPO': 'Verificación de Campo Registrada',
-    'IN_REVISION_UN': 'En Evaluación de Gabinete',
-    'APROBADO': 'Aprobado',
-    'RECHAZADO': 'Rechazado',
-    'OBSERVADO': 'Observado',
-    'VENCIDO': 'Plazo Vencido',
-    'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
-    'EN_DESACATO': 'En Desacato',
-    'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
-    'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
-  };
-
-  /** Usado tanto por la fila de la bandeja como por la cabecera del detalle (rtfStatusLabel). */
+  /**
+   * Delegado a `RtfService.estadoLabel` -- fuente única de etiquetas (hallazgo #8 de la revisión
+   * UX: este mapa vivía duplicado aquí y en `bandeja-oa`/`oa-dashboard` y había divergido).
+   * Usado tanto por la fila de la bandeja como por la cabecera del detalle (rtfStatusLabel).
+   */
   estadoLabel(estado?: string): string {
-    if (!estado) return '';
-    return UnGabineteComponent.ESTADO_LABELS[estado] ?? estado;
+    return this.rtfService.estadoLabel(estado);
   }
 
   rtfStatusLabel = computed(() => this.estadoLabel(this.rtfStatus()));
@@ -552,6 +543,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.nuevaCartaDias() > 0 &&
     !!this.nuevaCartaArchivo()
   );
+
+  /** ADR-017/019, hallazgo #4: el hint de campos faltantes no debe verse como un error real
+   *  antes de que el usuario toque el formulario -- el botón de envío ya está deshabilitado
+   *  mientras es inválido, así que un "intento de envío" nunca llega a disparar
+   *  `registrarCartaSubmit()`; se marca "tocado" en la primera interacción real en cambio. */
+  nuevaCartaTocado = signal(false);
 
   // R1 items para la vista
   r1Items = computed(() => [
@@ -637,8 +634,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
    */
   estadoPillStatus(estado?: string): StatusType {
     switch (estado) {
+      case 'APROBADO': return 'Aprobado';
       case 'IN_REVISION_UN': return 'Aprobado';
+      case 'EN_REVISION':
       case 'AUDITADO_CAMPO': return 'Media';
+      case 'OBSERVADO': return 'Alta';
+      case 'RECHAZADO':
       case 'VENCIDO':
       case 'EN_DESACATO':
       case 'PLAZO_LIMITE_NOTARIAL':
@@ -695,6 +696,7 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
     this.nuevaCartaFecNotificacion.set(new Date().toISOString().slice(0, 10));
     this.nuevaCartaDias.set(15);
     this.nuevaCartaArchivo.set(null);
+    this.nuevaCartaTocado.set(false);
     this.evaluacionDraft.set(new Map());
     this.devolverTempranoObservacion.set('');
 
@@ -954,10 +956,12 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   onTipoCartaChange(tipo: string) {
     this.nuevaCartaTipo.set(tipo === 'CARTA_NOTARIAL' ? 'CARTA_NOTARIAL' : 'PRIMERA_NOTIFICACION');
     this.nuevaCartaDias.set(tipo === 'CARTA_NOTARIAL' ? 30 : 15);
+    this.nuevaCartaTocado.set(true);
   }
 
   onCartaFile(info: FileInfo) {
     this.nuevaCartaArchivo.set(info.file);
+    this.nuevaCartaTocado.set(true);
   }
 
   // --- Marcar convenio como resuelto (ADR-018 Fase H) ---

@@ -209,6 +209,7 @@
             <span class="material-symbols-outlined text-[16px]">description</span>
             R1 · Cualitativa
           </button>
+          <ui-info-tooltip text="R1 — Información Cualitativa: la sección narrativa del Anexo 17 (actividades realizadas, logros, dificultades y cambios del paso crítico)." class="-ml-1.5" />
           <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             [class.bg-primary]="activeContentTab() === 't1'"
             [class.text-primary-foreground]="activeContentTab() === 't1'"
@@ -222,6 +223,7 @@
               <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">{{ metasObservadasCount() }}</span>
             }
           </button>
+          <ui-info-tooltip text="T1 — Metas Físicas: bienes y servicios del paso crítico, programado vs. ejecutado, según el Anexo 17." class="-ml-1.5" />
           <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             [class.bg-primary]="activeContentTab() === 'r2'"
             [class.text-primary-foreground]="activeContentTab() === 'r2'"
@@ -235,6 +237,7 @@
               <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">{{ indicadoresObservadasCount() }}</span>
             }
           </button>
+          <ui-info-tooltip text="R2 — Indicadores: cumplimiento de indicadores del paso crítico, programado vs. ejecutado, según el Anexo 17." class="-ml-1.5" />
           <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             [class.bg-primary]="activeContentTab() === 'f1'"
             [class.text-primary-foreground]="activeContentTab() === 'f1'"
@@ -245,6 +248,7 @@
             <span class="material-symbols-outlined text-[16px]">account_balance</span>
             F1 · Gastos Financieros
           </button>
+          <ui-info-tooltip text="F1 — Gastos Financieros: gastos ejecutados del paso crítico, con el desglose entre el aporte AGROIDEAS y la contrapartida de la OA." class="-ml-1.5" />
         </div>
 
         @if (activeContentTab() === 'r1') {
@@ -542,6 +546,7 @@
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px] text-primary">travel_explore</span>
             Verificación de Campo · Anexo 19 (Opcional)
+            <ui-info-tooltip text="Anexo 19 — Verificación de Campo: constancia de que se visitó el proyecto para confirmar lo reportado. Opcional, no bloquea la evaluación." />
           </h3>
           <p class="text-sm text-muted-foreground mb-4">
             Si realizó (o coordinó) una visita de campo para verificar la adopción tecnológica, registre aquí el Acta. No es obligatoria para continuar.
@@ -668,7 +673,7 @@
                   class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   placeholder="CN-2026-001"
                   [value]="nuevaCartaNumDocumento()"
-                  (input)="nuevaCartaNumDocumento.set($any($event.target).value)"
+                  (input)="nuevaCartaNumDocumento.set($any($event.target).value); nuevaCartaTocado.set(true)"
                 />
               </div>
               <div>
@@ -677,7 +682,7 @@
                   type="date"
                   class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   [value]="nuevaCartaFecNotificacion()"
-                  (input)="nuevaCartaFecNotificacion.set($any($event.target).value)"
+                  (input)="nuevaCartaFecNotificacion.set($any($event.target).value); nuevaCartaTocado.set(true)"
                 />
               </div>
               <div>
@@ -687,7 +692,7 @@
                   min="1"
                   class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   [value]="nuevaCartaDias()"
-                  (input)="nuevaCartaDias.set(+$any($event.target).value)"
+                  (input)="nuevaCartaDias.set(+$any($event.target).value); nuevaCartaTocado.set(true)"
                 />
               </div>
             </div>
@@ -701,7 +706,10 @@
               }
             </div>
 
-            @if (!nuevaCartaFormValida()) {
+            @if (nuevaCartaTocado() && !nuevaCartaFormValida()) {
+              <!-- ADR-017/019, hallazgo #4: solo se muestra tras interactuar con el formulario --
+                   antes se veía como un error real desde el primer render, sin que el usuario
+                   hubiera hecho nada. -->
               <p class="mt-2 text-[11px] text-destructive">Complete N° de documento, fecha, días otorgados y adjunte el archivo PDF.</p>
             }
 
@@ -720,6 +728,7 @@
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px] text-primary">summarize</span>
             Anexo 18 - Informe de Comprobación
+            <ui-info-tooltip text="Anexo 18 — Informe de Comprobación: el dictamen que la Unidad de Negocios emite tras evaluar el Anexo 17 presentado por la OA." />
           </h3>
 
           @if (anexo18Empty()) {

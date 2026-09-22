@@ -67,17 +67,22 @@
     <!-- Tab Navigation -->
     <div class="flex border-b border-border bg-muted/20">
       @for (tab of tabs; track tab.key) {
-        <button
-          class="relative px-6 py-3 text-sm font-medium transition-all"
-          [class.text-primary]="activeTab() === tab.key"
-          [class.text-muted-foreground]="activeTab() !== tab.key"
-          (click)="activeTab.set(tab.key)"
-        >
-          <span>{{ tab.label }}</span>
-          @if (activeTab() === tab.key) {
-            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
+        <div class="relative flex items-center">
+          <button
+            class="relative px-6 py-3 text-sm font-medium transition-all"
+            [class.text-primary]="activeTab() === tab.key"
+            [class.text-muted-foreground]="activeTab() !== tab.key"
+            (click)="activeTab.set(tab.key)"
+          >
+            <span>{{ tab.label }}</span>
+            @if (activeTab() === tab.key) {
+              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
+            }
+          </button>
+          @if (tab.hint) {
+            <ui-info-tooltip [text]="tab.hint" class="-ml-2" />
           }
-        </button>
+        </div>
       }
     </div>
 

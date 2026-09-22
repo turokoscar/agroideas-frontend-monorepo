@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UiAppShellComponent } from '@agroideas/ui';
@@ -6,13 +6,17 @@ import { AuthService } from '../../core/services/auth.service';
 import { PasoCritico, RtfService } from '../../core/services/rtf.service';
 import { NotificacionBellComponent } from '../notificacion-bell/notificacion-bell.component';
 
+/** Roles con acceso a la bandeja de gabinete (ver AppShellComponent.html, misma condición del
+ *  link "Evaluación Gabinete") — el badge de pendientes solo tiene sentido para ellos. */
+const ROLES_UN = ['UN', 'DE', 'UAJ', 'USE', 'ADMIN'];
+
 @Component({
   selector: 'app-shell',
   standalone: true,
   imports: [CommonModule, RouterModule, UiAppShellComponent, NotificacionBellComponent],
   templateUrl: './app-shell.component.html'
 })
-export class AppShellComponent implements OnInit {
+export class AppShellComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private rtfService = inject(RtfService);
   private router = inject(Router);
@@ -23,10 +27,18 @@ export class AppShellComponent implements OnInit {
   pasos = this.rtfService.pasos;
   pasosCargando = signal(false);
 
+  /** ADR-017/019, hallazgo #6: badge de RTFs pendientes en "Evaluación Gabinete", sin necesidad
+   *  de entrar a la bandeja para saberlo. Se refresca solo (polling), igual que las notificaciones. */
+  pendientesGabinete = this.rtfService.unPendientesCount;
+
   isStepsExpanded = signal(true);
   isReportsExpanded = signal(true);
 
   ngOnInit() {
+    if (ROLES_UN.includes(this.user()?.role ?? '')) {
+      this.rtfService.iniciarPollingBandejaUn();
+    }
+
     // Solo la OA navega por pasos críticos; UR y UN trabajan desde sus bandejas.
     if (this.user()?.role !== 'POSTULANTE') return;
 
@@ -38,6 +50,10 @@ export class AppShellComponent implements OnInit {
         this.pasosCargando.set(false);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.rtfService.detenerPollingBandejaUn();
   }
 
   /**

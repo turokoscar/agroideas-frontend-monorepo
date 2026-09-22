@@ -222,3 +222,64 @@ describe('UnGabineteComponent — pestañas de la bandeja (ADR-017)', () => {
     });
   });
 });
+
+/**
+ * Hallazgo #4 de la revisión UX (ADR-017/019): el hint "Complete N° de documento, fecha, días
+ * otorgados y adjunte el archivo PDF" se veía como un error real desde el primer render del
+ * formulario de Carta, antes de que el usuario hiciera nada. Se corrige con un signal "tocado"
+ * que solo se activa con una interacción real -- estos tests cubren ese signal, no el hint en sí
+ * (el `@if` en el template no se puede probar sin TestBed + detectChanges completos, que esta
+ * suite no ejercita para el resto del componente tampoco).
+ */
+describe('UnGabineteComponent — hint del formulario de Carta (ADR-017/019, hallazgo #4)', () => {
+  let httpMock: HttpTestingController;
+  const apiUrl = environment.apiUrl;
+  const ok = <T>(datos: T): ApiResponse<T> => ({ respuesta: 'OK', mensaje: 'OK', datos });
+
+  function crearComponente() {
+    TestBed.configureTestingModule({
+      imports: [UnGabineteComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
+    });
+    httpMock = TestBed.inject(HttpTestingController);
+    return TestBed.createComponent(UnGabineteComponent);
+  }
+
+  it('starts untouched (form freshly rendered, nothing typed yet)', () => {
+    const fixture = crearComponente();
+    expect(fixture.componentInstance.nuevaCartaTocado()).toBe(false);
+  });
+
+  it('marks the form as touched when the user picks a carta type', () => {
+    const fixture = crearComponente();
+    fixture.componentInstance.onTipoCartaChange('CARTA_NOTARIAL');
+    expect(fixture.componentInstance.nuevaCartaTocado()).toBe(true);
+  });
+
+  it('marks the form as touched when the user attaches a file', () => {
+    const fixture = crearComponente();
+    fixture.componentInstance.onCartaFile({ file: new File(['x'], 'c.pdf'), name: 'c.pdf', size: 1 } as any);
+    expect(fixture.componentInstance.nuevaCartaTocado()).toBe(true);
+  });
+
+  it('resets to untouched when a new RTF is opened, so the hint does not leak from a previous expediente', () => {
+    const fixture = crearComponente();
+    fixture.componentInstance.nuevaCartaTocado.set(true);
+
+    fixture.componentInstance.seleccionarRtf(77);
+    expect(fixture.componentInstance.nuevaCartaTocado()).toBe(false);
+
+    // Drena las llamadas que dispara seleccionarRtf para no dejar requests sin resolver.
+    httpMock.expectOne(`${apiUrl}/rtfs/77/completo`).flush(ok<UrCompletoDto>({
+      cabecera: { ideRtf: 77, ideConvenio: 1, numPasoCritico: 1, estRtf: 'EN_REVISION' } as RtfCabeceraDto,
+      evidencias: [], revisiones: [], verificacionesCampo: []
+    }));
+    httpMock.expectOne(`${apiUrl}/rtfs/77/gastos-f1`).flush(ok([]));
+    httpMock.expectOne(`${apiUrl}/un/rtfs/77/informe-comprobacion`).flush(ok(null));
+    httpMock.expectOne(`${apiUrl}/rtfs/77/cartas`).flush(ok([]));
+    httpMock.expectOne(`${apiUrl}/rtfs/77/estado-plazo?tipPlazo=REEVALUACION_UN`).flush(ok(null));
+    httpMock.expectOne(`${apiUrl}/rtfs/77/evaluaciones`).flush(ok<EvaluacionUrEstadoDto>({ pliegoObservaciones: '', revisiones: [] }));
+
+    httpMock.verify();
+  });
+});

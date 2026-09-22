@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { throwError } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { Subscription, interval, of, throwError } from 'rxjs';
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { PasoCriticoService } from './paso-critico.service';
 import {
   RtfCabeceraDto,
@@ -123,6 +123,34 @@ export class UnGabineteService {
         return throwError(() => err);
       })
     );
+  }
+
+  /** Total de RTFs pendientes de atención de la UN (evaluación + plazos), para el badge del
+   *  menú lateral (hallazgo #6 de la revisión UX de ADR-017/019: "sin señal de urgencia sin
+   *  entrar"). Es la unión completa que ya trae `loadBandejaUn` -- no hace falta resolver
+   *  convenios/RUC/razón social como sí hace `UnGabineteComponent.cargarBandeja`, el sidebar
+   *  solo necesita el número. */
+  pendientesCount = computed(() => this.unRtfList().length);
+
+  private pollingBandejaSub: Subscription | null = null;
+
+  /** Refresca `pendientesCount` de inmediato y luego cada `intervaloMs` (60s por defecto) --
+   *  mismo patrón que `NotificacionService.iniciarPolling`. Un error de red no debe cortar el
+   *  polling futuro (a diferencia de `loadBandejaUn` sola, que relanza el error para quien la
+   *  llama directamente), de ahí el `catchError` propio acá. */
+  iniciarPollingBandeja(intervaloMs = 60000) {
+    this.detenerPollingBandeja();
+    this.pollingBandejaSub = interval(intervaloMs)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.loadBandejaUn().pipe(catchError(() => of(null))))
+      )
+      .subscribe();
+  }
+
+  detenerPollingBandeja() {
+    this.pollingBandejaSub?.unsubscribe();
+    this.pollingBandejaSub = null;
   }
 
   loadRtfCompleto(rtfId: number) {

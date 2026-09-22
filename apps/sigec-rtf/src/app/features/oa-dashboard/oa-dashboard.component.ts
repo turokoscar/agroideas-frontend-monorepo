@@ -128,25 +128,9 @@ export class OaDashboardComponent implements OnInit {
     return labels;
   }
 
+  /** Delegado a `RtfService.estadoLabel` -- fuente única de etiquetas (hallazgo #8, ver ahí). */
   statusLabel(): string {
-    const status = this.rtfService.rtfStatus();
-    switch (status) {
-      case 'PENDIENTE':
-      case 'EN_EDICION': return 'En Edición';
-      case 'ENVIADO': return 'Enviado a UR';
-      case 'EN_REVISION': return 'En Revisión';
-      case 'AUDITADO_CAMPO': return 'Auditado en Campo';
-      case 'IN_REVISION_UN': return 'En Evaluación de Gabinete';
-      case 'APROBADO': return 'Aprobado';
-      case 'RECHAZADO': return 'Rechazado';
-      case 'VENCIDO': return 'Vencido';
-      case 'OBSERVADO': return 'Con Observaciones';
-      case 'PLAZO_INICIAL_NOTIFICACION': return 'Carta de Notificación Enviada';
-      case 'EN_DESACATO': return 'En Desacato';
-      case 'PLAZO_LIMITE_NOTARIAL': return 'Carta Notarial - Plazo Final';
-      case 'BLOQUEO_DEFINITIVO': return 'Bloqueo Definitivo';
-      default: return status;
-    }
+    return this.rtfService.rtfStatusLabel();
   }
 
   /** Mismo agrupamiento de severidad que `BandejaOAComponent.estadoPillStatus`. */

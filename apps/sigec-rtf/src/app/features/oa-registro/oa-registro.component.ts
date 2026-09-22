@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { RtfService, RtfCabeceraDto, GastoF1Dto, RelacionGastosF1ItemDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, StatusType, TableColumn } from '@agroideas/ui';
+import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent, StatusType, TableColumn } from '@agroideas/ui';
 import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
 
 @Component({
   selector: 'app-oa-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent],
   providers: [DecimalPipe],
   templateUrl: './oa-registro.component.html'
 })
@@ -329,13 +329,16 @@ export class OaRegistroComponent implements OnInit {
   // Tab state
   activeTab = signal<'R1' | 'T1' | 'R2' | 'F1' | 'ANEXO17' | 'ANEXOS'>('R1');
 
+  // `hint`: hallazgo #7 de la revisión UX (ADR-017/019 de sigec-rtf) -- jerga institucional sin
+  // apoyo contextual para un usuario nuevo. Solo las pestañas con nomenclatura del Instructivo
+  // AGROIDEAS lo traen; "Anexos" es autoexplicativo.
   tabs = [
-    { key: 'R1' as const, label: 'R1 - Información Cualitativa' },
-    { key: 'T1' as const, label: 'T1 - Metas Físicas' },
-    { key: 'R2' as const, label: 'R2 - Indicadores' },
-    { key: 'F1' as const, label: 'F1 - Consolidado Financiero' },
-    { key: 'ANEXOS' as const, label: 'Anexos' },
-    { key: 'ANEXO17' as const, label: 'Anexo 17' }
+    { key: 'R1' as const, label: 'R1 - Información Cualitativa', hint: 'R1 — Información Cualitativa: la sección narrativa del Anexo 17 (actividades realizadas, logros, dificultades y cambios del paso crítico).' },
+    { key: 'T1' as const, label: 'T1 - Metas Físicas', hint: 'T1 — Metas Físicas: bienes y servicios del paso crítico, programado vs. ejecutado, según el Anexo 17.' },
+    { key: 'R2' as const, label: 'R2 - Indicadores', hint: 'R2 — Indicadores: cumplimiento de indicadores del paso crítico, programado vs. ejecutado, según el Anexo 17.' },
+    { key: 'F1' as const, label: 'F1 - Consolidado Financiero', hint: 'F1 — Consolidado Financiero: gastos ejecutados del paso crítico, con el desglose entre el aporte AGROIDEAS y la contrapartida de la OA.' },
+    { key: 'ANEXOS' as const, label: 'Anexos', hint: undefined as string | undefined },
+    { key: 'ANEXO17' as const, label: 'Anexo 17', hint: 'Anexo 17 — Reporte Técnico Financiero: el documento oficial que presentas para rendir cuentas de este paso crítico (Instructivo AGROIDEAS).' }
   ];
 
   // Modal state

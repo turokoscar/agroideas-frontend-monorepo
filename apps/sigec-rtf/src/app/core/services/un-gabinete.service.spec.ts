@@ -211,4 +211,44 @@ describe('UnGabineteService', () => {
       expect(resultado).toBe(blob);
     });
   });
+
+  /** Badge de "Evaluación Gabinete" en el menú lateral (hallazgo #6 de la revisión UX,
+   *  ADR-017/019). Cubre el polling en sí, no la señal de refresco periódico (ver `interval`
+   *  en `iniciarPollingBandeja`) -- el objetivo es probar la carga inmediata y la resiliencia
+   *  a errores, no reimplementar un test de temporizador de RxJS. */
+  describe('pendientesCount / polling de la bandeja', () => {
+    const estadosCsv = 'EN_REVISION,AUDITADO_CAMPO,IN_REVISION_UN,VENCIDO,PLAZO_INICIAL_NOTIFICACION,EN_DESACATO,PLAZO_LIMITE_NOTARIAL,BLOQUEO_DEFINITIVO';
+
+    afterEach(() => service.detenerPollingBandeja());
+
+    it('refleja el total de unRtfList (evaluación + plazos combinados)', () => {
+      expect(service.pendientesCount()).toBe(0);
+
+      service.unRtfList.set([{ ideRtf: 1 }, { ideRtf: 2 }, { ideRtf: 3 }] as any);
+
+      expect(service.pendientesCount()).toBe(3);
+    });
+
+    it('iniciarPollingBandeja carga de inmediato, sin esperar el primer intervalo', () => {
+      service.iniciarPollingBandeja();
+
+      httpMock.expectOne(`${apiUrl}/rtfs?estados=${estadosCsv}&cantidad=1000`).flush(ok({
+        total: 2, items: [{ ideRtf: 1 }, { ideRtf: 2 }] as any
+      }));
+
+      expect(service.pendientesCount()).toBe(2);
+    });
+
+    it('un error de red no rompe el polling (se traga el error, a diferencia de loadBandejaUn sola)', () => {
+      expect(() => {
+        service.iniciarPollingBandeja();
+        httpMock.expectOne(`${apiUrl}/rtfs?estados=${estadosCsv}&cantidad=1000`)
+          .flush('boom', { status: 500, statusText: 'Server Error' });
+      }).not.toThrow();
+    });
+
+    it('detenerPollingBandeja es seguro de llamar aunque nunca se haya iniciado el polling', () => {
+      expect(() => service.detenerPollingBandeja()).not.toThrow();
+    });
+  });
 });

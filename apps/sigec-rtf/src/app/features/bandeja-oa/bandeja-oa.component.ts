@@ -195,23 +195,9 @@ export class BandejaOAComponent implements OnInit, OnDestroy {
     this.pdfViewerDownloadUrl.set(null);
   }
 
+  /** Delegado a `RtfService.estadoLabel` -- fuente única de etiquetas (hallazgo #8, ver ahí). */
   statusLabel(estado?: string): string {
-    const map: Record<string, string> = {
-      'PENDIENTE': 'Pendiente',
-      'EN_EDICION': 'En Edición',
-      'OBSERVADO': 'Con Observaciones',
-      'EN_REVISION': 'En Revisión',
-      'AUDITADO_CAMPO': 'Auditado en Campo',
-      'IN_REVISION_UN': 'En Evaluación de Gabinete',
-      'APROBADO': 'Aprobado',
-      'RECHAZADO': 'Rechazado',
-      'VENCIDO': 'Vencido',
-      'PLAZO_INICIAL_NOTIFICACION': 'Carta de Notificación Enviada',
-      'EN_DESACATO': 'En Desacato',
-      'PLAZO_LIMITE_NOTARIAL': 'Carta Notarial - Plazo Final',
-      'BLOQUEO_DEFINITIVO': 'Bloqueo Definitivo',
-    };
-    return map[estado ?? ''] ?? estado ?? '';
+    return this.rtfService.estadoLabel(estado);
   }
 
   /**
