@@ -1,11 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReporteMensualItem } from '../../../domain/models/convenio.model';
 
-export interface DonutData {
-  mes: number;
-  programado: number;
-  ejecutado: number;
-}
+export type DonutData = ReporteMensualItem;
 
 @Component({
   selector: 'app-reporte-mensual-donut',

@@ -1,12 +1,9 @@
-import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter, computed, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Output, EventEmitter, computed, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ReporteMensualItem } from '../../../domain/models/convenio.model';
 
-export interface ReporteMensualItem {
-  mes: number;
-  programado: number;
-  ejecutado: number;
-}
+export { ReporteMensualItem };
 
 @Component({
   selector: 'app-reporte-mensual-chart',

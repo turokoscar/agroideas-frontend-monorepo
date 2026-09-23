@@ -229,6 +229,8 @@ export class UnGabineteComponent implements OnInit, OnDestroy {
   // UN signals (self-contained, ver un-gabinete.service.ts)
   unRtfList = this.rtfService.unRtfList;
   cabecera = this.rtfService.unCabeceraSeleccionada;
+  /** Plazo del expediente abierto, para el banner enriquecido de la cabecera (mismo cálculo que `diasRestantes`, usado por fila en la bandeja). */
+  plazoCabecera = computed(() => this.diasRestantes(this.cabecera()?.fecLimite));
   metas = this.rtfService.unMetas;
   indicadores = this.rtfService.unIndicadores;
   evidencias = this.rtfService.unEvidencias;

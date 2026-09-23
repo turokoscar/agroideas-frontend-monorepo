@@ -4,7 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ConvenioFiltros, ConvenioFiltrosVigente, ConvenioRepository } from '../../domain/repositories/convenio.repository';
-import { Convenio, ConvenioResumenFinanciero } from '../../domain/models/convenio.model';
+import { Convenio, ConvenioResumenFinanciero, ReporteMensualResponse, ResumenEjecutivo } from '../../domain/models/convenio.model';
 import { ConvenioMapper, ConvenioDto } from '../mappers/convenio.mapper';
 
 @Injectable({
@@ -104,15 +104,21 @@ export class ConvenioRepositoryImpl extends ConvenioRepository {
         );
     }
 
-    override getResumenEjecutivo(): Observable<any> {
-        return this.http.get<ResponseDto<any>>(`${this.apiUrl}/resumen-ejecutivo`).pipe(
-            map(res => res.datos)
+    override getResumenEjecutivo(): Observable<ResumenEjecutivo> {
+        return this.http.get<ResponseDto<ResumenEjecutivo>>(`${this.apiUrl}/resumen-ejecutivo`).pipe(
+            map(res => res.datos || {
+                totalConvenios: 0,
+                conveniosActivos: 0,
+                programacionAcumulada: 0,
+                ejecucionAcumulada: 0,
+                saldoDisponible: 0
+            })
         );
     }
 
-    override getReporteMensual(anio: number): Observable<any> {
-        return this.http.get<ResponseDto<any>>(`${this.apiUrl}/reporte-mensual?anio=${anio}`).pipe(
-            map(res => res.datos)
+    override getReporteMensual(anio: number): Observable<ReporteMensualResponse> {
+        return this.http.get<ResponseDto<ReporteMensualResponse>>(`${this.apiUrl}/reporte-mensual?anio=${anio}`).pipe(
+            map(res => res.datos || { reporte: [] })
         );
     }
 }

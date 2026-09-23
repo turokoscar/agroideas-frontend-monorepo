@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, computed
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
+import { ReporteMensualItem, ResumenEjecutivo } from '../../../domain/models/convenio.model';
 import { ResumenEjecutivoComponent } from '../../components/resumen-ejecutivo/resumen-ejecutivo.component';
 import { ReporteMensualChartComponent } from '../../components/reporte-mensual-chart/reporte-mensual-chart.component';
-import { ReporteMensualDonutComponent } from '../../components/reporte-mensual-donut/reporte-mensual-donut.component';
+import { DonutData, ReporteMensualDonutComponent } from '../../components/reporte-mensual-donut/reporte-mensual-donut.component';
 
 @Component({
     selector: 'app-home',
@@ -26,14 +27,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     loadingResumen = signal<boolean>(true);
     loadingChart = signal<boolean>(true);
     
-    resumenData = signal<any>(null);
-    chartData = signal<any[]>([]);
+    resumenData = signal<ResumenEjecutivo | null>(null);
+    chartData = signal<ReporteMensualItem[]>([]);
     selectedYear = signal<number>(2026);
 
-    readonly donutData = computed(() => {
+    readonly donutData = computed<DonutData>(() => {
         const data = this.chartData();
-        const totalProgramado = data.reduce((sum: number, d: any) => sum + (Number(d.programado) || 0), 0);
-        const totalEjecutado = data.reduce((sum: number, d: any) => sum + (Number(d.ejecutado) || 0), 0);
+        const totalProgramado = data.reduce((sum: number, d: ReporteMensualItem) => sum + (Number(d.programado) || 0), 0);
+        const totalEjecutado = data.reduce((sum: number, d: ReporteMensualItem) => sum + (Number(d.ejecutado) || 0), 0);
         return { mes: 0, programado: totalProgramado, ejecutado: totalEjecutado };
     });
 
@@ -53,7 +54,7 @@ export class HomeComponent implements OnInit, OnDestroy {
                 this.resumenData.set(data);
                 this.loadingResumen.set(false);
             },
-            error: (err) => {
+            error: () => {
                 // Error handled by AlertService or removed
                 this.loadingResumen.set(false);
             }
@@ -69,7 +70,7 @@ export class HomeComponent implements OnInit, OnDestroy {
                 this.chartData.set(res?.reporte || []);
                 this.loadingChart.set(false);
             },
-            error: (err) => {
+            error: () => {
                 // Error handled by AlertService or removed
                 this.loadingChart.set(false);
             }

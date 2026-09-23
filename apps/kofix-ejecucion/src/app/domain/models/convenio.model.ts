@@ -28,3 +28,22 @@ export interface ConvenioResumenFinanciero {
     ejecucionAcumulada: number;
     saldoDisponible: number;
 }
+
+export interface ResumenEjecutivo {
+    totalConvenios: number;
+    conveniosActivos: number;
+    programacionAcumulada: number;
+    ejecucionAcumulada: number;
+    saldoDisponible: number;
+}
+
+export interface ReporteMensualItem {
+    mes: number;
+    programado: number;
+    ejecutado: number;
+}
+
+export interface ReporteMensualResponse {
+    reporte: ReporteMensualItem[];
+}
+

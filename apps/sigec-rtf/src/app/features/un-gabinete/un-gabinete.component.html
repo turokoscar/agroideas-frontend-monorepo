@@ -159,29 +159,66 @@
         <span class="sr-only">Cargando RTF completo…</span>
       </div>
     } @else {
-      <!-- Cabecera -->
-      <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Convenio</p>
+      <!-- Cabecera / Ficha del expediente -->
+      <div class="relative overflow-hidden bg-card border border-border rounded-xl p-5 pt-6 shadow-sm">
+        <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary via-primary-container to-secondary"></div>
+
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <!-- Identidad del expediente -->
+          <div class="flex flex-col gap-1.5 min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-semibold text-[11px] uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[15px]">verified</span>
+                RTF #{{ cabecera()?.ideRtf }}
+              </span>
+              <app-ui-status-pill [text]="rtfStatusLabel()" [status]="estadoPillStatus(rtfStatus())" />
+              @if (estaEnEvaluacionPrevia()) {
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  En evaluación de gabinete
+                </span>
+              }
+            </div>
+
             @if (cabecera()?.ideConvenio !== undefined && conveniosInfo().get(cabecera()!.ideConvenio); as info) {
-              <p class="text-sm font-bold text-foreground">{{ formatConvenio(info) }}</p>
-              <p class="text-xs text-muted-foreground">{{ info.ruc }} · {{ info.razonSocial }}</p>
+              <h3 class="text-lg font-bold text-foreground leading-tight truncate" [title]="info.razonSocial">{{ info.razonSocial }}</h3>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px] text-muted-foreground">badge</span>
+                  RUC: <strong class="text-foreground font-mono">{{ info.ruc }}</strong>
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px] text-muted-foreground">description</span>
+                  Convenio: <strong class="text-foreground">{{ formatConvenio(info) }}</strong>
+                </span>
+                @if (cabecera()?.fecRegistro) {
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px] text-muted-foreground">calendar_month</span>
+                    Recibido: {{ cabecera()?.fecRegistro | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                }
+              </div>
             } @else {
-              <p class="text-sm font-bold text-foreground">Convenio #{{ cabecera()?.ideConvenio }}</p>
+              <h3 class="text-lg font-bold text-foreground leading-tight">Convenio #{{ cabecera()?.ideConvenio }}</h3>
             }
           </div>
-          <div>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Paso Crítico</p>
-            <p class="text-sm font-bold text-foreground">{{ cabecera()?.numPasoCritico }}</p>
-          </div>
-          <div>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Estado</p>
-            <app-ui-status-pill [text]="rtfStatusLabel()" [status]="estadoPillStatus(rtfStatus())" />
-          </div>
-          <div>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fec. Límite</p>
-            <p class="text-sm font-bold text-foreground">{{ cabecera()?.fecLimite | date:'dd/MM/yyyy' }}</p>
+
+          <!-- Métricas destacadas -->
+          <div class="flex flex-wrap sm:flex-nowrap items-stretch gap-3 shrink-0">
+            <div class="flex flex-col justify-center rounded-lg bg-surface-container-low px-4 py-2.5 min-w-[140px]">
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Paso Crítico</span>
+              <span class="text-base font-bold text-foreground">{{ cabecera()?.numPasoCritico }}</span>
+            </div>
+            <div class="flex flex-col justify-center rounded-lg px-4 py-2.5 min-w-[170px]"
+              [ngClass]="plazoCabecera().urgente ? 'bg-destructive/10' : 'bg-secondary/10'">
+              <span class="text-[10px] font-semibold uppercase tracking-wider"
+                [class.text-destructive]="plazoCabecera().urgente"
+                [class.text-secondary]="!plazoCabecera().urgente">Plazo</span>
+              <span class="text-base font-bold"
+                [class.text-destructive]="plazoCabecera().urgente"
+                [class.text-foreground]="!plazoCabecera().urgente">{{ plazoCabecera().texto }}</span>
+              <span class="text-[11px] text-muted-foreground">Vence {{ cabecera()?.fecLimite | date:'dd/MM/yyyy' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -194,6 +231,10 @@
           [label]="'Plazo interno para reevaluar (reenviado por la OA tras observación)'"
         />
       }
+
+      <!-- Contenido a revisar (izq.) + Dictamen/Decisión (der., sticky) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div class="lg:col-span-8 flex flex-col gap-6">
 
       <!-- Contenido siempre-visible R1/T1/R2/F1 (ADR-019): pestañas en vez de grilla 2x2 --
            mismo patrón de pestañas que ADR-017 (bandeja), sin componente compartido nuevo. -->
@@ -208,6 +249,9 @@
             (click)="activeContentTab.set('r1')">
             <span class="material-symbols-outlined text-[16px]">description</span>
             R1 · Cualitativa
+            @if (estaEnEvaluacionPrevia() && dictamenR1() === 'OBSERVADO') {
+              <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">1</span>
+            }
           </button>
           <ui-info-tooltip text="R1 — Información Cualitativa: la sección narrativa del Anexo 17 (actividades realizadas, logros, dificultades y cambios del paso crítico)." class="-ml-1.5" />
           <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
@@ -221,6 +265,8 @@
             T1 · Metas Físicas
             @if (metasObservadasCount() > 0) {
               <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">{{ metasObservadasCount() }}</span>
+            } @else if (metas().length > 0) {
+              <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-surface-container-high text-muted-foreground">{{ metas().length }}</span>
             }
           </button>
           <ui-info-tooltip text="T1 — Metas Físicas: bienes y servicios del paso crítico, programado vs. ejecutado, según el Anexo 17." class="-ml-1.5" />
@@ -235,6 +281,8 @@
             R2 · Indicadores
             @if (indicadoresObservadasCount() > 0) {
               <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-destructive text-destructive-foreground">{{ indicadoresObservadasCount() }}</span>
+            } @else if (indicadores().length > 0) {
+              <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-surface-container-high text-muted-foreground">{{ indicadores().length }}</span>
             }
           </button>
           <ui-info-tooltip text="R2 — Indicadores: cumplimiento de indicadores del paso crítico, programado vs. ejecutado, según el Anexo 17." class="-ml-1.5" />
@@ -247,6 +295,9 @@
             (click)="activeContentTab.set('f1')">
             <span class="material-symbols-outlined text-[16px]">account_balance</span>
             F1 · Gastos Financieros
+            @if (gastosF1().length > 0) {
+              <span class="px-1.5 py-0.5 rounded-full text-[11px] leading-none bg-surface-container-high text-muted-foreground">{{ gastosF1().length }}</span>
+            }
           </button>
           <ui-info-tooltip text="F1 — Gastos Financieros: gastos ejecutados del paso crítico, con el desglose entre el aporte AGROIDEAS y la contrapartida de la OA." class="-ml-1.5" />
         </div>
@@ -299,9 +350,14 @@
           } @else {
             <div class="space-y-3">
               @for (m of metas(); track m.id) {
-                <div class="rounded-lg border border-border/60 p-3">
+                <div class="rounded-lg border p-3" [ngClass]="dictamenDe('META', m.id) === 'OBSERVADO' ? 'border-destructive/40 bg-destructive/5' : 'border-border/60'">
                   <div class="flex justify-between gap-2 text-xs mb-1">
-                    <span class="text-foreground font-medium">{{ m.descripcion || 'Actividad' }}</span>
+                    <span class="text-foreground font-medium flex items-center gap-1">
+                      @if (dictamenDe('META', m.id) === 'OBSERVADO') {
+                        <span class="material-symbols-outlined text-destructive text-[15px]">warning</span>
+                      }
+                      {{ m.descripcion || 'Actividad' }}
+                    </span>
                     <span class="text-muted-foreground whitespace-nowrap">
                       {{ (m.metaFisicaEjecutada ?? 0) | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}
                       @if (m.unidadMedida) { <span class="text-[10px]">{{ m.unidadMedida }}</span> }
@@ -370,9 +426,14 @@
           } @else {
             <div class="space-y-3">
               @for (ind of indicadores(); track ind.id) {
-                <div class="rounded-lg border border-border/60 p-3">
+                <div class="rounded-lg border p-3" [ngClass]="dictamenDe('INDICADOR', ind.id) === 'OBSERVADO' ? 'border-destructive/40 bg-destructive/5' : 'border-border/60'">
                   <div class="flex justify-between gap-2 text-xs mb-1">
-                    <span class="text-foreground font-medium">{{ ind.indicador || 'Indicador' }}</span>
+                    <span class="text-foreground font-medium flex items-center gap-1">
+                      @if (dictamenDe('INDICADOR', ind.id) === 'OBSERVADO') {
+                        <span class="material-symbols-outlined text-destructive text-[15px]">warning</span>
+                      }
+                      {{ ind.indicador || 'Indicador' }}
+                    </span>
                     <span class="text-muted-foreground whitespace-nowrap">
                       {{ (ind.metaEjecutada ?? 0) | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}
                       @if (ind.unidadMedida) { <span class="text-[10px]">{{ ind.unidadMedida }}</span> }
@@ -499,7 +560,11 @@
         }
       </div>
 
+      </div>
+      <!-- fin columna izquierda -->
+
       @if (estaEnEvaluacionPrevia()) {
+      <div class="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
         <!-- ADR-014 Parte 4: guardar la evaluación por ítem, pliego de observaciones y checklist. -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-4">
@@ -557,7 +622,9 @@
             <ui-dropzone label="Cargar Acta de Campo" [maxMB]="10" [multiple]="false" (onFile)="onActaFile($event)" />
           }
         </div>
+      </div>
       } @else if (enBloqueoDefinitivo()) {
+      <div class="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
         <!-- Bloqueo Definitivo (ADR-018 Fase F): ya no hay más cartas que registrar, solo la
              acción manual de marcar el convenio como resuelto. -->
         <div class="bg-card border border-destructive/30 rounded-xl p-5 shadow-sm">
@@ -612,7 +679,9 @@
             Carta Notarial. Confirma que corresponde iniciar la Resolución del Convenio.
           </p>
         </app-ui-modal>
+      </div>
       } @else if (enControlDePlazo()) {
+      <div class="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
         <!-- Control de Plazos - Cartas de Notificación/Notarial (Fase 4) -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -713,23 +782,33 @@
               <p class="mt-2 text-[11px] text-destructive">Complete N° de documento, fecha, días otorgados y adjunte el archivo PDF.</p>
             }
 
-            <ui-button
-              class="mt-4"
-              icon="send"
-              [label]="registrandoCarta() ? 'Registrando...' : 'Registrar y Notificar'"
-              [loading]="registrandoCarta()"
-              [disabled]="!nuevaCartaFormValida()"
-              (onClick)="registrarCartaSubmit()" />
+            <div class="mt-4">
+              <ui-button
+                icon="send"
+                [label]="registrandoCarta() ? 'Registrando...' : 'Registrar y Notificar'"
+                [loading]="registrandoCarta()"
+                [disabled]="!nuevaCartaFormValida()"
+                (onClick)="registrarCartaSubmit()" />
+            </div>
           </div>
         </div>
+      </div>
       } @else {
+      <div class="lg:col-span-12 flex flex-col gap-6">
         <!-- Anexo 18 - Informe de Comprobación, formulario real (B-012) -->
         <div class="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[16px] text-primary">summarize</span>
-            Anexo 18 - Informe de Comprobación
-            <ui-info-tooltip text="Anexo 18 — Informe de Comprobación: el dictamen que la Unidad de Negocios emite tras evaluar el Anexo 17 presentado por la OA." />
-          </h3>
+          <div class="flex flex-wrap items-start justify-between gap-2 mb-4">
+            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px] text-primary">summarize</span>
+              Anexo 18 - Informe de Comprobación
+              <ui-info-tooltip text="Anexo 18 — Informe de Comprobación: el dictamen que la Unidad de Negocios emite tras evaluar el Anexo 17 presentado por la OA." />
+            </h3>
+            @if (anexo18Form().estCalificacion) {
+              <app-ui-status-pill
+                [text]="anexo18Form().estCalificacion === 'APROBADO_CONFORME' ? 'Aprobado Conforme' : 'Rechazado con Observaciones'"
+                [status]="anexo18Form().estCalificacion === 'APROBADO_CONFORME' ? 'Aprobado' : 'Rechazado'" />
+            }
+          </div>
 
           @if (anexo18Empty()) {
             <p class="text-sm text-muted-foreground mb-4">Aún no se ha registrado el Informe de Comprobación. Complete y guarde el formulario antes de aprobar el RTF.</p>
@@ -760,120 +839,126 @@
             </div>
           </div>
 
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de la UN (relacionado al cumplimiento de Paso Crítico)</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Cumplimiento del paso crítico evaluado..."
-              [value]="anexo18Form().txtInformeUn"
-              (input)="updateAnexo18Form({ txtInformeUn: $any($event.target).value })"
-              rows="3"
-            ></textarea>
+          <!-- Informes narrativos (B-012): 2 columnas en pantallas medianas+ para evitar la
+               pared de textareas apiladas -- mismos 7 campos, misma validación, solo el layout cambia. -->
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de la UN (relacionado al cumplimiento de Paso Crítico)</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Cumplimiento del paso crítico evaluado..."
+                [value]="anexo18Form().txtInformeUn"
+                (input)="updateAnexo18Form({ txtInformeUn: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de la Visita (calidad de funcionamiento y adopción de la tecnología)</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Resultado de la visita de campo..."
+                [value]="anexo18Form().txtInformeVisita"
+                (input)="updateAnexo18Form({ txtInformeVisita: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe sobre indicadores del Plan de Responsabilidad Ambiental</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Desarrollo de los indicadores ambientales..."
+                [value]="anexo18Form().txtInformeAmbiental"
+                (input)="updateAnexo18Form({ txtInformeAmbiental: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de aspectos Financieros (cofinanciamiento y solicitud de transferencia)</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Verificación del cofinanciamiento y la solicitud de transferencia..."
+                [value]="anexo18Form().txtInformeFinanciero"
+                (input)="updateAnexo18Form({ txtInformeFinanciero: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Dificultades encontradas</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Dificultades encontradas durante la evaluación..."
+                [value]="anexo18Form().txtDificultades"
+                (input)="updateAnexo18Form({ txtDificultades: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Recomendaciones</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Recomendaciones para la OA..."
+                [value]="anexo18Form().txtRecomendaciones"
+                (input)="updateAnexo18Form({ txtRecomendaciones: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Conclusiones</label>
+              <textarea
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                placeholder="Conclusiones de la evaluación..."
+                [value]="anexo18Form().txtConclusiones"
+                (input)="updateAnexo18Form({ txtConclusiones: $any($event.target).value })"
+                rows="3"
+              ></textarea>
+            </div>
           </div>
 
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de la Visita (calidad de funcionamiento y adopción de la tecnología)</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Resultado de la visita de campo..."
-              [value]="anexo18Form().txtInformeVisita"
-              (input)="updateAnexo18Form({ txtInformeVisita: $any($event.target).value })"
-              rows="3"
-            ></textarea>
-          </div>
+          <div class="mt-4 flex flex-wrap items-end gap-4">
+            <div class="max-w-xs flex-1 min-w-[220px]">
+              <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Calificación Final</label>
+              <select
+                class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                [value]="anexo18Form().estCalificacion"
+                (change)="updateAnexo18Form({ estCalificacion: $any($event.target).value })"
+              >
+                <option value="">Sin calificar</option>
+                <option value="APROBADO_CONFORME">Aprobado de forma Conforme</option>
+                <option value="RECHAZADO_OBSERVACIONES">Rechazado con Observaciones</option>
+              </select>
+            </div>
 
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe sobre indicadores del Plan de Responsabilidad Ambiental</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Desarrollo de los indicadores ambientales..."
-              [value]="anexo18Form().txtInformeAmbiental"
-              (input)="updateAnexo18Form({ txtInformeAmbiental: $any($event.target).value })"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Informe de aspectos Financieros (cofinanciamiento y solicitud de transferencia)</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Verificación del cofinanciamiento y la solicitud de transferencia..."
-              [value]="anexo18Form().txtInformeFinanciero"
-              (input)="updateAnexo18Form({ txtInformeFinanciero: $any($event.target).value })"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Dificultades encontradas</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Dificultades encontradas durante la evaluación..."
-              [value]="anexo18Form().txtDificultades"
-              (input)="updateAnexo18Form({ txtDificultades: $any($event.target).value })"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Recomendaciones</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Recomendaciones para la OA..."
-              [value]="anexo18Form().txtRecomendaciones"
-              (input)="updateAnexo18Form({ txtRecomendaciones: $any($event.target).value })"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="mt-4">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Conclusiones</label>
-            <textarea
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm resize-y min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              placeholder="Conclusiones de la evaluación..."
-              [value]="anexo18Form().txtConclusiones"
-              (input)="updateAnexo18Form({ txtConclusiones: $any($event.target).value })"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="mt-4 max-w-xs">
-            <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Calificación Final</label>
-            <select
-              class="w-full rounded-xl border border-border bg-surface-container/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              [value]="anexo18Form().estCalificacion"
-              (change)="updateAnexo18Form({ estCalificacion: $any($event.target).value })"
-            >
-              <option value="">Sin calificar</option>
-              <option value="APROBADO_CONFORME">Aprobado de forma Conforme</option>
-              <option value="RECHAZADO_OBSERVACIONES">Rechazado con Observaciones</option>
-            </select>
+            <div class="flex flex-wrap gap-2">
+              <ui-button
+                icon="save"
+                [label]="guardandoAnexo18() ? 'Guardando...' : 'Guardar Informe'"
+                [loading]="guardandoAnexo18()"
+                [disabled]="!anexo18FormValido()"
+                (onClick)="guardarAnexo18()" />
+              <ui-button
+                appearance="soft"
+                severity="primary"
+                icon="visibility"
+                [label]="anexo18Empty() ? 'Generar PDF Anexo 18' : 'Ver PDF Anexo 18'"
+                [disabled]="anexo18Empty()"
+                [ariaLabel]="anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : ''"
+                (onClick)="generarAnexo18()" />
+            </div>
           </div>
 
           @if (!anexo18FormValido()) {
             <p class="mt-2 text-[11px] text-destructive">El N° de Informe y el Representante UN son obligatorios para guardar.</p>
           }
 
-          <div class="mt-4 flex flex-wrap gap-2">
-            <ui-button
-              icon="save"
-              [label]="guardandoAnexo18() ? 'Guardando...' : 'Guardar Informe'"
-              [loading]="guardandoAnexo18()"
-              [disabled]="!anexo18FormValido()"
-              (onClick)="guardarAnexo18()" />
-            <ui-button
-              appearance="soft"
-              severity="primary"
-              icon="visibility"
-              [label]="anexo18Empty() ? 'Generar PDF Anexo 18' : 'Ver PDF Anexo 18'"
-              [disabled]="anexo18Empty()"
-              [ariaLabel]="anexo18Empty() ? 'Guarde el informe antes de generar el PDF' : ''"
-              (onClick)="generarAnexo18()" />
-          </div>
-
           <!-- Copia escaneada del Anexo 18 ya firmado -- queda junto al resto de la documentación
                del expediente (evidencias, informes, Anexo 17), igual que el Anexo 17 firmado de la OA. -->
-          <div class="mt-4">
+          <div class="mt-4 pt-4 border-t border-border/60">
             <label class="text-[11px] font-semibold text-muted-foreground mb-1 block">Anexo 18 firmado (copia escaneada)</label>
             @if (anexo18FirmadosAdjuntos().length > 0) {
               <div class="flex flex-col gap-2 mb-2">
@@ -916,7 +1001,11 @@
             }
           </div>
         }
+      </div>
       }
+
+      </div>
+      <!-- fin grid contenido + dictamen -->
 
       <!-- Sticky Footer Actions -->
       <div class="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-container-lowest border border-border p-4 shadow-lg">

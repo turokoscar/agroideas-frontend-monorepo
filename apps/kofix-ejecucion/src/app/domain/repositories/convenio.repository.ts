@@ -1,5 +1,10 @@
 import { Observable } from 'rxjs';
-import { Convenio, ConvenioResumenFinanciero } from '../models/convenio.model';
+import {
+    Convenio,
+    ConvenioResumenFinanciero,
+    ReporteMensualResponse,
+    ResumenEjecutivo
+} from '../models/convenio.model';
 
 export interface ConvenioFiltros {
     departamentoCodigo?: string;
@@ -21,6 +26,6 @@ export abstract class ConvenioRepository {
     abstract getById(id: number): Observable<Convenio>;
     abstract getResumenFinanciero(id: number): Observable<ConvenioResumenFinanciero>;
     abstract getCronogramasMensuales(id: number): Observable<any>;
-    abstract getResumenEjecutivo(): Observable<any>;
-    abstract getReporteMensual(anio: number): Observable<any>;
+    abstract getResumenEjecutivo(): Observable<ResumenEjecutivo>;
+    abstract getReporteMensual(anio: number): Observable<ReporteMensualResponse>;
 }

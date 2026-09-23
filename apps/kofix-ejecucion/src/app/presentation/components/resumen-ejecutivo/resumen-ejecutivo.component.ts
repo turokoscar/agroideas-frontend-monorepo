@@ -1,13 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ResumenEjecutivo } from '../../../domain/models/convenio.model';
 
-export interface ResumenEjecutivoData {
-  totalConvenios: number;
-  conveniosActivos: number;
-  programacionAcumulada: number;
-  ejecucionAcumulada: number;
-  saldoDisponible: number;
-}
+export type ResumenEjecutivoData = ResumenEjecutivo;
 
 @Component({
   selector: 'app-resumen-ejecutivo',
@@ -18,7 +13,7 @@ export interface ResumenEjecutivoData {
   styleUrls: ['./resumen-ejecutivo.component.sass']
 })
 export class ResumenEjecutivoComponent {
-  data = input.required<ResumenEjecutivoData>();
+  data = input.required<ResumenEjecutivo>();
 
   formatCurrency(value?: number): string {
     if (value === undefined || value === null) return 'S/ 0.00';
