@@ -72,6 +72,32 @@ describe('UnDashboardComponent', () => {
     expect(component.criticosPct()).toBe(0);
   });
 
+  it('pinta el semáforo con el token según el avance financiero', () => {
+    expect(component.semaforoColor()).toBe('warning');
+    expect(component.semaforoTextClass()).toBe('text-warning');
+    expect(component.semaforoDatasets()[0]).toEqual(
+      expect.objectContaining({ data: [55, 45], color: ['warning', 'muted'] })
+    );
+
+    dashboardUnData.set(data({ avanceFinancieroPromedio: 70 }));
+    expect(component.semaforoColor()).toBe('success');
+    dashboardUnData.set(data({ avanceFinancieroPromedio: 29.4 }));
+    expect(component.semaforoColor()).toBe('danger');
+  });
+
+  it('arma la distribución por estado con porcentaje en la etiqueta y color por estado', () => {
+    expect(component.breakdownLabels()[0]).toBe('Aprobado (25%)');
+    const [ds] = component.breakdownDatasets();
+    expect(ds.data).toEqual([5, 5, 5, 1, 3]);
+    expect(ds.color).toEqual(['success', 'warning', 'info', 'danger', 'danger']);
+  });
+
+  it('dibuja los dos gráficos con app-ui-chart', () => {
+    const charts = fixture.nativeElement.querySelectorAll('app-ui-chart canvas');
+    expect(charts.length).toBe(2);
+    expect(charts[0].getAttribute('aria-label')).toContain('55%');
+  });
+
   it('renderiza los 4 KPIs con app-ui-kpi', () => {
     const kpis = Array.from(fixture.nativeElement.querySelectorAll('app-ui-kpi') as NodeListOf<HTMLElement>)
       .map((k) => k.textContent ?? '');

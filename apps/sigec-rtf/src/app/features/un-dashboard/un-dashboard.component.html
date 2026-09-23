@@ -77,32 +77,28 @@
       </app-ui-kpi>
     </div>
 
-    <!-- Avance Financiero Promedio + Breakdown -->
+    <!-- Avance Financiero Promedio + Breakdown (ui-chart, mismo motor que los gráficos de kofix) -->
     <div class="grid gap-6 lg:grid-cols-2">
 
       <!-- Avance Financiero Semáforo -->
       <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
         <h3 class="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <span class="material-symbols-outlined text-[18px]" [class.text-success]="semaforoVerde()" [class.text-warning]="semaforoAmbar()" [class.text-destructive]="semaforoRojo()">payments</span>
+          <span class="material-symbols-outlined text-[18px]" [ngClass]="semaforoTextClass()">payments</span>
           Avance Financiero Promedio
         </h3>
-        <div class="flex items-center gap-4">
-          <div class="relative h-24 w-24 flex items-center justify-center">
-            <svg class="h-24 w-24 -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="8" class="text-surface-container"></circle>
-              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="8"
-                [class.text-success]="semaforoVerde()"
-                [class.text-warning]="semaforoAmbar()"
-                [class.text-destructive]="semaforoRojo()"
-                [style.stroke-dasharray]="264"
-                [style.stroke-dashoffset]="264 - (264 * avanceFinanciero() / 100)"
-                stroke-linecap="round"
-              ></circle>
-            </svg>
-            <span class="absolute text-xl font-bold" [class.text-success]="semaforoVerde()" [class.text-warning]="semaforoAmbar()" [class.text-destructive]="semaforoRojo()">
-              {{ avanceFinanciero() }}%
-            </span>
-          </div>
+        <div class="flex items-center gap-6">
+          <app-ui-chart
+            class="w-40 shrink-0"
+            type="doughnut"
+            valueFormat="percent"
+            height="160px"
+            [labels]="['Avance', 'Por ejecutar']"
+            [datasets]="semaforoDatasets()"
+            [showLegend]="false"
+            [ariaLabel]="'Avance financiero promedio: ' + avanceFinanciero() + '%'">
+            <span class="text-2xl font-black" [ngClass]="semaforoTextClass()">{{ avanceFinanciero() }}%</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">promedio</span>
+          </app-ui-chart>
           <div class="space-y-2 text-xs">
             <div class="flex items-center gap-2">
               <span class="h-2.5 w-2.5 rounded-full bg-success"></span>
@@ -113,7 +109,7 @@
               <span>Ámbar: 30% a 69%</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="h-2.5 w-2.5 rounded-full bg-destructive"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-danger"></span>
               <span>Rojo: menos de 30%</span>
             </div>
           </div>
@@ -126,26 +122,19 @@
           <span class="material-symbols-outlined text-[18px] text-primary">bar_chart</span>
           Distribución por Estado
         </h3>
-        <div class="space-y-3">
-          @for (item of breakdown(); track item.label) {
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-foreground font-medium">{{ item.label }}</span>
-                <span class="text-muted-foreground">{{ item.count }} ({{ item.pct }}%)</span>
-              </div>
-              <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all"
-                  [style.width.%]="item.pct"
-                  [class.bg-success]="item.key === 'APROBADO'"
-                  [class.bg-destructive]="item.key === 'RECHAZADO' || item.key === 'VENCIDO'"
-                  [class.bg-warning]="item.key === 'PENDIENTE' || item.key === 'EN_EDICION'"
-                  [class.bg-info]="item.key === 'EN_REVISION' || item.key === 'IN_REVISION_UN'"
-                ></div>
-              </div>
-            </div>
-          }
-        </div>
+        @if (breakdown().length) {
+          <app-ui-chart
+            type="bar"
+            [horizontal]="true"
+            height="220px"
+            [labels]="breakdownLabels()"
+            [datasets]="breakdownDatasets()"
+            [showLegend]="false"
+            ariaLabel="Distribución de los RTF por estado">
+          </app-ui-chart>
+        } @else {
+          <p class="py-10 text-center text-xs text-muted-foreground">Sin RTFs registrados.</p>
+        }
       </div>
 
     </div>
@@ -204,7 +193,7 @@
                           [style.width.%]="c.avanceFinancieroPromedio"
                           [class.bg-success]="c.avanceFinancieroPromedio >= 70"
                           [class.bg-warning]="c.avanceFinancieroPromedio >= 30 && c.avanceFinancieroPromedio < 70"
-                          [class.bg-destructive]="c.avanceFinancieroPromedio < 30"
+                          [class.bg-danger]="c.avanceFinancieroPromedio < 30"
                         ></div>
                       </div>
                       <span class="text-xs font-medium">{{ c.avanceFinancieroPromedio | number:'1.0-0' }}%</span>

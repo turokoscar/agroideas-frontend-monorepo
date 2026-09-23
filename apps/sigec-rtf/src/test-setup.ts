@@ -6,3 +6,6 @@ globalThis.ngJest = {
   },
 };
 import 'jest-preset-angular/setup-jest';
+
+// jsdom no implementa canvas: sin contexto 2D, ui-chart omite el render de Chart.js.
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;

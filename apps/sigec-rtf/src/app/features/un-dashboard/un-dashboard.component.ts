@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { UiKpiComponent, UiPaginationComponent } from '@agroideas/ui';
+import { UiChartColor, UiChartComponent, UiChartDataset } from '@agroideas/ui/chart';
 import { formatConvenioNumber } from '@agroideas/utils';
 import { RtfService } from '../../core/services/rtf.service';
 import { ConvenioGeneralService } from '../../core/services/convenio-general.service';
@@ -9,7 +10,7 @@ import { ConvenioResumenDto } from '../../core/models';
 @Component({
   selector: 'app-un-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, UiPaginationComponent, UiKpiComponent],
+  imports: [CommonModule, DecimalPipe, UiPaginationComponent, UiKpiComponent, UiChartComponent],
   providers: [DecimalPipe],
   templateUrl: './un-dashboard.component.html',
 })
@@ -71,6 +72,22 @@ export class UnDashboardComponent implements OnInit {
   semaforoAmbar = computed(() => this.avanceFinanciero() >= 30 && this.avanceFinanciero() < 70);
   semaforoRojo = computed(() => this.avanceFinanciero() < 30);
 
+  /** Token del semáforo, compartido por el anillo, el ícono y el porcentaje central. */
+  semaforoColor = computed<UiChartColor>(() => (this.semaforoVerde() ? 'success' : this.semaforoAmbar() ? 'warning' : 'danger'));
+  /** Clases literales: Tailwind no detecta clases armadas dinámicamente (`text-${color}`). */
+  private static readonly SEMAFORO_TEXT: Partial<Record<UiChartColor, string>> = {
+    success: 'text-success',
+    warning: 'text-warning',
+    danger: 'text-danger',
+  };
+  semaforoTextClass = computed(() => UnDashboardComponent.SEMAFORO_TEXT[this.semaforoColor()] ?? '');
+
+  /** Anillo: avance promedio + resto hasta 100%. */
+  semaforoDatasets = computed<UiChartDataset[]>(() => {
+    const avance = Math.min(Math.max(this.avanceFinanciero(), 0), 100);
+    return [{ label: 'Avance financiero', data: [avance, 100 - avance], color: [this.semaforoColor(), 'muted'] }];
+  });
+
   aprobadosPct = computed(() => this.pctDelTotal(this.dashboard()?.aprobados ?? 0));
 
   // --- KPIs (mismo diseño que el resumen ejecutivo de kofix: app-ui-kpi de @agroideas/ui) ---
@@ -105,6 +122,27 @@ export class UnDashboardComponent implements OnInit {
       { key: 'RECHAZADO', label: 'Rechazado', count: d.rechazados, pct: Math.round((d.rechazados / total) * 100) },
       { key: 'VENCIDO', label: 'Vencido', count: d.vencidos, pct: Math.round((d.vencidos / total) * 100) },
     ];
+  });
+
+  /** Color de cada barra de "Distribución por Estado", por clave de estado. */
+  private static readonly BREAKDOWN_COLOR: Record<string, UiChartColor> = {
+    APROBADO: 'success',
+    PENDIENTE: 'warning',
+    EN_REVISION: 'info',
+    RECHAZADO: 'danger',
+    VENCIDO: 'danger',
+  };
+
+  /** Etiquetas con el porcentaje del total, p.ej. "Aprobado (25%)". */
+  breakdownLabels = computed(() => this.breakdown().map((b) => `${b.label} (${b.pct}%)`));
+
+  breakdownDatasets = computed<UiChartDataset[]>(() => {
+    const items = this.breakdown();
+    return [{
+      label: 'RTFs',
+      data: items.map((b) => b.count),
+      color: items.map((b) => UnDashboardComponent.BREAKDOWN_COLOR[b.key] ?? 'primary'),
+    }];
   });
 
   ngOnInit() {
