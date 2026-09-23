@@ -113,6 +113,10 @@ module.exports = [
               group: ['leaflet'],
               message: 'Usa el componente ui-map de @agroideas/ui en lugar de Leaflet directo.',
             },
+            {
+              group: ['chart.js', 'chart.js/*'],
+              message: 'Usa el componente ui-chart de @agroideas/ui/chart en lugar de Chart.js directo.',
+            },
           ],
         },
       ],

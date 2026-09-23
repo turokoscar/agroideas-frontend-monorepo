@@ -22,6 +22,7 @@
       "@agroideas/security": ["libs/security/src/index.ts"],
       "@agroideas/theme": ["libs/theme/src/index.ts"],
       "@agroideas/ui": ["libs/ui/src/index.ts"],
+      "@agroideas/ui/chart": ["libs/ui/src/chart.ts"],
       "@agroideas/utils": ["libs/utils/src/index.ts"]
     }
   },

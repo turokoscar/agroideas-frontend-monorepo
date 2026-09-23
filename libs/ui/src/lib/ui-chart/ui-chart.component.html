@@ -1,0 +1,30 @@
+<div class="relative w-full" [style.height]="height()">
+  <canvas #canvas role="img" [attr.aria-label]="ariaLabel()"></canvas>
+  @if (type() === 'doughnut') {
+    <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+      <ng-content />
+    </div>
+  }
+</div>
+
+<table class="sr-only">
+  <caption>{{ ariaLabel() }}</caption>
+  <thead>
+    <tr>
+      <th scope="col"></th>
+      @for (ds of datasets(); track ds.label) {
+        <th scope="col">{{ ds.label }}</th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track row.label) {
+      <tr>
+        <th scope="row">{{ row.label }}</th>
+        @for (value of row.values; track $index) {
+          <td>{{ value }}</td>
+        }
+      </tr>
+    }
+  </tbody>
+</table>
