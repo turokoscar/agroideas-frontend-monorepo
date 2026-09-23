@@ -72,6 +72,36 @@ describe('UiChartComponent', () => {
     expect(lastConfig().options.scales.y.ticks.precision).toBe(0);
   });
 
+  it('keeps the value axis on Y for vertical charts', () => {
+    const { indexAxis, scales } = lastConfig().options;
+    expect(indexAxis).toBe('x');
+    expect(scales.y.beginAtZero).toBe(true);
+    expect(scales.x.beginAtZero).toBeUndefined();
+  });
+
+  it('swaps axes for horizontal bar charts', () => {
+    fixture.componentRef.setInput('type', 'bar');
+    fixture.componentRef.setInput('horizontal', true);
+    render(fixture);
+
+    const { indexAxis, scales, interaction } = lastConfig().options;
+    expect(indexAxis).toBe('y');
+    expect(interaction.axis).toBe('y');
+    expect(scales.x.beginAtZero).toBe(true);
+    expect(scales.y.beginAtZero).toBeUndefined();
+
+    const label = lastConfig().options.plugins.tooltip.callbacks.label;
+    const text = label({ parsed: { x: 7, y: 1 }, label: 'Ene', dataset: { label: 'RTFs' } });
+    expect(text).toContain('RTFs');
+    expect(text).toContain('7');
+  });
+
+  it('ignores horizontal for non-bar charts', () => {
+    fixture.componentRef.setInput('horizontal', true);
+    render(fixture);
+    expect(lastConfig().options.indexAxis).toBe('x');
+  });
+
   it('updates the existing chart when inputs change', () => {
     const chart = ChartMock.mock.results[0].value;
     fixture.componentRef.setInput('labels', ['Ene', 'Feb', 'Mar']);

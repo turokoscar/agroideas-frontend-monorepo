@@ -107,6 +107,8 @@ export class UiChartComponent implements OnDestroy {
   showTooltip = input(true);
   /** Grosor del anillo en `doughnut` (porcentaje del radio vacío). */
   cutout = input('78%');
+  /** Solo `bar`: barras horizontales (categorías en el eje Y), útil con etiquetas largas. */
+  horizontal = input(false);
 
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private chart?: Chart;
@@ -181,8 +183,25 @@ export class UiChartComponent implements OnDestroy {
   private buildConfig(): ChartConfiguration {
     const type = this.type();
     const isDoughnut = type === 'doughnut';
+    const horizontal = type === 'bar' && this.horizontal();
     const text = this.color('muted-foreground');
     const grid = this.color('border', 0.5);
+    const categoryAxis = { grid: { display: false }, ticks: { color: text, font: { size: 11 } } };
+    const valueAxis = {
+      beginAtZero: true,
+      border: { display: false },
+      grid: { color: grid },
+      ticks: {
+        color: text,
+        font: { size: 11 },
+        maxTicksLimit: 6,
+        // El eje muestra enteros: sin esto, con todo en 0 Chart.js usa pasos
+        // de 0.2 y las etiquetas redondeadas se repiten (S/ 1, S/ 1, S/ 0…).
+        precision: this.valueFormat() === 'percent' ? undefined : 0,
+        callback: (value: string | number) =>
+          this.format(Number(value), (this.chart?.width ?? Infinity) < COMPACT_BREAKPOINT ? 'compact' : 'axis'),
+      },
+    };
 
     return {
       type,
@@ -207,7 +226,8 @@ export class UiChartComponent implements OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: isDoughnut ? undefined : { mode: 'index', intersect: false },
+        interaction: isDoughnut ? undefined : { mode: 'index', intersect: false, axis: horizontal ? 'y' : 'x' },
+        indexAxis: horizontal ? 'y' : 'x',
         ...(isDoughnut ? { cutout: this.cutout() } : {}),
         plugins: {
           legend: {
@@ -220,33 +240,15 @@ export class UiChartComponent implements OnDestroy {
             enabled: this.showTooltip(),
             callbacks: {
               label: (item: TooltipItem<UiChartType>) => {
-                const value = typeof item.parsed === 'number' ? item.parsed : (item.parsed as { y: number }).y;
+                const parsed = item.parsed as number | { x: number; y: number };
+                const value = typeof parsed === 'number' ? parsed : horizontal ? parsed.x : parsed.y;
                 const label = isDoughnut ? item.label : item.dataset.label;
                 return ` ${label}: ${this.format(value)}`;
               },
             },
           },
         },
-        scales: isDoughnut
-          ? {}
-          : {
-              x: { grid: { display: false }, ticks: { color: text, font: { size: 11 } } },
-              y: {
-                beginAtZero: true,
-                border: { display: false },
-                grid: { color: grid },
-                ticks: {
-                  color: text,
-                  font: { size: 11 },
-                  maxTicksLimit: 6,
-                  // El eje muestra enteros: sin esto, con todo en 0 Chart.js usa pasos
-                  // de 0.2 y las etiquetas redondeadas se repiten (S/ 1, S/ 1, S/ 0…).
-                  precision: this.valueFormat() === 'percent' ? undefined : 0,
-                  callback: (value) =>
-                    this.format(Number(value), (this.chart?.width ?? Infinity) < COMPACT_BREAKPOINT ? 'compact' : 'axis'),
-                },
-              },
-            },
+        scales: isDoughnut ? {} : horizontal ? { x: valueAxis, y: categoryAxis } : { x: categoryAxis, y: valueAxis },
       },
     } as ChartConfiguration;
   }
