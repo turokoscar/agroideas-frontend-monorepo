@@ -52,7 +52,7 @@ describe('AdminProductividadUnComponent', () => {
     expect(kpis[0]).toContain('Especialistas');
     expect(kpis[0]).toContain('2');
     expect(kpis[1]).toContain('5');
-    // (4 × 3,5 + 1 × 8,5) / 5 = 4,5 días; el separador depende del LOCALE_ID.
+    // (4 × 3.5 + 1 × 8.5) / 5 = 4.5 días; el separador depende del LOCALE_ID.
     expect(kpis[2]).toMatch(/4[.,]5 días/);
   });
 

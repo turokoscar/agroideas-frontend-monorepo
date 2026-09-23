@@ -88,7 +88,7 @@
           <tr *ngFor="let d of rtfService.disbursements()" class="hover:bg-surface-container/5 transition-colors">
             <td class="px-5 py-3.5 font-mono text-[10px] text-muted-foreground">{{ d.id | uppercase }}</td>
             <td class="px-5 py-3.5 font-medium">{{ d.item }}</td>
-            <td class="px-5 py-3.5 text-center text-muted-foreground">{{ d.date | date:'dd MMM yyyy':'':'es' }}</td>
+            <td class="px-5 py-3.5 text-center text-muted-foreground">{{ d.date | date:'dd MMM yyyy' }}</td>
             <td class="px-5 py-3.5 text-right font-bold text-primary">S/ {{ d.amount | number:'1.0-0' }}</td>
             <td class="px-5 py-3.5 text-center">
               <span class="px-2 py-0.5 rounded-full text-[9px] font-bold text-success bg-success-soft border border-success/15 uppercase">

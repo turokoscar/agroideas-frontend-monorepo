@@ -38,7 +38,7 @@ export class AdminProductividadUnComponent implements OnInit {
     return totalExpedientes === 0 ? 0 : totalDias / totalExpedientes;
   });
 
-  /** "4,5 días" con el formato del LOCALE_ID de la app (valor del KPI Promedio General). */
+  /** "4.5 días" con el formato del LOCALE_ID de la app (valor del KPI Promedio General). */
   promedioGeneralTexto = computed(() => `${this.decimal.transform(this.promedioGeneral(), '1.0-1') ?? '0'} días`);
 
   ngOnInit(): void {

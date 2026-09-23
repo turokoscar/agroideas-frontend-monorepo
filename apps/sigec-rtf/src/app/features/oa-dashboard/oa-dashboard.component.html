@@ -166,8 +166,8 @@
                     [style.left.%]="(paso.startMonth / rtfService.durationMonths()) * 100"
                     [style.width.%]="((paso.endMonth - paso.startMonth) / rtfService.durationMonths()) * 100"
                   >
-                    <span class="truncate">{{ paso.start | date:'MMM yy':'':'es' }}</span>
-                    <span class="truncate">{{ paso.end | date:'MMM yy':'':'es' }}</span>
+                    <span class="truncate">{{ paso.start | date:'MMM yy' }}</span>
+                    <span class="truncate">{{ paso.end | date:'MMM yy' }}</span>
                   </div>
                 </div>
                 <div class="w-24 text-right">
