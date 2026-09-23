@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { RtfService } from '../../core/services/rtf.service';
-import { ToastService } from '@agroideas/ui';
+import { ToastService, UIButtonComponent } from '@agroideas/ui';
 import { RevisionDto, UrEvaluacionItemKind, parseSeccionRevision } from '../../core/models';
 
 interface ObservacionVista {
@@ -31,7 +31,7 @@ interface ObservacionVista {
 @Component({
   selector: 'app-oa-observaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UIButtonComponent],
   templateUrl: './oa-observaciones.component.html'
 })
 export class OaObservacionesComponent implements OnInit {

@@ -115,6 +115,24 @@ describe('OaObservacionesComponent', () => {
     expect(fixture.componentInstance.isLoading()).toBe(false);
   });
 
+  it('usa ui-button: "Marcar como atendida" solo en la pendiente y deshabilitado sin respuesta', () => {
+    const fixture = cargarConDosObservaciones();
+    fixture.detectChanges();
+
+    const botones = Array.from(fixture.nativeElement.querySelectorAll('ui-button button') as NodeListOf<HTMLButtonElement>);
+    const textos = botones.map(b => b.textContent?.trim() ?? '');
+    expect(textos.filter(t => t.includes('Marcar como atendida'))).toHaveLength(1);
+    expect(textos.some(t => t.includes('Volver a la bandeja'))).toBe(true);
+    expect(textos.some(t => t.includes('Ir a corregir el RTF'))).toBe(true);
+
+    const marcar = botones.find(b => b.textContent?.includes('Marcar como atendida'))!;
+    expect(marcar.disabled).toBe(true);
+
+    fixture.componentInstance.actualizarRespuesta(21, 'Se adjuntó la evidencia');
+    fixture.detectChanges();
+    expect(marcar.disabled).toBe(false);
+  });
+
   it('irACorregir navigates to the paso crítico registration route once it is known', () => {
     const fixture = crearComponente(55);
     fixture.detectChanges();

@@ -61,7 +61,7 @@
                   Atendida
                 </span>
               }
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold uppercase tracking-wider">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-soft text-warning text-[10px] font-bold uppercase tracking-wider">
                 {{ categoriaLabel(obs.categoria) }}
               </span>
             </div>
@@ -93,19 +93,13 @@
                 (ngModelChange)="actualizarRespuesta(obs.ideRevision, $event)"
               ></textarea>
               <div class="flex justify-end">
-                <button
-                  type="button"
-                  class="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-1.5"
-                  [disabled]="!respuestaDe(obs.ideRevision).trim() || atendiendoId() === obs.ideRevision"
-                  (click)="atenderObservacion(obs.ideRevision)"
-                >
-                  @if (atendiendoId() === obs.ideRevision) {
-                    <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-                  } @else {
-                    <span class="material-symbols-outlined text-[16px]">check</span>
-                  }
-                  Marcar como atendida
-                </button>
+                <ui-button
+                  size="sm"
+                  icon="check"
+                  label="Marcar como atendida"
+                  [loading]="atendiendoId() === obs.ideRevision"
+                  [disabled]="!respuestaDe(obs.ideRevision).trim()"
+                  (onClick)="atenderObservacion(obs.ideRevision)" />
               </div>
             </div>
           }
@@ -124,22 +118,9 @@
   <!-- Controls -->
   @if (!isLoading()) {
     <div class="flex items-center justify-end gap-3 pt-2">
-      <button
-        type="button"
-        (click)="volver()"
-        class="px-4 py-2 border border-border rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors"
-      >
-        Volver a la bandeja
-      </button>
+      <ui-button appearance="soft" severity="secondary" icon="arrow_back" label="Volver a la bandeja" (onClick)="volver()" />
       @if (hayObservaciones()) {
-        <button
-          type="button"
-          (click)="irACorregir()"
-          class="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/95 shadow transition-all flex items-center gap-1.5"
-        >
-          <span class="material-symbols-outlined text-[16px]">edit_document</span>
-          Ir a corregir el RTF
-        </button>
+        <ui-button icon="edit_document" label="Ir a corregir el RTF" (onClick)="irACorregir()" />
       }
     </div>
   }
