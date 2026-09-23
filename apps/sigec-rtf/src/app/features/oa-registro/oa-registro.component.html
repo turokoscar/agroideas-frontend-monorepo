@@ -40,26 +40,39 @@
     </div>
   }
 
-  <!-- Header Info Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-surface-container-lowest border border-border rounded-xl p-4 space-y-1">
-      <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Convenio</span>
-      <p class="text-sm font-bold text-foreground">{{ rtfService.convenioId() }}</p>
-    </div>
-    <div class="bg-surface-container-lowest border border-border rounded-xl p-4 space-y-1">
-      <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Paso Crítico</span>
-      <p class="text-sm font-bold text-primary">{{ rtfService.activePasoNumero() }} / {{ rtfService.totalPasos() }}</p>
-    </div>
-    <div class="bg-surface-container-lowest border border-border rounded-xl p-4 space-y-1">
-      <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Período</span>
-      <p class="text-sm font-bold text-foreground">Mes {{ rtfService.currentMonth() }} / {{ rtfService.durationMonths() }}</p>
-    </div>
-    <div class="bg-surface-container-lowest border border-border rounded-xl p-4 space-y-1">
-      <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Estado</span>
-      <p class="text-sm font-bold" [class.text-amber-500]="rtfService.rtfStatus() === 'PENDIENTE' || rtfService.rtfStatus() === 'EN_EDICION'" [class.text-success]="rtfService.rtfStatus() === 'APROBADO'">
-        {{ rtfService.rtfStatusLabel() }}
-      </p>
-    </div>
+  <!-- Header KPIs: mismo diseño que el resumen ejecutivo de kofix (app-ui-kpi) -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <app-ui-kpi
+      label="Convenio"
+      [value]="rtfService.convenioId() || '—'"
+      subtitle="Convenio del Plan de Negocio"
+      variant="primary"
+      icon="handshake">
+    </app-ui-kpi>
+    <app-ui-kpi
+      label="Paso Crítico"
+      [value]="rtfService.activePasoNumero() + ' de ' + rtfService.totalPasos()"
+      [subtitle]="avancePasos() + '% de los pasos'"
+      variant="info"
+      icon="flag"
+      [showProgress]="rtfService.totalPasos() > 0"
+      [progress]="avancePasos()">
+    </app-ui-kpi>
+    <app-ui-kpi
+      label="Período"
+      [value]="'Mes ' + rtfService.currentMonth() + ' de ' + rtfService.durationMonths()"
+      [subtitle]="avancePeriodo() + '% del plazo del convenio'"
+      icon="calendar_month"
+      [showProgress]="rtfService.durationMonths() > 0"
+      [progress]="avancePeriodo()">
+    </app-ui-kpi>
+    <app-ui-kpi
+      label="Estado"
+      [value]="rtfService.rtfStatusLabel()"
+      subtitle="Estado del RTF"
+      [variant]="estadoKpiVariant()"
+      icon="assignment">
+    </app-ui-kpi>
   </div>
 
   <!-- Tabs -->
@@ -561,43 +574,44 @@
             </div>
           </div>
 
-          <!-- Executed financial metrics card -->
-          <div class="bg-surface-container-lowest border border-border rounded-2xl p-5 shadow-sm space-y-4">
+          <!-- Progreso del Presupuesto: mismo diseño que el resumen ejecutivo de kofix (app-ui-kpi) -->
+          <section class="space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Progreso del Presupuesto</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Presupuesto Aprobado (Convenio)</span>
-                <span class="text-xl font-bold text-foreground">S/ {{ rtfService.budget() | number:'1.2-2' }}</span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Programado (Paso Crítico)</span>
-                <span class="text-xl font-bold text-foreground">S/ {{ (rtfService.avanceFinancieroPC()?.programado ?? 0) | number:'1.2-2' }}</span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Ejecutado (Paso Crítico)</span>
-                <span class="text-xl font-bold text-primary">S/ {{ (rtfService.avanceFinancieroPC()?.ejecutado ?? 0) | number:'1.2-2' }}</span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Saldo por Rendir (Paso Crítico)</span>
-                <span class="text-xl font-bold" [class.text-success]="saldoPorRendir(rtfService.avanceFinancieroPC()?.programado ?? 0, rtfService.avanceFinancieroPC()?.ejecutado ?? 0) >= 0" [class.text-danger]="saldoPorRendir(rtfService.avanceFinancieroPC()?.programado ?? 0, rtfService.avanceFinancieroPC()?.ejecutado ?? 0) < 0">
-                  S/ {{ saldoPorRendir(rtfService.avanceFinancieroPC()?.programado ?? 0, rtfService.avanceFinancieroPC()?.ejecutado ?? 0) | number:'1.2-2' }}
-                </span>
-              </div>
-              <div class="space-y-1">
-                <span class="text-[10px] text-muted-foreground block">Porcentaje de Avance</span>
-                <span class="text-xl font-bold text-foreground">
-                  {{ ((rtfService.avanceFinancieroPC()?.porcentajeAvance ?? 0) / 100) | percent:'1.0-0' }}
-                </span>
-              </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <app-ui-kpi
+                label="Presupuesto Aprobado"
+                [value]="soles(rtfService.budget())"
+                subtitle="Total del convenio"
+                variant="primary"
+                icon="account_balance">
+              </app-ui-kpi>
+              <app-ui-kpi
+                label="Programado"
+                [value]="soles(presupuestoPC().programado)"
+                subtitle="Paso Crítico actual"
+                variant="info"
+                icon="calendar_month">
+              </app-ui-kpi>
+              <app-ui-kpi
+                label="Ejecutado"
+                [value]="soles(presupuestoPC().ejecutado)"
+                [subtitle]="(presupuestoPC().porcentajeAvance | number:'1.0-0') + '% de avance del programado'"
+                variant="success"
+                icon="payments"
+                [showProgress]="presupuestoPC().programado > 0"
+                [progress]="presupuestoPC().avance">
+              </app-ui-kpi>
+              <app-ui-kpi
+                label="Saldo por Rendir"
+                [value]="soles(presupuestoPC().saldo)"
+                [subtitle]="presupuestoPC().saldo < 0 ? 'Excede el monto programado' : presupuestoPC().porcentajeSaldo + '% por rendir'"
+                [variant]="presupuestoPC().saldo < 0 ? 'danger' : 'warning'"
+                icon="account_balance_wallet"
+                [showProgress]="presupuestoPC().programado > 0"
+                [progress]="presupuestoPC().porcentajeSaldo">
+              </app-ui-kpi>
             </div>
-            <!-- Progress bar -->
-            <div class="w-full bg-muted rounded-full h-2">
-              <div
-                class="bg-primary h-2 rounded-full transition-all duration-500"
-                [style.width.%]="rtfService.avanceFinancieroPC()?.porcentajeAvance ?? 0"
-              ></div>
-            </div>
-          </div>
+          </section>
 
           <!-- ADR-0011: la sincronización con KOFIX es la acción que mantiene "Ejecutado"/"Monto
                Facturado" al día -- se le da peso de botón real, no de link de texto, para que no
