@@ -53,7 +53,7 @@ export class AdminCumplimientoPlazosComponent implements OnInit {
     return [
       { label: 'RTFs Vencidos', count: r.rtfsVencidos, pct: this.pctDe(r.rtfsVencidos), color: 'warning' },
       { label: 'Cartas de Notificación', count: r.cartasNotificacion, pct: this.pctDe(r.cartasNotificacion), color: 'info' },
-      { label: 'Cartas Notariales', count: r.cartasNotariales, pct: this.pctDe(r.cartasNotariales), color: 'primary' },
+      { label: 'Cartas Notariales', count: r.cartasNotariales, pct: this.pctDe(r.cartasNotariales), color: 'muted-foreground' },
       { label: 'Bloqueos Definitivos', count: r.bloqueosDefinitivos, pct: this.pctDe(r.bloqueosDefinitivos), color: 'danger' }
     ];
   });

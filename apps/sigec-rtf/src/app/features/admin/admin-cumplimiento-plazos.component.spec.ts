@@ -55,7 +55,7 @@ describe('AdminCumplimientoPlazosComponent', () => {
       'RTFs Vencidos (57%)', 'Cartas de Notificación (29%)', 'Cartas Notariales (14%)', 'Bloqueos Definitivos (0%)'
     ]);
     expect(c.distribucionDatasets()[0]).toEqual(
-      expect.objectContaining({ data: [4, 2, 1, 0], color: ['warning', 'info', 'primary', 'danger'] })
+      expect.objectContaining({ data: [4, 2, 1, 0], color: ['warning', 'info', 'muted-foreground', 'danger'] })
     );
 
     const kpis = Array.from(fixture.nativeElement.querySelectorAll('app-ui-kpi') as NodeListOf<HTMLElement>)
