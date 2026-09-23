@@ -1,7 +1,26 @@
 <div class="p-6 md:p-8 space-y-8 animate-fade-in font-display w-full max-w-full overflow-hidden block">
-    <header class="border-b border-slate-200 dark:border-zinc-800 pb-5">
-        <h1 class="text-2xl font-black uppercase text-slate-800 dark:text-white tracking-tight leading-tight">Resumen Ejecutivo</h1>
-        <p class="text-slate-500 text-sm mt-1">Estado de ejecución presupuestal y convenios vigentes en el sistema.</p>
+    <header class="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between dark:border-zinc-800">
+        <div>
+            <h1 class="text-2xl font-black uppercase text-slate-800 dark:text-white tracking-tight leading-tight">Resumen Ejecutivo</h1>
+            <p class="text-slate-500 text-sm mt-1">Estado de ejecución presupuestal y convenios vigentes en el sistema.</p>
+        </div>
+
+        <!-- Selector único de período: gobierna todos los gráficos del año -->
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+            <label for="periodoSelect" class="text-xs font-bold uppercase tracking-widest text-slate-500">Período</label>
+            <div class="relative">
+                <select
+                    id="periodoSelect"
+                    [ngModel]="selectedYear()"
+                    (ngModelChange)="onYearChange($event)"
+                    class="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-9 text-sm font-bold text-slate-700 shadow-sm focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                    @for (year of availableYears; track year) {
+                        <option [ngValue]="year">Año {{ year }}</option>
+                    }
+                </select>
+                <span class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-lg text-slate-400" aria-hidden="true">expand_more</span>
+            </div>
+        </div>
     </header>
 
     <!-- Loading Resumen -->
@@ -63,8 +82,7 @@
                     }
                     <app-reporte-mensual-chart 
                         [data]="chartData()" 
-                        [selectedYear]="selectedYear()"
-                        (onYearChange)="onYearChange($event)">
+                        [selectedYear]="selectedYear()">
                     </app-reporte-mensual-chart>
                 </div>
             }
@@ -85,8 +103,7 @@
             } @else {
                 <app-reporte-mensual-donut
                     [data]="donutData()"
-                    [year]="selectedYear()"
-                    (onYearChange)="onYearChange($event)">
+                    [year]="selectedYear()">
                 </app-reporte-mensual-donut>
             }
         </div>

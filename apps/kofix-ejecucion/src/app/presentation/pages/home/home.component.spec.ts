@@ -4,12 +4,15 @@ import { AlertService } from '@agroideas/feedback';
 import { HomeComponent } from './home.component';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { ReporteMensualResponse, ResumenEjecutivo } from '../../../domain/models/convenio.model';
+import { ReporteMensualChartComponent } from '../../components/reporte-mensual-chart/reporte-mensual-chart.component';
+import { ReporteMensualDonutComponent } from '../../components/reporte-mensual-donut/reporte-mensual-donut.component';
 
 describe('HomeComponent', () => {
     let component: HomeComponent;
     let fixture: ComponentFixture<HomeComponent>;
     let mockRepo: jest.Mocked<Partial<ConvenioRepository>>;
     let mockAlertService: jest.Mocked<Partial<AlertService>>;
+    const currentYear = new Date().getFullYear();
 
     const mockResumen: ResumenEjecutivo = {
         totalConvenios: 5,
@@ -51,7 +54,7 @@ describe('HomeComponent', () => {
         fixture.detectChanges();
 
         expect(mockRepo.getResumenEjecutivo).toHaveBeenCalled();
-        expect(mockRepo.getReporteMensual).toHaveBeenCalledWith(2026);
+        expect(mockRepo.getReporteMensual).toHaveBeenCalledWith(currentYear);
         expect(component.resumenData()).toEqual(mockResumen);
         expect(component.chartData()).toEqual([{ mes: 1, programado: 100, ejecutado: 50 }]);
         expect(component.loadingResumen()).toBe(false);
@@ -135,8 +138,51 @@ describe('HomeComponent', () => {
 
         component.retryChart();
 
-        expect(mockRepo.getReporteMensual).toHaveBeenCalledWith(2026);
+        expect(mockRepo.getReporteMensual).toHaveBeenCalledWith(currentYear);
         expect(component.errorChart()).toBeNull();
         expect(component.chartData()).toEqual([]);
+    });
+
+    it('should default to the current year instead of a hardcoded one', () => {
+        jest.useFakeTimers().setSystemTime(new Date('2027-03-15T12:00:00'));
+        try {
+            const other = TestBed.createComponent(HomeComponent);
+            other.detectChanges();
+
+            expect(other.componentInstance.selectedYear()).toBe(2027);
+            expect(mockRepo.getReporteMensual).toHaveBeenCalledWith(2027);
+            expect(other.componentInstance.availableYears).toEqual(
+                [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029]
+            );
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('should offer a single period selector from 2020 to current year + 2', () => {
+        fixture.detectChanges();
+        const selects = fixture.nativeElement.querySelectorAll('select');
+        const options: HTMLOptionElement[] = Array.from(selects[0].options);
+
+        expect(selects.length).toBe(1);
+        expect(options[0].textContent?.trim()).toBe('Año 2020');
+        expect(options[options.length - 1].textContent?.trim()).toBe(`Año ${currentYear + 2}`);
+    });
+
+    it('should drive both charts from the single period selector', () => {
+        fixture.detectChanges();
+        mockRepo.getReporteMensual = jest.fn().mockReturnValue(of({ reporte: [{ mes: 2, programado: 10, ejecutado: 5 }] }));
+        const select: HTMLSelectElement = fixture.nativeElement.querySelector('#periodoSelect');
+
+        select.value = select.options[0].value;
+        select.dispatchEvent(new Event('change'));
+        fixture.detectChanges();
+
+        expect(mockRepo.getReporteMensual).toHaveBeenCalledWith(2020);
+        const chart = fixture.debugElement.query((de) => de.componentInstance instanceof ReporteMensualChartComponent);
+        const donut = fixture.debugElement.query((de) => de.componentInstance instanceof ReporteMensualDonutComponent);
+        expect(chart.componentInstance.selectedYear()).toBe(2020);
+        expect(donut.componentInstance.year()).toBe(2020);
+        expect(donut.componentInstance.prog()).toBe(10);
     });
 });

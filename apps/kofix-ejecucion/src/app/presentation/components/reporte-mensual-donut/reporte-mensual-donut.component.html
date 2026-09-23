@@ -1,53 +1,35 @@
-<div class="donut-card">
-  <div class="donut-header">
-    <h3 class="donut-title">Ejecución Anual</h3>
-    <span class="donut-subtitle">Avance de ejecución vs programación anual</span>
+<div class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+  <div>
+    <h3 class="text-base font-extrabold uppercase tracking-wide text-slate-900 dark:text-zinc-100">Ejecución Anual</h3>
+    <span class="mt-0.5 block text-xs text-slate-500">Avance de ejecución vs programación anual</span>
   </div>
 
-  <div class="donut-body">
-    <div class="donut-svg-container">
-      <svg [attr.viewBox]="'0 0 ' + viewbox + ' ' + viewbox" class="donut-svg">
-        <circle
-          [attr.cx]="center"
-          [attr.cy]="center"
-          [attr.r]="radius"
-          fill="none"
-          class="donut-track" />
+  <app-ui-chart
+    type="doughnut"
+    valueFormat="currency"
+    height="180px"
+    [labels]="['Ejecutado', 'Por ejecutar']"
+    [datasets]="datasets()"
+    [showLegend]="false"
+    [showTooltip]="hasProgram() || hasEjecucion()"
+    [ariaLabel]="'Ejecución anual ' + year() + ': ' + centerLabel() + ' ejecutado'">
+    <span class="text-3xl font-black text-slate-800 dark:text-zinc-50">{{ centerLabel() }}</span>
+    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ hasProgram() ? 'ejecutado' : 'sin referencia' }}</span>
+  </app-ui-chart>
 
-        <circle
-          [attr.cx]="center"
-          [attr.cy]="center"
-          [attr.r]="radius"
-          fill="none"
-          class="donut-arc"
-          [ngClass]="colorClass()"
-          [attr.stroke-dasharray]="circumference"
-          [attr.stroke-dashoffset]="dashOffset()"
-          [attr.transform]="'rotate(-90, ' + center + ', ' + center + ')'" />
-
-        <text [attr.x]="center" [attr.y]="center - 6" text-anchor="middle" class="donut-pct">{{ centerLabel() }}</text>
-        <text [attr.x]="center" [attr.y]="center + 18" text-anchor="middle" class="donut-label">{{ hasProgram() ? 'ejecutado' : 'sin referencia' }}</text>
-      </svg>
+  <div class="flex flex-col gap-2">
+    <div class="flex items-center justify-between rounded-lg bg-info-soft px-3 py-2 text-xs font-bold text-info">
+      <span class="uppercase tracking-wide">Programado</span>
+      <span>{{ formatCurrency(prog()) }}</span>
     </div>
-
-    <div class="donut-values">
-      <div class="value-row value-row--prog">
-        <span class="value-label">Programado</span>
-        <span class="value-number">{{ formatCurrency(prog()) }}</span>
-      </div>
-      <div class="value-row value-row--ejec">
-        <span class="value-label">Ejecutado</span>
-        <span class="value-number">{{ formatCurrency(ejec()) }}</span>
-      </div>
+    <div class="flex items-center justify-between rounded-lg bg-success-soft px-3 py-2 text-xs font-bold text-success">
+      <span class="uppercase tracking-wide">Ejecutado</span>
+      <span>{{ formatCurrency(ejec()) }}</span>
     </div>
   </div>
 
-  <div class="donut-footer">
-    <div class="year-nav">
-      <button class="year-arrow" (click)="prevYear()" [disabled]="year() <= minYear" title="Año anterior">&#8249;</button>
-      <span class="donut-year">{{ year() }}</span>
-      <button class="year-arrow" (click)="nextYear()" [disabled]="year() >= maxYear" title="Año siguiente">&#8250;</button>
-    </div>
-    <span class="donut-status" [ngClass]="colorClass()">{{ statusLabel() }}</span>
+  <div class="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-zinc-800">
+    <span class="text-sm font-bold text-slate-600 dark:text-zinc-300">Año {{ year() }}</span>
+    <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" [class]="statusPillClass()">{{ statusLabel() }}</span>
   </div>
 </div>

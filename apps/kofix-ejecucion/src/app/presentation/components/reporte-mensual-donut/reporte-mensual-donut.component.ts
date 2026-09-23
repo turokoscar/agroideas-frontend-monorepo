@@ -1,13 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { UiChartColor, UiChartComponent, UiChartDataset } from '@agroideas/ui/chart';
 import { ReporteMensualItem } from '../../../domain/models/convenio.model';
 
 export type DonutData = ReporteMensualItem;
 
+/** Clases literales (Tailwind no detecta clases armadas dinámicamente). */
+const STATUS_PILL: Record<UiChartColor, string> = {
+  success: 'bg-success-soft text-success',
+  warning: 'bg-warning-soft text-warning',
+  danger: 'bg-danger-soft text-danger',
+  info: 'bg-info-soft text-info',
+  primary: 'bg-primary/10 text-primary',
+  secondary: 'bg-secondary/10 text-secondary',
+  tertiary: 'bg-tertiary/10 text-tertiary',
+  accent: 'bg-accent/10 text-accent',
+  muted: 'bg-muted text-muted-foreground'
+};
+
 @Component({
   selector: 'app-reporte-mensual-donut',
   standalone: true,
-  imports: [CommonModule],
+  imports: [UiChartComponent],
   templateUrl: './reporte-mensual-donut.component.html',
   styleUrls: ['./reporte-mensual-donut.component.sass'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -15,16 +28,6 @@ export type DonutData = ReporteMensualItem;
 export class ReporteMensualDonutComponent {
   data = input.required<DonutData>();
   year = input.required<number>();
-  onYearChange = output<number>();
-
-  readonly minYear = 2020;
-  readonly maxYear = new Date().getFullYear() + 2;
-
-  readonly viewbox = 200;
-  readonly center = this.viewbox / 2;
-  readonly radius = 78;
-  readonly strokeWidth = 16;
-  readonly circumference = Math.round(2 * Math.PI * this.radius);
 
   readonly prog = computed(() => Number(this.data()?.programado) || 0);
   readonly ejec = computed(() => Number(this.data()?.ejecutado) || 0);
@@ -42,14 +45,26 @@ export class ReporteMensualDonutComponent {
     return Math.round(this.displayPct() * 100);
   });
 
-  readonly dashOffset = computed(() => this.circumference * (1 - this.displayPct()));
-
-  readonly colorClass = computed(() => {
-    if (!this.hasProgram()) return 'donut-arc--info';
+  readonly statusColor = computed<UiChartColor>(() => {
+    if (!this.hasProgram()) return 'info';
     const pct = this.displayPct();
-    if (pct >= 0.8) return 'donut-arc--success';
-    if (pct >= 0.5) return 'donut-arc--warning';
-    return 'donut-arc--danger';
+    if (pct >= 0.8) return 'success';
+    if (pct >= 0.5) return 'warning';
+    return 'danger';
+  });
+
+  readonly statusPillClass = computed(() => STATUS_PILL[this.statusColor()]);
+
+  /** Anillo: segmento ejecutado + resto por ejecutar. Sin datos, anillo vacío. */
+  readonly datasets = computed<UiChartDataset[]>(() => {
+    const ejecutado = this.hasProgram() ? Math.min(this.ejec(), this.prog()) : this.ejec();
+    const porEjecutar = this.hasProgram() ? Math.max(this.prog() - this.ejec(), 0) : 0;
+    const vacio = !this.hasProgram() && !this.hasEjecucion();
+    return [{
+      label: 'Ejecución anual',
+      data: vacio ? [0, 1] : [ejecutado, porEjecutar],
+      color: [this.statusColor(), 'muted']
+    }];
   });
 
   readonly centerLabel = computed(() => {
@@ -65,16 +80,6 @@ export class ReporteMensualDonutComponent {
     if (pct >= 0.5) return 'En progreso';
     return 'Atrasado';
   });
-
-  prevYear(): void {
-    const next = this.year() - 1;
-    if (next >= this.minYear) this.onYearChange.emit(next);
-  }
-
-  nextYear(): void {
-    const next = this.year() + 1;
-    if (next <= this.maxYear) this.onYearChange.emit(next);
-  }
 
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('es-PE', {

@@ -48,46 +48,41 @@ describe('ReporteMensualDonutComponent', () => {
     it('should classify status by execution percentage', () => {
         fixture.componentRef.setInput('data', { mes: 0, programado: 1000, ejecutado: 900 });
         expect(component.statusLabel()).toBe('Excelente');
-        expect(component.colorClass()).toBe('donut-arc--success');
+        expect(component.statusColor()).toBe('success');
 
         fixture.componentRef.setInput('data', { mes: 0, programado: 1000, ejecutado: 600 });
         expect(component.statusLabel()).toBe('En progreso');
-        expect(component.colorClass()).toBe('donut-arc--warning');
+        expect(component.statusColor()).toBe('warning');
 
         fixture.componentRef.setInput('data', { mes: 0, programado: 1000, ejecutado: 100 });
         expect(component.statusLabel()).toBe('Atrasado');
-        expect(component.colorClass()).toBe('donut-arc--danger');
+        expect(component.statusColor()).toBe('danger');
+        expect(component.statusPillClass()).toContain('text-danger');
     });
 
-    it('should emit the previous/next year within bounds', () => {
-        const spy = jest.fn();
-        component.onYearChange.subscribe(spy);
+    it('should split the ring into ejecutado and por ejecutar, colored by status', () => {
+        const [ring] = component.datasets();
 
-        component.prevYear();
-        expect(spy).toHaveBeenCalledWith(2025);
-
-        component.nextYear();
-        expect(spy).toHaveBeenCalledWith(2027);
+        expect(ring.data).toEqual([800, 200]);
+        expect(ring.color).toEqual(['success', 'muted']);
     });
 
-    it('should not emit when the year would go below minYear', () => {
-        fixture.componentRef.setInput('year', component.minYear);
-        const spy = jest.fn();
-        component.onYearChange.subscribe(spy);
+    it('should cap the ejecutado segment at the programmed amount', () => {
+        fixture.componentRef.setInput('data', { mes: 0, programado: 1000, ejecutado: 1500 });
 
-        component.prevYear();
-
-        expect(spy).not.toHaveBeenCalled();
+        expect(component.datasets()[0].data).toEqual([1000, 0]);
     });
 
-    it('should not emit when the year would go above maxYear', () => {
-        fixture.componentRef.setInput('year', component.maxYear);
-        const spy = jest.fn();
-        component.onYearChange.subscribe(spy);
+    it('should draw an empty muted ring when there is no data', () => {
+        fixture.componentRef.setInput('data', { mes: 0, programado: 0, ejecutado: 0 });
 
-        component.nextYear();
+        expect(component.datasets()[0].data).toEqual([0, 1]);
+        expect(component.statusColor()).toBe('info');
+    });
 
-        expect(spy).not.toHaveBeenCalled();
+    it('should show the year without navigation arrows', () => {
+        expect(fixture.nativeElement.querySelector('button')).toBeNull();
+        expect(fixture.nativeElement.textContent).toContain('Año 2026');
     });
 
     it('should format currency with two decimals', () => {

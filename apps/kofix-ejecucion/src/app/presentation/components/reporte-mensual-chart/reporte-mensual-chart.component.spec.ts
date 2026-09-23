@@ -24,44 +24,47 @@ describe('ReporteMensualChartComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('should default maxYVal when there is no data', () => {
-        fixture.componentRef.setInput('data', []);
-        expect(component.maxYVal()).toBe(100000);
+    it('should build programado and ejecutado series with 12 months', () => {
+        const [programado, ejecutado] = component.datasets();
+
+        expect(programado.label).toBe('Programado');
+        expect(programado.data).toHaveLength(12);
+        expect(programado.data[11]).toBe(12000);
+        expect(ejecutado.data[0]).toBe(500);
     });
 
-    it('should scale maxYVal 15% above the largest value', () => {
-        expect(component.maxYVal()).toBe(12000 * 1.15);
+    it('should place each value by its mes, filling missing months with 0', () => {
+        fixture.componentRef.setInput('data', [
+            { mes: 7, programado: 300, ejecutado: 100 },
+            { mes: 3, programado: 200, ejecutado: 50 }
+        ]);
+
+        const [programado, ejecutado] = component.datasets();
+
+        expect(programado.data).toEqual([0, 0, 200, 0, 0, 0, 300, 0, 0, 0, 0, 0]);
+        expect(ejecutado.data[2]).toBe(50);
+        expect(ejecutado.data[6]).toBe(100);
     });
 
-    it('should build non-empty SVG paths for programado and ejecutado', () => {
-        expect(component.programadoPath()).toMatch(/^M /);
-        expect(component.ejecutadoPath()).toMatch(/^M /);
+    it('should ignore months out of range and coerce non-numeric values', () => {
+        fixture.componentRef.setInput('data', [
+            { mes: 13, programado: 999, ejecutado: 999 },
+            { mes: 1, programado: 'abc' as unknown as number, ejecutado: 10 }
+        ]);
+
+        const [programado, ejecutado] = component.datasets();
+
+        expect(programado.data.every((v) => v === 0)).toBe(true);
+        expect(ejecutado.data[0]).toBe(10);
     });
 
-    it('should return empty paths when there is no data', () => {
-        fixture.componentRef.setInput('data', []);
-        expect(component.programadoPath()).toBe('');
-        expect(component.ejecutadoPath()).toBe('');
+    it('should not own a year selector (the page drives the period)', () => {
+        expect(fixture.nativeElement.querySelector('select')).toBeNull();
+        expect(fixture.nativeElement.textContent).toContain('Año 2026');
     });
 
-    it('should emit onYearChange when a year is selected', () => {
-        const spy = jest.fn();
-        component.onYearChange.subscribe(spy);
-
-        component.onYearSelect(2025);
-
-        expect(spy).toHaveBeenCalledWith(2025);
-    });
-
-    it('should show and hide the tooltip for a given month index', () => {
-        component.showTooltip(0, {} as MouseEvent);
-        expect(component.activeTooltip()).toMatchObject({ index: 0, mesName: 'Ene' });
-
-        component.hideTooltip();
-        expect(component.activeTooltip()).toBeNull();
-    });
-
-    it('should format currency without decimals', () => {
-        expect(component.formatCurrency(1500)).not.toContain('.00');
+    it('should render the shared ui-chart with an accessible label for the year', () => {
+        const chart: HTMLElement = fixture.nativeElement.querySelector('app-ui-chart canvas');
+        expect(chart.getAttribute('aria-label')).toContain('2026');
     });
 });

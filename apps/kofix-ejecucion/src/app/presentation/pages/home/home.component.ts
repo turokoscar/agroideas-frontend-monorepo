@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
@@ -8,11 +9,17 @@ import { ResumenEjecutivoComponent } from '../../components/resumen-ejecutivo/re
 import { ReporteMensualChartComponent } from '../../components/reporte-mensual-chart/reporte-mensual-chart.component';
 import { DonutData, ReporteMensualDonutComponent } from '../../components/reporte-mensual-donut/reporte-mensual-donut.component';
 
+/** Primer año fiscal navegable en el dashboard. */
+const MIN_FISCAL_YEAR = 2020;
+/** Años hacia adelante navegables (programación multianual). */
+const YEARS_AHEAD = 2;
+
 @Component({
     selector: 'app-home',
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         ResumenEjecutivoComponent,
         ReporteMensualChartComponent,
         ReporteMensualDonutComponent
@@ -25,6 +32,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     private convenioRepo = inject(ConvenioRepository);
     private alertService = inject(AlertService);
     private chartSubscription?: Subscription;
+    private readonly currentYear = new Date().getFullYear();
+
+    /** Años del selector único de período del dashboard. */
+    readonly availableYears: number[] = Array.from(
+        { length: this.currentYear + YEARS_AHEAD - MIN_FISCAL_YEAR + 1 },
+        (_, i) => MIN_FISCAL_YEAR + i
+    );
     
     loadingResumen = signal<boolean>(true);
     loadingChart = signal<boolean>(true);
@@ -33,7 +47,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     
     resumenData = signal<ResumenEjecutivo | null>(null);
     chartData = signal<ReporteMensualItem[]>([]);
-    selectedYear = signal<number>(2026);
+    selectedYear = signal<number>(this.currentYear);
 
     readonly donutData = computed<DonutData>(() => {
         const data = this.chartData();
