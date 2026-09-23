@@ -19,7 +19,8 @@
         "index": "apps/sat-ui/src/index.html",
         "browser": "apps/sat-ui/src/main.ts",
         "polyfills": [
-          "zone.js"
+          "zone.js",
+          "@angular/localize/init"
         ],
         "tsConfig": "apps/sat-ui/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
@@ -33,7 +34,8 @@
           "libs/theme/src/styles/base.css",
           "apps/sat-ui/src/styles.scss"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": ["sweetalert2"]
       },
       "configurations": {
         "production": {

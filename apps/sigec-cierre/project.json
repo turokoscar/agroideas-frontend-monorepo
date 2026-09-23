@@ -13,7 +13,7 @@
         "outputPath": "dist/apps/sigec-cierre",
         "index": "apps/sigec-cierre/src/index.html",
         "browser": "apps/sigec-cierre/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": ["zone.js", "@angular/localize/init"],
         "tsConfig": "apps/sigec-cierre/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -26,7 +26,8 @@
           "libs/theme/src/styles/base.css",
           "apps/sigec-cierre/src/styles.scss"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": ["sweetalert2"]
       },
       "configurations": {
         "production": {

@@ -16,7 +16,7 @@
         "outputPath": "dist/apps/sigec-rtf",
         "index": "apps/sigec-rtf/src/index.html",
         "browser": "apps/sigec-rtf/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": ["zone.js", "@angular/localize/init"],
         "tsConfig": "apps/sigec-rtf/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -44,7 +44,8 @@
           "libs/theme/src/styles/base.css",
           "apps/sigec-rtf/src/styles.scss"
         ],
-        "scripts": []
+        "scripts": [],
+        "allowedCommonJsDependencies": ["sweetalert2"]
       },
       "configurations": {
         "production": {

@@ -359,11 +359,11 @@
                       {{ m.descripcion || 'Actividad' }}
                     </span>
                     <span class="text-muted-foreground whitespace-nowrap">
-                      {{ (m.metaFisicaEjecutada ?? 0) | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}
+                      {{ m.metaFisicaEjecutada | number:'1.0-1' }} / {{ m.metaFisicaProgramada | number:'1.0-1' }}
                       @if (m.unidadMedida) { <span class="text-[10px]">{{ m.unidadMedida }}</span> }
                     </span>
                   </div>
-                  <app-ui-progress-bar [value]="m.metaFisicaEjecutada ?? 0" [maxValue]="m.metaFisicaProgramada" [showPercentage]="false" />
+                  <app-ui-progress-bar [value]="m.metaFisicaEjecutada" [maxValue]="m.metaFisicaProgramada" [showPercentage]="false" />
                   @if (m.comentarios) {
                     <p class="mt-2 text-[11px] text-muted-foreground italic">"{{ m.comentarios }}"</p>
                   }
@@ -435,11 +435,11 @@
                       {{ ind.indicador || 'Indicador' }}
                     </span>
                     <span class="text-muted-foreground whitespace-nowrap">
-                      {{ (ind.metaEjecutada ?? 0) | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}
+                      {{ ind.metaEjecutada | number:'1.0-1' }} / {{ ind.metaProgramada | number:'1.0-1' }}
                       @if (ind.unidadMedida) { <span class="text-[10px]">{{ ind.unidadMedida }}</span> }
                     </span>
                   </div>
-                  <app-ui-progress-bar [value]="ind.metaEjecutada ?? 0" [maxValue]="ind.metaProgramada" [showPercentage]="false" />
+                  <app-ui-progress-bar [value]="ind.metaEjecutada" [maxValue]="ind.metaProgramada" [showPercentage]="false" />
                   @if (ind.comentarios) {
                     <p class="mt-2 text-[11px] text-muted-foreground italic">"{{ ind.comentarios }}"</p>
                   }
