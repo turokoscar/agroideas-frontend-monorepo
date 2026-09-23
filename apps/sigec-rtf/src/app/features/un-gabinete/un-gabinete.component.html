@@ -125,7 +125,7 @@
         @if (col.field === 'plazo') {
           @if (diasRestantes(row.fecLimite); as plazo) {
             <span class="text-xs font-semibold"
-              [class.text-destructive]="plazo.urgente"
+              [class.text-danger]="plazo.urgente"
               [class.text-muted-foreground]="!plazo.urgente">{{ plazo.texto }}</span>
           }
         }
@@ -210,12 +210,12 @@
               <span class="text-base font-bold text-foreground">{{ cabecera()?.numPasoCritico }}</span>
             </div>
             <div class="flex flex-col justify-center rounded-lg px-4 py-2.5 min-w-[170px]"
-              [ngClass]="plazoCabecera().urgente ? 'bg-destructive/10' : 'bg-secondary/10'">
+              [ngClass]="plazoCabecera().urgente ? 'bg-danger-soft' : 'bg-secondary/10'">
               <span class="text-[10px] font-semibold uppercase tracking-wider"
-                [class.text-destructive]="plazoCabecera().urgente"
+                [class.text-danger]="plazoCabecera().urgente"
                 [class.text-secondary]="!plazoCabecera().urgente">Plazo</span>
               <span class="text-base font-bold"
-                [class.text-destructive]="plazoCabecera().urgente"
+                [class.text-danger]="plazoCabecera().urgente"
                 [class.text-foreground]="!plazoCabecera().urgente">{{ plazoCabecera().texto }}</span>
               <span class="text-[11px] text-muted-foreground">Vence {{ cabecera()?.fecLimite | date:'dd/MM/yyyy' }}</span>
             </div>
