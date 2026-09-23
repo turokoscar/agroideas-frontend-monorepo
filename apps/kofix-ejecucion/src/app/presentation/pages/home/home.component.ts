@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import { AlertService } from '@agroideas/feedback';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { ReporteMensualItem, ResumenEjecutivo } from '../../../domain/models/convenio.model';
 import { ResumenEjecutivoComponent } from '../../components/resumen-ejecutivo/resumen-ejecutivo.component';
@@ -22,10 +23,13 @@ import { DonutData, ReporteMensualDonutComponent } from '../../components/report
 })
 export class HomeComponent implements OnInit, OnDestroy {
     private convenioRepo = inject(ConvenioRepository);
+    private alertService = inject(AlertService);
     private chartSubscription?: Subscription;
     
     loadingResumen = signal<boolean>(true);
     loadingChart = signal<boolean>(true);
+    errorResumen = signal<string | null>(null);
+    errorChart = signal<string | null>(null);
     
     resumenData = signal<ResumenEjecutivo | null>(null);
     chartData = signal<ReporteMensualItem[]>([]);
@@ -49,14 +53,16 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     loadResumenEjecutivo(): void {
         this.loadingResumen.set(true);
+        this.errorResumen.set(null);
         this.convenioRepo.getResumenEjecutivo().subscribe({
             next: (data) => {
                 this.resumenData.set(data);
                 this.loadingResumen.set(false);
             },
             error: () => {
-                // Error handled by AlertService or removed
+                this.errorResumen.set('No se pudieron cargar las métricas del resumen ejecutivo.');
                 this.loadingResumen.set(false);
+                this.alertService.toast('Error al cargar las métricas del resumen ejecutivo', 'error');
             }
         });
     }
@@ -64,6 +70,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     loadReporteMensual(year: number): void {
         this.chartSubscription?.unsubscribe();
         this.loadingChart.set(true);
+        this.errorChart.set(null);
         this.selectedYear.set(year);
         this.chartSubscription = this.convenioRepo.getReporteMensual(year).subscribe({
             next: (res) => {
@@ -71,13 +78,22 @@ export class HomeComponent implements OnInit, OnDestroy {
                 this.loadingChart.set(false);
             },
             error: () => {
-                // Error handled by AlertService or removed
+                this.errorChart.set('No se pudo cargar el reporte mensual de ejecución.');
                 this.loadingChart.set(false);
+                this.alertService.toast('Error al cargar el reporte de ejecución mensual', 'error');
             }
         });
     }
 
     onYearChange(year: number): void {
         this.loadReporteMensual(year);
+    }
+
+    retryResumen(): void {
+        this.loadResumenEjecutivo();
+    }
+
+    retryChart(): void {
+        this.loadReporteMensual(this.selectedYear());
     }
 }

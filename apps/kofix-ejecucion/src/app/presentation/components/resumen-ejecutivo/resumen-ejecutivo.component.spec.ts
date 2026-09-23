@@ -38,4 +38,16 @@ describe('ResumenEjecutivoComponent', () => {
     it('should default to 0.0% when there is nothing programmed', () => {
         expect(component.getPercent(400, 0)).toBe('0.0%');
     });
+
+    it('should compute progress percentage with boundaries [0, 100]', () => {
+        expect(component.getProgressPercent(50, 100)).toBe(50);
+        expect(component.getProgressPercent(0, 0)).toBe(0);
+        expect(component.getProgressPercent(-10, 100)).toBe(0);
+        expect(component.getProgressPercent(150, 100)).toBe(100);
+    });
+
+    it('should render 4 app-ui-kpi components', () => {
+        const kpis = fixture.nativeElement.querySelectorAll('app-ui-kpi');
+        expect(kpis.length).toBe(4);
+    });
 });

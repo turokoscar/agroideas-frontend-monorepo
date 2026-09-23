@@ -5,49 +5,89 @@
     </header>
 
     <!-- Loading Resumen -->
-    <div *ngIf="loadingResumen()" class="flex flex-col items-center justify-center py-10 space-y-4">
-        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando métricas...</span>
-    </div>
+    @if (loadingResumen()) {
+        <div class="flex flex-col items-center justify-center py-10 space-y-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando métricas...</span>
+        </div>
+    }
+
+    <!-- Error Resumen / Retry -->
+    @if (!loadingResumen() && errorResumen()) {
+        <div class="flex flex-col sm:flex-row items-center justify-between p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl gap-4">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">error</span>
+                <div>
+                    <p class="text-sm font-semibold text-red-800 dark:text-red-300">{{ errorResumen() }}</p>
+                    <p class="text-xs text-red-600 dark:text-red-400">Verifique su conexión o intente nuevamente.</p>
+                </div>
+            </div>
+            <button type="button" (click)="retryResumen()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-base">refresh</span>
+                <span>Reintentar</span>
+            </button>
+        </div>
+    }
 
     <!-- Executive Summary Dashboard (Tiles) -->
-    <div *ngIf="!loadingResumen() && resumenData()">
-        <app-resumen-ejecutivo [data]="resumenData()"></app-resumen-ejecutivo>
-    </div>
+    @if (!loadingResumen() && !errorResumen() && resumenData(); as data) {
+        <div>
+            <app-resumen-ejecutivo [data]="data"></app-resumen-ejecutivo>
+        </div>
+    }
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
         <!-- 8 Columns Chart -->
         <div class="lg:col-span-8 w-full max-w-full overflow-hidden block">
-            <!-- SVG Line Chart Component (siempre montado) -->
-            <div class="relative">
-                @if (loadingChart()) {
-                    <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-zinc-900/80 rounded-2xl space-y-4">
-                        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando datos del gráfico...</span>
+            @if (!loadingChart() && errorChart()) {
+                <div class="flex flex-col items-center justify-center py-12 p-6 bg-white dark:bg-zinc-900 border border-red-200 dark:border-red-900/50 rounded-2xl space-y-4 text-center">
+                    <span class="material-symbols-outlined text-red-500 text-4xl">cloud_off</span>
+                    <div class="space-y-1">
+                        <p class="text-sm font-bold text-slate-800 dark:text-white">{{ errorChart() }}</p>
+                        <p class="text-xs text-slate-500">No fue posible obtener el histórico financiero del año {{ selectedYear() }}.</p>
                     </div>
-                }
-                <app-reporte-mensual-chart 
-                    [data]="chartData()" 
-                    [selectedYear]="selectedYear()"
-                    (onYearChange)="onYearChange($event)">
-                </app-reporte-mensual-chart>
-            </div>
+                    <button type="button" (click)="retryChart()" class="px-4 py-2 bg-slate-800 dark:bg-zinc-100 hover:bg-slate-700 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base">refresh</span>
+                        <span>Reintentar gráfico</span>
+                    </button>
+                </div>
+            } @else {
+                <!-- SVG Line Chart Component (siempre montado cuando no hay error) -->
+                <div class="relative">
+                    @if (loadingChart()) {
+                        <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-zinc-900/80 rounded-2xl space-y-4">
+                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando datos del gráfico...</span>
+                        </div>
+                    }
+                    <app-reporte-mensual-chart 
+                        [data]="chartData()" 
+                        [selectedYear]="selectedYear()"
+                        (onYearChange)="onYearChange($event)">
+                    </app-reporte-mensual-chart>
+                </div>
+            }
         </div>
 
         <!-- 4 Columns Donut Chart -->
         <div class="lg:col-span-4 flex flex-col gap-6">
-            @if (!loadingChart()) {
+            @if (loadingChart()) {
+                <div class="flex flex-col items-center justify-center py-10 space-y-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl min-h-[250px]">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando dona...</span>
+                </div>
+            } @else if (errorChart()) {
+                <div class="flex flex-col items-center justify-center py-10 space-y-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl min-h-[250px] p-6 text-center">
+                    <span class="material-symbols-outlined text-slate-400 text-3xl">donut_large</span>
+                    <p class="text-xs text-slate-500">Información del donut no disponible debido al error de carga.</p>
+                </div>
+            } @else {
                 <app-reporte-mensual-donut
                     [data]="donutData()"
                     [year]="selectedYear()"
                     (onYearChange)="onYearChange($event)">
                 </app-reporte-mensual-donut>
-            } @else {
-                <div class="flex flex-col items-center justify-center py-10 space-y-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl min-h-[250px]">
-                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cargando dona...</span>
-                </div>
             }
         </div>
     </div>

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { UiKpiComponent } from '@agroideas/ui';
 import { ResumenEjecutivo } from '../../../domain/models/convenio.model';
 
 export type ResumenEjecutivoData = ResumenEjecutivo;
@@ -8,7 +9,7 @@ export type ResumenEjecutivoData = ResumenEjecutivo;
   selector: 'app-resumen-ejecutivo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, UiKpiComponent],
   templateUrl: './resumen-ejecutivo.component.html',
   styleUrls: ['./resumen-ejecutivo.component.sass']
 })
@@ -24,5 +25,10 @@ export class ResumenEjecutivoComponent {
     if (!programado) return '0.0%';
     const pct = (ejecutado / programado) * 100;
     return `${pct.toFixed(1)}%`;
+  }
+
+  getProgressPercent(parte: number, total: number): number {
+    if (!total || total <= 0) return 0;
+    return Math.min(Math.max(Math.round((parte / total) * 100), 0), 100);
   }
 }
