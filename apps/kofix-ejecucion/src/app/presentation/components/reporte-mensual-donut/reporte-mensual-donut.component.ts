@@ -14,7 +14,8 @@ const STATUS_PILL: Record<UiChartColor, string> = {
   secondary: 'bg-secondary/10 text-secondary',
   tertiary: 'bg-tertiary/10 text-tertiary',
   accent: 'bg-accent/10 text-accent',
-  muted: 'bg-muted text-muted-foreground'
+  muted: 'bg-muted text-muted-foreground',
+  'muted-foreground': 'bg-muted text-muted-foreground'
 };
 
 @Component({

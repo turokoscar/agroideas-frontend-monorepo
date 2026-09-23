@@ -66,7 +66,9 @@ export type UiChartColor =
   | 'success'
   | 'warning'
   | 'danger'
-  | 'muted';
+  | 'muted'
+  /** Gris oscuro neutro: serie sin connotación de estado, con contraste suficiente sobre fondo claro. */
+  | 'muted-foreground';
 
 export type UiChartValueFormat = 'number' | 'currency' | 'percent';
 
@@ -254,7 +256,7 @@ export class UiChartComponent implements OnDestroy {
   }
 
   /** Lee el token HSL (`118 64% 22%`) del tema y lo devuelve como color CSS. */
-  private color(token: UiChartColor | 'muted-foreground' | 'border' | 'card', alpha = 1): string {
+  private color(token: UiChartColor | 'border' | 'card', alpha = 1): string {
     if (typeof document === 'undefined') return 'currentColor';
     const hsl = getComputedStyle(document.documentElement).getPropertyValue(`--${token}`).trim();
     return hsl ? `hsl(${hsl} / ${alpha})` : 'currentColor';
