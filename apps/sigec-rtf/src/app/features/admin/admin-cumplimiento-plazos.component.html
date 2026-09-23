@@ -53,50 +53,36 @@
     </div>
   } @else if (reporte()) {
     @let r = reporte()!;
+    <!-- KPIs: mismo diseño que el resumen ejecutivo de kofix (app-ui-kpi) -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">RTFs Vencidos</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-            <span class="material-symbols-outlined text-[20px]">event_busy</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-amber-500">{{ r.rtfsVencidos }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">En el rango seleccionado</div>
-      </div>
-
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Cartas de Notificación</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-info/10 text-info">
-            <span class="material-symbols-outlined text-[20px]">mail</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-info">{{ r.cartasNotificacion }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">Emitidas en el rango</div>
-      </div>
-
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Cartas Notariales</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-700/10 text-sky-700">
-            <span class="material-symbols-outlined text-[20px]">gavel</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-sky-700">{{ r.cartasNotariales }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">Emitidas en el rango</div>
-      </div>
-
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Bloqueos Definitivos</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-            <span class="material-symbols-outlined text-[20px]">block</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-destructive">{{ r.bloqueosDefinitivos }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">Aplicados en el rango</div>
-      </div>
+      <app-ui-kpi
+        label="RTFs Vencidos"
+        [value]="r.rtfsVencidos + ''"
+        [subtitle]="pctDe(r.rtfsVencidos) + '% de los eventos del rango'"
+        variant="warning"
+        icon="event_busy">
+      </app-ui-kpi>
+      <app-ui-kpi
+        label="Cartas de Notificación"
+        [value]="r.cartasNotificacion + ''"
+        [subtitle]="pctDe(r.cartasNotificacion) + '% de los eventos del rango'"
+        variant="info"
+        icon="mail">
+      </app-ui-kpi>
+      <app-ui-kpi
+        label="Cartas Notariales"
+        [value]="r.cartasNotariales + ''"
+        [subtitle]="pctDe(r.cartasNotariales) + '% de los eventos del rango'"
+        variant="primary"
+        icon="gavel">
+      </app-ui-kpi>
+      <app-ui-kpi
+        label="Bloqueos Definitivos"
+        [value]="r.bloqueosDefinitivos + ''"
+        [subtitle]="pctDe(r.bloqueosDefinitivos) + '% de los eventos del rango'"
+        variant="danger"
+        icon="block">
+      </app-ui-kpi>
     </div>
 
     <div class="bg-surface-container-lowest border border-border rounded-xl p-6">
@@ -107,19 +93,15 @@
       @if (distribucion().length === 0) {
         <p class="text-sm text-muted-foreground">Sin eventos de cumplimiento de plazos en el rango seleccionado.</p>
       } @else {
-        <div class="space-y-3">
-          @for (item of distribucion(); track item.label) {
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-foreground font-medium">{{ item.label }}</span>
-                <span class="text-muted-foreground">{{ item.count }} ({{ item.pct }}%)</span>
-              </div>
-              <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
-                <div class="h-full rounded-full transition-all" [style.width.%]="item.pct" [ngClass]="item.colorClass"></div>
-              </div>
-            </div>
-          }
-        </div>
+        <app-ui-chart
+          type="bar"
+          [horizontal]="true"
+          height="200px"
+          [labels]="distribucionLabels()"
+          [datasets]="distribucionDatasets()"
+          [showLegend]="false"
+          ariaLabel="Distribución de los eventos de cumplimiento de plazos en el rango">
+        </app-ui-chart>
       }
     </div>
   }

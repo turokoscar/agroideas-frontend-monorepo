@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/services/admin.service';
 import { ReporteCumplimientoPlazosDto } from '../../core/models';
-import { UIButtonComponent, ToastService } from '@agroideas/ui';
+import { UIButtonComponent, ToastService, UiKpiComponent } from '@agroideas/ui';
+import { UiChartColor, UiChartComponent, UiChartDataset } from '@agroideas/ui/chart';
 
 function formatoFecha(fecha: Date): string {
   return fecha.toISOString().slice(0, 10);
@@ -13,13 +14,14 @@ interface FilaDistribucion {
   label: string;
   count: number;
   pct: number;
-  colorClass: string;
+  /** Token del tema, compartido por el KPI y su barra en el gráfico. */
+  color: UiChartColor;
 }
 
 @Component({
   selector: 'app-admin-cumplimiento-plazos',
   standalone: true,
-  imports: [CommonModule, RouterLink, UIButtonComponent],
+  imports: [CommonModule, RouterLink, UIButtonComponent, UiKpiComponent, UiChartComponent],
   templateUrl: './admin-cumplimiento-plazos.component.html'
 })
 export class AdminCumplimientoPlazosComponent implements OnInit {
@@ -39,17 +41,29 @@ export class AdminCumplimientoPlazosComponent implements OnInit {
     return r.rtfsVencidos + r.cartasNotificacion + r.cartasNotariales + r.bloqueosDefinitivos;
   });
 
+  /** Porcentaje de un tipo de evento sobre el total del rango; 0 si no hubo eventos. */
+  pctDe(n: number): number {
+    const total = this.total();
+    return total > 0 ? Math.round((n / total) * 100) : 0;
+  }
+
   distribucion = computed<FilaDistribucion[]>(() => {
     const r = this.reporte();
-    const total = this.total();
-    if (!r || total === 0) return [];
-    const pct = (n: number) => Math.round((n / total) * 100);
+    if (!r || this.total() === 0) return [];
     return [
-      { label: 'RTFs Vencidos', count: r.rtfsVencidos, pct: pct(r.rtfsVencidos), colorClass: 'bg-amber-500' },
-      { label: 'Cartas de Notificación', count: r.cartasNotificacion, pct: pct(r.cartasNotificacion), colorClass: 'bg-info' },
-      { label: 'Cartas Notariales', count: r.cartasNotariales, pct: pct(r.cartasNotariales), colorClass: 'bg-sky-700' },
-      { label: 'Bloqueos Definitivos', count: r.bloqueosDefinitivos, pct: pct(r.bloqueosDefinitivos), colorClass: 'bg-destructive' }
+      { label: 'RTFs Vencidos', count: r.rtfsVencidos, pct: this.pctDe(r.rtfsVencidos), color: 'warning' },
+      { label: 'Cartas de Notificación', count: r.cartasNotificacion, pct: this.pctDe(r.cartasNotificacion), color: 'info' },
+      { label: 'Cartas Notariales', count: r.cartasNotariales, pct: this.pctDe(r.cartasNotariales), color: 'primary' },
+      { label: 'Bloqueos Definitivos', count: r.bloqueosDefinitivos, pct: this.pctDe(r.bloqueosDefinitivos), color: 'danger' }
     ];
+  });
+
+  /** Etiquetas con el porcentaje del total, p.ej. "RTFs Vencidos (40%)". */
+  distribucionLabels = computed(() => this.distribucion().map(f => `${f.label} (${f.pct}%)`));
+
+  distribucionDatasets = computed<UiChartDataset[]>(() => {
+    const filas = this.distribucion();
+    return [{ label: 'Eventos', data: filas.map(f => f.count), color: filas.map(f => f.color) }];
   });
 
   ngOnInit(): void {
