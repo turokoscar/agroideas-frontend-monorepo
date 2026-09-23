@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { UiPaginationComponent } from '@agroideas/ui';
+import { UiKpiComponent, UiPaginationComponent } from '@agroideas/ui';
 import { formatConvenioNumber } from '@agroideas/utils';
 import { RtfService } from '../../core/services/rtf.service';
 import { ConvenioGeneralService } from '../../core/services/convenio-general.service';
@@ -9,7 +9,7 @@ import { ConvenioResumenDto } from '../../core/models';
 @Component({
   selector: 'app-un-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, UiPaginationComponent],
+  imports: [CommonModule, DecimalPipe, UiPaginationComponent, UiKpiComponent],
   providers: [DecimalPipe],
   templateUrl: './un-dashboard.component.html',
 })
@@ -71,11 +71,28 @@ export class UnDashboardComponent implements OnInit {
   semaforoAmbar = computed(() => this.avanceFinanciero() >= 30 && this.avanceFinanciero() < 70);
   semaforoRojo = computed(() => this.avanceFinanciero() < 30);
 
-  aprobadosPct = computed(() => {
+  aprobadosPct = computed(() => this.pctDelTotal(this.dashboard()?.aprobados ?? 0));
+
+  // --- KPIs (mismo diseño que el resumen ejecutivo de kofix: app-ui-kpi de @agroideas/ui) ---
+
+  /** RTFs aún en trámite: pendientes, en edición, en revisión y en evaluación de gabinete. */
+  enProceso = computed(() => {
     const d = this.dashboard();
-    if (!d || d.totalRtfs === 0) return 0;
-    return Math.round((d.aprobados / d.totalRtfs) * 100);
+    return d ? d.pendientes + d.enEdicion + d.enRevision + d.inRevisionUn : 0;
   });
+  enProcesoPct = computed(() => this.pctDelTotal(this.enProceso()));
+
+  /** RTFs que requieren atención: vencidos o rechazados. */
+  criticos = computed(() => {
+    const d = this.dashboard();
+    return d ? d.vencidos + d.rechazados : 0;
+  });
+  criticosPct = computed(() => this.pctDelTotal(this.criticos()));
+
+  private pctDelTotal(parte: number): number {
+    const total = this.dashboard()?.totalRtfs ?? 0;
+    return total > 0 ? Math.round((parte / total) * 100) : 0;
+  }
 
   breakdown = computed(() => {
     const d = this.dashboard();
