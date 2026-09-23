@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { UIButtonComponent, UiMapComponent } from '@agroideas/ui';
+import { UIButtonComponent } from '@agroideas/ui';
+import { UiMapComponent } from '@agroideas/ui/map';
 import { Convenio } from '../../../domain/models/convenio.model';
 
 @Component({

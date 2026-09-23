@@ -38,7 +38,10 @@ Las reglas se aplican con `@nx/enforce-module-boundaries` (ver `eslint.config.js
 **Invariantes**
 - Una app **nunca** importa otra app; lo común vive en `scope:shared`.
 - `apps/*` **no** importan `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`,
-  `sweetalert2` ni `leaflet` directamente: se consumen vía `@agroideas/*`.
+  `sweetalert2`, `leaflet`, `chart.js` ni `pdfjs-dist` directamente: se consumen vía
+  `@agroideas/*`. Los componentes pesados de `ui` tienen su propio punto de entrada
+  (`@agroideas/ui/chart`, `@agroideas/ui/map`, `@agroideas/ui/pdf-viewer`) y no se
+  reexportan desde el barrel `@agroideas/ui`.
 
 ## Generadores estándar
 

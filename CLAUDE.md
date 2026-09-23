@@ -64,8 +64,8 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
     empty `tags: []` does **not**, it blocks every lib import — but every app in this
     workspace is tagged).
 - Apps **must not** import `primeng`, `@angular/material`/`@angular/cdk`, `bootstrap`,
-  `sweetalert2`, `leaflet` directly — those are banned as `error` in `apps/**` via
-  `no-restricted-imports` in root `eslint.config.js` and must be consumed through
+  `sweetalert2`, `leaflet`, `chart.js`, `pdfjs-dist` directly — those are banned as `error`
+  in `apps/**` via `no-restricted-imports` in root `eslint.config.js` and must be consumed through
   `@agroideas/*` libs. `kofix-ejecucion` fully complies (0 direct imports left); its
   transitional ESLint override (see below) only relaxes style/a11y rules, not this one.
 
@@ -176,10 +176,21 @@ shared interceptor.
 `security`, and `utils` are populated with real code and consumed across `kofix-ejecucion`,
 `sat-ui`, `sigec-rtf`, and `sigec-cierre` (e.g. `authInterceptor`/`AUTH_TOKEN_KEY` from
 `auth`, `permissionGuard` from `security`, `AlertService` from `feedback`, and
-`ui-modal`/`ui-button`/`ui-select-search`/`ui-map` from `ui` wrapping PrimeNG/Leaflet so apps
-never touch the provider directly). Not every app wires every lib the same way — e.g.
+`ui-modal`/`ui-button`/`ui-select-search` from `ui` and `ui-map` from `ui/map` wrapping
+PrimeNG/Leaflet so apps never touch the provider directly). Not every app wires every lib the same way — e.g.
 `sat-ui`'s permission provider is a stub and it doesn't use the `sel-usuario` mapper (see
 "The other three apps" above).
+
+**Heavy `ui` components have their own entry points** — `@agroideas/ui/chart` (Chart.js),
+`@agroideas/ui/map` (Leaflet) and `@agroideas/ui/pdf-viewer` (pdf.js), mapped in
+`tsconfig.base.json` and **not** re-exported from the `@agroideas/ui` barrel. Every app imports
+the barrel from its shell, so anything exported there lands in the initial bundle of all four
+apps; keep heavy providers out of it and never add module-level side effects (e.g.
+`Chart.register`, `GlobalWorkerOptions.workerSrc`) to `ui` components. `chart.js` and
+`pdfjs-dist` are banned in `apps/**` like `leaflet`. pdf.js assets (worker, `cmaps/`,
+`standard_fonts/`) are copied from `node_modules/pdfjs-dist` via `assets` in the consuming
+app's `project.json` (today only `sigec-rtf`) — never commit copies to `public/`.
+
 `@agroideas/http` is still Nx scaffolding (an unused placeholder component) — nothing
 depends on it yet. `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` models and a menu
 component stub from `index.ts`, but its `MenuRepository` (in `domain/repositories/`) is not

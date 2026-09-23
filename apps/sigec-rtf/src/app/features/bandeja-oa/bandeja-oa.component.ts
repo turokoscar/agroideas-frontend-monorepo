@@ -10,9 +10,9 @@ import {
   UiFilterBarComponent,
   UiStatusPillComponent,
   StatusType,
-  UiPdfViewerComponent,
   UIButtonComponent
 } from '@agroideas/ui';
+import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { DocumentacionRtfModalComponent } from '../documentacion-rtf/documentacion-rtf-modal.component';
 
 interface BandejaTab {

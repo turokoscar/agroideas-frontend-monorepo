@@ -23,6 +23,8 @@
       "@agroideas/theme": ["libs/theme/src/index.ts"],
       "@agroideas/ui": ["libs/ui/src/index.ts"],
       "@agroideas/ui/chart": ["libs/ui/src/chart.ts"],
+      "@agroideas/ui/map": ["libs/ui/src/map.ts"],
+      "@agroideas/ui/pdf-viewer": ["libs/ui/src/pdf-viewer.ts"],
       "@agroideas/utils": ["libs/utils/src/index.ts"]
     }
   },

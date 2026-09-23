@@ -9,7 +9,6 @@ import { formatConvenioNumber } from '@agroideas/utils';
 import {
   ToastService,
   UiCountdownBannerComponent,
-  UiPdfViewerComponent,
   UiDataTableComponent,
   TableColumn,
   UIButtonComponent,
@@ -23,6 +22,7 @@ import {
   UIModalComponent,
   UiInfoTooltipComponent,
 } from '@agroideas/ui';
+import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { DocumentacionRtfModalComponent } from '../documentacion-rtf/documentacion-rtf-modal.component';

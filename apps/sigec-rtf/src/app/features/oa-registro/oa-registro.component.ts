@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { RtfService, RtfCabeceraDto, GastoF1Dto, RelacionGastosF1ItemDto } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ToastService, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent, StatusType, TableColumn } from '@agroideas/ui';
+import { ToastService, UiCountdownBannerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent, StatusType, TableColumn } from '@agroideas/ui';
+import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
 
 @Component({

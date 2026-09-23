@@ -39,7 +39,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 | `type:data-access` | `data-access`, `util` |
 | `type:util` | `util` only |
 
-**Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
+**Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet`, `chart.js`, `pdfjs-dist` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
 
 **Watch out:** `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
 
@@ -59,7 +59,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 | Lib | Status | Exports |
 |-----|--------|---------|
 | `theme` | done | `tokens.css` (HSL vars), `tailwind-preset.js`, `base.css`, `theme.ts` |
-| `ui` | done | 16 standalone components — `ui-app-shell`, `ui-button`, `ui-card`, `ui-status-pill`, `ui-kpi`, `ui-progress-bar`, `ui-modal`, `ui-filter-bar`, `ui-data-table`, `ui-map` (Leaflet wrapper), `ui-pagination`, `ui-select-search`, `ui-countdown`, `ui-dropzone`, `ui-file-chip`, `ui-pdf-viewer` — plus `ToastService` |
+| `ui` | done | Standalone components — `ui-app-shell`, `ui-button`, `ui-card`, `ui-status-pill`, `ui-kpi`, `ui-progress-bar`, `ui-modal`, `ui-filter-bar`, `ui-data-table`, `ui-pagination`, `ui-select-search`, `ui-countdown`, `ui-dropzone`, `ui-file-chip` — plus `ToastService`. Heavy ones live in separate entry points, not the barrel: `@agroideas/ui/chart` (`ui-chart`, Chart.js), `@agroideas/ui/map` (`ui-map`, Leaflet), `@agroideas/ui/pdf-viewer` (`ui-pdf-viewer`, pdf.js) |
 | `utils` | done | `cn`, `currency`, `date-formatter`, `jwt.util`, `permissions`, `response.dto`, `storage-keys`, `format-date` pipe, `roles` |
 | `security` | done | `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
 | `auth` | done | `authInterceptor` (HttpInterceptorFn), `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY` injection tokens |

@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Observable } from 'rxjs';
-import { UIButtonComponent, UiPdfViewerComponent, ToastService } from '@agroideas/ui';
+import { UIButtonComponent, ToastService } from '@agroideas/ui';
+import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { RtfService } from '../../core/services/rtf.service';
 import { DocumentoRepositorioDto } from '../../core/models';
 import { esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';

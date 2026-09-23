@@ -111,7 +111,11 @@ module.exports = [
             },
             {
               group: ['leaflet'],
-              message: 'Usa el componente ui-map de @agroideas/ui en lugar de Leaflet directo.',
+              message: 'Usa el componente ui-map de @agroideas/ui/map en lugar de Leaflet directo.',
+            },
+            {
+              group: ['pdfjs-dist', 'pdfjs-dist/*'],
+              message: 'Usa el componente ui-pdf-viewer de @agroideas/ui/pdf-viewer en lugar de pdf.js directo.',
             },
             {
               group: ['chart.js', 'chart.js/*'],

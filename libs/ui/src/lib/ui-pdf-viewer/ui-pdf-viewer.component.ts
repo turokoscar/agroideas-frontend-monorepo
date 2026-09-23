@@ -3,7 +3,18 @@ import { CommonModule } from '@angular/common';
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+/**
+ * El worker se configura al abrir el primer PDF y no al cargar el módulo: un
+ * efecto secundario a nivel de módulo impide descartar pdf.js del bundle de las
+ * apps que no usan el visor. El archivo lo publica cada app desde
+ * `node_modules/pdfjs-dist/build` (assets en project.json), así que siempre
+ * coincide con la versión instalada.
+ */
+function ensurePdfWorker(): void {
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+  }
+}
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
@@ -169,6 +180,7 @@ export class UiPdfViewerComponent {
     this.cleanupDoc();
 
     try {
+      ensurePdfWorker();
       const loadingTask = pdfjsLib.getDocument({
         url,
         cMapUrl: '/cmaps/',
