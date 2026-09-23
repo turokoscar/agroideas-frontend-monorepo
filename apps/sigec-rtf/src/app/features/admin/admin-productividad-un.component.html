@@ -49,39 +49,29 @@
       <span class="sr-only">Cargando reporte…</span>
     </div>
   } @else {
+    <!-- KPIs: mismo diseño que el resumen ejecutivo de kofix (app-ui-kpi) -->
     <div class="grid gap-4 sm:grid-cols-3">
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Especialistas</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <span class="material-symbols-outlined text-[20px]">groups</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-foreground">{{ items().length }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">Con expedientes resueltos en el rango</div>
-      </div>
-
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Expedientes Atendidos</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
-            <span class="material-symbols-outlined text-[20px]">task_alt</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-success">{{ totalExpedientes() }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">Total en el rango seleccionado</div>
-      </div>
-
-      <div class="bg-surface-container-lowest border border-border p-5 rounded-xl">
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Promedio General</span>
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-info/10 text-info">
-            <span class="material-symbols-outlined text-[20px]">schedule</span>
-          </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tracking-tight text-info">{{ promedioGeneral() | number:'1.0-1' }}</div>
-        <div class="mt-1 text-xs text-muted-foreground">Días entre derivación y resolución</div>
-      </div>
+      <app-ui-kpi
+        label="Especialistas"
+        [value]="items().length + ''"
+        subtitle="Con expedientes resueltos en el rango"
+        variant="primary"
+        icon="groups">
+      </app-ui-kpi>
+      <app-ui-kpi
+        label="Expedientes Atendidos"
+        [value]="totalExpedientes() + ''"
+        subtitle="Total en el rango seleccionado"
+        variant="success"
+        icon="task_alt">
+      </app-ui-kpi>
+      <app-ui-kpi
+        label="Promedio General"
+        [value]="promedioGeneralTexto()"
+        subtitle="Entre derivación y resolución"
+        variant="info"
+        icon="schedule">
+      </app-ui-kpi>
     </div>
 
     <div class="bg-surface-container-lowest border border-border rounded-xl overflow-hidden">

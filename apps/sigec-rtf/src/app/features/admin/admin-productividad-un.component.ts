@@ -3,7 +3,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminService } from '../../core/services/admin.service';
 import { ReporteProductividadUnItemDto } from '../../core/models';
-import { UIButtonComponent, ToastService } from '@agroideas/ui';
+import { UIButtonComponent, ToastService, UiKpiComponent } from '@agroideas/ui';
 
 function formatoFecha(fecha: Date): string {
   return fecha.toISOString().slice(0, 10);
@@ -12,12 +12,14 @@ function formatoFecha(fecha: Date): string {
 @Component({
   selector: 'app-admin-productividad-un',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, RouterLink, UIButtonComponent],
+  imports: [CommonModule, DecimalPipe, RouterLink, UIButtonComponent, UiKpiComponent],
+  providers: [DecimalPipe],
   templateUrl: './admin-productividad-un.component.html'
 })
 export class AdminProductividadUnComponent implements OnInit {
   private adminService = inject(AdminService);
   private toast = inject(ToastService);
+  private decimal = inject(DecimalPipe);
 
   // Rango por defecto: últimos 30 días.
   desde = signal(formatoFecha(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
@@ -35,6 +37,9 @@ export class AdminProductividadUnComponent implements OnInit {
     const totalExpedientes = this.totalExpedientes();
     return totalExpedientes === 0 ? 0 : totalDias / totalExpedientes;
   });
+
+  /** "4,5 días" con el formato del LOCALE_ID de la app (valor del KPI Promedio General). */
+  promedioGeneralTexto = computed(() => `${this.decimal.transform(this.promedioGeneral(), '1.0-1') ?? '0'} días`);
 
   ngOnInit(): void {
     this.consultar();

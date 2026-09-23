@@ -37,6 +37,25 @@ describe('AdminProductividadUnComponent', () => {
     expect(fixture.componentInstance.items()).toEqual(items);
   });
 
+  it('renders the three KPIs with app-ui-kpi, weighting the average by expedientes', () => {
+    const fixture = crearComponente();
+    fixture.detectChanges();
+    httpMock.expectOne(req => req.url.startsWith(`${apiUrl}/admin/reportes/productividad-un`)).flush(ok([
+      ...items,
+      { ideUsuario: 8, txtUsuario: 'mlopez', expedientesAtendidos: 1, promedioDias: 8.5, tasaObservacion: 0 }
+    ]));
+    fixture.detectChanges();
+
+    const kpis = Array.from(fixture.nativeElement.querySelectorAll('app-ui-kpi') as NodeListOf<HTMLElement>)
+      .map(k => k.textContent ?? '');
+    expect(kpis.length).toBe(3);
+    expect(kpis[0]).toContain('Especialistas');
+    expect(kpis[0]).toContain('2');
+    expect(kpis[1]).toContain('5');
+    // (4 × 3,5 + 1 × 8,5) / 5 = 4,5 días; el separador depende del LOCALE_ID.
+    expect(kpis[2]).toMatch(/4[.,]5 días/);
+  });
+
   it('does not call the backend when hasta is before desde', () => {
     const fixture = crearComponente();
     fixture.detectChanges();
