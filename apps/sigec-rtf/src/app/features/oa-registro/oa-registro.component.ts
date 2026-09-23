@@ -8,24 +8,6 @@ import { ToastService, UiCountdownBannerComponent, UiDataTableComponent, UIModal
 import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
 
-/** Color del KPI "Estado" según la etapa del RTF (claves de `estRtf`, ver RtfService.ESTADO_LABELS). */
-const ESTADO_KPI_VARIANT: Record<string, KpiVariant> = {
-  PENDIENTE: 'warning',
-  EN_EDICION: 'warning',
-  OBSERVADO: 'warning',
-  PLAZO_INICIAL_NOTIFICACION: 'warning',
-  ENVIADO: 'info',
-  EN_REVISION: 'info',
-  AUDITADO_CAMPO: 'info',
-  IN_REVISION_UN: 'info',
-  APROBADO: 'success',
-  RECHAZADO: 'danger',
-  VENCIDO: 'danger',
-  EN_DESACATO: 'danger',
-  PLAZO_LIMITE_NOTARIAL: 'danger',
-  BLOQUEO_DEFINITIVO: 'danger',
-};
-
 /** Porcentaje entero acotado a [0, 100]; 0 si no hay total. */
 const porcentaje = (parte: number, total: number): number =>
   total > 0 ? Math.min(Math.max(Math.round((parte / total) * 100), 0), 100) : 0;
@@ -49,7 +31,7 @@ export class OaRegistroComponent implements OnInit {
 
   // --- KPIs (mismo diseño que el resumen ejecutivo de kofix: app-ui-kpi de @agroideas/ui) ---
 
-  readonly estadoKpiVariant = computed<KpiVariant>(() => ESTADO_KPI_VARIANT[this.rtfService.rtfStatus()] ?? 'default');
+  readonly estadoKpiVariant = computed<KpiVariant>(() => this.rtfService.estadoKpiVariant(this.rtfService.rtfStatus()));
   readonly avancePasos = computed(() => porcentaje(this.rtfService.activePasoNumero(), this.rtfService.totalPasos()));
   readonly avancePeriodo = computed(() => porcentaje(this.rtfService.currentMonth(), this.rtfService.durationMonths()));
 

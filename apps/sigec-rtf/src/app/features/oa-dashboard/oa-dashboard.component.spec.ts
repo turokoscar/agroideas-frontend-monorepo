@@ -187,6 +187,48 @@ describe('OaDashboardComponent', () => {
       expect(fixture.componentInstance.financialProgress).toBe(25);
     });
 
+    it('pasosProgress es el porcentaje del paso activo sobre el total, 0 sin pasos', () => {
+      const fixture = crearComponente('1');
+      const rtf = fixture.componentInstance.rtfService;
+      rtf.totalPasos.set(0);
+      expect(fixture.componentInstance.pasosProgress).toBe(0);
+
+      rtf.totalPasos.set(6);
+      rtf.activePasoNumero.set(3);
+      expect(fixture.componentInstance.pasosProgress).toBe(50);
+    });
+
+    it('el color del KPI de estado sale de RtfService.estadoKpiVariant', () => {
+      const fixture = crearComponente('1');
+      const rtf = fixture.componentInstance.rtfService;
+
+      rtf.rtfStatus.set('APROBADO');
+      expect(fixture.componentInstance.estadoKpiVariant()).toBe('success');
+      // ENVIADO es transitorio hacia EN_REVISION: no se pinta como aprobado.
+      rtf.rtfStatus.set('ENVIADO');
+      expect(fixture.componentInstance.estadoKpiVariant()).toBe('info');
+      rtf.rtfStatus.set('EN_DESACATO');
+      expect(fixture.componentInstance.estadoKpiVariant()).toBe('danger');
+      rtf.rtfStatus.set('PENDIENTE');
+      expect(fixture.componentInstance.estadoKpiVariant()).toBe('warning');
+      expect(rtf.estadoKpiVariant('DESCONOCIDO')).toBe('default');
+    });
+
+    it('renderiza los 4 KPIs con app-ui-kpi', () => {
+      const fixture = crearComponente('1');
+      fixture.detectChanges();
+      fixture.componentInstance.isLoading.set(false);
+      fixture.detectChanges();
+
+      const labels = Array.from(fixture.nativeElement.querySelectorAll('app-ui-kpi') as NodeListOf<HTMLElement>)
+        .map((k) => k.textContent ?? '');
+      expect(labels.length).toBe(4);
+      expect(labels[0]).toContain('Convenio Activo');
+      expect(labels[3]).toContain('Desembolso');
+      // ngOnInit dispara las cargas del dashboard; aquí solo interesa el render de los KPIs.
+      httpMock.match(() => true);
+    });
+
     it('pasoClass y pasoBadgeClass distinguen Aprobado/Activo/otro', () => {
       const fixture = crearComponente('1');
       const c = fixture.componentInstance;

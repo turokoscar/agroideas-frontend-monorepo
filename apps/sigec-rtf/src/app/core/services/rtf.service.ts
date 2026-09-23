@@ -1,4 +1,5 @@
 import { Injectable, inject, computed } from '@angular/core';
+import type { KpiVariant } from '@agroideas/ui';
 import { OaRtfService } from './oa-rtf.service';
 import { UnGabineteService } from './un-gabinete.service';
 import { PasoCriticoService } from './paso-critico.service';
@@ -153,6 +154,32 @@ export class RtfService {
   estadoLabel(estado?: string): string {
     if (!estado) return '';
     return RtfService.ESTADO_LABELS[estado] ?? estado;
+  }
+
+  /**
+   * Color de los KPIs de estado (`app-ui-kpi`) -- fuente única para `oa-registro` y
+   * `oa-dashboard`. `ENVIADO` va con los estados en revisión: es transitorio y el backend lo
+   * resuelve a `EN_REVISION` en el mismo request (no es un estado aprobado).
+   */
+  private static readonly ESTADO_KPI_VARIANT: Record<string, KpiVariant> = {
+    'PENDIENTE': 'warning',
+    'EN_EDICION': 'warning',
+    'OBSERVADO': 'warning',
+    'PLAZO_INICIAL_NOTIFICACION': 'warning',
+    'ENVIADO': 'info',
+    'EN_REVISION': 'info',
+    'AUDITADO_CAMPO': 'info',
+    'IN_REVISION_UN': 'info',
+    'APROBADO': 'success',
+    'RECHAZADO': 'danger',
+    'VENCIDO': 'danger',
+    'EN_DESACATO': 'danger',
+    'PLAZO_LIMITE_NOTARIAL': 'danger',
+    'BLOQUEO_DEFINITIVO': 'danger',
+  };
+
+  estadoKpiVariant(estado?: string): KpiVariant {
+    return (estado && RtfService.ESTADO_KPI_VARIANT[estado]) || 'default';
   }
 
   rtfStatusLabel = computed(() => this.estadoLabel(this.rtfStatus()));

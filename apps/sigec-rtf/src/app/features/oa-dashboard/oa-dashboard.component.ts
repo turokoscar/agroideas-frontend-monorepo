@@ -5,13 +5,14 @@ import { Router, RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FormatConvenioPipe } from '../../core/pipes/format-convenio.pipe';
+import { KpiVariant, UiKpiComponent } from '@agroideas/ui';
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-oa-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, RouterModule, FormatConvenioPipe],
+  imports: [CommonModule, DecimalPipe, RouterModule, FormatConvenioPipe, UiKpiComponent],
   providers: [DecimalPipe],
   templateUrl: './oa-dashboard.component.html'
 })
@@ -20,6 +21,7 @@ export class OaDashboardComponent implements OnInit {
   authService = inject(AuthService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private decimal = inject(DecimalPipe);
 
   isLoading = signal(true);
   hasError = signal(false);
@@ -133,45 +135,18 @@ export class OaDashboardComponent implements OnInit {
     return this.rtfService.rtfStatusLabel();
   }
 
-  /** Mismo agrupamiento de severidad que `BandejaOAComponent.estadoPillStatus`. */
-  statusColorClass(): string {
-    switch (this.rtfService.rtfStatus()) {
-      case 'APROBADO':
-      case 'ENVIADO': return 'text-success';
-      case 'RECHAZADO':
-      case 'VENCIDO':
-      case 'EN_DESACATO':
-      case 'PLAZO_LIMITE_NOTARIAL':
-      case 'BLOQUEO_DEFINITIVO': return 'text-destructive';
-      case 'OBSERVADO':
-      case 'PLAZO_INICIAL_NOTIFICACION': return 'text-warning';
-      case 'EN_REVISION':
-      case 'AUDITADO_CAMPO':
-      case 'IN_REVISION_UN': return 'text-info';
-      case 'PENDIENTE':
-      case 'EN_EDICION':
-      default: return 'text-amber-500';
-    }
+  /** Color del KPI "Paso Crítico Actual": fuente única en `RtfService.estadoKpiVariant`. */
+  readonly estadoKpiVariant = computed<KpiVariant>(() => this.rtfService.estadoKpiVariant(this.rtfService.rtfStatus()));
+
+  get pasosProgress(): number {
+    const total = this.rtfService.totalPasos();
+    if (total <= 0) return 0;
+    return Math.round((this.rtfService.activePasoNumero() / total) * 100);
   }
 
-  statusDotClass(): string {
-    switch (this.rtfService.rtfStatus()) {
-      case 'APROBADO':
-      case 'ENVIADO': return 'bg-success';
-      case 'RECHAZADO':
-      case 'VENCIDO':
-      case 'EN_DESACATO':
-      case 'PLAZO_LIMITE_NOTARIAL':
-      case 'BLOQUEO_DEFINITIVO': return 'bg-destructive';
-      case 'OBSERVADO':
-      case 'PLAZO_INICIAL_NOTIFICACION': return 'bg-warning';
-      case 'EN_REVISION':
-      case 'AUDITADO_CAMPO':
-      case 'IN_REVISION_UN': return 'bg-info';
-      case 'PENDIENTE':
-      case 'EN_EDICION':
-      default: return 'bg-amber-500 animate-pulse';
-    }
+  /** Monto en soles sin decimales, con el formato del LOCALE_ID de la app. */
+  soles(value: number): string {
+    return `S/ ${this.decimal.transform(value, '1.0-0') ?? '0'}`;
   }
 
   pasoClass(status: string): string {
