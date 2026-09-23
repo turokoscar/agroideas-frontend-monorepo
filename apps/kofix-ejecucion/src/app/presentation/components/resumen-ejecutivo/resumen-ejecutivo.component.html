@@ -1,9 +1,13 @@
+<p class="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+  <span class="material-symbols-outlined text-sm" aria-hidden="true">functions</span>
+  Acumulado total · no se filtra por período
+</p>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
   <!-- Card 1: Convenios Activos -->
   <app-ui-kpi
     label="Convenios Activos"
     [value]="data().conveniosActivos + ' de ' + data().totalConvenios + ' convenios'"
-    subtitle="Vigentes en el año fiscal"
+    subtitle="Acumulado total"
     variant="primary"
     icon="handshake"
     [showProgress]="data().totalConvenios > 0"
