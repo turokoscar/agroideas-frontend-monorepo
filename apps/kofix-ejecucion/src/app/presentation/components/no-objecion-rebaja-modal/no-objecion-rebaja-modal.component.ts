@@ -26,7 +26,8 @@ export type ModoRebaja = 'parcial' | 'total';
 })
 export class NoObjecionRebajaModalComponent implements OnInit {
     noObjecionId = input.required<number>();
-    @Output() onClose = new EventEmitter<boolean>();
+    /** Emite true si se registró una rebaja (la lista debe recargarse). */
+    @Output() closed = new EventEmitter<boolean>();
 
     private repo = inject(NoObjecionRepository);
     private alertService = inject(AlertService);
@@ -76,7 +77,7 @@ export class NoObjecionRebajaModalComponent implements OnInit {
     });
 
     canSave = computed(() =>
-        !!this.detalle() && this.detalle()!.saldoNoSolicitado > 0 && this.unidadesValidas()
+        (this.detalle()?.saldoNoSolicitado ?? 0) > 0 && this.unidadesValidas()
         && !!this.numeroCarta().trim() && !!this.fechaCarta() && !!this.fileUrl() && !!this.motivo().trim()
         && !this.uploadingFile());
 
@@ -130,7 +131,8 @@ export class NoObjecionRebajaModalComponent implements OnInit {
 
     save(): void {
         const det = this.detalle();
-        if (!det || !this.canSave()) return;
+        const archivoUrl = this.fileUrl();
+        if (!det || !archivoUrl || !this.canSave()) return;
 
         const total = this.modo() === 'total';
         const titulo = total ? '¿Anular el saldo de la No Objeción?' : '¿Registrar la rebaja?';
@@ -138,20 +140,20 @@ export class NoObjecionRebajaModalComponent implements OnInit {
             + ` (${det.proveedorNombre ?? 'proveedor'}). La No Objeción quedará en ${this.formatCurrency(det.montoVigente - this.montoRebaja())}`
             + ` y el monto volverá al saldo disponible de la meta. Esta acción no se puede deshacer.`;
 
-        this.alertService.confirm(titulo, texto).then((result: any) => {
+        this.alertService.confirm(titulo, texto).then((result: { isConfirmed: boolean }) => {
             if (!result.isConfirmed) return;
 
             this.isSubmitting.set(true);
             this.repo.registrarRebaja(this.noObjecionId(), {
                 noObjecionDetId: det.noObjecionDetId,
                 total,
-                unidades: total ? undefined : this.unidades()!,
+                unidades: total ? undefined : (this.unidades() ?? undefined),
                 numeroCarta: this.numeroCarta().trim(),
                 fechaCarta: this.fechaCarta(),
-                archivoUrl: this.fileUrl()!,
+                archivoUrl,
                 motivo: this.motivo().trim()
             }).pipe(finalize(() => this.isSubmitting.set(false))).subscribe({
-                next: (res: any) => {
+                next: (res: { mensaje?: string }) => {
                     this.alertService.toast(res?.mensaje || (total ? 'Saldo anulado con éxito.' : 'Rebaja registrada con éxito.'));
                     this.onHide(true);
                 },
@@ -164,6 +166,6 @@ export class NoObjecionRebajaModalComponent implements OnInit {
 
     onHide(refresh = false): void {
         this.visible.set(false);
-        this.onClose.emit(refresh);
+        this.closed.emit(refresh);
     }
 }

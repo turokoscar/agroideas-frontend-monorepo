@@ -98,7 +98,7 @@ describe('NoObjecionRebajaModalComponent', () => {
 
     it('should register a partial rebaja after confirmation and close with refresh', async () => {
         const closed = jest.fn();
-        component.onClose.subscribe(closed);
+        component.closed.subscribe(closed);
         component.unidades.set(4);
         completarSustento();
 
@@ -137,7 +137,7 @@ describe('NoObjecionRebajaModalComponent', () => {
     it('should show the API error message and keep the modal open', async () => {
         mockRepo.registrarRebaja = jest.fn().mockReturnValue(throwError(() => ({ error: { mensaje: 'Máximo rebajable: 3 unidad(es).' } })));
         const closed = jest.fn();
-        component.onClose.subscribe(closed);
+        component.closed.subscribe(closed);
         component.unidades.set(4);
         completarSustento();
 

@@ -18,5 +18,5 @@ export abstract class NoObjecionRepository {
     /** ADR 0012 Fase 4: saldo rebajable por ítem e historial de rebajas. */
     abstract getSaldoRebaja(noObjecionId: number): Observable<NoObjecionRebajaSaldo>;
     /** ADR 0012 Fase 4: rebaja parcial (unidades enteras) o total ("Anular saldo"). */
-    abstract registrarRebaja(noObjecionId: number, request: NoObjecionRebajaRequest): Observable<any>;
+    abstract registrarRebaja(noObjecionId: number, request: NoObjecionRebajaRequest): Observable<{ mensaje?: string }>;
 }

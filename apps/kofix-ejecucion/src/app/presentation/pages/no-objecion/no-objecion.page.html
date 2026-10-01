@@ -97,7 +97,7 @@
 @if (showRebajaModal()) {
   <app-no-objecion-rebaja-modal
     [noObjecionId]="rebajaNoObjecionId()!"
-    (onClose)="handleRebajaModalClose($event)">
+    (closed)="handleRebajaModalClose($event)">
   </app-no-objecion-rebaja-modal>
 }
 
