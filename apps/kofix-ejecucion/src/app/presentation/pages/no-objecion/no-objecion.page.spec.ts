@@ -143,4 +143,55 @@ describe('NoObjecionPageComponent', () => {
         expect(mockRepo.downloadFile).not.toHaveBeenCalled();
         expect(mockAlert.show).toHaveBeenCalledWith('Información', expect.any(String), 'info');
     });
+
+    // ADR 0012 Fase 4: rebaja / anulación del saldo no solicitado
+    describe('rebaja', () => {
+        it('should only allow rebajar when there is saldo no solicitado', () => {
+            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 4000 }))).toBe(true);
+            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 0 }))).toBe(false);
+        });
+
+        it('should open the rebaja modal for the selected row', () => {
+            component.openRebajaModal(buildNoObjecion({ id: 6, saldoMonto: 4000 }));
+
+            expect(component.showRebajaModal()).toBe(true);
+            expect(component.rebajaNoObjecionId()).toBe(6);
+        });
+
+        it('should not open the rebaja modal without saldo', () => {
+            component.openRebajaModal(buildNoObjecion({ id: 6, saldoMonto: 0 }));
+
+            expect(component.showRebajaModal()).toBe(false);
+        });
+
+        it('should reload the list only when the rebaja was registered', () => {
+            fixture.detectChanges();
+            jest.clearAllMocks();
+
+            component.handleRebajaModalClose(false);
+            expect(mockRepo.getByPostulante).not.toHaveBeenCalled();
+
+            component.handleRebajaModalClose(true);
+            expect(mockRepo.getByPostulante).toHaveBeenCalled();
+        });
+
+        it('should block editing and deleting a no-objecion that has rebajas', () => {
+            const rebajada = buildNoObjecion({ id: 6, numSolicitudes: 0, numRebajas: 1 });
+            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [rebajada], total: 1 }));
+            fixture.detectChanges();
+
+            component.editNoObjecion(6);
+            component.deleteNoObjecion(6);
+
+            expect(component.showModal()).toBe(false);
+            expect(mockAlert.confirm).not.toHaveBeenCalled();
+            expect(mockAlert.show).toHaveBeenCalledTimes(2);
+        });
+
+        it('should map the API estados to status pills', () => {
+            expect(component.getBadgeStatus('Rebajada')).toBe('Media');
+            expect(component.getBadgeStatus('Cerrada')).toBe('Cerrado');
+            expect(component.getBadgeStatus('En Uso')).toBe('Activo');
+        });
+    });
 });

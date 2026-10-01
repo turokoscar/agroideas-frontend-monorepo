@@ -1,0 +1,145 @@
+<app-ui-modal [visible]="visible()" title="Rebajar / Anular saldo de la No Objeción"
+  [subtitle]="saldo() ? (saldo()!.tipoDocumentoNombre + ' N° ' + saldo()!.numeroDocumento) : ''" icon="content_cut"
+  [isSubmitting]="isSubmitting()" [saveLabel]="modo() === 'total' ? 'Anular saldo' : 'Registrar rebaja'"
+  [saveDisabled]="!canSave()" (onHide)="onHide()" (onSave)="save()" maxWidth="760px">
+
+  @if (loading()) {
+    <div class="flex items-center justify-center p-8">
+      <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+    </div>
+  } @else if (detallesConSaldo().length === 0) {
+    <p class="text-sm text-muted-foreground p-4" data-testid="sin-saldo">
+      Esta No Objeción no tiene saldo no solicitado: no hay nada que rebajar.
+    </p>
+  } @else {
+    <div class="space-y-5">
+
+      <!-- Ítems de la N.O. con su saldo -->
+      <div class="border border-slate-200 rounded-lg overflow-x-auto bg-white">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+            <tr>
+              <th class="p-2.5 w-8"></th>
+              <th class="p-2.5">Ítem / Proveedor</th>
+              <th class="p-2.5 text-right">Precio unit.</th>
+              <th class="p-2.5 text-right">Vigente</th>
+              <th class="p-2.5 text-right">Solicitado</th>
+              <th class="p-2.5 text-right">Sin solicitar</th>
+              <th class="p-2.5 text-center">Und. rebajables</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (det of saldo()!.detalles; track det.noObjecionDetId) {
+              <tr class="border-b border-slate-100" [class.opacity-50]="det.saldoNoSolicitado <= 0">
+                <td class="p-2.5 text-center">
+                  <input type="radio" name="rebaja-detalle" [attr.aria-label]="'Seleccionar ' + det.itemNombre"
+                    [disabled]="det.saldoNoSolicitado <= 0"
+                    [checked]="selectedDetId() === det.noObjecionDetId"
+                    (change)="selectedDetId.set(det.noObjecionDetId)" />
+                </td>
+                <td class="p-2.5">
+                  <span class="block font-semibold text-slate-800">{{ det.itemNombre }}</span>
+                  <span class="block text-[10px] text-slate-400">{{ det.proveedorNombre }}</span>
+                </td>
+                <td class="p-2.5 text-right">{{ formatCurrency(det.precioUnitario) }}</td>
+                <td class="p-2.5 text-right">{{ formatCurrency(det.montoVigente) }}</td>
+                <td class="p-2.5 text-right">{{ formatCurrency(det.montoSolicitado) }}</td>
+                <td class="p-2.5 text-right font-semibold text-primary">{{ formatCurrency(det.saldoNoSolicitado) }}</td>
+                <td class="p-2.5 text-center">{{ det.unidadesRebajables }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modalidad -->
+      <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Modalidad de la rebaja">
+        <ui-button size="sm" [appearance]="modo() === 'parcial' ? 'solid' : 'soft'" severity="primary" icon="content_cut"
+          label="Rebajar (parcial)" (onClick)="setModo('parcial')" />
+        <ui-button size="sm" [appearance]="modo() === 'total' ? 'solid' : 'soft'" severity="danger" icon="block"
+          label="Anular saldo (total)" (onClick)="setModo('total')" />
+      </div>
+
+      <div class="form-card-flat grid grid-cols-1 md:grid-cols-2 gap-3">
+        @if (modo() === 'parcial') {
+          <div class="form-field">
+            <label class="form-label" for="rebaja-unidades">Unidades a rebajar (máx. {{ detalle()?.unidadesRebajables ?? 0 }})</label>
+            <input id="rebaja-unidades" type="number" min="1" step="1" [max]="detalle()?.unidadesRebajables ?? 0"
+              class="form-input" [ngModel]="unidades()" (ngModelChange)="unidades.set($event)" />
+            @if (unidades() !== null && !unidadesValidas()) {
+              <span class="text-[10px] text-destructive">Debe ser un número entero entre 1 y {{ detalle()?.unidadesRebajables ?? 0 }}.</span>
+            }
+          </div>
+        }
+        <div class="form-field">
+          <span class="form-label">Monto a rebajar</span>
+          <span class="text-lg font-bold text-primary" data-testid="monto-rebaja">{{ formatCurrency(montoRebaja()) }}</span>
+          @if (detalle()) {
+            <span class="text-[10px] text-slate-400">
+              La N.O. quedará en {{ formatCurrency(detalle()!.montoVigente - montoRebaja()) }}; el monto vuelve al saldo de la meta.
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Sustento: carta de la organización -->
+      <div class="form-card-flat grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="form-field">
+          <label class="form-label" for="rebaja-numero-carta">N° de carta de la organización</label>
+          <input id="rebaja-numero-carta" type="text" maxlength="50" class="form-input"
+            [ngModel]="numeroCarta()" (ngModelChange)="numeroCarta.set($event)" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="rebaja-fecha-carta">Fecha de la carta</label>
+          <input id="rebaja-fecha-carta" type="date" class="form-input" [min]="minFechaCarta()" [max]="hoy"
+            [ngModel]="fechaCarta()" (ngModelChange)="fechaCarta.set($event)" />
+        </div>
+        <div class="form-field md:col-span-2">
+          <label class="form-label" for="rebaja-archivo">Carta de la organización (PDF)</label>
+          <input id="rebaja-archivo" type="file" #fileInput hidden (change)="onFileSelected($event)" accept="application/pdf">
+          @if (fileUrl()) {
+            <ui-file-chip [name]="selectedFile()?.name || 'Carta cargada'" [size]="selectedFile()?.size || 0" (onRemove)="removeFile()" />
+          } @else if (uploadingFile()) {
+            <p class="text-xs font-semibold text-primary animate-pulse">Subiendo archivo...</p>
+          } @else {
+            <div class="form-file-upload group flex-col items-center justify-center p-4 text-center"
+                 role="button" tabindex="0" aria-label="Subir la carta de la organización en PDF"
+                 (click)="fileInput.click()" (keydown.enter)="fileInput.click()"
+                 (keydown.space)="$event.preventDefault(); fileInput.click()">
+              <span class="material-symbols-outlined text-slate-400 text-2xl">cloud_upload</span>
+              <p class="text-xs font-semibold text-slate-600">Haz clic para subir la carta</p>
+              <p class="text-[9px] text-slate-400">Solo PDF máx. 10MB</p>
+            </div>
+          }
+        </div>
+        <div class="form-field md:col-span-2">
+          <label class="form-label" for="rebaja-motivo">Motivo</label>
+          <textarea id="rebaja-motivo" rows="2" maxlength="1000" class="form-input"
+            placeholder="Ej.: el proveedor comunicó que no continuará con el servicio"
+            [ngModel]="motivo()" (ngModelChange)="motivo.set($event)"></textarea>
+        </div>
+      </div>
+
+      <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+        La rebaja no se puede deshacer. Solo se rebaja lo no solicitado: lo ya solicitado está en trámite.
+      </p>
+    </div>
+  }
+
+  <!-- Historial -->
+  @if (saldo()?.rebajas?.length) {
+    <div class="mt-5">
+      <h4 class="text-xs font-semibold text-slate-800 mb-2">Rebajas registradas</h4>
+      <ul class="text-xs space-y-1" data-testid="historial-rebajas">
+        @for (r of saldo()!.rebajas; track r.id) {
+          <li class="flex flex-wrap gap-x-3 text-slate-600">
+            <span class="font-semibold">{{ r.total ? 'Anulación de saldo' : 'Rebaja de ' + r.unidades + ' und.' }}</span>
+            <span>{{ formatCurrency(r.monto) }}</span>
+            <span>Carta {{ r.numeroCarta }} ({{ r.fechaCarta | date:'dd/MM/yyyy' }})</span>
+            <span class="text-slate-400">{{ r.motivo }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</app-ui-modal>

@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-objecion-modal.component';
 import { NoObjecionItemsModalComponent } from '../../components/no-objecion-items-modal/no-objecion-items-modal.component';
+import { NoObjecionRebajaModalComponent } from '../../components/no-objecion-rebaja-modal/no-objecion-rebaja-modal.component';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
 import { finalize } from 'rxjs/operators';
@@ -20,6 +21,7 @@ import { finalize } from 'rxjs/operators';
         UiStatusPillComponent,
         NoObjecionModalComponent,
         NoObjecionItemsModalComponent,
+        NoObjecionRebajaModalComponent,
         UIButtonComponent
     ],
     templateUrl: './no-objecion.page.html',
@@ -47,6 +49,10 @@ export class NoObjecionPageComponent implements OnInit {
     modalMode = signal<'create' | 'edit'>('create');
     selectedNoObjecionId = signal<number | undefined>(undefined);
 
+    // Modal de rebaja / anulación del saldo no solicitado (ADR 0012 Fase 4)
+    showRebajaModal = signal(false);
+    rebajaNoObjecionId = signal<number | undefined>(undefined);
+
     // Modal ligero de solo lectura (ver ítems)
     showItemsModal = signal(false);
     viewingNoObjecionId = signal<number | undefined>(undefined);
@@ -55,7 +61,8 @@ export class NoObjecionPageComponent implements OnInit {
         { field: 'numeroDocumento', header: 'N° Documento', type: 'custom', width: '140px' },
         { field: 'tipoDocumentoNombre', header: 'Tipo Doc.', width: '130px' },
         { field: 'fechaDocumento', header: 'Fecha', type: 'date', width: '110px', align: 'center' },
-        { field: 'totalMonto', header: 'Total Adjudicado', type: 'currency', align: 'right', width: '150px' },
+        { field: 'totalMonto', header: 'Adjudicado Vigente', type: 'currency', align: 'right', width: '150px' },
+        { field: 'saldoMonto', header: 'Sin Solicitar', type: 'currency', align: 'right', width: '140px' },
         { field: 'estadoNombre', header: 'Estado', type: 'custom', width: '120px', align: 'center' },
         { field: 'observacion', header: 'Observación' },
     ];
@@ -64,6 +71,12 @@ export class NoObjecionPageComponent implements OnInit {
         'PENDIENTE': 'Pendiente',
         'APROBADO':  'Aprobado',
         'RECHAZADO': 'Rechazado',
+        // Estados que calcula la API (ADR 0012 Fase 4)
+        'Registrado': 'Pendiente',
+        'En Uso':     'Activo',
+        'Utilizado':  'Finalizado',
+        'Rebajada':   'Media',
+        'Cerrada':    'Cerrado',
     };
 
     getBadgeStatus(value: string): StatusType {
@@ -114,10 +127,33 @@ export class NoObjecionPageComponent implements OnInit {
         this.showModal.set(true);
     }
 
+    /** Editar/eliminar solo sin desembolsos ni rebajas (una N.O. rebajada conserva su trazabilidad). */
+    tieneMovimientos(row: NoObjecion): boolean {
+        return (row.numSolicitudes || 0) > 0 || (row.numRebajas || 0) > 0;
+    }
+
+    /** Rebajar / anular saldo: solo si queda saldo no solicitado (ADR 0012 Fase 4). */
+    puedeRebajar(row: NoObjecion): boolean {
+        return (row.saldoMonto || 0) > 0;
+    }
+
+    openRebajaModal(row: NoObjecion): void {
+        if (!this.puedeRebajar(row)) return;
+        this.rebajaNoObjecionId.set(row.id);
+        this.showRebajaModal.set(true);
+    }
+
+    handleRebajaModalClose(refresh: boolean): void {
+        this.showRebajaModal.set(false);
+        if (refresh) {
+            this.loadNoObjeciones();
+        }
+    }
+
     editNoObjecion(id: number): void {
         const noObj = this.noObjeciones().find(n => n.id === id);
-        if (noObj && (noObj.numSolicitudes || 0) > 0) {
-            this.alertService.show('Acción no permitida', 'No se puede modificar una No Objeción que ya tiene desembolsos asociados.', 'warning');
+        if (noObj && this.tieneMovimientos(noObj)) {
+            this.alertService.show('Acción no permitida', 'No se puede modificar una No Objeción que ya tiene desembolsos o rebajas.', 'warning');
             return;
         }
 
@@ -144,8 +180,8 @@ export class NoObjecionPageComponent implements OnInit {
 
     deleteNoObjecion(id: number): void {
         const noObj = this.noObjeciones().find(n => n.id === id);
-        if (noObj && (noObj.numSolicitudes || 0) > 0) {
-            this.alertService.show('Acción no permitida', 'No se puede eliminar una No Objeción que ya tiene desembolsos asociados.', 'warning');
+        if (noObj && this.tieneMovimientos(noObj)) {
+            this.alertService.show('Acción no permitida', 'No se puede eliminar una No Objeción que ya tiene desembolsos o rebajas.', 'warning');
             return;
         }
 

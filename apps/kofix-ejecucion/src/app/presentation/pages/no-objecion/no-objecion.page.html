@@ -66,13 +66,19 @@
       (onClick)="downloadDocument(row.archivoUrl)" />
     @if (!readOnly()) {
       <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
-        [ariaLabel]="row.numSolicitudes > 0 ? 'No se puede editar: tiene desembolsos asociados' : 'Editar'"
-        [disabled]="row.numSolicitudes > 0"
+        [ariaLabel]="tieneMovimientos(row) ? 'No se puede editar: tiene desembolsos o rebajas' : 'Editar'"
+        [disabled]="tieneMovimientos(row)"
         (onClick)="editNoObjecion(row.id)" />
       <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
-        [ariaLabel]="row.numSolicitudes > 0 ? 'No se puede eliminar: tiene desembolsos asociados' : 'Eliminar'"
-        [disabled]="row.numSolicitudes > 0"
+        [ariaLabel]="tieneMovimientos(row) ? 'No se puede eliminar: tiene desembolsos o rebajas' : 'Eliminar'"
+        [disabled]="tieneMovimientos(row)"
         (onClick)="deleteNoObjecion(row.id)" />
+      <!-- ADR 0012 Fase 4: rebaja parcial o anulación del saldo no solicitado -->
+      @if (puedeRebajar(row)) {
+        <ui-button iconOnly appearance="soft" severity="warning" size="sm" icon="content_cut"
+          ariaLabel="Rebajar / Anular saldo"
+          (onClick)="openRebajaModal(row)" />
+      }
     }
   </div>
 </ng-template>
@@ -85,6 +91,14 @@
     [noObjecionId]="selectedNoObjecionId()"
     (onClose)="handleModalClose($event)">
   </app-no-objecion-modal>
+}
+
+<!-- Modal de rebaja / anulación de saldo (ADR 0012 Fase 4) -->
+@if (showRebajaModal()) {
+  <app-no-objecion-rebaja-modal
+    [noObjecionId]="rebajaNoObjecionId()!"
+    (onClose)="handleRebajaModalClose($event)">
+  </app-no-objecion-rebaja-modal>
 }
 
 <!-- Modal ligero de solo lectura -->

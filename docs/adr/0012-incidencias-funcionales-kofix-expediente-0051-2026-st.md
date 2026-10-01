@@ -1,7 +1,7 @@
 # ADR 0012: Incidencias funcionales de KOFIX (expediente 0051-2026-ST) — análisis situacional
 
 ## Estado
-Aceptado · **Fases 1, 2 y 3 implementadas** (sin desplegar a QA; la Fase 2 quedó reducida al error de carga, ver su registro) · Fases 4, 5 y 1b pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
+Aceptado · **Fases 1, 2, 3 y 4 implementadas** (sin desplegar a QA; la Fase 2 quedó reducida al error de carga, ver su registro) · Fases 5 y 1b pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
 
 ## Fecha
 2026-10-01
@@ -357,6 +357,19 @@ saldos distintos a propósito. El de reprogramación es más restrictivo, porque
 pendiente de pago ya no se puede redistribuir. El frontend no cambia: el modal ya usa
 `saldoDisponible` como techo.
 
+### D7 — Los SPs solo leen o escriben; la lógica de negocio va en la API
+Principio fijado por el owner (2026-10-01) durante la Fase 4: los procedimientos almacenados
+se limitan a **transacciones** (INSERT/UPDATE) y **lecturas** (con agregaciones de montos). Las
+reglas de negocio viven en la API: topes, unidades enteras, montos derivados, fechas válidas y
+estados. Aplicado en la Fase 4: `KDX_FIN_SP_C_NOOBJECIONREBAJA` solo inserta; el tope, las
+unidades y el monto los calcula `NoObjecionRebajaService` (con `NoObjecionRebajaCalculo`); el
+estado de la N.O. lo calcula `NoObjecionEstado`, ya no un `CASE` del listado.
+
+**Deuda reconocida:** los SPs de resumen del Kardex de la Fase 1 (`KARDEXRESUMENEJECUCION`,
+`KARDEXRESUMENMES` y `KARDEXEJECUCIONPERIODO`) todavía codifican criterios de negocio en la
+consulta: qué cuenta como pagado (cheque GIRADO) y la conversión de monto a unidades físicas.
+Ver Puntos abiertos.
+
 ### D3 — Desembolsos (INC-05, INC-06, INC-07)
 - **INC-05:** `TIPO_PAGO` queda con dos valores activos: `TRANSFERENCIA` → "TRANSFERENCIA
   BANCARIA", `CHEQUE` → "CHEQUE DE GERENCIA". `PAGO_DESTINO` pasa a `est_estado = 0` (no se
@@ -518,7 +531,7 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
 | 1 ✅ local | INC-08 + H-09 + H-10 + D2/D2b: saldo de meta, ejecutado = pagado, comprometido = adjudicado, sin fan-out por rendiciones, avance físico = monto ÷ precio unitario (también en `KARDEXEJECUCIONPERIODO`, que consume SIGEC-RTF); bloqueo de programación con la misma fórmula; tests en `KardexServiceTests` y spec de `kardex-varianza-tab` | API + UI | Fase 0, confirmar consumidores de `imp_saldoNuevo` |
 | 2 ✅ | INC-07: error de carga visible en la lista de Desembolsos; se retira el botón "Anular" de desembolsos (la anulación es de la N.O., ver Fase 4) | UI | — |
 | 3 ✅ | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago); validador que rechaza PAGO_DESTINO. Sin migración de datos (QA no tiene PAGO_DESTINO en uso) | API (SQL + validador) | — |
-| 4 | INC-04: rebaja parcial y "Anular saldo" (rebaja total) de la N.O.; tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
+| 4 ✅ | INC-04: rebaja parcial y "Anular saldo" (rebaja total) de la N.O.; tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
 | 5 | INC-06: terminología Memorándum de validación | UI (+ API si es campo nuevo) | Respuesta del punto abierto |
 | 1 ✅ local | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
 | 1b | INC-02, ajustes del modal de reprogramación: conservar los meses solicitados y mostrar el saldo físico | UI (+ API sel-general si se conservan meses) | Respuesta de los puntos abiertos de INC-02 |
@@ -753,6 +766,66 @@ se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a3
 de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
 alguna vez se necesita anular desembolsos individuales.
 
+### Fase 4 — 2026-10-01
+
+**`mc-api-ejecucion`**
+- `Database/20261001_adr0012_fase4_rebaja_noobjecion.sql` (idempotente):
+  - Tabla `FIN.KDX_FIN_TMD_NOOBJECION_REBAJA` (detalle de N.O., `flg_total`, unidades,
+    monto, N°/fecha/archivo de la carta, motivo, auditoría). PK, FK al detalle, `CHECK`
+    de montos positivos e índice por detalle.
+  - Vista `FIN.vw_Kardex_NoObjecionDetSaldo`: por detalle activo, adjudicado original,
+    rebajado, **adjudicado vigente**, solicitado, devuelto y saldo no solicitado. Solo
+    agrega montos.
+  - SPs nuevos, sin reglas: `NOOBJECIONREBAJA_SALDO` (lectura: cabecera, saldos e
+    historial), `NOOBJECIONDET_SALDO` (lectura con `UPDLOCK` dentro de la transacción de la
+    API), `C_NOOBJECIONREBAJA` (solo INSERT) y `NOOBJECIONTIENEREBAJAS`.
+  - SPs que pasan al adjudicado vigente: `NOOBJECIONSUMAITEM` y `NOOBJECIONSUMAPOSTULANTE`
+    (saldo de la meta para nuevas N.O.), `NOOBJECIONITEMSDESEMBOLSO` y `DESEMBOLSOSALDOITEM`
+    (lo rebajado deja de ofrecerse para desembolsar), `NOOBJECIONPOSTULANTE` y
+    `NOOBJECIONPORID` (montos sin procesar, sin `CASE` de estado) y los tres SPs del Kardex de
+    la Fase 1 (comprometido = vigente; el avance físico usa el precio **original**, que la
+    rebaja no altera).
+- `NoObjecionRebajaService` + `NoObjecionRebajaController`
+  (`GET api/no-objeciones/{id}/rebajas/saldo`, `POST api/no-objeciones/{id}/rebajas`, con
+  `OPERACIONES_FINANCIERAS` + cartera). Valida que el ítem sea de la N.O.; que la fecha de la
+  carta sea ≥ la de la N.O., no futura y de un periodo abierto. Luego, en una transacción,
+  relee el saldo con bloqueo, valida el tope y calcula unidades y monto (parcial: entero ≥ 1 y
+  ≤ unidades rebajables, monto = unidades × precio; total: todo el saldo) e inserta. Audita
+  `REBAJAR` / `ANULAR_SALDO`.
+- `NoObjecionRebajaValidator`: carta (N°, fecha, archivo) y motivo obligatorios; unidades ≥ 1
+  en la parcial.
+- `NoObjecionReglas.cs`: `NoObjecionRebajaCalculo` (unidades rebajables, monto) y
+  `NoObjecionEstado` (Registrado / En Uso / Utilizado / **Rebajada** / **Cerrada**).
+- `NoObjecionService`: el listado calcula el estado en la API; editar o eliminar una N.O. con
+  rebajas se rechaza.
+- Tests: `NoObjecionRebajaServiceTests` (10), `NoObjecionReglasTests` (13),
+  `NoObjecionRebajaValidatorTests` (5) y 3 nuevos en `NoObjecionServiceTests`.
+  **`dotnet test`: 146/146 ✅.**
+
+**`agroideas-frontend-monorepo`** (`kofix-ejecucion`)
+- Modelos y repositorio (`getSaldoRebaja`, `registrarRebaja`); el mapper suma
+  `montoRebajado`/`numRebajas`.
+- `no-objecion-rebaja-modal` (nuevo): tabla de ítems con precio, vigente, solicitado, saldo
+  sin solicitar y unidades rebajables; modalidad "Rebajar (parcial)" / "Anular saldo (total)";
+  monto resultante y con cuánto queda la N.O.; carta (N°, fecha entre la de la N.O. y hoy,
+  PDF subido a **sel-api-archivos** con el mismo flujo que el documento de la N.O.); motivo;
+  confirmación que avisa que no se puede deshacer; e historial de rebajas.
+- `no-objecion.page`: botón "Rebajar / Anular saldo" (ícono `content_cut`) solo si
+  `saldoMonto > 0`; editar y eliminar deshabilitados con desembolsos **o rebajas**; columnas
+  "Adjudicado Vigente" y "Sin Solicitar"; pills para los estados que calcula la API.
+- Specs: modal (12) y página (6 nuevos). **`nx test kofix-ejecucion`: 539/539 ✅**; lint 0
+  errores; `nx build` OK.
+
+**Verificación en BD local** (transacción con `ROLLBACK`; N.O. de Porongos ampliada a 100
+und × 192 con 50 solicitadas): rebaja parcial de 20 und → vigente 15,360, "Rebajada", 30 und
+rebajables, meta comprometida 15,360 / 80 und. Anular saldo → vigente 9,600 (= solicitado),
+"Cerrada", ya no se ofrece para desembolso, Kardex comprometido 9,600, avance físico 50
+(precio original). Un error del SP original con `ROLLBACK` revertía la transacción del
+llamador; con D7 el SP ya no tiene esa lógica.
+
+**No verificado:** el flujo completo contra la API levantada (requiere un token de
+`sel-api-seguridad`); se cubrió con tests unitarios y con los SPs en la BD local.
+
 ### Fase 3 — 2026-10-01
 
 **`mc-api-ejecucion`**
@@ -855,6 +928,15 @@ con los nombres nuevos automáticamente.
 - [ ] **Edición de desembolsos:** hoy el botón "Editar" existe, pero la API rechaza toda
   solicitud con pago, es decir, todas. ¿Se habilita la edición (con qué reglas) o se retira
   el botón?
+- [ ] **D7, deuda:** ¿se refactorizan los SPs de resumen del Kardex (Fase 1) para que la API
+  decida qué es "pagado" y cómo se convierte el monto a unidades? Implica traer filas por
+  detalle de solicitud y agregar en C#.
+- [ ] **Fase 4, concurrencia:** el bloqueo del detalle serializa rebajas concurrentes, pero no
+  un desembolso registrado al mismo tiempo que una rebaja del mismo ítem. Para cerrarlo,
+  `DesembolsoService` debería releer el saldo con el mismo bloqueo antes de registrar.
+- [ ] **Fase 4, permiso en la UI:** el botón "Rebajar / Anular saldo" se muestra a quien ve la
+  lista (como Editar/Eliminar). La API exige `OPERACIONES_FINANCIERAS`. ¿Se oculta también
+  en la UI según el permiso?
 - [ ] Validar las severidades con la Unidad de Negocios.
 
 ## Referencias

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { NoObjecionRepository } from '../../domain/repositories/no-objecion.repository';
-import { NoObjecion, NoObjecionBalance } from '../../domain/models/no-objecion.model';
+import { NoObjecion, NoObjecionBalance, NoObjecionRebajaRequest, NoObjecionRebajaSaldo } from '../../domain/models/no-objecion.model';
 import { NoObjecionProgrammedItem } from '../../domain/models/no-objecion-programmed-item.model';
 import { NoObjecionMapper } from '../mappers/no-objecion.mapper';
 
@@ -116,5 +116,15 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
 
     override evaluar(id: number, estado: string, observacion: string): Observable<any> {
         return this.http.post<ResponseDto>(`${this.apiUrl}/${id}/evaluaciones`, { estado, observacion });
+    }
+
+    override getSaldoRebaja(noObjecionId: number): Observable<NoObjecionRebajaSaldo> {
+        return this.http.get<ResponseDto<NoObjecionRebajaSaldo>>(`${this.apiUrl}/${noObjecionId}/rebajas/saldo`).pipe(
+            map(res => res.datos as NoObjecionRebajaSaldo)
+        );
+    }
+
+    override registrarRebaja(noObjecionId: number, request: NoObjecionRebajaRequest): Observable<ResponseDto> {
+        return this.http.post<ResponseDto>(`${this.apiUrl}/${noObjecionId}/rebajas`, request);
     }
 }
