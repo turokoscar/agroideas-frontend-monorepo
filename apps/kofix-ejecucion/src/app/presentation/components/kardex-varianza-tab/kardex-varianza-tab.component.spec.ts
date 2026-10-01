@@ -57,4 +57,42 @@ describe('KardexVarianzaTabComponent', () => {
         expect(component.formatCurrency(undefined)).toBe('-');
         expect(component.formatCurrency(1000)).toContain('1,000');
     });
+
+    // ADR 0012 INC-08 (0051-2026-ST): N.O. parcial de 14,400 desembolsada completa sobre una meta de
+    // 86,400. El saldo llega del backend como saldo de la meta; estado, barra y varianza deben coincidir.
+    it('should show "Con Saldo" with 17% when a partial N.O. was fully disbursed against a larger goal', () => {
+        fixture.componentRef.setInput('kardexConsolidado', [{
+            itemMlId: 172575,
+            itemDescripcion: 'Asistencia técnica',
+            montoProgramado: 86400,
+            montoComprometido: 86400,
+            montoEfectivizado: 14400,
+            montoRendido: 0,
+            saldo: 72000
+        }]);
+        fixture.detectChanges();
+
+        const text: string = fixture.nativeElement.textContent;
+        expect(text).toContain('Con Saldo');
+        expect(text).not.toContain('Ejecutado 100%');
+        expect(text).toContain('17% ejecutado');
+        expect(text).toContain('72,000');
+    });
+
+    it('should show "Ejecutado 100%" only when the goal balance reaches zero', () => {
+        fixture.componentRef.setInput('kardexConsolidado', [{
+            itemMlId: 172575,
+            itemDescripcion: 'Asistencia técnica',
+            montoProgramado: 86400,
+            montoComprometido: 86400,
+            montoEfectivizado: 86400,
+            montoRendido: 0,
+            saldo: 0
+        }]);
+        fixture.detectChanges();
+
+        const text: string = fixture.nativeElement.textContent;
+        expect(text).toContain('Ejecutado 100%');
+        expect(text).toContain('100% ejecutado');
+    });
 });
