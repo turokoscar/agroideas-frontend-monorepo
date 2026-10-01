@@ -11,8 +11,8 @@
     [showAdd]="!readOnly()" addLabel="Nueva Rendición" (onAdd)="openModal()">
 
     <div class="filter-group">
-      <label class="filter-label" for="rendicion-filter-numero">N° Solicitud Origen</label>
-      <input id="rendicion-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
+      <label class="filter-label" for="rendicion-filter-numero">N° Memorándum AGROIDEAS (origen)</label>
+      <input id="rendicion-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: 0946"
         class="filter-input" (keyup.enter)="onSearch()" />
     </div>
 

@@ -56,7 +56,7 @@ export class DesembolsoPageComponent implements OnInit {
 
   chequesColumns: TableColumn[] = [
     { field: 'correlativo', header: 'Correlativo', width: '140px' },
-    { field: 'numeroSolicitud', header: 'N° Solicitud', width: '130px' },
+    { field: 'numeroSolicitud', header: 'N° Memorándum AGROIDEAS', width: '170px' },
     { field: 'fechaDevengado', header: 'Devengado el', type: 'date', width: '110px', align: 'center' },
     { field: 'monto', header: 'Monto', type: 'currency', align: 'right', width: '140px' },
     { field: 'observacion', header: 'Observación' },
@@ -71,7 +71,7 @@ export class DesembolsoPageComponent implements OnInit {
   tiposPago = signal<CatalogoItem[]>([]);
 
   columns: TableColumn[] = [
-    { field: 'numeroSolicitud', header: 'N° Solicitud', type: 'custom', width: '130px' },
+    { field: 'numeroSolicitud', header: 'N° Memorándum AGROIDEAS', type: 'custom', width: '170px' },
     { field: 'fechaSolicitud', header: 'Fecha', type: 'date', width: '110px', align: 'center' },
     { field: 'tipoPagoNombre', header: 'Tipo de Pago', width: '140px' },
     { field: 'montoTotalDesembolsado', header: 'Monto Total', type: 'currency', align: 'right', width: '140px' },

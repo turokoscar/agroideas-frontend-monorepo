@@ -1,7 +1,7 @@
 # ADR 0012: Incidencias funcionales de KOFIX (expediente 0051-2026-ST) — análisis situacional
 
 ## Estado
-Aceptado · **Fases 1, 2, 3 y 4 implementadas** (sin desplegar a QA; la Fase 2 quedó reducida al error de carga, ver su registro) · Fases 5 y 1b pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
+Aceptado · **Fases 1, 2, 3, 4 y 5 implementadas** (sin desplegar a QA; la Fase 2 quedó reducida al error de carga, ver su registro) · Fase 5 implementada · Fase 1b pendiente · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
 
 ## Fecha
 2026-10-01
@@ -533,7 +533,7 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
 | 2 ✅ | INC-07: error de carga visible en la lista de Desembolsos; se retira el botón "Anular" de desembolsos (la anulación es de la N.O., ver Fase 4) | UI | — |
 | 3 ✅ | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago); validador que rechaza PAGO_DESTINO. Sin migración de datos (QA no tiene PAGO_DESTINO en uso) | API (SQL + validador) | — |
 | 4 ✅ | INC-04: rebaja parcial y "Anular saldo" (rebaja total) de la N.O.; tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
-| 5 | INC-06: terminología Memorándum de validación | UI (+ API si es campo nuevo) | Respuesta del punto abierto |
+| 5 ✅ | INC-06: solo renombrar "N° Solicitud" a "N° Memorándum AGROIDEAS" en pantallas y mensajes (sin campo nuevo) | UI + mensajes de la API | — |
 | 1 ✅ local | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
 | 1b | INC-02, ajustes del modal de reprogramación: conservar los meses solicitados y mostrar el saldo físico | UI (+ API sel-general si se conservan meses) | Respuesta de los puntos abiertos de INC-02 |
 | — | INC-01 (solo propuesta, ver D5) | SEL + KOFIX | Validar el uso de `convenio_incentivo_ampliacion` en QA/prod y qué modifica una adenda |
@@ -771,6 +771,20 @@ se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a3
 de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
 alguna vez se necesita anular desembolsos individuales.
 
+### Fase 5 — 2026-10-02
+
+Decisión del owner: **solo cambiar el nombre**. "N° Solicitud" pasa a **"N° Memorándum
+AGROIDEAS"**; el dato y su columna (`cod_numeroSolicitud` / `numeroSolicitud`) no cambian.
+- `kofix-ejecucion`: etiqueta del modal de desembolso, columnas de la lista de Desembolsos y
+  de la bandeja de cheques (ancho 130 → 170 px), modal de activación de cheque, filtro de
+  Rendiciones ("N° Memorándum AGROIDEAS (origen)") y filtro de Desembolsos. Ese filtro decía
+  "N° Desembolso", pero busca por ese mismo número. Los placeholders `SD-2024-001` pasan a
+  `0946`, el formato real que se muestra como `NNNN-AAAA`.
+- `mc-api-ejecucion`: mensajes de validación (`[Required]` de `DesembolsoRequest` y
+  `DesembolsoValidator`) y el texto de auditoría al crear o editar.
+- Ningún test fijaba los textos. **`dotnet test` 162/162 ✅; `nx test kofix-ejecucion`
+  541/541 ✅; build OK.**
+
 ### D7 — Kardex calculado en la API (2026-10-02)
 
 **Motivo:** el owner pidió refactorizar los SPs del Kardex de la Fase 1 aplicando D7, los
@@ -932,8 +946,7 @@ con los nombres nuevos automáticamente.
 - [ ] **INC-02, habilitar el botón:** ¿la reprogramación queda abierta a todo usuario con
   acceso a Programación vigente, o requiere un permiso o una acción explícita ("habilitar
   reprogramación")? Hoy el botón está siempre activo salvo bloqueo por saldo.
-- [ ] **INC-06:** ¿el memorándum de validación **reemplaza** "N° Solicitud" o **se añade**?
-  ¿Es texto libre (número de memorándum) o lleva fecha y archivo adjunto como la N.O.?
+- [x] **INC-06:** el memorándum **reemplaza** el nombre del campo; no hay campo nuevo ni archivo: solo se renombra "N° Solicitud" a "N° Memorándum AGROIDEAS" (owner, 2026-10-02).
 - [x] **Entorno de las capturas:** QA (VPS OVH). Diagnóstico ejecutado el 2026-10-01.
 - [x] **INC-07 / INC-08:** INC-08 confirmado; INC-07 explicado por capturas de momentos
   distintos. Confirmar con quien tomó las capturas que la lista de Desembolsos ya muestra

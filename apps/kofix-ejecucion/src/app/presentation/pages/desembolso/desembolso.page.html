@@ -4,8 +4,8 @@
   <app-ui-filter-bar (onSearch)="onSearch()" [showSearch]="true"
     [showAdd]="!readOnly()" addLabel="Nueva Solicitud" (onAdd)="openCreateModal()">
     <div class="filter-group">
-      <label class="filter-label" for="desembolso-filter-numero">N° Desembolso</label>
-      <input id="desembolso-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: SD-2024-001"
+      <label class="filter-label" for="desembolso-filter-numero">N° Memorándum AGROIDEAS</label>
+      <input id="desembolso-filter-numero" type="text" [ngModel]="filterNumero()" (ngModelChange)="filterNumero.set($event)" placeholder="Ej: 0946"
         class="filter-input" (keyup.enter)="onSearch()" />
     </div>
     <div class="filter-group">
