@@ -1,6 +1,8 @@
 import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
+import { PERMISSIONS } from '@agroideas/utils';
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, computed, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-objecion-modal.component';
@@ -34,6 +36,10 @@ export class NoObjecionPageComponent implements OnInit {
 
     private noObjecionRepo = inject(NoObjecionRepository);
     private alertService = inject(AlertService);
+    private permissionService = inject(PermissionService);
+
+    /** Rebajar / anular saldo exige el mismo permiso que la API (ADR 0012 Fase 4). */
+    protected readonly puedeOperarFinanzas = computed(() => this.permissionService.hasPermission(PERMISSIONS.OPERACIONES_FINANCIERAS));
 
     noObjeciones = signal<NoObjecion[]>([]);
     loading = signal(false);
@@ -132,9 +138,9 @@ export class NoObjecionPageComponent implements OnInit {
         return (row.numSolicitudes || 0) > 0 || (row.numRebajas || 0) > 0;
     }
 
-    /** Rebajar / anular saldo: solo si queda saldo no solicitado (ADR 0012 Fase 4). */
+    /** Rebajar / anular saldo: con permiso OPERACIONES_FINANCIERAS y si queda saldo no solicitado (ADR 0012 Fase 4). */
     puedeRebajar(row: NoObjecion): boolean {
-        return (row.saldoMonto || 0) > 0;
+        return this.puedeOperarFinanzas() && (row.saldoMonto || 0) > 0;
     }
 
     openRebajaModal(row: NoObjecion): void {

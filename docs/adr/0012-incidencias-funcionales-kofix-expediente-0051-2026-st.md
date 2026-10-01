@@ -860,8 +860,8 @@ hechos después de las 00:00 (afectaba lo que recibe SIGEC-RTF). `Periodo` compa
   monto resultante y con cuánto queda la N.O.; carta (N°, fecha entre la de la N.O. y hoy,
   PDF subido a **sel-api-archivos** con el mismo flujo que el documento de la N.O.); motivo;
   confirmación que avisa que no se puede deshacer; e historial de rebajas.
-- `no-objecion.page`: botón "Rebajar / Anular saldo" (ícono `content_cut`) solo si
-  `saldoMonto > 0`; editar y eliminar deshabilitados con desembolsos **o rebajas**; columnas
+- `no-objecion.page`: botón "Rebajar / Anular saldo" (ícono `content_cut`) solo con el
+  permiso `OPERACIONES_FINANCIERAS` (agregado el 2026-10-02) y si `saldoMonto > 0`; editar y eliminar deshabilitados con desembolsos **o rebajas**; columnas
   "Adjudicado Vigente" y "Sin Solicitar"; pills para los estados que calcula la API.
 - Specs: modal (12) y página (6 nuevos). **`nx test kofix-ejecucion`: 539/539 ✅**; lint 0
   errores; `nx build` OK.
@@ -985,9 +985,9 @@ con los nombres nuevos automáticamente.
 - [ ] **Fase 4, concurrencia:** el bloqueo del detalle serializa rebajas concurrentes, pero no
   un desembolso registrado al mismo tiempo que una rebaja del mismo ítem. Para cerrarlo,
   `DesembolsoService` debería releer el saldo con el mismo bloqueo antes de registrar.
-- [ ] **Fase 4, permiso en la UI:** el botón "Rebajar / Anular saldo" se muestra a quien ve la
-  lista (como Editar/Eliminar). La API exige `OPERACIONES_FINANCIERAS`. ¿Se oculta también
-  en la UI según el permiso?
+- [x] **Fase 4, permiso en la UI:** el botón "Rebajar / Anular saldo" solo se muestra con
+  `OPERACIONES_FINANCIERAS` (`PermissionService`, mismo patrón que `ACTIVAR_CHEQUES` en
+  Desembolsos), además de requerir saldo no solicitado (owner, 2026-10-02).
 - [ ] Validar las severidades con la Unidad de Negocios.
 
 ## Referencias

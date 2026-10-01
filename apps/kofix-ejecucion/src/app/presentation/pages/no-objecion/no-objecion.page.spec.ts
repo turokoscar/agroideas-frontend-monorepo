@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
 import { NoObjecionPageComponent } from './no-objecion.page';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
@@ -10,6 +11,7 @@ describe('NoObjecionPageComponent', () => {
     let fixture: ComponentFixture<NoObjecionPageComponent>;
     let mockRepo: jest.Mocked<Partial<NoObjecionRepository>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
+    let mockPermissionService: jest.Mocked<Partial<PermissionService>>;
 
     const buildNoObjecion = (overrides: Partial<NoObjecion> = {}): NoObjecion => ({
         id: 1,
@@ -29,12 +31,14 @@ describe('NoObjecionPageComponent', () => {
             downloadFile: jest.fn()
         };
         mockAlert = { show: jest.fn(), toast: jest.fn(), confirm: jest.fn() };
+        mockPermissionService = { hasPermission: jest.fn().mockReturnValue(true) };
 
         await TestBed.configureTestingModule({
             imports: [NoObjecionPageComponent],
             providers: [
                 { provide: NoObjecionRepository, useValue: mockRepo },
-                { provide: AlertService, useValue: mockAlert }
+                { provide: AlertService, useValue: mockAlert },
+                { provide: PermissionService, useValue: mockPermissionService }
             ]
         }).compileComponents();
 
@@ -149,6 +153,31 @@ describe('NoObjecionPageComponent', () => {
         it('should only allow rebajar when there is saldo no solicitado', () => {
             expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 4000 }))).toBe(true);
             expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 0 }))).toBe(false);
+            expect(mockPermissionService.hasPermission).toHaveBeenCalledWith('OPERACIONES_FINANCIERAS');
+        });
+
+        it('should hide the rebaja button without OPERACIONES_FINANCIERAS, even with saldo', () => {
+            mockPermissionService.hasPermission = jest.fn().mockReturnValue(false);
+            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [buildNoObjecion({ id: 6, saldoMonto: 4000 })], total: 1 }));
+            fixture = TestBed.createComponent(NoObjecionPageComponent);
+            component = fixture.componentInstance;
+            fixture.componentRef.setInput('convenioId', 5);
+            fixture.detectChanges();
+
+            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 4000 }))).toBe(false);
+            expect(fixture.nativeElement.querySelector('[aria-label="Rebajar / Anular saldo"]')).toBeNull();
+            component.openRebajaModal(buildNoObjecion({ id: 6, saldoMonto: 4000 }));
+            expect(component.showRebajaModal()).toBe(false);
+        });
+
+        it('should render the rebaja button only for rows with saldo when the user has the permission', () => {
+            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({
+                items: [buildNoObjecion({ id: 6, saldoMonto: 4000 }), buildNoObjecion({ id: 7, saldoMonto: 0 })],
+                total: 2
+            }));
+            fixture.detectChanges();
+
+            expect(fixture.nativeElement.querySelectorAll('[aria-label="Rebajar / Anular saldo"]').length).toBe(1);
         });
 
         it('should open the rebaja modal for the selected row', () => {
