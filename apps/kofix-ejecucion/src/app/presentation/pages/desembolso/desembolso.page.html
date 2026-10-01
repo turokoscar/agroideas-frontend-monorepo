@@ -92,13 +92,8 @@
   <div class="row-actions">
     <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="visibility"
       ariaLabel="Ver ítems de la solicitud" (onClick)="viewDesembolso(row)" />
-    @if (!readOnly()) {
-      <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
-        [ariaLabel]="row.montoRendido > 0 ? 'No se puede editar: tiene rendición asociada' : 'Editar'"
-        [disabled]="row.montoRendido > 0"
-        (onClick)="editDesembolso(row)" />
-      <!-- ADR 0012: no se anulan desembolsos; se anula el saldo no solicitado de la N.O. (Fase 4) -->
-    }
+    <!-- ADR 0012: los desembolsos no se editan ni se anulan (la API rechaza toda solicitud con pago,
+         y todas lo tienen desde que se registran); lo que se anula es el saldo de la N.O. (Fase 4) -->
   </div>
 </ng-template>
 

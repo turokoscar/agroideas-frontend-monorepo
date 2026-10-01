@@ -191,28 +191,6 @@ describe('DesembolsoPageComponent', () => {
         });
     });
 
-    describe('editDesembolso', () => {
-        it('should block editing a desembolso that already has a rendición', () => {
-            fixture.detectChanges();
-
-            component.editDesembolso(buildDesembolso({ montoRendido: 100 }));
-
-            expect(component.showModal()).toBe(false);
-            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.any(String), 'warning');
-        });
-
-        it('should open the edit modal when there is no rendición', () => {
-            fixture.detectChanges();
-            const row = buildDesembolso({ montoRendido: 0 });
-
-            component.editDesembolso(row);
-
-            expect(component.showModal()).toBe(true);
-            expect(component.modalMode()).toBe('edit');
-            expect(component.editingDesembolso()).toBe(row);
-        });
-    });
-
     describe('load error (ADR 0012 INC-07)', () => {
         it('should flag the error instead of showing an empty list as "Sin solicitudes"', () => {
             mockDesembolsoRepo.getByPostulante = jest.fn().mockReturnValue(throwError(() => new Error('500')));

@@ -205,14 +205,4 @@ export class DesembolsoPageComponent implements OnInit {
   handleItemsModalClose(): void {
       this.showItemsModal.set(false);
   }
-
-  editDesembolso(row: Desembolso): void {
-      if ((row.montoRendido || 0) > 0) {
-          this.alertService.show('Acción no permitida', 'No se puede modificar una solicitud que ya tiene una rendición registrada.', 'warning');
-          return;
-      }
-      this.modalMode.set('edit');
-      this.editingDesembolso.set(row);
-      this.showModal.set(true);
-  }
 }
