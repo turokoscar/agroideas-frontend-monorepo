@@ -771,6 +771,45 @@ se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a3
 de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
 alguna vez se necesita anular desembolsos individuales.
 
+### Concurrencia desembolso / rebaja — 2026-10-02
+
+**Problema 1 (concurrencia):** desembolso y rebaja consumen el mismo saldo no solicitado de un
+ítem de N.O. Ambos leían el saldo y luego insertaban. La rebaja bloqueaba el ítem (Fase 4),
+pero el desembolso no tomaba ese bloqueo. Dos operaciones simultáneas sobre el mismo ítem (por
+ejemplo, desembolsar 4,000 y anular el saldo de 4,000) podían pasar las dos y dejar la N.O. en
+negativo.
+
+**Problema 2 (encontrado al analizarlo, sin concurrencia):** el saldo del desembolso lo
+validaba `KDX_FIN_SP_C_DESEMBOLSODETALLE` con su propia fórmula (adjudicado − solicitado +
+devoluciones), que **no descontaba las rebajas**. La UI sí las descontaba, pero una petición
+directa a la API o una pantalla desactualizada podía desembolsar lo ya rebajado. Además, era
+lógica de negocio en un SP (contra D7).
+
+**Solución:**
+- `INoObjecionDetSaldoRepository.LeerConBloqueoAsync` (nueva interfaz, implementada por
+  `NoObjecionRepository` con `KDX_FIN_SP_R_NOOBJECIONDET_SALDO`): lectura del saldo de un ítem
+  con `UPDLOCK, HOLDLOCK`, **compartida** por la rebaja y el desembolso.
+- `NoObjecionSaldoBloqueo.BloquearAsync`: bloquea varios ítems **en orden ascendente de id**
+  (evita bloqueos cruzados entre desembolsos de varios ítems).
+- `DesembolsoSaldoValidacion` (regla pura): lo solicitado por ítem (sumando ítems repetidos)
+  ≤ saldo no solicitado, que ya descuenta rebajas y suma devoluciones. Al **editar**, lo que la
+  propia solicitud tenía en el ítem vuelve a estar disponible.
+- `DesembolsoService`: al registrar y al editar, dentro de la transacción, bloquea, valida y
+  recién entonces inserta. La edición pasó a la transacción del servicio
+  (`ActualizarDesembolsoAsync` del repositorio recibe conexión y transacción).
+- `Database/20261002_adr0012_concurrencia_desembolso_rebaja.sql`:
+  `KDX_FIN_SP_C_DESEMBOLSODETALLE` **solo inserta**.
+
+**Verificación:**
+- Tests: `DesembolsoSaldoValidacionTests` (6) y `DesembolsoServiceSaldoConcurrenciaTests` (4:
+  rechazo con rollback cuando una rebaja ya consumió el saldo, orden de bloqueo 7 → 9, edición
+  que devuelve lo propio y edición que excede). **`dotnet test` 172/172 ✅.**
+- **Prueba real con dos sesiones en la BD local:** se abrieron 1,920 sin solicitar en la N.O.
+  de Porongos. La sesión A (rebaja) tomó el bloqueo a las 21:17:06.513, esperó 5 s y anuló el
+  saldo (commit 21:17:11.532). La sesión B (desembolso) pidió el bloqueo a las 21:17:07.493 y lo
+  obtuvo a las 21:17:11.549 (esperó a A), leyendo saldo **0** en lugar de 1,920, así que la API
+  rechaza el desembolso. Datos de prueba revertidos.
+
 ### Fase 5 — 2026-10-02
 
 Decisión del owner: **solo cambiar el nombre**. "N° Solicitud" pasa a **"N° Memorándum
@@ -995,9 +1034,7 @@ con los nombres nuevos automáticamente.
   API"). Siguen con lógica en SQL otros SPs **anteriores** a este ADR que leen
   `vw_Kardex_CicloOperativo` (p. ej. totales ejecutados para reportes y alertas); quedan fuera
   de alcance.
-- [ ] **Fase 4, concurrencia:** el bloqueo del detalle serializa rebajas concurrentes, pero no
-  un desembolso registrado al mismo tiempo que una rebaja del mismo ítem. Para cerrarlo,
-  `DesembolsoService` debería releer el saldo con el mismo bloqueo antes de registrar.
+- [x] **Fase 4, concurrencia:** resuelto el 2026-10-02 (ver "Concurrencia desembolso / rebaja" en el Registro de implementación).
 - [x] **Fase 4, permiso en la UI:** el botón "Rebajar / Anular saldo" solo se muestra con
   `OPERACIONES_FINANCIERAS` (`PermissionService`, mismo patrón que `ACTIVAR_CHEQUES` en
   Desembolsos), además de requerir saldo no solicitado (owner, 2026-10-02).
