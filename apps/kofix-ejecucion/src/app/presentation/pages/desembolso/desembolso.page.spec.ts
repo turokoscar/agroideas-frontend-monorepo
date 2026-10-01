@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { DesembolsoPageComponent } from './desembolso.page';
@@ -214,22 +214,31 @@ describe('DesembolsoPageComponent', () => {
     });
 
     describe('deleteDesembolso', () => {
-        it('should block anular when the desembolso already has a rendición', () => {
+        // ADR 0012 Fase 2: el backend decide puedeAnular (sin rendición y con la N.O. abierta).
+        it('should block anular when the backend marks the row as not cancellable', () => {
             fixture.detectChanges();
 
-            component.deleteDesembolso(buildDesembolso({ montoRendido: 100 }));
+            component.deleteDesembolso(buildDesembolso({ montoRendido: 0, puedeAnular: false }));
 
             expect(mockAlert.confirm).not.toHaveBeenCalled();
-            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.any(String), 'warning');
+            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.stringContaining('No Objeción'), 'warning');
         });
 
         it('should not anular when the confirmation is dismissed', async () => {
             mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: false });
 
-            component.deleteDesembolso(buildDesembolso({ montoRendido: 0 }));
+            component.deleteDesembolso(buildDesembolso({ puedeAnular: true }));
             await Promise.resolve();
 
             expect(mockDesembolsoRepo.anular).not.toHaveBeenCalled();
+        });
+
+        it('should warn about the Kardex extorno in the confirmation', () => {
+            mockAlert.confirm = jest.fn().mockReturnValue(new Promise(() => undefined));
+
+            component.deleteDesembolso(buildDesembolso({ puedeAnular: true }));
+
+            expect(mockAlert.confirm).toHaveBeenCalledWith('¿Anular Solicitud?', expect.stringContaining('extorno'));
         });
 
         it('should anular and reload the list when confirmed', async () => {
@@ -238,12 +247,59 @@ describe('DesembolsoPageComponent', () => {
             mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: true });
             mockDesembolsoRepo.anular = jest.fn().mockReturnValue(of(null));
 
-            component.deleteDesembolso(buildDesembolso({ id: 9, montoRendido: 0 }));
+            component.deleteDesembolso(buildDesembolso({ id: 9, puedeAnular: true }));
             await Promise.resolve();
 
             expect(mockDesembolsoRepo.anular).toHaveBeenCalledWith(9);
             expect(mockAlert.toast).toHaveBeenCalledWith('Solicitud anulada con éxito.');
             expect(mockDesembolsoRepo.getByPostulante).toHaveBeenCalled();
+        });
+
+        it('should also reload the bandeja de cheques after anular when the user can activate cheques', async () => {
+            mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
+            fixture.detectChanges();
+            jest.clearAllMocks();
+            mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: true });
+            mockDesembolsoRepo.anular = jest.fn().mockReturnValue(of(null));
+
+            component.deleteDesembolso(buildDesembolso({ id: 9, puedeAnular: true }));
+            await Promise.resolve();
+
+            expect(mockDesembolsoRepo.getChequesPendientesActivacion).toHaveBeenCalledWith(5);
+        });
+    });
+
+    describe('load error (ADR 0012 INC-07)', () => {
+        it('should flag the error instead of showing an empty list as "Sin solicitudes"', () => {
+            mockDesembolsoRepo.getByPostulante = jest.fn().mockReturnValue(throwError(() => new Error('500')));
+
+            fixture.detectChanges();
+
+            expect(component.loadError()).toBe(true);
+            expect(component.desembolsos()).toEqual([]);
+        });
+
+        it('should clear the error flag after a successful reload', () => {
+            mockDesembolsoRepo.getByPostulante = jest.fn().mockReturnValue(throwError(() => new Error('500')));
+            fixture.detectChanges();
+            mockDesembolsoRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [buildDesembolso()], total: 1 }));
+
+            component.loadDesembolsos();
+
+            expect(component.loadError()).toBe(false);
+            expect(component.desembolsos().length).toBe(1);
+        });
+
+        it('should only render the anular button for rows the backend allows to cancel', () => {
+            mockDesembolsoRepo.getByPostulante = jest.fn().mockReturnValue(of({
+                items: [buildDesembolso({ id: 1, puedeAnular: true }), buildDesembolso({ id: 2, puedeAnular: false })],
+                total: 2
+            }));
+
+            fixture.detectChanges();
+
+            const botones = fixture.nativeElement.querySelectorAll('[aria-label="Anular solicitud (registra un extorno en el Kardex)"]');
+            expect(botones.length).toBe(1);
         });
     });
 

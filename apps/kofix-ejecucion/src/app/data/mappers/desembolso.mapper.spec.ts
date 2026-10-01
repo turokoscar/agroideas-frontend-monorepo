@@ -12,12 +12,17 @@ describe('DesembolsoMapper', () => {
             montoRendido: 300,
             numeroNoObjecion: 'NO-2026-01',
             numeroSolicitud: 'SOL-001',
-            observacion: 'Sin observaciones'
+            observacion: 'Sin observaciones',
+            puedeAnular: true
         };
 
         const result = DesembolsoMapper.fromApi(dto);
 
         expect(result).toEqual(dto);
+    });
+
+    it('should default puedeAnular to false when the API omits it', () => {
+        expect(DesembolsoMapper.fromApi({ id: 1 }).puedeAnular).toBe(false);
     });
 
     it('should map a saldo API DTO to a SettlementBalance model', () => {

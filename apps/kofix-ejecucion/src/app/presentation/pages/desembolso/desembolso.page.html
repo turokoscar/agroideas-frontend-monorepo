@@ -57,9 +57,9 @@
     [rowTemplate]="rowTemplate"
     icon="payments"
     title="Solicitudes de Desembolso"
-    emptyIcon="payments"
-    emptyMessage="Sin solicitudes"
-    emptySubMessage="No se encontraron solicitudes de desembolso para este convenio."
+    [emptyIcon]="loadError() ? 'error' : 'payments'"
+    [emptyMessage]="loadError() ? 'No se pudieron cargar las solicitudes' : 'Sin solicitudes'"
+    [emptySubMessage]="loadError() ? 'Ocurrió un error al consultar los desembolsos. Intenta nuevamente.' : 'No se encontraron solicitudes de desembolso para este convenio.'"
     (onLazyLoad)="loadLazyDesembolsos($event)">
 
     <!-- Template para columnas custom (estado con badge) -->
@@ -97,10 +97,12 @@
         [ariaLabel]="row.montoRendido > 0 ? 'No se puede editar: tiene rendición asociada' : 'Editar'"
         [disabled]="row.montoRendido > 0"
         (onClick)="editDesembolso(row)" />
-      <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
-        [ariaLabel]="row.montoRendido > 0 ? 'No se puede anular: tiene rendición asociada' : 'Anular'"
-        [disabled]="row.montoRendido > 0"
-        (onClick)="deleteDesembolso(row)" />
+      <!-- ADR 0012 Fase 2: solo sin rendición y con la N.O. aún abierta (saldo no solicitado) -->
+      @if (row.puedeAnular) {
+        <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="block"
+          ariaLabel="Anular solicitud (registra un extorno en el Kardex)"
+          (onClick)="deleteDesembolso(row)" />
+      }
     }
   </div>
 </ng-template>

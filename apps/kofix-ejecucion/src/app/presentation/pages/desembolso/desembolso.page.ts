@@ -1,7 +1,7 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
-import { PERMISSIONS, formatSolicitudNumber } from '@agroideas/utils';
+import { PERMISSIONS, formatCurrency, formatSolicitudNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -38,6 +38,8 @@ export class DesembolsoPageComponent implements OnInit {
 
   desembolsos = signal<Desembolso[]>([]);
   loading = signal<boolean>(false);
+  /** La carga falló: la tabla lo dice en vez de mostrar "Sin solicitudes" (ADR 0012 INC-07). */
+  loadError = signal<boolean>(false);
   totalRecords = signal<number>(0);
   showModal = signal<boolean>(false);
   modalMode = signal<'create' | 'edit'>('create');
@@ -159,11 +161,14 @@ export class DesembolsoPageComponent implements OnInit {
         limit
     ).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (result) => {
+        this.loadError.set(false);
         this.desembolsos.set(result.items);
         this.totalRecords.set(result.total);
       },
-      error: (err) => {
-        // Error handled by AlertService or removed
+      error: () => {
+        this.loadError.set(true);
+        this.desembolsos.set([]);
+        this.totalRecords.set(0);
       }
     });
   }
@@ -212,17 +217,24 @@ export class DesembolsoPageComponent implements OnInit {
   }
 
   deleteDesembolso(row: Desembolso): void {
-      if ((row.montoRendido || 0) > 0) {
-          this.alertService.show('Acción no permitida', 'No se puede anular una solicitud que ya tiene una rendición registrada.', 'warning');
+      if (!row.puedeAnular) {
+          this.alertService.show('Acción no permitida', 'Solo se puede anular una solicitud sin rendición y cuya No Objeción aún tenga saldo por solicitar.', 'warning');
           return;
       }
-      this.alertService.confirm('¿Anular Solicitud?', 'Esta acción no se puede deshacer.').then((result: any) => {
+      this.alertService.confirm(
+        '¿Anular Solicitud?',
+        `Se anulará la solicitud ${this.formatSolicitudNumber(row)} por ${formatCurrency(row.montoTotalDesembolsado)} y se registrará un extorno en el Kardex. El monto vuelve a quedar disponible en la No Objeción. Esta acción no se puede deshacer.`
+      ).then((result: any) => {
         if (result.isConfirmed) {
             this.loading.set(true);
             this.desembolsoRepo.anular(row.id).pipe(finalize(() => this.loading.set(false))).subscribe({
                 next: () => {
                     this.alertService.toast('Solicitud anulada con éxito.');
                     this.loadDesembolsos();
+                    // Un cheque en DEVENGADO anulado sale de la bandeja de activación
+                    if (this.puedeActivarCheque()) {
+                      this.loadChequesPendientes();
+                    }
                 },
                 error: (err) => {
                     this.alertService.show('Error', err.error?.mensaje || 'No se pudo anular la solicitud.', 'error');

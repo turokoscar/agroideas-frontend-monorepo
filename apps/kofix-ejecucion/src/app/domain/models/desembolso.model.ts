@@ -8,6 +8,8 @@ export interface Desembolso {
     montoRendido: number;
     numeroNoObjecion: string;
     numeroSolicitud?: string;
+    /** Sin rendición y con sus N.O. abiertas (saldo no solicitado). Lo calcula el backend (ADR 0012 Fase 2). */
+    puedeAnular?: boolean;
 
     // Campos opcionales para registro
     postulanteId?: number;
