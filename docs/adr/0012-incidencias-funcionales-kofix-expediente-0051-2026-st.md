@@ -365,10 +365,11 @@ estados. Aplicado en la Fase 4: `KDX_FIN_SP_C_NOOBJECIONREBAJA` solo inserta; el
 unidades y el monto los calcula `NoObjecionRebajaService` (con `NoObjecionRebajaCalculo`); el
 estado de la N.O. lo calcula `NoObjecionEstado`, ya no un `CASE` del listado.
 
-**Deuda reconocida:** los SPs de resumen del Kardex de la Fase 1 (`KARDEXRESUMENEJECUCION`,
-`KARDEXRESUMENMES` y `KARDEXEJECUCIONPERIODO`) todavía codifican criterios de negocio en la
-consulta: qué cuenta como pagado (cheque GIRADO) y la conversión de monto a unidades físicas.
-Ver Puntos abiertos.
+**Aplicado también al Kardex (2026-10-02):** los tres SPs de resumen de la Fase 1
+(`KARDEXRESUMENEJECUCION`, `KARDEXRESUMENMES` y `KARDEXEJECUCIONPERIODO`) codificaban en la
+consulta qué cuenta como pagado y la conversión de monto a unidades. Se reemplazaron por un SP
+de lectura (`KDX_FIN_SP_R_KARDEXCICLO_POSTULANTE`) y un conjunto de componentes en la API. Ver
+el Registro de implementación, sección "D7 — Kardex calculado en la API".
 
 ### D3 — Desembolsos (INC-05, INC-06, INC-07)
 - **INC-05:** `TIPO_PAGO` queda con dos valores activos: `TRANSFERENCIA` → "TRANSFERENCIA
@@ -695,6 +696,10 @@ EXEC FIN.KDX_FIN_SP_R_KARDEXEJECUCIONPERIODO @ide_postulante = 190432, @fec_inic
 
 ### Fase 1 — 2026-10-01 (local, sin desplegar)
 
+> **Nota (2026-10-02):** el script SQL de esta fase se **reemplazó** por el refactor D7 (ver
+> "D7 — Kardex calculado en la API"): las mismas reglas se calculan ahora en la API, con
+> resultados idénticos. Lo que sigue describe la versión original, que nunca se desplegó.
+
 **`mc-api-ejecucion`**
 - `Database/20261001_adr0012_fase1_kardex_ejecucion_pagada.sql` (nuevo; no toca los scripts
   con cambios locales pendientes). Redefine:
@@ -765,6 +770,51 @@ se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a3
 `deploy_kofix.sh`. En el frontend se quitaron `puedeAnular` y el botón. La verificación
 de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
 alguna vez se necesita anular desembolsos individuales.
+
+### D7 — Kardex calculado en la API (2026-10-02)
+
+**Motivo:** el owner pidió refactorizar los SPs del Kardex de la Fase 1 aplicando D7, los
+principios SOLID y menor complejidad ciclomática.
+
+**Base de datos** (`Database/20261002_adr0012_d7_kardex_ciclo_lectura.sql`):
+- Nuevo `FIN.KDX_FIN_SP_R_KARDEXCICLO_POSTULANTE`, **solo lectura**, con cinco conjuntos
+  de filas: detalles de N.O. (adjudicado original y vigente, cantidad y fecha), detalles de
+  solicitud, pagos (desembolso, cheque y su estado, fecha), rendiciones (monto y fecha) y
+  movimientos del ledger. No agrega ni decide.
+- Se **eliminan** los tres SPs agregados. `20260822_*` y `20260910_*` los vuelven a crear en
+  cada despliegue, y este script, que va después, los retira.
+- Se **elimina** `20261001_adr0012_fase1_kardex_ejecucion_pagada.sql` (nunca se desplegó) y
+  la sección 4d de la Fase 4, que redefinía esos SPs.
+
+**API** (`mc-api-ejecucion.Negocio/Services/Kardex/`):
+
+| Componente | Responsabilidad (SOLID) |
+| --- | --- |
+| `IKardexCicloRepository` / `KardexCicloRepository` | Solo leer el ciclo (ISP: interfaz propia, separada de `IKardexRepository`) |
+| `IPagoEfectivoPolicy` / `PagoEfectivoPolicy` | Única regla de "ejecutado = pagado; cheque desde GIRADO" (SRP; OCP: se cambia sin tocar las calculadoras; DIP: se inyecta) |
+| `KardexCiclo` | Indexa una vez el ciclo: resuelve cada solicitud (ítem, si está pagada, fecha, unidades y rendiciones) y descarta las de N.O. inactivas |
+| `AvanceFisico` | Monto → unidades con el precio del adjudicado original (D2b) |
+| `Periodo` | Rango cerrado comparado por fecha |
+| `ResumenPorItemCalculo` · `ResumenMensualCalculo` · `EjecucionPeriodoCalculo` | Una agregación cada una, funciones puras |
+| `IKardexResumenService` / `KardexResumenService` | Fachada: lee, indexa y delega. Es lo único que conocen `KardexService`, `ProgramacionService` y `DesembolsoService` |
+
+Complejidad: ningún método tiene `if` anidados; las agregaciones son expresiones LINQ de una
+rama. Los únicos condicionales son el de la política, el de `Periodo.Contiene` y la guarda de
+división por cero de `AvanceFisico`. `IKardexRepository` pierde los tres métodos agregados.
+
+**Defecto corregido de paso:** el `BETWEEN @fec_inicio AND @fec_fin` del SQL comparaba
+`fec_pago` (`datetime2`) contra `DATE` y excluía los pagos del **último día** del periodo
+hechos después de las 00:00 (afectaba lo que recibe SIGEC-RTF). `Periodo` compara por fecha.
+
+**Verificación:**
+- Tests nuevos: `PagoEfectivoPolicyTests` (5), `KardexCicloCalculoTests` (9, con los casos
+  reales: QA 0051-2026-ST 86,400/14,400 y 6 und; fan-out 29,400 en vez de 88,200; cheque
+  DEVENGADO; N.O. rebajada o inactiva; 6 mensuales = 6 und; último día con hora; mensual de
+  36 filas) y `KardexResumenServiceTests` (2). **`dotnet test`: 162/162 ✅.**
+- **Equivalencia con datos reales:** antes de retirar los SPs se guardó su salida para los 4
+  postulantes de la BD local (consolidado, periodo completo, septiembre 2026 y mensual: 16
+  secciones, 185 líneas). Con el script aplicado, `KardexResumenService` contra la misma BD
+  produjo **exactamente los mismos valores (0 diferencias)**.
 
 ### Fase 4 — 2026-10-01
 
@@ -928,9 +978,10 @@ con los nombres nuevos automáticamente.
 - [ ] **Edición de desembolsos:** hoy el botón "Editar" existe, pero la API rechaza toda
   solicitud con pago, es decir, todas. ¿Se habilita la edición (con qué reglas) o se retira
   el botón?
-- [ ] **D7, deuda:** ¿se refactorizan los SPs de resumen del Kardex (Fase 1) para que la API
-  decida qué es "pagado" y cómo se convierte el monto a unidades? Implica traer filas por
-  detalle de solicitud y agregar en C#.
+- [x] **D7, deuda del Kardex:** refactorizado el 2026-10-02 (ver "D7 — Kardex calculado en la
+  API"). Siguen con lógica en SQL otros SPs **anteriores** a este ADR que leen
+  `vw_Kardex_CicloOperativo` (p. ej. totales ejecutados para reportes y alertas); quedan fuera
+  de alcance.
 - [ ] **Fase 4, concurrencia:** el bloqueo del detalle serializa rebajas concurrentes, pero no
   un desembolso registrado al mismo tiempo que una rebaja del mismo ítem. Para cerrarlo,
   `DesembolsoService` debería releer el saldo con el mismo bloqueo antes de registrar.
