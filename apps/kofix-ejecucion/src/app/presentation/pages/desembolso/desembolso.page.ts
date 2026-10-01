@@ -1,7 +1,7 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
-import { PERMISSIONS, formatCurrency, formatSolicitudNumber } from '@agroideas/utils';
+import { PERMISSIONS, formatSolicitudNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -214,33 +214,5 @@ export class DesembolsoPageComponent implements OnInit {
       this.modalMode.set('edit');
       this.editingDesembolso.set(row);
       this.showModal.set(true);
-  }
-
-  deleteDesembolso(row: Desembolso): void {
-      if (!row.puedeAnular) {
-          this.alertService.show('Acción no permitida', 'Solo se puede anular una solicitud sin rendición y cuya No Objeción aún tenga saldo por solicitar.', 'warning');
-          return;
-      }
-      this.alertService.confirm(
-        '¿Anular Solicitud?',
-        `Se anulará la solicitud ${this.formatSolicitudNumber(row)} por ${formatCurrency(row.montoTotalDesembolsado)} y se registrará un extorno en el Kardex. El monto vuelve a quedar disponible en la No Objeción. Esta acción no se puede deshacer.`
-      ).then((result: any) => {
-        if (result.isConfirmed) {
-            this.loading.set(true);
-            this.desembolsoRepo.anular(row.id).pipe(finalize(() => this.loading.set(false))).subscribe({
-                next: () => {
-                    this.alertService.toast('Solicitud anulada con éxito.');
-                    this.loadDesembolsos();
-                    // Un cheque en DEVENGADO anulado sale de la bandeja de activación
-                    if (this.puedeActivarCheque()) {
-                      this.loadChequesPendientes();
-                    }
-                },
-                error: (err) => {
-                    this.alertService.show('Error', err.error?.mensaje || 'No se pudo anular la solicitud.', 'error');
-                }
-            });
-        }
-      });
   }
 }

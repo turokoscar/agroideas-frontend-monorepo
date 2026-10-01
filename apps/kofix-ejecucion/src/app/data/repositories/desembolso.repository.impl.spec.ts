@@ -41,7 +41,7 @@ describe('DesembolsoRepositoryImpl', () => {
 
     it('should map desembolsos through DesembolsoMapper', (done) => {
         service.getByPostulante(3).subscribe((res) => {
-            expect(res.items).toEqual([{ id: 1, fechaSolicitud: '2026-08-01', estadoId: 2, estadoNombre: 'Aprobado', tipoPagoNombre: 'Transferencia', montoTotalDesembolsado: 100, montoRendido: 0, numeroNoObjecion: 'NO-1', numeroSolicitud: 'S1', observacion: '', puedeAnular: false }]);
+            expect(res.items).toEqual([{ id: 1, fechaSolicitud: '2026-08-01', estadoId: 2, estadoNombre: 'Aprobado', tipoPagoNombre: 'Transferencia', montoTotalDesembolsado: 100, montoRendido: 0, numeroNoObjecion: 'NO-1', numeroSolicitud: 'S1', observacion: '' }]);
             done();
         });
 

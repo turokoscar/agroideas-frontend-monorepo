@@ -1,7 +1,7 @@
 # ADR 0012: Incidencias funcionales de KOFIX (expediente 0051-2026-ST) — análisis situacional
 
 ## Estado
-Aceptado · **Fases 1, 2 y 3 implementadas** (sin desplegar a QA) · Fases 4, 5 y 1b pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
+Aceptado · **Fases 1, 2 y 3 implementadas** (sin desplegar a QA; la Fase 2 quedó reducida al error de carga, ver su registro) · Fases 4, 5 y 1b pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
 
 ## Fecha
 2026-10-01
@@ -369,15 +369,14 @@ pendiente de pago ya no se puede redistribuir. El frontend no cambia: el modal y
   - La anulación de un desembolso (`KDX_FIN_SP_D_DESEMBOLSO`) debe registrar un
     **EXTORNO** en el Kardex (el tipo de operación 10 ya existe en el catálogo).
   - `desembolso.page.ts` debe mostrar el error de carga en vez de la lista vacía.
-  - **Reglas de anulación (owner, 2026-10-01):**
-    - Se puede anular **cualquier desembolso sin rendición**, aunque ya esté girado
-      (transferencia o cheque). Hasta ahora ninguno se podía anular: el pago se crea al
-      registrar, y la anulación rechazaba toda solicitud "efectivizada".
-    - El botón **Anular** solo se muestra mientras la No Objeción que respalda el
-      desembolso **tenga saldo no solicitado** (N.O. abierta). Una N.O. solicitada por
-      completo (o rebajada por completo, Fase 4) queda cerrada.
-    - Lo anula el **mismo especialista** (`OPERACIONES_FINANCIERAS` + cartera), sin
-      aprobación.
+  - **Corrección del owner (2026-10-01): lo que se anula es la No Objeción, no el
+    desembolso.** Y solo su **saldo no solicitado**: lo solicitado se mantiene porque ya
+    está en trámite. Equivale a la **rebaja total** de la Fase 4 (D4). Por eso **no se
+    anulan desembolsos** y no hace falta EXTORNO. La implementación inicial de la Fase 2,
+    que anulaba desembolsos con extorno, se **revirtió**. Ver el Registro de implementación.
+  - Hallazgo que se mantiene: la anulación de desembolsos de la API nunca funcionó (el pago
+    se crea al registrar y se rechazaba toda solicitud "efectivizada"). Se retira el botón
+    de la UI; el endpoint queda sin uso.
 
 ### D4 — No Objeciones (INC-03, INC-04)
 - **INC-03:** se agrega `TIPO_DOCUMENTO` = `CARTA` (seed + migración).
@@ -416,8 +415,15 @@ pendiente de pago ya no se puede redistribuir. El frontend no cambia: el modal y
     unitario no cambia, así que el avance físico (D2b) sigue siendo correcto. En el ejemplo: 4,000 ÷ 1,000 = 4 meses liberados,
     y la meta (sigue en 12,000 / 12 meses) queda con 2,000 / 2 meses comprometidos en esa
     N.O. y 10,000 / 10 meses disponibles para nuevas N.O.
-  - **Rebaja total** (todo el saldo no solicitado) = equivale al "desistir" original: la N.O.
-    queda cerrada para nuevos desembolsos sin borrarla.
+  - **Rebaja total = "Anular" la N.O.** (owner, 2026-10-01): anula **todo el saldo no
+    solicitado**. Lo solicitado se mantiene, y la N.O. queda cerrada en lo solicitado, sin
+    admitir nuevos desembolsos y sin borrarse. En la UI se ofrece como acción propia
+    ("Anular saldo") junto a "Rebajar" (parcial, en unidades enteras). Ejemplo: N.O. de
+    6,000 con 2,000 solicitados → al anular, la N.O. queda en 2,000 y 4,000 vuelven al
+    saldo disponible de la meta. Mismo sustento (carta de la organización) y mismo permiso
+    que la rebaja parcial. En la anulación total el monto se toma completo (incluida
+    cualquier fracción de unidad), para que el adjudicado vigente quede exactamente en lo
+    solicitado.
   - **Estado derivado** del listado: se agrega "Rebajada" (o "Cerrada" si el saldo vigente
     llega a 0 con rebaja), con filtro y pill en la lista y en los reportes.
   - **Validación en el backend** (no solo en la UI): el alta de desembolso y el alta de
@@ -510,9 +516,9 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
 | --- | --- | --- | --- |
 | 0 | Diagnóstico de datos de 0051-2026-ST (consultas abajo) | BD KARDEX | — |
 | 1 ✅ local | INC-08 + H-09 + H-10 + D2/D2b: saldo de meta, ejecutado = pagado, comprometido = adjudicado, sin fan-out por rendiciones, avance físico = monto ÷ precio unitario (también en `KARDEXEJECUCIONPERIODO`, que consume SIGEC-RTF); bloqueo de programación con la misma fórmula; tests en `KardexServiceTests` y spec de `kardex-varianza-tab` | API + UI | Fase 0, confirmar consumidores de `imp_saldoNuevo` |
-| 2 ✅ | INC-07: anulación de desembolsos sin rendición con N.O. abierta, con EXTORNO en el Kardex y baja del pago y del cheque; botón según `puedeAnular`; error de carga visible en la lista | API + UI | — |
+| 2 ✅ | INC-07: error de carga visible en la lista de Desembolsos; se retira el botón "Anular" de desembolsos (la anulación es de la N.O., ver Fase 4) | UI | — |
 | 3 ✅ | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago); validador que rechaza PAGO_DESTINO. Sin migración de datos (QA no tiene PAGO_DESTINO en uso) | API (SQL + validador) | — |
-| 4 | INC-04: tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
+| 4 | INC-04: rebaja parcial y "Anular saldo" (rebaja total) de la N.O.; tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
 | 5 | INC-06: terminología Memorándum de validación | UI (+ API si es campo nuevo) | Respuesta del punto abierto |
 | 1 ✅ local | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
 | 1b | INC-02, ajustes del modal de reprogramación: conservar los meses solicitados y mostrar el saldo físico | UI (+ API sel-general si se conservan meses) | Respuesta de los puntos abiertos de INC-02 |
@@ -728,46 +734,24 @@ Oficio 02), ejecutado 14,400, saldo **72,000**, 17%, "Con Saldo";
 
 ### Fase 2 — 2026-10-01
 
-**`mc-api-ejecucion`**
-- `Database/20261001_adr0012_fase2_anulacion_desembolso_extorno.sql`:
-  - `KDX_FIN_SP_C_KARDEXMOVIMIENTO`: EXTORNO (10) suma al saldo corrido, igual que
-    DEVOLUCIÓN y TIPO_SALDO. Antes caía en la rama de RENDICIÓN, que no lo alteraba.
-  - `KDX_FIN_SP_R_DESEMBOLSO_PUEDE_MODIFICAR`: nuevo `NoObjecionConSaldo` (todas las N.O.
-    de la solicitud con `Σ(adjudicado − solicitado activo + devoluciones) > 0`).
-  - `KDX_FIN_SP_D_DESEMBOLSO`: además de la cabecera y el detalle, inactiva la fila de pago
-    (`KDX_FIN_TMM_DESEMBOLSO`) y el cheque de gerencia. Así el cheque sale de la bandeja de
-    activación y deja de contar como pagado en el Kardex.
-  - `KDX_FIN_SP_R_DESEMBOLSOPOSTULANTE`: nuevo `puedeAnular` por fila.
-- `DesembolsoService.AnularDesembolsoAsync`: se quita el bloqueo por "efectivizada" y se
-  agrega el de N.O. cerrada. En **una transacción**: un EXTORNO por detalle (mismo ítem, N.O.
-  y monto que el movimiento DESEMBOLSO original) y luego la baja. Si algo falla, se hace
-  rollback de todo. Un `RAISERROR` de negocio (p. ej. periodo contable cerrado) se devuelve
-  como mensaje.
-- `DesembolsoRepository.EliminarAsync`: acepta la conexión y la transacción del llamador.
-- Tests (`DesembolsoServiceAccesoYSaldosTests`): rendición, N.O. cerrada, pago girado con
-  extorno por detalle + commit, sin pago (sin extorno), y rollback si falla el extorno.
-  **`dotnet test`: 118/118 ✅.**
+**Versión final (vigente):**
+- `kofix-ejecucion`, `desembolso.page`: `loadError` cambia el estado vacío a "No se pudieron
+  cargar las solicitudes" en vez de "Sin solicitudes" (INC-07). Specs del error de carga.
+- Se **retira el botón "Anular"** de la lista de Desembolsos y su handler. Nunca funcionó:
+  la API rechazaba toda solicitud con pago, y todas lo tienen desde que se registran. Además,
+  la anulación es de la N.O. (Fase 4).
+- **`nx test kofix-ejecucion`: 524/524 ✅**; lint 0 errores.
 
-**`agroideas-frontend-monorepo`** (`kofix-ejecucion`)
-- `Desembolso.puedeAnular` (modelo + mapper). En `desembolso.page`, el botón "Anular"
-  (ícono `block`) solo se renderiza si `puedeAnular`. La confirmación indica el número, el
-  monto y que se registrará un extorno. Tras anular se recarga también la bandeja de cheques.
-- Error de carga: `loadError` cambia el estado vacío a "No se pudieron cargar las
-  solicitudes", en vez de "Sin solicitudes".
-- Specs: anulación (bloqueo, confirmación con extorno, recarga de la bandeja), error de
-  carga y render del botón por fila. **`nx test kofix-ejecucion`: 531/531 ✅**; lint 0
-  errores.
-
-**Verificación en BD local** (dentro de una transacción con `ROLLBACK`): con la N.O. del
-cheque 20005 abierta, la lista marca `puedeAnular = 1` solo para esa fila (las otras tienen
-rendición). Al anular, el EXTORNO lleva el saldo corrido de 0 a 9,600; se inactivan la
-cabecera, el detalle, el pago y el cheque; el Kardex del ítem 19017 pasa de solicitado y
-ejecutado 9,600 a 0; y la N.O. recupera el saldo desembolsable. Con los datos reales, las
-tres solicitudes de 86147 dan `puedeAnular = 0`: N.O. solicitada al 100% o con rendición.
-
-**No incluido (deuda menor):** la **edición** sigue bloqueada para solicitudes con pago
-(toda solicitud lo tiene desde que se registra). Además, `ide_estadoSolicitud` sigue sin
-avanzar de PENDIENTE.
+**Implementación inicial, revertida el mismo día:** por un malentendido se implementó la
+anulación de **desembolsos** (sin rendición y con N.O. abierta), con EXTORNO en el Kardex y
+baja del pago y del cheque (API `9a4a2ce`, monorepo `2027ad3`). El owner aclaró que lo que
+se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a34` en
+`mc-api-ejecucion`: los SPs `KARDEXMOVIMIENTO`, `PUEDE_MODIFICAR`, `D_DESEMBOLSO` y
+`DESEMBOLSOPOSTULANTE` vuelven a su versión previa, también en la BD local, y el script
+`20261001_adr0012_fase2_anulacion_desembolso_extorno.sql` se eliminó del repo y de
+`deploy_kofix.sh`. En el frontend se quitaron `puedeAnular` y el botón. La verificación
+de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
+alguna vez se necesita anular desembolsos individuales.
 
 ### Fase 3 — 2026-10-01
 
@@ -868,9 +852,9 @@ con los nombres nuevos automáticamente.
 - [x] **INC-05:** en QA no hay `PAGO_DESTINO` en uso y los 4 `CHEQUE` tienen el ciclo de
   cheque de gerencia (ADR-020): no hay datos que migrar. Repetir el conteo en producción
   antes de desplegar ahí (`diag_0051.sql`, consulta 8).
-- [ ] **Edición de desembolsos:** hoy es imposible para cualquier solicitud con pago, es decir,
-  todas. ¿Se habilita con las mismas reglas que la anulación, o basta con anular y registrar
-  de nuevo?
+- [ ] **Edición de desembolsos:** hoy el botón "Editar" existe, pero la API rechaza toda
+  solicitud con pago, es decir, todas. ¿Se habilita la edición (con qué reglas) o se retira
+  el botón?
 - [ ] Validar las severidades con la Unidad de Negocios.
 
 ## Referencias

@@ -12,8 +12,7 @@ export class DesembolsoMapper {
             montoRendido: dto.montoRendido,
             numeroNoObjecion: dto.numeroNoObjecion,
             numeroSolicitud: dto.numeroSolicitud,
-            observacion: dto.observacion,
-            puedeAnular: dto.puedeAnular ?? false
+            observacion: dto.observacion
         };
     }
 

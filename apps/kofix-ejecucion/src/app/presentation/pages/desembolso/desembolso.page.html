@@ -97,12 +97,7 @@
         [ariaLabel]="row.montoRendido > 0 ? 'No se puede editar: tiene rendición asociada' : 'Editar'"
         [disabled]="row.montoRendido > 0"
         (onClick)="editDesembolso(row)" />
-      <!-- ADR 0012 Fase 2: solo sin rendición y con la N.O. aún abierta (saldo no solicitado) -->
-      @if (row.puedeAnular) {
-        <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="block"
-          ariaLabel="Anular solicitud (registra un extorno en el Kardex)"
-          (onClick)="deleteDesembolso(row)" />
-      }
+      <!-- ADR 0012: no se anulan desembolsos; se anula el saldo no solicitado de la N.O. (Fase 4) -->
     }
   </div>
 </ng-template>
