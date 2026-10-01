@@ -1,7 +1,7 @@
 # ADR 0012: Incidencias funcionales de KOFIX (expediente 0051-2026-ST) — análisis situacional
 
 ## Estado
-Aceptado · **Fase 1 implementada en local** (sin commit ni despliegue a QA) · Fases 2-5 pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
+Aceptado · **Fases 1 y 3 implementadas y commiteadas** (sin desplegar a QA) · Fases 2, 4, 5 y 1b pendientes · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
 
 ## Fecha
 2026-10-01
@@ -376,12 +376,15 @@ pendiente de pago ya no se puede redistribuir. El frontend no cambia: el modal y
   detalle de N.O. (ítem + proveedor), no un estado "Desistida" de toda la N.O.:
   - **Registro propio, sin modificar la N.O.:** tabla nueva
     `FIN.KDX_FIN_TMD_NOOBJECION_REBAJA` (`ide_noObjecionDet`, `imp_rebajado`,
-    `can_rebajada`, `fec_rebaja`, `cod_numeroInforme`, `fec_informe`, `ide_archivo`
-    (informe), `txt_motivo`, `est_estado`, auditoría). El adjudicado original se conserva
+    `can_rebajada`, `fec_rebaja`, `cod_numeroCarta`, `fec_carta`, `ide_archivo`
+    (carta), `txt_motivo`, `est_estado`, auditoría). El adjudicado original se conserva
     (trazabilidad). **Sin anulación por ahora** (owner): no hay endpoint para anular una
     rebaja; `est_estado` queda solo para una corrección administrativa en BD.
-  - **Sustento: un informe** (owner): número, fecha y archivo del informe, todos
-    obligatorios (reusa el flujo de archivos de la N.O.).
+  - **Sustento: la carta de la organización** (owner, corregido el 2026-10-01; antes decía
+    "un informe"): N° de carta, fecha y archivo adjunto, los tres obligatorios. Reusa el
+    flujo de archivos de la N.O. Es la carta con la que la OA comunica que no continúa con
+    el proveedor. No confundir con el tipo de documento "Carta" de la N.O. (INC-03), que es
+    el documento que **autoriza** la N.O.
   - **Quién la registra: el mismo especialista** (owner): igual que el alta de N.O., exige el
     permiso `OPERACIONES_FINANCIERAS` (`NoObjecionController`) y que el convenio esté en su
     cartera (`ValidarAccesoConvenioAsync`). No hay paso de aprobación.
@@ -413,8 +416,8 @@ pendiente de pago ya no se puede redistribuir. El frontend no cambia: el modal y
   - **UI:** acción "Rebajar" en `no-objecion.page.html`, visible solo con
     `OPERACIONES_FINANCIERAS` y si hay al menos 1 unidad no solicitada. El modal muestra,
     por detalle (ítem + proveedor), adjudicado, solicitado, pagado y unidades rebajables;
-    pide las unidades a rebajar (entero) y muestra el monto resultante, junto con el número,
-    la fecha y el archivo del informe y el motivo. Advierte que la rebaja no se puede
+    pide las unidades a rebajar (entero) y muestra el monto resultante, junto con el N°, la
+    fecha y el adjunto de la carta de la organización y el motivo. Advierte que la rebaja no se puede
     deshacer.
 
 ### D5 — Adendas (INC-01)
@@ -499,8 +502,8 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
 | 0 | Diagnóstico de datos de 0051-2026-ST (consultas abajo) | BD KARDEX | — |
 | 1 ✅ local | INC-08 + H-09 + H-10 + D2/D2b: saldo de meta, ejecutado = pagado, comprometido = adjudicado, sin fan-out por rendiciones, avance físico = monto ÷ precio unitario (también en `KARDEXEJECUCIONPERIODO`, que consume SIGEC-RTF); bloqueo de programación con la misma fórmula; tests en `KardexServiceTests` y spec de `kardex-varianza-tab` | API + UI | Fase 0, confirmar consumidores de `imp_saldoNuevo` |
 | 2 | INC-07: extorno al anular desembolso; error visible en la lista | API + UI | Fase 0 |
-| 3 | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago) + migración de tipos de pago | API (SQL) | Regla de migración |
-| 4 | INC-04: tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta y anulación de rebaja, validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
+| 3 ✅ | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago); validador que rechaza PAGO_DESTINO. Sin migración de datos (QA no tiene PAGO_DESTINO en uso) | API (SQL + validador) | — |
+| 4 | INC-04: tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
 | 5 | INC-06: terminología Memorándum de validación | UI (+ API si es campo nuevo) | Respuesta del punto abierto |
 | 1 ✅ local | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
 | 1b | INC-02, ajustes del modal de reprogramación: conservar los meses solicitados y mostrar el saldo físico | UI (+ API sel-general si se conservan meses) | Respuesta de los puntos abiertos de INC-02 |
@@ -714,6 +717,38 @@ Esperado en QA tras desplegar (0051-2026-ST, ítem 172575): comprometido **86,40
 Oficio 02), ejecutado 14,400, saldo **72,000**, 17%, "Con Saldo";
 `CantidadEjecutada` = **6** (antes 12), 172572 = 23 (antes 46) y 172570 = 621 (antes 1,242).
 
+### Fase 3 — 2026-10-01
+
+**`mc-api-ejecucion`**
+- `Database/20261001_adr0012_fase3_catalogos_documento_pago.sql` (idempotente, re-ejecutable
+  en cada despliegue):
+  - INC-03: `TIPO_DOCUMENTO` = `CARTA` (orden 5).
+  - INC-05: `TRANSFERENCIA` → "TRANSFERENCIA BANCARIA", `CHEQUE` → "CHEQUE DE GERENCIA",
+    `PAGO_DESTINO` → `est_estado = 0` (no se borra). Los `ide_catalogo` y `cod_codigo` no
+    cambian, porque `DesembolsoService` decide el flujo por id (12 directo a GIRADO, 13
+    DEVENGADO → GIRADO).
+- `DesembolsoValidator`: `TipoPagoId` solo admite 12 o 13. Antes, un 14 enviado directo a la
+  API se procesaba como transferencia, y cualquier otro id registraba la solicitud **sin
+  efectivizarla**. La condición se aplica solo a la regla nueva
+  (`ApplyConditionTo.CurrentValidator`), para no desactivar la de "obligatorio".
+- `DesembolsoService`: se retira la rama `TipoPagoId == 14` y los comentarios de PAGO_DESTINO.
+- Tests: `Validators/DesembolsoValidatorTests` (nuevo: 12 y 13 válidos, 14 rechazado,
+  0 solo con el mensaje de obligatorio). **`dotnet test`: 115/115 ✅.**
+
+**Frontend:** sin cambios. Los selects de tipo de documento (`no-objecion-modal`) y de tipo
+de pago (`desembolso-modal`, filtro de `desembolso.page`) leen el catálogo, que ya filtra
+`est_estado = 1`. Los textos solo aparecen en fixtures de specs.
+
+**Verificación en BD local** (script aplicado dos veces, sin duplicados):
+`CATALOGOPORGRUPO 'TIPO_PAGO'` devuelve solo 12 "TRANSFERENCIA BANCARIA" y 13 "CHEQUE DE
+GERENCIA"; `'TIPO_DOCUMENTO'` agrega 20001 "CARTA".
+
+**`despliegue/deploy_kofix.sh`:** script agregado al final de `DB_SCRIPTS`.
+
+**Efecto en datos existentes:** la columna "Tipo de Pago" de la lista de Desembolsos toma la
+descripción del catálogo (`DESEMBOLSOPOSTULANTE`), así que los registros históricos se ven
+con los nombres nuevos automáticamente.
+
 ## Puntos abiertos
 
 - [ ] **INC-01 (propuesta):** ¿una adenda modifica plazo, montos o metas? Contar filas en
@@ -770,15 +805,17 @@ Oficio 02), ejecutado 14,400, saldo **72,000**, 17%, "Con Saldo";
 - [x] **INC-04, solicitudes pendientes:** solo se rebaja lo no solicitado; lo solicitado ya
   está en trámite (owner, 2026-10-01).
 - [x] **INC-04, unidades:** solo unidades enteras (owner, 2026-10-01).
-- [x] **INC-04, sustento y permiso:** un informe; lo registra el mismo especialista (owner,
+- [x] **INC-04, sustento y permiso:** la **carta de la organización** (N°, fecha y adjunto;
+  corregido por el owner, antes "informe"); la registra el mismo especialista (owner,
   2026-10-01).
 - [x] **INC-04, anulación:** no, por ahora (owner, 2026-10-01).
 - [ ] **INC-04, precio unitario no entero:** si `imp_montoAdjudicado ÷ can_cantidad` tiene
   decimales (p. ej. 1,000 ÷ 3), el monto rebajado se redondea a 2 decimales y, si la
   rebaja es total, se ajusta para que el adjudicado vigente quede exactamente en lo
   solicitado. Validar con datos reales antes de implementar.
-- [ ] **INC-05:** en QA no hay `PAGO_DESTINO` en uso. Falta confirmar que todo `CHEQUE`
-  histórico es de gerencia, y repetir el conteo en producción.
+- [x] **INC-05:** en QA no hay `PAGO_DESTINO` en uso y los 4 `CHEQUE` tienen el ciclo de
+  cheque de gerencia (ADR-020): no hay datos que migrar. Repetir el conteo en producción
+  antes de desplegar ahí (`diag_0051.sql`, consulta 8).
 - [ ] Validar las severidades con la Unidad de Negocios.
 
 ## Referencias
