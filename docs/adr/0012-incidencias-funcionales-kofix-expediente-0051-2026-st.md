@@ -49,9 +49,9 @@ La severidad es propuesta; debe validarla la Unidad de Negocios.
 | ID | Módulo | Tipo | Hallazgo | Severidad | Diagnóstico en código |
 | --- | --- | --- | --- | --- | --- |
 | INC-01 | General | Por definir | Adendas: solo se mencionan, sin detalle. | Por definir | Sin evidencia — no hay nada que analizar todavía. |
-| INC-02 | Programación | Defecto | Con programación vigente, la información no aparece. | Media | Hipótesis ligada a INC-08 (ver H-02). |
+| INC-02 | Programación | Defecto | En ejecución, la reprogramación debe trabajar sobre el saldo no solicitado. | Media | **Aclarado por el owner**: saldo reprogramable = aprobado − solicitado (ver H-02, D6). |
 | INC-03 | No Objeciones | Cambio funcional | Falta **Carta** en tipo de documento. | Baja | Confirmado: catálogo `TIPO_DOCUMENTO` solo tiene 4 valores. |
-| INC-04 | No Objeciones | Funcionalidad faltante | No se puede desistir sin borrar. | Alta | Confirmado: no hay estado persistido de N.O. |
+| INC-04 | No Objeciones | Funcionalidad faltante | No se puede **rebajar** el saldo no usado de una N.O. para liberarlo a una nueva N.O. | Alta | **Aclarado por el owner**: es una rebaja parcial, no un desistimiento (ver H-04, D4). |
 | INC-05 | Desembolsos | Cambio funcional | Tipo de pago debe ser Transferencia bancaria / Cheques de gerencia. | Media | Confirmado: catálogo `TIPO_PAGO` tiene 3 valores (incluye `PAGO_DESTINO`). |
 | INC-06 | Desembolsos | Cambio funcional | "N° Solicitud" → memorándum de validación del jefe de UN. | Media | Confirmado; el término aparece en 4 pantallas. |
 | INC-07 | Desembolsos | Inconsistencia | Lista "Sin solicitudes" pero el Kardex marca S/ 14,400 ejecutado. | Alta → **Baja** | **No es defecto de datos**: capturas de momentos distintos (ver H-07). Quedan dos defectos menores. |
@@ -96,7 +96,7 @@ Defectos derivados del mismo diseño:
 2. **Bloquea la reprogramación.** `ProgramacionService.cs:63-72` y `:134` usan el mismo
    `Imp_saldoActual` para decidir `Bloqueado = saldoDisponible <= 0`. Con S/ 72,000 reales
    por ejecutar, la meta **queda bloqueada para reprogramar**. Esto es más grave que el
-   error visual y probablemente se relaciona con INC-02 (H-02).
+   error visual. Lo corrige D6, que define el saldo reprogramable (INC-02, H-02).
 3. **"Comprometido" y "Ejecutado" son la misma cifra.** En `KDX_FIN_SP_R_KARDEXRESUMENEJECUCION`
    (líneas 47-48) ambos son `SUM(b.imp_montoSolicitado)` de la vista
    `FIN.vw_Kardex_CicloOperativo`, que parte de `KDX_FIN_TMD_SOLDESEMBOLSO_DET` y hace
@@ -224,13 +224,34 @@ Hipótesis, en orden de probabilidad:
    un 500 del listado se ve igual que "Sin solicitudes". Es un defecto propio aunque no sea
    esta la causa.
 
-### H-02 — Programación vigente "no muestra información" (INC-02) ❓ hipótesis
+### H-02 — Reprogramación en fase de ejecución (INC-02) ✅ aclarado
 
-Sin captura. Por H-08.2, cualquier meta con una N.O. desembolsada al 100% sale
-`Bloqueado = true` en programación, aunque tenga saldo de meta. Si "no aparece la
-información" significa que no se puede reprogramar o que los ítems aparecen bloqueados o
-vacíos, el arreglo de H-08 lo resuelve. Hay que confirmarlo con el área usuaria antes de
-tocar el módulo.
+**Aclaración del owner (2026-10-01):** INC-02 no es "falta información". En fase de
+ejecución se puede habilitar el botón de programación del ítem, que en esa fase es una
+**reprogramación**, y debe trabajar con saldos: *si de 100 hay 40 con solicitud de
+desembolso, solo 60 están disponibles para reprogramar.* La base es lo **solicitado**
+(pagado o no), no lo pagado: la regla difiere del saldo del Kardex (D1/D2).
+
+**Cómo funciona hoy** (`programacion-vigente-detail` → `programacion-items` →
+`programacion-cronograma-modal`):
+- El botón por ítem abre el modal de cronograma. Queda en solo lectura si
+  `GET programacion/proyectos/{id}/estado-bloqueo` marca el ítem como `bloqueado`.
+- El modal limita el total financiero con `saldoDisponible` de ese endpoint
+  (`montoLimite`, "Disponible p/ reprogramar") y `canSave` exige que lo programado sea
+  **igual** a ese techo. El backend (`ProgramacionService.SaveCronogramaAsync`) vuelve a
+  validar contra el mismo saldo.
+- Antes de la Fase 1, ese saldo era el saldo corrido del ledger, sembrado con la N.O.
+  (H-08.2): podía bloquear metas con saldo o dejar un techo equivocado. Además no
+  correspondía a "aprobado − solicitado".
+
+**Observaciones del modal (no se corrigen todavía, ver Puntos abiertos):**
+1. La tarjeta "Meta física total" y `restanteFisico` siguen usando la meta física
+   **completa**, aunque el techo financiero ya descuenta lo solicitado. La validación de
+   `save()` permite programar hasta la meta física total. Lo que limita en la práctica es
+   el techo financiero, porque la financiera se deriva de la física con el precio de la meta.
+2. El cronograma guardado reemplaza la programación del ítem con montos que suman solo el
+   saldo (p. ej. 60). Los meses ya cubiertos por solicitudes (los 40) **no se conservan**
+   en la programación, y "Financiera Prog." quedará por debajo del aprobado.
 
 ### H-03 / H-05 — Catálogos (INC-03, INC-05) ✅ confirmado
 
@@ -242,8 +263,39 @@ listas hardcodeadas en el frontend: `desembolso.page.ts` y el modal cargan
   propio DEVENGADO → GIRADO (ADR-020 del backend, `desembolso.model.ts:44`), así que
   "Cheques de gerencia" es un **cambio de descripción**, no un tipo nuevo.
 
-### H-04 — No Objeción sin estado propio (INC-04) ✅ confirmado
+### H-04 — Rebaja del saldo no usado de una No Objeción (INC-04) ✅ aclarado
 
+**Aclaración del owner (2026-10-01):** lo que se pide no es desistir de la N.O. completa,
+sino una **rebaja de la N.O.** Una N.O. siempre está amarrada a un proveedor. Si el
+proveedor decide no continuar, se rebaja el saldo no usado de **esa N.O.** y ese monto
+vuelve al **saldo disponible de la meta**. **La meta no cambia.**
+
+| Paso | Meta (aprobado) | N.O. del proveedor | Saldo disponible de la meta para nuevas N.O. |
+| --- | --- | --- | --- |
+| Meta Asistencia técnica | 12,000 | — | 12,000 |
+| N.O. de 6,000 | 12,000 | 6,000 | 6,000 |
+| Se pagan 2,000 (2 meses) y el proveedor no continúa: rebaja de 4,000 | 12,000 | **2,000** | **10,000** |
+
+La rebaja actúa **sobre la N.O.** (su adjudicado vigente baja de 6,000 a 2,000). Por eso
+el saldo disponible de la meta sube, sin tocar la meta.
+
+**Qué hay hoy en el código**, sin ningún mecanismo para hacer esto:
+
+| Dónde | Qué hace | Efecto de la falta de rebaja |
+| --- | --- | --- |
+| `NoObjecionService.CreateAsync` + `KDX_FIN_SP_R_NOOBJECIONSUMAITEM` | Rechaza una N.O. nueva si `Σ adjudicado de N.O. activas + nuevo > MontoAprobado`, y lo mismo con la cantidad contra `MetaAprobada` | Los 4,000 no usados siguen sumando: con 6,000 comprometidos solo se puede adjudicar 6,000 más, nunca 10,000 |
+| `KDX_FIN_SP_R_NOOBJECIONSUMAPOSTULANTE` | Saldo físico/financiero que muestra el modal de N.O. (`saldoFisico`, "Bal.") | Muestra como comprometido lo que ya no se va a usar |
+| `KDX_FIN_SP_R_NOOBJECIONITEMSDESEMBOLSO` / `KDX_FIN_SP_R_DESEMBOLSOSALDOITEM` (último en `20260917_validacion_fechas_noobjecion_desembolso.sql`) | Saldo desembolsable por detalle de N.O. = adjudicado − solicitado + devoluciones | La N.O. sigue ofreciéndose para nuevos desembolsos por 4,000 |
+| Kardex (Fase 1, `KARDEXRESUMENEJECUCION`) | Comprometido = Σ adjudicado | Comprometido inflado en 4,000 |
+| `KDX_FIN_SP_R_NOOBJECIONPOSTULANTE` | Estado derivado Registrado / En Uso / Utilizado | Una N.O. rebajada quedaría "En Uso" para siempre |
+
+Además existe un concepto parecido que **no sirve** para esto: la **DEVOLUCIÓN** (tipo de
+operación 11, `RegistrarDevolucionAsync`) **suma** saldo al detalle de la N.O. (dinero que
+regresa y se puede volver a desembolsar **dentro de la misma N.O.**). La rebaja hace lo
+contrario: **reduce** la N.O., y lo rebajado vuelve al saldo disponible de la meta (la
+meta no cambia).
+
+**Antecedente (análisis previo, se mantiene):**
 El "estado" de la N.O. **no se persiste**: se deriva en el SP de listado
 (`CASE WHEN montoUtilizado = 0 THEN 'Registrado' … 'En Uso' … 'Utilizado'`, línea 486). No
 existe grupo `ESTADO_NO_OBJECION` en el catálogo. Las acciones de la lista
@@ -295,6 +347,16 @@ ese precio coincide con `meta financiera ÷ meta física`, la regla del owner. S
 igual a `KARDEXEJECUCIONPERIODO`, y a cualquier otra vista o reporte que muestre
 avance físico.
 
+### D6 — Saldo reprogramable = aprobado − solicitado (INC-02)
+`ProgramacionService` (`GetEstadoBloqueoAsync` y `SaveCronogramaAsync`) calcula
+`SaldoDisponible = MontoAprobado − Imp_solicitado`, donde `Imp_solicitado` es la suma de
+toda solicitud de desembolso **activa**, pagada o no (nueva columna de
+`KDX_FIN_SP_R_KARDEXRESUMENEJECUCION`). El ítem se bloquea cuando ese saldo llega a 0, salvo
+excepción registrada. El Kardex mantiene su propio saldo (aprobado − pagado, D1/D2): son dos
+saldos distintos a propósito. El de reprogramación es más restrictivo, porque una solicitud
+pendiente de pago ya no se puede redistribuir. El frontend no cambia: el modal ya usa
+`saldoDisponible` como techo.
+
 ### D3 — Desembolsos (INC-05, INC-06, INC-07)
 - **INC-05:** `TIPO_PAGO` queda con dos valores activos: `TRANSFERENCIA` → "TRANSFERENCIA
   BANCARIA", `CHEQUE` → "CHEQUE DE GERENCIA". `PAGO_DESTINO` pasa a `est_estado = 0` (no se
@@ -310,22 +372,53 @@ avance físico.
 
 ### D4 — No Objeciones (INC-03, INC-04)
 - **INC-03:** se agrega `TIPO_DOCUMENTO` = `CARTA` (seed + migración).
-- **INC-04:** nueva acción **Desistir**:
-  - Estado persistido en `KDX_FIN_TMC_NO_OBJECION` (columna nueva o FK a un grupo de
-    catálogo `ESTADO_NO_OBJECION`). El estado derivado (Registrado / En Uso / Utilizado)
-    se mantiene para las N.O. no desistidas; "Desistida" tiene prioridad sobre él.
-  - El alta de desembolso **rechaza en backend** cualquier ítem de una N.O. desistida, sea
-    cual sea su avance (no basta con ocultarla en el frontend).
-  - Lo ya desembolsado se conserva; el saldo no desembolsado deja de contar como
-    comprometido (D2).
-  - Adjunto opcional: carta de desistimiento del jefe de UN (reusa el flujo de archivos de
-    la N.O.). Motivo obligatorio.
-  - Botón en `no-objecion.page.html`, filtro y pill de estado "Desistida" en la lista y en
-    los reportes.
+- **INC-04 (replanteado tras la aclaración del owner):** nueva acción **Rebaja** por
+  detalle de N.O. (ítem + proveedor), no un estado "Desistida" de toda la N.O.:
+  - **Registro propio, sin modificar la N.O.:** tabla nueva
+    `FIN.KDX_FIN_TMD_NOOBJECION_REBAJA` (`ide_noObjecionDet`, `imp_rebajado`,
+    `can_rebajada`, `fec_rebaja`, `cod_numeroInforme`, `fec_informe`, `ide_archivo`
+    (informe), `txt_motivo`, `est_estado`, auditoría). El adjudicado original se conserva
+    (trazabilidad). **Sin anulación por ahora** (owner): no hay endpoint para anular una
+    rebaja; `est_estado` queda solo para una corrección administrativa en BD.
+  - **Sustento: un informe** (owner): número, fecha y archivo del informe, todos
+    obligatorios (reusa el flujo de archivos de la N.O.).
+  - **Quién la registra: el mismo especialista** (owner): igual que el alta de N.O., exige el
+    permiso `OPERACIONES_FINANCIERAS` (`NoObjecionController`) y que el convenio esté en su
+    cartera (`ValidarAccesoConvenioAsync`). No hay paso de aprobación.
+  - **La rebaja es de la N.O., no de la meta.** El `MontoAprobado` y la `MetaAprobada` de
+    SEL no se tocan. Lo que baja es el **adjudicado vigente** del detalle de N.O. =
+    `imp_montoAdjudicado − Σ rebajas activas` (lo mismo para la cantidad), y con él sube el
+    saldo disponible de la meta (`aprobado − Σ adjudicado vigente`). Lo usan **todos** los puntos de la tabla de H-04:
+    `NOOBJECIONSUMAITEM` y `NOOBJECIONSUMAPOSTULANTE` (liberan el saldo de la meta para la
+    nueva N.O.), `NOOBJECIONITEMSDESEMBOLSO` y `DESEMBOLSOSALDOITEM` (la N.O. ya no ofrece
+    lo rebajado), el comprometido del Kardex (Fase 1) y el listado de N.O.
+  - **Tope de la rebaja** = saldo no solicitado del detalle =
+    `adjudicado − solicitado (activo, pagado o no) + devoluciones − rebajas previas`. No se
+    puede rebajar lo que ya tiene solicitud de desembolso, **porque se entiende que ya está en
+    trámite** (owner): es el mismo criterio que D6. Si una solicitud pendiente no se va a
+    pagar, primero se anula (flujo existente) y luego se rebaja.
+  - **Unidades enteras** (owner): la rebaja se registra en **unidades** (`can_rebajada`
+    entero, ≥ 1), y el monto se deriva: `imp_rebajado = can_rebajada × precio unitario de la
+    N.O.` (`imp_montoAdjudicado ÷ can_cantidad`). Si el saldo no solicitado no es múltiplo
+    exacto del precio unitario, el tope en unidades es `FLOOR(saldo ÷ precio)`. El precio
+    unitario no cambia, así que el avance físico (D2b) sigue siendo correcto. En el ejemplo: 4,000 ÷ 1,000 = 4 meses liberados,
+    y la meta (sigue en 12,000 / 12 meses) queda con 2,000 / 2 meses comprometidos en esa
+    N.O. y 10,000 / 10 meses disponibles para nuevas N.O.
+  - **Rebaja total** (todo el saldo no solicitado) = equivale al "desistir" original: la N.O.
+    queda cerrada para nuevos desembolsos sin borrarla.
+  - **Estado derivado** del listado: se agrega "Rebajada" (o "Cerrada" si el saldo vigente
+    llega a 0 con rebaja), con filtro y pill en la lista y en los reportes.
+  - **Validación en el backend** (no solo en la UI): el alta de desembolso y el alta de
+    rebaja validan contra el adjudicado vigente.
+  - **UI:** acción "Rebajar" en `no-objecion.page.html`, visible solo con
+    `OPERACIONES_FINANCIERAS` y si hay al menos 1 unidad no solicitada. El modal muestra,
+    por detalle (ítem + proveedor), adjudicado, solicitado, pagado y unidades rebajables;
+    pide las unidades a rebajar (entero) y muestra el monto resultante, junto con el número,
+    la fecha y el archivo del informe y el motivo. Advierte que la rebaja no se puede
+    deshacer.
 
-### D5 — Programación y adendas (INC-01, INC-02)
-INC-02 se reevalúa **después** de D1: si el síntoma era el bloqueo por saldo falso, queda
-resuelto sin tocar el módulo.
+### D5 — Adendas (INC-01)
+INC-02 se resolvió con D6.
 
 **INC-01 (adendas) queda solo como propuesta** (owner, 2026-10-01): primero hay que validar
 que la BD de SEL guarde esa información. Lo encontrado en `BD_SEL_DEV` (local, 2026-10-01):
@@ -364,6 +457,14 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
   en `kardex-varianza-tab`). Se descarta como solución final: arreglaría la pantalla, pero
   `ProgramacionService` seguiría bloqueando metas con saldo. Puede usarse como **mitigación
   temporal** (Fase 0) si el backend tarda.
+- **Rebaja editando `imp_montoAdjudicado`/`can_cantidad` del detalle.** Se descarta: pierde
+  el monto original adjudicado (trazabilidad frente al documento de la N.O.) y no permite
+  anular la rebaja.
+- **Rebaja como movimiento negativo de DEVOLUCIÓN.** Se descarta: la devolución libera saldo
+  **dentro** de la N.O., y la rebaja tiene que liberarlo hacia la **meta**. Mezclarlas
+  rompería los saldos de desembolso.
+- **Desistir con un estado "Desistida" de toda la N.O.** (propuesta inicial). Se reemplaza
+  por la rebaja: la rebaja total cubre ese caso, y la parcial cubre el caso real del owner.
 - **Desistimiento por eliminación.** Se descarta: borra la trazabilidad y permite recrear la
   solicitud con otro monto.
 - **Desistimiento solo con el campo Observación.** Se descarta: no bloquea nuevos
@@ -384,7 +485,8 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
   Negocios antes del despliegue, y revisar los reportes (`reportes.page.ts`), las alertas de
   varianza (`alertas.page.ts`, `kpiVarianzas`) y la ejecución por periodo
   (`KDX_FIN_SP_R_KARDEXEJECUCIONPERIODO`), que leen la misma vista.
-- El estado Desistida entra en filtros, reportes y en la validación del alta de desembolso.
+- La rebaja entra en todos los cálculos de saldo de N.O. (alta de N.O., alta de desembolso,
+  Kardex, listado) y en filtros y reportes (estado "Rebajada"/"Cerrada").
 - Cambia la terminología Solicitud → Memorándum de validación en pantallas, reportes y
   manuales.
 - Casi todo el trabajo es de `mc-api-ejecucion` (SPs + servicios). El frontend cambia en
@@ -398,9 +500,11 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
 | 1 ✅ local | INC-08 + H-09 + H-10 + D2/D2b: saldo de meta, ejecutado = pagado, comprometido = adjudicado, sin fan-out por rendiciones, avance físico = monto ÷ precio unitario (también en `KARDEXEJECUCIONPERIODO`, que consume SIGEC-RTF); bloqueo de programación con la misma fórmula; tests en `KardexServiceTests` y spec de `kardex-varianza-tab` | API + UI | Fase 0, confirmar consumidores de `imp_saldoNuevo` |
 | 2 | INC-07: extorno al anular desembolso; error visible en la lista | API + UI | Fase 0 |
 | 3 | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago) + migración de tipos de pago | API (SQL) | Regla de migración |
-| 4 | INC-04: estado Desistida, endpoint, validación en el alta de desembolso, UI | API + UI | Fase 1 (comprometido) |
+| 4 | INC-04: tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta y anulación de rebaja, validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
 | 5 | INC-06: terminología Memorándum de validación | UI (+ API si es campo nuevo) | Respuesta del punto abierto |
-| — | INC-01 (solo propuesta, ver D5), INC-02 | SEL + KOFIX | Validar el uso de `convenio_incentivo_ampliacion` en QA/prod y qué modifica una adenda; INC-02 se reevalúa tras desplegar la Fase 1 |
+| 1 ✅ local | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
+| 1b | INC-02, ajustes del modal de reprogramación: conservar los meses solicitados y mostrar el saldo físico | UI (+ API sel-general si se conservan meses) | Respuesta de los puntos abiertos de INC-02 |
+| — | INC-01 (solo propuesta, ver D5) | SEL + KOFIX | Validar el uso de `convenio_incentivo_ampliacion` en QA/prod y qué modifica una adenda |
 
 ## Verificación con datos (BD local, 2026-10-01)
 
@@ -575,13 +679,15 @@ EXEC FIN.KDX_FIN_SP_R_KARDEXEJECUCIONPERIODO @ide_postulante = 190432, @fec_inic
     mismo conjunto de ítems (los que tienen solicitudes), porque SIGEC distingue "sin dato"
     de 0.
 - `KardexService.GetKardexConsolidadoAsync`: `Saldo = MetaFinanciera − MontoEfectivizado`.
-- `ProgramacionService.SaveCronogramaAsync` / `GetEstadoBloqueoAsync`: saldo disponible y
-  bloqueo con `MontoAprobado − Imp_efectivizado`.
-- `ExecutionSummaryInternal`: se elimina `Imp_saldoActual`.
+- `ProgramacionService.SaveCronogramaAsync` / `GetEstadoBloqueoAsync`: saldo reprogramable y
+  bloqueo con `MontoAprobado − Imp_solicitado` (D6; ajustado el 2026-10-01 tras la
+  aclaración de INC-02, antes usaba lo pagado).
+- `ExecutionSummaryInternal`: se elimina `Imp_saldoActual` y se agrega `Imp_solicitado`
+  (el SP de resumen devuelve la nueva columna `imp_solicitado`).
 - Tests: `KardexServiceTests` (+ caso 0051-2026-ST: saldo 72,000 = varianza) y
-  `ProgramacionServiceSaldoTests` (nuevo, 5 casos: no bloquea con N.O. parcial, bloquea al
-  pagar el 100%, sin ejecución, rechaza o permite reprogramar según el saldo de la meta).
-  **`dotnet test`: 110/110 ✅.**
+  `ProgramacionServiceSaldoTests` (nuevo, 6 casos: no bloquea con N.O. parcial, bloquea al
+  solicitar el 100%, sin ejecución, descuenta lo solicitado aunque no esté pagado, y
+  rechaza o permite reprogramar según el saldo). **`dotnet test`: 111/111 ✅.**
 
 **`agroideas-frontend-monorepo`**
 - `kardex-varianza-tab`: sin cambios de lógica (ya presentaba `saldo` del backend). Se
@@ -620,8 +726,18 @@ Oficio 02), ejecutado 14,400, saldo **72,000**, 17%, "Con Saldo";
   cambios locales pendientes), desplegar con `deploy_kofix.sh` (el script nuevo al final;
   revisar los `20260910_*` y `20260917_*` que faltan en la lista) y repetir los dos
   diagnósticos en QA.
-- [ ] **INC-02:** qué pantalla y qué datos deberían verse con una programación vigente.
-  ¿El síntoma es que la meta aparece **bloqueada**? (si sí, se resuelve con D1).
+- [x] **INC-02:** es la reprogramación en fase de ejecución; saldo = aprobado − solicitado
+  (owner, 2026-10-01). Implementado en el backend (D6).
+- [ ] **INC-02, meses ya solicitados:** al reprogramar, ¿el cronograma debe **conservar** los
+  meses ya cubiertos por solicitudes (bloqueados, no editables) y redistribuir solo el
+  saldo, o basta con programar el saldo en meses futuros? Hoy se reemplaza todo el
+  cronograma del ítem y lo solicitado desaparece de la programación (H-02, obs. 2).
+- [ ] **INC-02, meta física:** ¿el modal debe mostrar y limitar también el saldo **físico**
+  (meta − unidades ya solicitadas, con el precio de la N.O.)? Hoy muestra la meta física
+  completa (H-02, obs. 1).
+- [ ] **INC-02, habilitar el botón:** ¿la reprogramación queda abierta a todo usuario con
+  acceso a Programación vigente, o requiere un permiso o una acción explícita ("habilitar
+  reprogramación")? Hoy el botón está siempre activo salvo bloqueo por saldo.
 - [ ] **INC-06:** ¿el memorándum de validación **reemplaza** "N° Solicitud" o **se añade**?
   ¿Es texto libre (número de memorándum) o lleva fecha y archivo adjunto como la N.O.?
 - [x] **Entorno de las capturas:** QA (VPS OVH). Diagnóstico ejecutado el 2026-10-01.
@@ -649,8 +765,18 @@ Oficio 02), ejecutado 14,400, saldo **72,000**, 17%, "Con Saldo";
   siembra o retirarlo.
 - [x] **D2:** "Ejecutado" = **solo lo pagado**; cheques de gerencia **desde GIRADO** (owner,
   2026-10-01).
-- [ ] **INC-04:** si una N.O. se desiste con solicitudes **pendientes** (no pagadas), ¿se
-  anulan, se permite terminar de pagarlas o se impide desistir?
+- [x] **INC-04:** es una rebaja del saldo no usado que lo libera para una nueva N.O. (owner,
+  2026-10-01). Ver D4.
+- [x] **INC-04, solicitudes pendientes:** solo se rebaja lo no solicitado; lo solicitado ya
+  está en trámite (owner, 2026-10-01).
+- [x] **INC-04, unidades:** solo unidades enteras (owner, 2026-10-01).
+- [x] **INC-04, sustento y permiso:** un informe; lo registra el mismo especialista (owner,
+  2026-10-01).
+- [x] **INC-04, anulación:** no, por ahora (owner, 2026-10-01).
+- [ ] **INC-04, precio unitario no entero:** si `imp_montoAdjudicado ÷ can_cantidad` tiene
+  decimales (p. ej. 1,000 ÷ 3), el monto rebajado se redondea a 2 decimales y, si la
+  rebaja es total, se ajusta para que el adjudicado vigente quede exactamente en lo
+  solicitado. Validar con datos reales antes de implementar.
 - [ ] **INC-05:** en QA no hay `PAGO_DESTINO` en uso. Falta confirmar que todo `CHEQUE`
   histórico es de gerencia, y repetir el conteo en producción.
 - [ ] Validar las severidades con la Unidad de Negocios.
