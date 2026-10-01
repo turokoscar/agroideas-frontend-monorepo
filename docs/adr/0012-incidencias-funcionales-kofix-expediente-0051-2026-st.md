@@ -1,10 +1,16 @@
 # ADR 0012: Incidencias funcionales de KOFIX (expediente 0051-2026-ST) — análisis situacional
 
 ## Estado
-Aceptado · **Fases 1, 2, 3, 4 y 5 implementadas** (sin desplegar a QA; la Fase 2 quedó reducida al error de carga, ver su registro) · Fase 5 implementada · Fase 1b pendiente · INC-01 queda como propuesta. **En pausa desde el 2026-10-01**, a la espera de revisar y commitear la Fase 1, desplegarla y que el área usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación) y los [Puntos abiertos](#puntos-abiertos).
-
+Aceptado · **Fases 1 (con D6), 2, 3, 4 y 5 implementadas y commiteadas**, más el refactor D7
+y la concurrencia desembolso/rebaja (la Fase 2 quedó reducida al error de carga, ver su
+registro) · Fase 1b pendiente · INC-01 queda como propuesta. **En pausa desde el
+2026-10-01**, a la espera de subir los commits (`desarrollo` de `mc-api-ejecucion` y de este
+monorepo), desplegar en QA con `deploy_kofix.sh`, repetir los diagnósticos y que el área
+usuaria responda los puntos abiertos. Ver el [Registro de implementación](#registro-de-implementación)
+y los [Puntos abiertos](#puntos-abiertos).
 ## Fecha
-2026-10-01
+2026-10-01 · Estado verificado contra el código el 2026-10-01 (`dotnet test` 172/172,
+`nx test kofix-ejecucion` 541/541).
 
 ## Responsables
 Equipo Frontend AGROIDEAS · Owner del módulo: Oscar Pazos
@@ -365,7 +371,7 @@ estados. Aplicado en la Fase 4: `KDX_FIN_SP_C_NOOBJECIONREBAJA` solo inserta; el
 unidades y el monto los calcula `NoObjecionRebajaService` (con `NoObjecionRebajaCalculo`); el
 estado de la N.O. lo calcula `NoObjecionEstado`, ya no un `CASE` del listado.
 
-**Aplicado también al Kardex (2026-10-02):** los tres SPs de resumen de la Fase 1
+**Aplicado también al Kardex (2026-10-01):** los tres SPs de resumen de la Fase 1
 (`KARDEXRESUMENEJECUCION`, `KARDEXRESUMENMES` y `KARDEXEJECUCIONPERIODO`) codificaban en la
 consulta qué cuenta como pagado y la conversión de monto a unidades. Se reemplazaron por un SP
 de lectura (`KDX_FIN_SP_R_KARDEXCICLO_POSTULANTE`) y un conjunto de componentes en la API. Ver
@@ -529,12 +535,12 @@ use la meta **vigente** (con adendas) como programado en el Kardex y en el bloqu
 | Fase | Alcance | Repos | Depende de |
 | --- | --- | --- | --- |
 | 0 | Diagnóstico de datos de 0051-2026-ST (consultas abajo) | BD KARDEX | — |
-| 1 ✅ local | INC-08 + H-09 + H-10 + D2/D2b: saldo de meta, ejecutado = pagado, comprometido = adjudicado, sin fan-out por rendiciones, avance físico = monto ÷ precio unitario (también en `KARDEXEJECUCIONPERIODO`, que consume SIGEC-RTF); bloqueo de programación con la misma fórmula; tests en `KardexServiceTests` y spec de `kardex-varianza-tab` | API + UI | Fase 0, confirmar consumidores de `imp_saldoNuevo` |
-| 2 ✅ | INC-07: error de carga visible en la lista de Desembolsos; se retira el botón "Anular" de desembolsos (la anulación es de la N.O., ver Fase 4) | UI | — |
+| 1 ✅ | INC-08 + H-09 + H-10 + D2/D2b: saldo de meta, ejecutado = pagado, comprometido = adjudicado, sin fan-out por rendiciones, avance físico = monto ÷ precio unitario (también en `KARDEXEJECUCIONPERIODO`, que consume SIGEC-RTF); bloqueo de programación con la misma fórmula; tests en `KardexServiceTests` y spec de `kardex-varianza-tab` | API + UI | Fase 0, confirmar consumidores de `imp_saldoNuevo` |
+| 2 ✅ | INC-07: error de carga visible en la lista de Desembolsos; se retiran los botones "Anular" y "Editar" de desembolsos (la anulación es de la N.O., ver Fase 4) | UI | — |
 | 3 ✅ | INC-03 + INC-05: catálogos (CARTA; renombrar e inactivar tipos de pago); validador que rechaza PAGO_DESTINO. Sin migración de datos (QA no tiene PAGO_DESTINO en uso) | API (SQL + validador) | — |
 | 4 ✅ | INC-04: rebaja parcial y "Anular saldo" (rebaja total) de la N.O.; tabla de rebajas, "adjudicado vigente" en los 6 SPs de saldo de N.O., endpoint de alta de rebaja (sin anulación), validaciones, modal "Rebajar" y estado en la lista | API + UI | Fase 1 (comprometido); puntos abiertos de INC-04 |
 | 5 ✅ | INC-06: solo renombrar "N° Solicitud" a "N° Memorándum AGROIDEAS" en pantallas y mensajes (sin campo nuevo) | UI + mensajes de la API | — |
-| 1 ✅ local | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
+| 1 (D6) ✅ | INC-02 (D6): saldo reprogramable = aprobado − solicitado en `ProgramacionService` | API | — |
 | 1b | INC-02, ajustes del modal de reprogramación: conservar los meses solicitados y mostrar el saldo físico | UI (+ API sel-general si se conservan meses) | Respuesta de los puntos abiertos de INC-02 |
 | — | INC-01 (solo propuesta, ver D5) | SEL + KOFIX | Validar el uso de `convenio_incentivo_ampliacion` en QA/prod y qué modifica una adenda |
 
@@ -694,9 +700,9 @@ EXEC FIN.KDX_FIN_SP_R_KARDEXEJECUCIONPERIODO @ide_postulante = 190432, @fec_inic
 
 ## Registro de implementación
 
-### Fase 1 — 2026-10-01 (local, sin desplegar)
+### Fase 1 — 2026-10-01 (commiteada, sin desplegar)
 
-> **Nota (2026-10-02):** el script SQL de esta fase se **reemplazó** por el refactor D7 (ver
+> **Nota (2026-10-01):** el script SQL de esta fase se **reemplazó** por el refactor D7 (ver
 > "D7 — Kardex calculado en la API"): las mismas reglas se calculan ahora en la API, con
 > resultados idénticos. Lo que sigue describe la versión original, que nunca se desplegó.
 
@@ -731,11 +737,12 @@ EXEC FIN.KDX_FIN_SP_R_KARDEXEJECUCIONPERIODO @ide_postulante = 190432, @fec_inic
   suma 2 casos: "Con Saldo" + 17% + 72,000 para 0051-2026-ST, y "Ejecutado 100%" solo con
   saldo 0. **`nx test kofix-ejecucion --testPathPattern=kardex-varianza-tab`: 5/5 ✅.**
 
-**`despliegue/deploy_kofix.sh`**: se agrega el script al final de `DB_SCRIPTS`. Ojo: la
-lista vuelve a aplicar `20260822_estandarizar_nomenclatura_sp.sql` en cada despliegue, que
-redefine estos mismos SPs con la versión anterior. Por eso el script nuevo debe quedar
-**siempre al final**. Además, la lista **no incluye** `20260910_*`, `20260917_*` ni otros
-scripts posteriores al 28/08: revisar antes del próximo despliegue.
+**`despliegue/deploy_kofix.sh`**: la lista vuelve a aplicar
+`20260822_estandarizar_nomenclatura_sp.sql` en cada despliegue, que redefine estos mismos SPs
+con la versión anterior. Por eso los scripts del ADR deben quedar **siempre al final**.
+Estado actual de `DB_SCRIPTS` (verificado el 2026-10-01): ya incluye `20260910_*` y los tres
+`20260917_*`, y termina con los cuatro scripts del ADR en orden de dependencia: Fase 3,
+Fase 4, D7 y concurrencia. El script de esta fase ya no está: lo reemplazó el de D7.
 
 **Verificación en BD local (script aplicado en `sqlserver_dev`, 2026-10-01):**
 
@@ -750,81 +757,7 @@ Esperado en QA tras desplegar (0051-2026-ST, ítem 172575): comprometido **86,40
 Oficio 02), ejecutado 14,400, saldo **72,000**, 17%, "Con Saldo";
 `CantidadEjecutada` = **6** (antes 12), 172572 = 23 (antes 46) y 172570 = 621 (antes 1,242).
 
-### Fase 2 — 2026-10-01
-
-**Versión final (vigente):**
-- `kofix-ejecucion`, `desembolso.page`: `loadError` cambia el estado vacío a "No se pudieron
-  cargar las solicitudes" en vez de "Sin solicitudes" (INC-07). Specs del error de carga.
-- Se **retira el botón "Anular"** de la lista de Desembolsos y su handler. Nunca funcionó:
-  la API rechazaba toda solicitud con pago, y todas lo tienen desde que se registran. Además,
-  la anulación es de la N.O. (Fase 4).
-- **`nx test kofix-ejecucion`: 524/524 ✅**; lint 0 errores.
-
-**Implementación inicial, revertida el mismo día:** por un malentendido se implementó la
-anulación de **desembolsos** (sin rendición y con N.O. abierta), con EXTORNO en el Kardex y
-baja del pago y del cheque (API `9a4a2ce`, monorepo `2027ad3`). El owner aclaró que lo que
-se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a34` en
-`mc-api-ejecucion`: los SPs `KARDEXMOVIMIENTO`, `PUEDE_MODIFICAR`, `D_DESEMBOLSO` y
-`DESEMBOLSOPOSTULANTE` vuelven a su versión previa, también en la BD local, y el script
-`20261001_adr0012_fase2_anulacion_desembolso_extorno.sql` se eliminó del repo y de
-`deploy_kofix.sh`. En el frontend se quitaron `puedeAnular` y el botón. La verificación
-de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
-alguna vez se necesita anular desembolsos individuales.
-
-### Concurrencia desembolso / rebaja — 2026-10-02
-
-**Problema 1 (concurrencia):** desembolso y rebaja consumen el mismo saldo no solicitado de un
-ítem de N.O. Ambos leían el saldo y luego insertaban. La rebaja bloqueaba el ítem (Fase 4),
-pero el desembolso no tomaba ese bloqueo. Dos operaciones simultáneas sobre el mismo ítem (por
-ejemplo, desembolsar 4,000 y anular el saldo de 4,000) podían pasar las dos y dejar la N.O. en
-negativo.
-
-**Problema 2 (encontrado al analizarlo, sin concurrencia):** el saldo del desembolso lo
-validaba `KDX_FIN_SP_C_DESEMBOLSODETALLE` con su propia fórmula (adjudicado − solicitado +
-devoluciones), que **no descontaba las rebajas**. La UI sí las descontaba, pero una petición
-directa a la API o una pantalla desactualizada podía desembolsar lo ya rebajado. Además, era
-lógica de negocio en un SP (contra D7).
-
-**Solución:**
-- `INoObjecionDetSaldoRepository.LeerConBloqueoAsync` (nueva interfaz, implementada por
-  `NoObjecionRepository` con `KDX_FIN_SP_R_NOOBJECIONDET_SALDO`): lectura del saldo de un ítem
-  con `UPDLOCK, HOLDLOCK`, **compartida** por la rebaja y el desembolso.
-- `NoObjecionSaldoBloqueo.BloquearAsync`: bloquea varios ítems **en orden ascendente de id**
-  (evita bloqueos cruzados entre desembolsos de varios ítems).
-- `DesembolsoSaldoValidacion` (regla pura): lo solicitado por ítem (sumando ítems repetidos)
-  ≤ saldo no solicitado, que ya descuenta rebajas y suma devoluciones. Al **editar**, lo que la
-  propia solicitud tenía en el ítem vuelve a estar disponible.
-- `DesembolsoService`: al registrar y al editar, dentro de la transacción, bloquea, valida y
-  recién entonces inserta. La edición pasó a la transacción del servicio
-  (`ActualizarDesembolsoAsync` del repositorio recibe conexión y transacción).
-- `Database/20261002_adr0012_concurrencia_desembolso_rebaja.sql`:
-  `KDX_FIN_SP_C_DESEMBOLSODETALLE` **solo inserta**.
-
-**Verificación:**
-- Tests: `DesembolsoSaldoValidacionTests` (6) y `DesembolsoServiceSaldoConcurrenciaTests` (4:
-  rechazo con rollback cuando una rebaja ya consumió el saldo, orden de bloqueo 7 → 9, edición
-  que devuelve lo propio y edición que excede). **`dotnet test` 172/172 ✅.**
-- **Prueba real con dos sesiones en la BD local:** se abrieron 1,920 sin solicitar en la N.O.
-  de Porongos. La sesión A (rebaja) tomó el bloqueo a las 21:17:06.513, esperó 5 s y anuló el
-  saldo (commit 21:17:11.532). La sesión B (desembolso) pidió el bloqueo a las 21:17:07.493 y lo
-  obtuvo a las 21:17:11.549 (esperó a A), leyendo saldo **0** en lugar de 1,920, así que la API
-  rechaza el desembolso. Datos de prueba revertidos.
-
-### Fase 5 — 2026-10-02
-
-Decisión del owner: **solo cambiar el nombre**. "N° Solicitud" pasa a **"N° Memorándum
-AGROIDEAS"**; el dato y su columna (`cod_numeroSolicitud` / `numeroSolicitud`) no cambian.
-- `kofix-ejecucion`: etiqueta del modal de desembolso, columnas de la lista de Desembolsos y
-  de la bandeja de cheques (ancho 130 → 170 px), modal de activación de cheque, filtro de
-  Rendiciones ("N° Memorándum AGROIDEAS (origen)") y filtro de Desembolsos. Ese filtro decía
-  "N° Desembolso", pero busca por ese mismo número. Los placeholders `SD-2024-001` pasan a
-  `0946`, el formato real que se muestra como `NNNN-AAAA`.
-- `mc-api-ejecucion`: mensajes de validación (`[Required]` de `DesembolsoRequest` y
-  `DesembolsoValidator`) y el texto de auditoría al crear o editar.
-- Ningún test fijaba los textos. **`dotnet test` 162/162 ✅; `nx test kofix-ejecucion`
-  541/541 ✅; build OK.**
-
-### D7 — Kardex calculado en la API (2026-10-02)
+### D7 — Kardex calculado en la API (2026-10-01)
 
 **Motivo:** el owner pidió refactorizar los SPs del Kardex de la Fase 1 aplicando D7, los
 principios SOLID y menor complejidad ciclomática.
@@ -868,6 +801,63 @@ hechos después de las 00:00 (afectaba lo que recibe SIGEC-RTF). `Periodo` compa
   postulantes de la BD local (consolidado, periodo completo, septiembre 2026 y mensual: 16
   secciones, 185 líneas). Con el script aplicado, `KardexResumenService` contra la misma BD
   produjo **exactamente los mismos valores (0 diferencias)**.
+
+### Fase 2 — 2026-10-01
+
+**Versión final (vigente):**
+- `kofix-ejecucion`, `desembolso.page`: `loadError` cambia el estado vacío a "No se pudieron
+  cargar las solicitudes" en vez de "Sin solicitudes" (INC-07). Specs del error de carga.
+- Se **retira el botón "Anular"** de la lista de Desembolsos y su handler. Nunca funcionó:
+  la API rechazaba toda solicitud con pago, y todas lo tienen desde que se registran. Además,
+  la anulación es de la N.O. (Fase 4).
+- Se **retira el botón "Editar"** de la lista de Desembolsos (monorepo `14c9439`). Por la
+  misma razón, siempre terminaba en error: la API rechaza editar toda solicitud con pago.
+  Decisión del owner. El endpoint de edición sigue existiendo, y desde la concurrencia
+  desembolso/rebaja valida el saldo con bloqueo.
+- **`nx test kofix-ejecucion`: 524/524 ✅**; lint 0 errores.
+
+**Implementación inicial, revertida el mismo día:** por un malentendido se implementó la
+anulación de **desembolsos** (sin rendición y con N.O. abierta), con EXTORNO en el Kardex y
+baja del pago y del cheque (API `9a4a2ce`, monorepo `2027ad3`). El owner aclaró que lo que
+se anula es la **N.O.**, y solo su saldo no solicitado. Se revirtió con `b1e7a34` en
+`mc-api-ejecucion`: los SPs `KARDEXMOVIMIENTO`, `PUEDE_MODIFICAR`, `D_DESEMBOLSO` y
+`DESEMBOLSOPOSTULANTE` vuelven a su versión previa, también en la BD local, y el script
+`20261001_adr0012_fase2_anulacion_desembolso_extorno.sql` se eliminó del repo y de
+`deploy_kofix.sh`. En el frontend se quitaron `puedeAnular` y el botón. La verificación
+de esa versión (extorno, baja del cheque, recuperación del saldo) queda como referencia si
+alguna vez se necesita anular desembolsos individuales.
+
+### Fase 3 — 2026-10-01
+
+**`mc-api-ejecucion`**
+- `Database/20261001_adr0012_fase3_catalogos_documento_pago.sql` (idempotente, re-ejecutable
+  en cada despliegue):
+  - INC-03: `TIPO_DOCUMENTO` = `CARTA` (orden 5).
+  - INC-05: `TRANSFERENCIA` → "TRANSFERENCIA BANCARIA", `CHEQUE` → "CHEQUE DE GERENCIA",
+    `PAGO_DESTINO` → `est_estado = 0` (no se borra). Los `ide_catalogo` y `cod_codigo` no
+    cambian, porque `DesembolsoService` decide el flujo por id (12 directo a GIRADO, 13
+    DEVENGADO → GIRADO).
+- `DesembolsoValidator`: `TipoPagoId` solo admite 12 o 13. Antes, un 14 enviado directo a la
+  API se procesaba como transferencia, y cualquier otro id registraba la solicitud **sin
+  efectivizarla**. La condición se aplica solo a la regla nueva
+  (`ApplyConditionTo.CurrentValidator`), para no desactivar la de "obligatorio".
+- `DesembolsoService`: se retira la rama `TipoPagoId == 14` y los comentarios de PAGO_DESTINO.
+- Tests: `Validators/DesembolsoValidatorTests` (nuevo: 12 y 13 válidos, 14 rechazado,
+  0 solo con el mensaje de obligatorio). **`dotnet test`: 115/115 ✅.**
+
+**Frontend:** sin cambios. Los selects de tipo de documento (`no-objecion-modal`) y de tipo
+de pago (`desembolso-modal`, filtro de `desembolso.page`) leen el catálogo, que ya filtra
+`est_estado = 1`. Los textos solo aparecen en fixtures de specs.
+
+**Verificación en BD local** (script aplicado dos veces, sin duplicados):
+`CATALOGOPORGRUPO 'TIPO_PAGO'` devuelve solo 12 "TRANSFERENCIA BANCARIA" y 13 "CHEQUE DE
+GERENCIA"; `'TIPO_DOCUMENTO'` agrega 20001 "CARTA".
+
+**`despliegue/deploy_kofix.sh`:** script agregado al final de `DB_SCRIPTS`.
+
+**Efecto en datos existentes:** la columna "Tipo de Pago" de la lista de Desembolsos toma la
+descripción del catálogo (`DESEMBOLSOPOSTULANTE`), así que los registros históricos se ven
+con los nombres nuevos automáticamente.
 
 ### Fase 4 — 2026-10-01
 
@@ -914,7 +904,7 @@ hechos después de las 00:00 (afectaba lo que recibe SIGEC-RTF). `Periodo` compa
   PDF subido a **sel-api-archivos** con el mismo flujo que el documento de la N.O.); motivo;
   confirmación que avisa que no se puede deshacer; e historial de rebajas.
 - `no-objecion.page`: botón "Rebajar / Anular saldo" (ícono `content_cut`) solo con el
-  permiso `OPERACIONES_FINANCIERAS` (agregado el 2026-10-02) y si `saldoMonto > 0`; editar y eliminar deshabilitados con desembolsos **o rebajas**; columnas
+  permiso `OPERACIONES_FINANCIERAS` (agregado el 2026-10-01) y si `saldoMonto > 0`; editar y eliminar deshabilitados con desembolsos **o rebajas**; columnas
   "Adjudicado Vigente" y "Sin Solicitar"; pills para los estados que calcula la API.
 - Specs: modal (12) y página (6 nuevos). **`nx test kofix-ejecucion`: 539/539 ✅**; lint 0
   errores; `nx build` OK.
@@ -929,37 +919,58 @@ llamador; con D7 el SP ya no tiene esa lógica.
 **No verificado:** el flujo completo contra la API levantada (requiere un token de
 `sel-api-seguridad`); se cubrió con tests unitarios y con los SPs en la BD local.
 
-### Fase 3 — 2026-10-01
+### Concurrencia desembolso / rebaja — 2026-10-01
 
-**`mc-api-ejecucion`**
-- `Database/20261001_adr0012_fase3_catalogos_documento_pago.sql` (idempotente, re-ejecutable
-  en cada despliegue):
-  - INC-03: `TIPO_DOCUMENTO` = `CARTA` (orden 5).
-  - INC-05: `TRANSFERENCIA` → "TRANSFERENCIA BANCARIA", `CHEQUE` → "CHEQUE DE GERENCIA",
-    `PAGO_DESTINO` → `est_estado = 0` (no se borra). Los `ide_catalogo` y `cod_codigo` no
-    cambian, porque `DesembolsoService` decide el flujo por id (12 directo a GIRADO, 13
-    DEVENGADO → GIRADO).
-- `DesembolsoValidator`: `TipoPagoId` solo admite 12 o 13. Antes, un 14 enviado directo a la
-  API se procesaba como transferencia, y cualquier otro id registraba la solicitud **sin
-  efectivizarla**. La condición se aplica solo a la regla nueva
-  (`ApplyConditionTo.CurrentValidator`), para no desactivar la de "obligatorio".
-- `DesembolsoService`: se retira la rama `TipoPagoId == 14` y los comentarios de PAGO_DESTINO.
-- Tests: `Validators/DesembolsoValidatorTests` (nuevo: 12 y 13 válidos, 14 rechazado,
-  0 solo con el mensaje de obligatorio). **`dotnet test`: 115/115 ✅.**
+**Problema 1 (concurrencia):** desembolso y rebaja consumen el mismo saldo no solicitado de un
+ítem de N.O. Ambos leían el saldo y luego insertaban. La rebaja bloqueaba el ítem (Fase 4),
+pero el desembolso no tomaba ese bloqueo. Dos operaciones simultáneas sobre el mismo ítem (por
+ejemplo, desembolsar 4,000 y anular el saldo de 4,000) podían pasar las dos y dejar la N.O. en
+negativo.
 
-**Frontend:** sin cambios. Los selects de tipo de documento (`no-objecion-modal`) y de tipo
-de pago (`desembolso-modal`, filtro de `desembolso.page`) leen el catálogo, que ya filtra
-`est_estado = 1`. Los textos solo aparecen en fixtures de specs.
+**Problema 2 (encontrado al analizarlo, sin concurrencia):** el saldo del desembolso lo
+validaba `KDX_FIN_SP_C_DESEMBOLSODETALLE` con su propia fórmula (adjudicado − solicitado +
+devoluciones), que **no descontaba las rebajas**. La UI sí las descontaba, pero una petición
+directa a la API o una pantalla desactualizada podía desembolsar lo ya rebajado. Además, era
+lógica de negocio en un SP (contra D7).
 
-**Verificación en BD local** (script aplicado dos veces, sin duplicados):
-`CATALOGOPORGRUPO 'TIPO_PAGO'` devuelve solo 12 "TRANSFERENCIA BANCARIA" y 13 "CHEQUE DE
-GERENCIA"; `'TIPO_DOCUMENTO'` agrega 20001 "CARTA".
+**Solución:**
+- `INoObjecionDetSaldoRepository.LeerConBloqueoAsync` (nueva interfaz, implementada por
+  `NoObjecionRepository` con `KDX_FIN_SP_R_NOOBJECIONDET_SALDO`): lectura del saldo de un ítem
+  con `UPDLOCK, HOLDLOCK`, **compartida** por la rebaja y el desembolso.
+- `NoObjecionSaldoBloqueo.BloquearAsync`: bloquea varios ítems **en orden ascendente de id**
+  (evita bloqueos cruzados entre desembolsos de varios ítems).
+- `DesembolsoSaldoValidacion` (regla pura): lo solicitado por ítem (sumando ítems repetidos)
+  ≤ saldo no solicitado, que ya descuenta rebajas y suma devoluciones. Al **editar**, lo que la
+  propia solicitud tenía en el ítem vuelve a estar disponible.
+- `DesembolsoService`: al registrar y al editar, dentro de la transacción, bloquea, valida y
+  recién entonces inserta. La edición pasó a la transacción del servicio
+  (`ActualizarDesembolsoAsync` del repositorio recibe conexión y transacción).
+- `Database/20261002_adr0012_concurrencia_desembolso_rebaja.sql`:
+  `KDX_FIN_SP_C_DESEMBOLSODETALLE` **solo inserta**.
 
-**`despliegue/deploy_kofix.sh`:** script agregado al final de `DB_SCRIPTS`.
+**Verificación:**
+- Tests: `DesembolsoSaldoValidacionTests` (6) y `DesembolsoServiceSaldoConcurrenciaTests` (4:
+  rechazo con rollback cuando una rebaja ya consumió el saldo, orden de bloqueo 7 → 9, edición
+  que devuelve lo propio y edición que excede). **`dotnet test` 172/172 ✅.**
+- **Prueba real con dos sesiones en la BD local:** se abrieron 1,920 sin solicitar en la N.O.
+  de Porongos. La sesión A (rebaja) tomó el bloqueo a las 21:17:06.513, esperó 5 s y anuló el
+  saldo (commit 21:17:11.532). La sesión B (desembolso) pidió el bloqueo a las 21:17:07.493 y lo
+  obtuvo a las 21:17:11.549 (esperó a A), leyendo saldo **0** en lugar de 1,920, así que la API
+  rechaza el desembolso. Datos de prueba revertidos.
 
-**Efecto en datos existentes:** la columna "Tipo de Pago" de la lista de Desembolsos toma la
-descripción del catálogo (`DESEMBOLSOPOSTULANTE`), así que los registros históricos se ven
-con los nombres nuevos automáticamente.
+### Fase 5 — 2026-10-01
+
+Decisión del owner: **solo cambiar el nombre**. "N° Solicitud" pasa a **"N° Memorándum
+AGROIDEAS"**; el dato y su columna (`cod_numeroSolicitud` / `numeroSolicitud`) no cambian.
+- `kofix-ejecucion`: etiqueta del modal de desembolso, columnas de la lista de Desembolsos y
+  de la bandeja de cheques (ancho 130 → 170 px), modal de activación de cheque, filtro de
+  Rendiciones ("N° Memorándum AGROIDEAS (origen)") y filtro de Desembolsos. Ese filtro decía
+  "N° Desembolso", pero busca por ese mismo número. Los placeholders `SD-2024-001` pasan a
+  `0946`, el formato real que se muestra como `NNNN-AAAA`.
+- `mc-api-ejecucion`: mensajes de validación (`[Required]` de `DesembolsoRequest` y
+  `DesembolsoValidator`) y el texto de auditoría al crear o editar.
+- Ningún test fijaba los textos. **`dotnet test` 162/162 ✅; `nx test kofix-ejecucion`
+  541/541 ✅; build OK.**
 
 ## Puntos abiertos
 
@@ -969,10 +980,12 @@ con los nombres nuevos automáticamente.
   Si solo amplía plazo, basta con exponer la tabla por `sel-api-general` y usar la última
   `fechaTermino` como fecha de fin vigente. Si cambia montos o metas, hay que extender el
   modelo.
-- [ ] **Fase 1:** revisar y commitear (en `mc-api-ejecucion` los cambios se mezclan con otros
-  cambios locales pendientes), desplegar con `deploy_kofix.sh` (el script nuevo al final;
-  revisar los `20260910_*` y `20260917_*` que faltan en la lista) y repetir los dos
-  diagnósticos en QA.
+- [x] **Fases 1-5 (código):** commiteadas en `desarrollo` en ambos repos (API `2767293` …
+  `0e6ae0b`; monorepo `af6e6a5` … `92dad68`); `deploy_kofix.sh` ya tiene los scripts del ADR
+  y los `20260910_*`/`20260917_*`.
+- [ ] **Subir y desplegar:** push de `desarrollo` en `mc-api-ejecucion` y en este monorepo,
+  despliegue en QA con `deploy_kofix.sh` y repetir los dos diagnósticos (ver "Orden de
+  despliegue").
 - [x] **INC-02:** es la reprogramación en fase de ejecución; saldo = aprobado − solicitado
   (owner, 2026-10-01). Implementado en el backend (D6).
 - [ ] **INC-02, meses ya solicitados:** al reprogramar, ¿el cronograma debe **conservar** los
@@ -985,7 +998,7 @@ con los nombres nuevos automáticamente.
 - [ ] **INC-02, habilitar el botón:** ¿la reprogramación queda abierta a todo usuario con
   acceso a Programación vigente, o requiere un permiso o una acción explícita ("habilitar
   reprogramación")? Hoy el botón está siempre activo salvo bloqueo por saldo.
-- [x] **INC-06:** el memorándum **reemplaza** el nombre del campo; no hay campo nuevo ni archivo: solo se renombra "N° Solicitud" a "N° Memorándum AGROIDEAS" (owner, 2026-10-02).
+- [x] **INC-06:** el memorándum **reemplaza** el nombre del campo; no hay campo nuevo ni archivo: solo se renombra "N° Solicitud" a "N° Memorándum AGROIDEAS" (owner, 2026-10-01).
 - [x] **Entorno de las capturas:** QA (VPS OVH). Diagnóstico ejecutado el 2026-10-01.
 - [x] **INC-07 / INC-08:** INC-08 confirmado; INC-07 explicado por capturas de momentos
   distintos. Confirmar con quien tomó las capturas que la lista de Desembolsos ya muestra
@@ -1020,24 +1033,23 @@ con los nombres nuevos automáticamente.
   corregido por el owner, antes "informe"); la registra el mismo especialista (owner,
   2026-10-01).
 - [x] **INC-04, anulación:** no, por ahora (owner, 2026-10-01).
-- [ ] **INC-04, precio unitario no entero:** si `imp_montoAdjudicado ÷ can_cantidad` tiene
-  decimales (p. ej. 1,000 ÷ 3), el monto rebajado se redondea a 2 decimales y, si la
-  rebaja es total, se ajusta para que el adjudicado vigente quede exactamente en lo
-  solicitado. Validar con datos reales antes de implementar.
+- [ ] **INC-04, precio unitario no entero:** implementado en la Fase 4 (`NoObjecionRebajaCalculo`):
+  si `imp_montoAdjudicado ÷ can_cantidad` tiene decimales (p. ej. 1,000 ÷ 3), el monto
+  rebajado se redondea a 2 decimales y la rebaja total toma el saldo completo, de modo que el
+  adjudicado vigente quede exactamente en lo solicitado. Falta validarlo con datos reales de QA.
 - [x] **INC-05:** en QA no hay `PAGO_DESTINO` en uso y los 4 `CHEQUE` tienen el ciclo de
   cheque de gerencia (ADR-020): no hay datos que migrar. Repetir el conteo en producción
   antes de desplegar ahí (`diag_0051.sql`, consulta 8).
-- [ ] **Edición de desembolsos:** hoy el botón "Editar" existe, pero la API rechaza toda
-  solicitud con pago, es decir, todas. ¿Se habilita la edición (con qué reglas) o se retira
-  el botón?
-- [x] **D7, deuda del Kardex:** refactorizado el 2026-10-02 (ver "D7 — Kardex calculado en la
+- [x] **Edición de desembolsos:** se retira el botón "Editar" (owner, 2026-10-01; monorepo
+  `14c9439`). Ver el registro de la Fase 2.
+- [x] **D7, deuda del Kardex:** refactorizado el 2026-10-01 (ver "D7 — Kardex calculado en la
   API"). Siguen con lógica en SQL otros SPs **anteriores** a este ADR que leen
   `vw_Kardex_CicloOperativo` (p. ej. totales ejecutados para reportes y alertas); quedan fuera
   de alcance.
-- [x] **Fase 4, concurrencia:** resuelto el 2026-10-02 (ver "Concurrencia desembolso / rebaja" en el Registro de implementación).
+- [x] **Fase 4, concurrencia:** resuelto el 2026-10-01 (ver "Concurrencia desembolso / rebaja" en el Registro de implementación).
 - [x] **Fase 4, permiso en la UI:** el botón "Rebajar / Anular saldo" solo se muestra con
   `OPERACIONES_FINANCIERAS` (`PermissionService`, mismo patrón que `ACTIVAR_CHEQUES` en
-  Desembolsos), además de requerir saldo no solicitado (owner, 2026-10-02).
+  Desembolsos), además de requerir saldo no solicitado (owner, 2026-10-01).
 - [ ] Validar las severidades con la Unidad de Negocios.
 
 ## Referencias
