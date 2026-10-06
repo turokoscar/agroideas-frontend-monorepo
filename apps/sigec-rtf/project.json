@@ -63,6 +63,19 @@
           ],
           "outputHashing": "all"
         },
+        "quality": {
+          "fileReplacements": [
+            {
+              "replace": "apps/sigec-rtf/src/environments/environment.ts",
+              "with": "apps/sigec-rtf/src/environments/environment.quality.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true
+        },
         "development": {
           "optimization": false,
           "extractLicenses": false,
