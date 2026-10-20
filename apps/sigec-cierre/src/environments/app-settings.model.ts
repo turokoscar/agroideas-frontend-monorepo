@@ -30,6 +30,14 @@ export interface AppSettings {
      */
     umbralDesviacionCriticaPct: number;
   };
+  revisionLegal: {
+    /** Límites de `ObservarUajRequestValidator` y `SubsanacionRequestValidator` de sigec-api-cierre (deben coincidir). */
+    maximoObservaciones: number;
+    longitudObservacion: number;
+    longitudRespuesta: number;
+    /** Longitud máxima del número de la RDE (`SuscripcionRdeRequestValidator`). */
+    longitudNumeroRde: number;
+  };
   notificaciones: {
     /** Cada cuánto se refresca el contador de no leídas de la campana. */
     intervaloRefrescoMs: number;

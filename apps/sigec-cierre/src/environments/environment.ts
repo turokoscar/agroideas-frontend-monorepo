@@ -15,6 +15,12 @@ export const environment: AppSettings = {
   evaluacion: {
     umbralDesviacionCriticaPct: -20
   },
+  revisionLegal: {
+    maximoObservaciones: 50,
+    longitudObservacion: 2000,
+    longitudRespuesta: 4000,
+    longitudNumeroRde: 50
+  },
   notificaciones: {
     intervaloRefrescoMs: 60_000,
     cantidadEnCampana: 20

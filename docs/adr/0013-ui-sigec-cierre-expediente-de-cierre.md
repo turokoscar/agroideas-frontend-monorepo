@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fases 0, 1, A, 2 y 3 implementadas** (20/10/2026) · Fases 4, 5 y D pendientes. Ver el
+Aceptado · **Fases 0, 1, A, 2, 3 y 4 implementadas** (20/10/2026) · Fases 5 y D pendientes. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -574,4 +574,21 @@ solo se enteraba al intentarlo.
   la decide la API. 148/148 pruebas.
 - En local se aprobó a mano el RTF 30005 (`SIGEC_RTF.rtf.SRT_TMC_RTF`, de EN_REVISION a APROBADO) para continuar
   las pruebas de la derivación.
+
+### Fase 4 — 2026-10-20
+Cada acción aparece en la tarjeta de su etapa solo para el rol y el estado que corresponde (`puedeEjecutar`):
+- **DE, `DERIVADO_DE`:** `TrasladoUajComponent` → `POST …/derivaciones` (`destino: "UAJ"`), con confirmación.
+- **UAJ, `EN_REVISION_UAJ`:** `RevisionUajComponent`: observar (modal con una observación por fila, límites de la API en
+  `AppSettings.revisionLegal`) o remitir el Informe Legal y el Proyecto de RDE (`POST …/proyectos-rde`).
+- **UN, `OBSERVADO_UAJ`:** `SubsanacionComponent`: responde las observaciones pendientes de la última ronda y prepara la
+  versión nueva del Anexo 22 (reusa `InformeEvaluacionComponent` en modo `subsanacion`, que no muestra la derivación y
+  avisa cuándo la versión está firmada); con ambas cosas, `POST …/subsanaciones`.
+- **DE, `PROYECTO_RDE_REMITIDO`:** `SuscripcionRdeComponent`: número, fecha (ni futura ni anterior a la remisión del
+  proyecto, como la API) y PDF; avisa que el convenio pasará al estado 77 en el SEL.
+- **DE, `CERRADO`:** `CargoNotificacionComponent` (`POST …/documentos`, `CARGO_NOTIFICACION_RDE`) y, en la cabecera,
+  "Reintentar ahora" el estado 77 si quedó sin sincronizar (`POST …/sincronizaciones-sel`).
+- **Historial:** pestaña "Observaciones UAJ" (solo personal) por ronda, con sus respuestas; la etapa de revisión legal
+  indica "Observado por la UAJ (ronda N)" o "Subsanadas las observaciones de la ronda N".
+- **`SelectorPdfComponent`** (compartido): `form-file-upload` + `ui-file-chip` con la validación de tipo y tamaño.
+- **Pruebas:** 168/168; lint sin advertencias; build. Falta la prueba manual con usuarios de DE y UAJ.
 

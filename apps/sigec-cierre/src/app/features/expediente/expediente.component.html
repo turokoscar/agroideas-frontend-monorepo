@@ -70,6 +70,10 @@
             <div>
               <p class="font-semibold">Convenio cerrado; el estado situacional 77 aún no se registra en el SEL.</p>
               <p>Se reintenta automáticamente ({{ c.canIntentosSel }} intentos).@if (c.txtErrorSel) { Último error: {{ c.txtErrorSel }} }</p>
+              @if (puedeReintentarSel()) {
+                <ui-button class="mt-2 inline-block" size="sm" appearance="soft" severity="warning" icon="sync" label="Reintentar ahora"
+                  [loading]="reintentandoSel()" [disabled]="reintentandoSel()" (onClick)="reintentarSel()" />
+              }
             </div>
           </div>
         }
@@ -205,6 +209,21 @@
           @if (etapa.situacion === 'activa' && etapa.clave === 'EVALUACION_UN' && puede('DerivarDe')) {
             <app-informe-evaluacion [ideCierre]="c.ideCierreConvenio" [plazoUn]="etapa.plazo" (cambio)="cargar()" />
           }
+          @if (etapa.situacion === 'activa' && etapa.clave === 'DIRECCION_EJECUTIVA' && puede('TrasladarUaj')) {
+            <app-traslado-uaj [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
+          }
+          @if (etapa.situacion === 'activa' && etapa.clave === 'REVISION_UAJ' && c.estCierre === 'EN_REVISION_UAJ' && puede('ObservarUaj')) {
+            <app-revision-uaj [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
+          }
+          @if (etapa.situacion === 'activa' && etapa.clave === 'REVISION_UAJ' && puede('SubsanarYElevarDe')) {
+            <app-subsanacion [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
+          }
+          @if (etapa.situacion === 'activa' && etapa.clave === 'RDE' && puede('SuscribirRde')) {
+            <app-suscripcion-rde [ideCierre]="c.ideCierreConvenio" [fecRemisionProyecto]="c.fecRemisionProyectoRde" (cambio)="cargar()" />
+          }
+          @if (etapa.clave === 'RDE' && etapa.situacion === 'completada' && puede('RegistrarCargoNotificacion')) {
+            <app-cargo-notificacion [ideCierre]="c.ideCierreConvenio" [registrado]="tieneCargo()" (cambio)="cargar()" />
+          }
         </article>
       }
     </section>
@@ -225,6 +244,11 @@
           <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'envios'"
             [class.bg-primary]="pestana() === 'envios'" [class.text-primary-foreground]="pestana() === 'envios'"
             [class.text-muted-foreground]="pestana() !== 'envios'" (click)="cambiarPestana('envios')">Correos enviados</button>
+        }
+        @if (esPersonal() && observaciones().length > 0) {
+          <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'observaciones'"
+            [class.bg-primary]="pestana() === 'observaciones'" [class.text-primary-foreground]="pestana() === 'observaciones'"
+            [class.text-muted-foreground]="pestana() !== 'observaciones'" (click)="cambiarPestana('observaciones')">Observaciones UAJ ({{ observaciones().length }})</button>
         }
       </div>
 
@@ -299,6 +323,27 @@
                   }
                 </ol>
               }
+            }
+            @case ('observaciones') {
+              <div class="space-y-4">
+                @for (r of rondas(); track r.numRonda) {
+                  <div class="space-y-2">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ronda {{ r.numRonda }}</p>
+                    @for (o of r.observaciones; track o.ideObservacion) {
+                      <div class="rounded-lg border border-border p-3 text-xs">
+                        <p class="text-foreground"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
+                        <p class="text-[10px] text-muted-foreground">Observado el {{ o.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
+                        @if (o.txtRespuesta) {
+                          <p class="mt-2 border-l-2 border-success/50 pl-2 text-foreground">{{ o.txtRespuesta }}</p>
+                          <p class="pl-2 text-[10px] text-muted-foreground">Respondido por la UN el {{ o.fecRespuesta | date: 'dd/MM/yyyy HH:mm' }}</p>
+                        } @else {
+                          <p class="mt-2 text-[11px] font-semibold text-warning">Pendiente de respuesta</p>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
             }
             @case ('envios') {
               @if ((envios() ?? []).length === 0) {

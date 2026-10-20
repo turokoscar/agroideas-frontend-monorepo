@@ -53,7 +53,8 @@ describe('ExpedienteComponent', () => {
     // Lo mismo para el Anexo 22 (Fase 3).
     obtenerAnexo22: jest.fn().mockReturnValue(NEVER),
     listarVersionesAnexo22: jest.fn().mockReturnValue(NEVER),
-    obtenerRequisitosDerivacion: jest.fn().mockReturnValue(NEVER)
+    obtenerRequisitosDerivacion: jest.fn().mockReturnValue(NEVER),
+    listarObservaciones: jest.fn().mockReturnValue(of([]))
   };
   const toast = { error: jest.fn() };
 
@@ -149,6 +150,40 @@ describe('ExpedienteComponent', () => {
     expect(crear(['UN']).nativeElement.querySelector('app-informe-evaluacion')).not.toBeNull();
     TestBed.resetTestingModule();
     expect(crear(['UR']).nativeElement.querySelector('app-informe-evaluacion')).toBeNull();
+  });
+
+  it.each<[string, CierreRol, string]>([
+    ['DERIVADO_DE', 'DE', 'app-traslado-uaj'],
+    ['EN_REVISION_UAJ', 'UAJ', 'app-revision-uaj'],
+    ['OBSERVADO_UAJ', 'UN', 'app-subsanacion'],
+    ['PROYECTO_RDE_REMITIDO', 'DE', 'app-suscripcion-rde'],
+    ['CERRADO', 'DE', 'app-cargo-notificacion']
+  ])('en %s muestra a %s su acción (%s) y a la OA ninguna', (estado, rol, selector) => {
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: estado }));
+    expect(crear([rol]).nativeElement.querySelector(selector)).not.toBeNull();
+    TestBed.resetTestingModule();
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: estado }));
+    expect(crear(['OA']).nativeElement.querySelector(selector)).toBeNull();
+  });
+
+  it('cerrado sin sincronizar, ofrece a la DE reintentar el estado 77', () => {
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: 'CERRADO', flgSelSincronizado: false, canIntentosSel: 2 }));
+    expect(crear(['DE']).componentInstance.puedeReintentarSel()).toBe(true);
+    TestBed.resetTestingModule();
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: 'CERRADO', flgSelSincronizado: false, canIntentosSel: 2 }));
+    expect(crear(['UN']).componentInstance.puedeReintentarSel()).toBe(false);
+  });
+
+  it('con observaciones de la UAJ muestra la pestaña con el historial por ronda', () => {
+    api.listarObservaciones.mockReturnValue(of([
+      { ideObservacion: 1, ideCierreConvenio: 12, numRonda: 1, numOrden: 1, txtObservacion: 'Falta el acta', ideUsuario: 1,
+        fecRegistro: '2026-10-20T10:00:00', txtRespuesta: 'Se adjuntó', ideUsuarioRespuesta: 2, fecRespuesta: '2026-10-21T10:00:00' }
+    ]));
+    const fixture = crear(['UN']);
+    expect(fixture.nativeElement.textContent).toContain('Observaciones UAJ (1)');
+    fixture.componentInstance.cambiarPestana('observaciones');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Se adjuntó');
   });
 });
 

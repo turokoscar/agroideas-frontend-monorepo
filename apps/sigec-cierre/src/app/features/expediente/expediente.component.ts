@@ -22,8 +22,14 @@ import { EstadoCierrePillComponent } from '../../shared/estado-cierre-pill.compo
 import { AccionCierre, puedeEjecutar } from '../../core/models/acciones-cierre';
 import { ActaCierreComponent } from './acta-cierre/acta-cierre.component';
 import { InformeEvaluacionComponent } from './informe-evaluacion/informe-evaluacion.component';
+import { TrasladoUajComponent } from './revision-legal/traslado-uaj.component';
+import { RevisionUajComponent } from './revision-legal/revision-uaj.component';
+import { SubsanacionComponent } from './revision-legal/subsanacion.component';
+import { SuscripcionRdeComponent } from './revision-legal/suscripcion-rde.component';
+import { CargoNotificacionComponent } from './revision-legal/cargo-notificacion.component';
+import { ObservacionUajDto, agruparPorRonda, ultimaRonda } from '../../core/models/revision-legal.model';
 
-type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios';
+type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones';
 
 /**
  * Vista única del expediente para todos los roles (ADR 0013, D3): cabecera, stepper de seis
@@ -34,7 +40,15 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios';
 @Component({
   selector: 'app-expediente',
   standalone: true,
-  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent, ActaCierreComponent, InformeEvaluacionComponent],
+  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
+    ActaCierreComponent,
+    InformeEvaluacionComponent,
+    TrasladoUajComponent,
+    RevisionUajComponent,
+    SubsanacionComponent,
+    SuscripcionRdeComponent,
+    CargoNotificacionComponent
+  ],
   templateUrl: './expediente.component.html'
 })
 export class ExpedienteComponent implements OnDestroy {
@@ -55,6 +69,10 @@ export class ExpedienteComponent implements OnDestroy {
 
   auditorias = signal<AuditoriaCierreDto[] | null>(null);
   envios = signal<EnvioNotificacionDto[] | null>(null);
+  /** Observaciones de la UAJ de todas las rondas (solo personal: la API responde 403 a la OA). */
+  observaciones = signal<ObservacionUajDto[]>([]);
+  rondas = computed(() => agruparPorRonda(this.observaciones()));
+  reintentandoSel = signal(false);
   cargandoPestana = signal(false);
 
   visor = signal<{ abierto: boolean; nombre: string | null; url: string | null }>({ abierto: false, nombre: null, url: null });
@@ -69,7 +87,7 @@ export class ExpedienteComponent implements OnDestroy {
   }
   etapas = computed<EtapaCierre[]>(() => {
     const cierre = this.cierre();
-    return cierre ? construirEtapas(cierre, this.plazos()) : [];
+    return cierre ? construirEtapas(cierre, this.plazos(), ultimaRonda(this.observaciones())) : [];
   });
   origen = computed(() => {
     const tipo = this.cierre()?.tipOrigen;
@@ -96,6 +114,9 @@ export class ExpedienteComponent implements OnDestroy {
     this.error.set(null);
     this.auditorias.set(null);
     this.envios.set(null);
+    if (this.esPersonal()) {
+      this.api.listarObservaciones(id).subscribe({ next: o => this.observaciones.set(o), error: () => this.observaciones.set([]) });
+    }
     forkJoin({ cierre: this.api.obtener(id), plazos: this.api.listarPlazos(id) }).subscribe({
       next: ({ cierre, plazos }) => {
         this.cierre.set(cierre);
@@ -105,6 +126,32 @@ export class ExpedienteComponent implements OnDestroy {
       error: err => {
         this.error.set(mensajeParaUsuario(err, 'No se pudo cargar el expediente de cierre.'));
         this.cargando.set(false);
+      }
+    });
+  }
+
+  /** Hay un cargo de notificación de la RDE vigente. */
+  tieneCargo = computed(() => this.cierre()?.documentos.some(d => d.tipDocumento === 'CARGO_NOTIFICACION_RDE') ?? false);
+  /** La DE puede reintentar el estado 77 si el cierre quedó sin sincronizar con el SEL. */
+  puedeReintentarSel = computed(() => {
+    const c = this.cierre();
+    return !!c && c.estCierre === 'CERRADO' && c.flgSelSincronizado === false && this.auth.roles().includes('DE');
+  });
+
+  reintentarSel() {
+    const c = this.cierre();
+    if (!c) return;
+    this.reintentandoSel.set(true);
+    this.api.reintentarSincronizacionSel(c.ideCierreConvenio).subscribe({
+      next: () => {
+        this.reintentandoSel.set(false);
+        this.toast.success('Estado 77 registrado', 'El convenio figura como cerrado en el SEL.');
+        this.cargar();
+      },
+      error: err => {
+        this.reintentandoSel.set(false);
+        this.toast.error('No se pudo registrar el estado 77', mensajeParaUsuario(err, 'Se seguirá reintentando automáticamente.'));
+        this.cargar();
       }
     });
   }

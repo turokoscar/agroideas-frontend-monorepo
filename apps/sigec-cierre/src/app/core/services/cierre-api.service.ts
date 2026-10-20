@@ -16,6 +16,7 @@ import { PlazoDto } from '../models/plazo.model';
 import { EnvioNotificacionDto } from '../models/notificacion.model';
 import { Anexo21Datos, Anexo21Dto } from '../models/anexo21.model';
 import { Anexo22Datos, Anexo22Dto, RequisitosDerivacionDto, VersionAnexo22Dto } from '../models/anexo22.model';
+import { ObservacionUajDto } from '../models/revision-legal.model';
 
 /**
  * Desenvuelve el sobre MIDAGRI. La API responde los errores con su código HTTP (llegan como
@@ -173,6 +174,67 @@ export class CierreApiService {
   derivar(ideCierreConvenio: number, destino: 'DE' | 'UAJ', txtContingencia: string | null = null): Observable<CierreDto> {
     return this.http
       .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/derivaciones`, { destino, txtContingencia })
+      .pipe(desenvolver());
+  }
+
+  // --- Revisión legal, subsanación y RDE (Fase 4) ---
+
+  /** Observaciones de todas las rondas con sus respuestas (solo personal; la API responde 403 a la OA). */
+  listarObservaciones(ideCierreConvenio: number): Observable<ObservacionUajDto[]> {
+    return this.http
+      .get<ApiResponse<ObservacionUajDto[]>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/observaciones`)
+      .pipe(desenvolver());
+  }
+
+  /** La UAJ observa: el expediente vuelve a la UN y el Anexo 22 se reabre como versión nueva. */
+  observar(ideCierreConvenio: number, observaciones: string[]): Observable<CierreDto> {
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/observaciones`, { observaciones })
+      .pipe(desenvolver());
+  }
+
+  /** La UN responde todas las observaciones de la última ronda y eleva de nuevo a la DE (exige el Anexo 22 nuevo firmado). */
+  subsanar(ideCierreConvenio: number, respuestas: { ideObservacion: number; txtRespuesta: string }[]): Observable<CierreDto> {
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/subsanaciones`, { respuestas })
+      .pipe(desenvolver());
+  }
+
+  /** La UAJ remite el Informe Legal y el Proyecto de RDE (multipart: `informeLegal`, `proyectoRde`). */
+  remitirProyectoRde(ideCierreConvenio: number, informeLegal: File, proyectoRde: File): Observable<CierreDto> {
+    const formulario = new FormData();
+    formulario.append('informeLegal', informeLegal);
+    formulario.append('proyectoRde', proyectoRde);
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/proyectos-rde`, formulario)
+      .pipe(desenvolver());
+  }
+
+  /** La DE carga la RDE suscrita: el expediente queda CERRADO y se registra el estado 77 en el SEL. */
+  suscribirRde(ideCierreConvenio: number, txtNumeroRde: string, fecEmisionRde: string, rde: File): Observable<CierreDto> {
+    const formulario = new FormData();
+    formulario.append('txtNumeroRde', txtNumeroRde);
+    formulario.append('fecEmisionRde', fecEmisionRde);
+    formulario.append('archivo', rde);
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/rdes`, formulario)
+      .pipe(desenvolver());
+  }
+
+  /** Cargo de la entrega física de la RDE (la DE, con el expediente CERRADO). */
+  registrarCargoNotificacion(ideCierreConvenio: number, cargo: File): Observable<unknown> {
+    const formulario = new FormData();
+    formulario.append('tipoDocumento', 'CARGO_NOTIFICACION_RDE');
+    formulario.append('archivo', cargo);
+    return this.http
+      .post<ApiResponse<unknown>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/documentos`, formulario)
+      .pipe(desenvolver());
+  }
+
+  /** Reintenta registrar el estado 77 en el SEL (la DE, si quedó pendiente). */
+  reintentarSincronizacionSel(ideCierreConvenio: number): Observable<CierreDto> {
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/sincronizaciones-sel`, {})
       .pipe(desenvolver());
   }
 

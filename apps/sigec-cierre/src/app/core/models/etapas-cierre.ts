@@ -86,7 +86,7 @@ function fechaDeEtapa(clave: ClaveEtapa, c: CierreDetalleDto): string | null {
   }
 }
 
-function notasDeEtapa(clave: ClaveEtapa, c: CierreDetalleDto): string[] {
+function notasDeEtapa(clave: ClaveEtapa, c: CierreDetalleDto, ronda: number): string[] {
   const notas: string[] = [];
   if (clave === 'ANEXO20' && c.flgDeOficio) {
     notas.push('Continuó de oficio: el plazo del Anexo 20 venció sin que la OA lo presentara.');
@@ -95,7 +95,10 @@ function notasDeEtapa(clave: ClaveEtapa, c: CierreDetalleDto): string[] {
     notas.push(`Contingencia por derivar fuera de plazo: ${c.txtContingencia}`);
   }
   if (clave === 'REVISION_UAJ' && c.estCierre === 'OBSERVADO_UAJ') {
-    notas.push('Observado por la UAJ: la Unidad de Negocios debe subsanar y elevar de nuevo a la DE.');
+    const enRonda = ronda > 0 ? ` (ronda ${ronda})` : '';
+    notas.push(`Observado por la UAJ${enRonda}: la Unidad de Negocios debe subsanar y elevar de nuevo a la DE.`);
+  } else if (clave === 'REVISION_UAJ' && ronda > 0 && ['DERIVADO_DE', 'EN_REVISION_UAJ'].includes(c.estCierre)) {
+    notas.push(`Subsanadas las observaciones de la ronda ${ronda}: nueva revisión legal.`);
   }
   if (clave === 'RDE' && c.txtNumeroRde) {
     notas.push(`RDE N° ${c.txtNumeroRde}`);
@@ -103,7 +106,8 @@ function notasDeEtapa(clave: ClaveEtapa, c: CierreDetalleDto): string[] {
   return notas;
 }
 
-export function construirEtapas(cierre: CierreDetalleDto, plazos: readonly PlazoDto[]): EtapaCierre[] {
+/** `ronda`: última ronda de observaciones de la UAJ (0 si no hubo), para las notas de la revisión legal. */
+export function construirEtapas(cierre: CierreDetalleDto, plazos: readonly PlazoDto[], ronda = 0): EtapaCierre[] {
   const activa = indiceEtapaActiva(cierre.estCierre);
   return ETAPAS.map((def, indice) => ({
     clave: def.clave,
@@ -114,6 +118,6 @@ export function construirEtapas(cierre: CierreDetalleDto, plazos: readonly Plazo
     fecha: indice < activa ? fechaDeEtapa(def.clave, cierre) : null,
     documentos: cierre.documentos.filter(d => def.documentos.includes(d.tipDocumento)),
     plazo: def.tipoPlazo ? plazoDeTipo(plazos, def.tipoPlazo) : null,
-    notas: notasDeEtapa(def.clave, cierre)
+    notas: notasDeEtapa(def.clave, cierre, ronda)
   }));
 }

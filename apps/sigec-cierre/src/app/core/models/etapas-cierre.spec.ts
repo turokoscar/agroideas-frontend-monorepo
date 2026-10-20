@@ -141,4 +141,11 @@ describe('etapas-cierre', () => {
       expect(diasRestantes('2026-10-18T23:59:59', hoy)).toBe(-2);
     });
   });
+
+  it('indica la ronda de observaciones de la UAJ y la revisión tras subsanar', () => {
+    expect(construirEtapas(cierre('OBSERVADO_UAJ'), [], 2)[4].notas[0]).toContain('Observado por la UAJ (ronda 2)');
+    expect(construirEtapas(cierre('EN_REVISION_UAJ'), [], 2)[4].notas[0]).toContain('Subsanadas las observaciones de la ronda 2');
+    expect(construirEtapas(cierre('EN_REVISION_UAJ'), [], 0)[4].notas).toEqual([]);
+  });
 });
+

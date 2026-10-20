@@ -146,5 +146,31 @@ describe('CierreApiService', () => {
     expect(derivar.request.body).toEqual({ destino: 'DE', txtContingencia: 'Contingencia' });
     derivar.flush({ respuesta: 'OK', mensaje: '', datos: {} });
   });
+
+  it('Fase 4: observar, subsanar, remitir el proyecto, suscribir la RDE y registrar el cargo', () => {
+    service.observar(6, ['Obs 1']).subscribe();
+    expect(http.expectOne(`${API}/cierres/6/observaciones`).request.body).toEqual({ observaciones: ['Obs 1'] });
+
+    service.subsanar(6, [{ ideObservacion: 9, txtRespuesta: 'Listo' }]).subscribe();
+    expect(http.expectOne(`${API}/cierres/6/subsanaciones`).request.body).toEqual({ respuestas: [{ ideObservacion: 9, txtRespuesta: 'Listo' }] });
+
+    const informe = new File(['%PDF-'], 'il.pdf', { type: 'application/pdf' });
+    const proyecto = new File(['%PDF-'], 'prde.pdf', { type: 'application/pdf' });
+    service.remitirProyectoRde(6, informe, proyecto).subscribe();
+    const remitir = http.expectOne(`${API}/cierres/6/proyectos-rde`).request.body as FormData;
+    expect([remitir.get('informeLegal'), remitir.get('proyectoRde')]).toEqual([informe, proyecto]);
+
+    service.suscribirRde(6, '045-2026', '2026-10-20', informe).subscribe();
+    const rde = http.expectOne(`${API}/cierres/6/rdes`).request.body as FormData;
+    expect([rde.get('txtNumeroRde'), rde.get('fecEmisionRde'), rde.get('archivo')]).toEqual(['045-2026', '2026-10-20', informe]);
+
+    service.registrarCargoNotificacion(6, informe).subscribe();
+    const cargo = http.expectOne(`${API}/cierres/6/documentos`).request.body as FormData;
+    expect(cargo.get('tipoDocumento')).toBe('CARGO_NOTIFICACION_RDE');
+
+    service.reintentarSincronizacionSel(6).subscribe();
+    expect(http.expectOne(`${API}/cierres/6/sincronizaciones-sel`).request.method).toBe('POST');
+    http.match(() => true).forEach(r => r.flush({ respuesta: 'OK', mensaje: '', datos: {} }));
+  });
 });
 

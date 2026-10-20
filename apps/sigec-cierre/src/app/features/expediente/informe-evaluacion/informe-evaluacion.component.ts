@@ -69,8 +69,15 @@ export class InformeEvaluacionComponent {
   ideCierre = input.required<number>();
   /** Plazo de la evaluación de la UN (90 días): si venció, la derivación exige contingencia. */
   plazoUn = input<PlazoDto | null>(null);
+  /**
+   * `evaluacion` (EN_EVALUACION_UN): al firmarlo se eleva a la DE desde aquí. `subsanacion` (OBSERVADO_UAJ): es la
+   * versión nueva tras las observaciones de la UAJ; la elevación la hace `SubsanacionComponent` con las respuestas.
+   */
+  modo = input<'evaluacion' | 'subsanacion'>('evaluacion');
   /** Se emite cuando el expediente cambió (Anexo 22 presentado o expediente derivado). */
   cambio = output<void>();
+  /** Se emite al cargar el informe: si la versión vigente ya está firmada. */
+  firmadoCambio = output<boolean>();
 
   readonly resultados = RESULTADOS;
   readonly tamanoMaximoMb = environment.archivos.tamanoMaximoPdfMb;
@@ -130,6 +137,7 @@ export class InformeEvaluacionComponent {
         this.anexo.set(anexo);
         this.sucio.set(false);
         this.cargando.set(false);
+        this.firmadoCambio.emit(anexo.estAnexo22 === 'FIRMADO');
       },
       error: err => {
         this.cargando.set(false);
@@ -137,7 +145,10 @@ export class InformeEvaluacionComponent {
       }
     });
     this.api.listarVersionesAnexo22(id).subscribe({ next: v => this.versiones.set(v), error: () => this.versiones.set([]) });
-    this.api.obtenerRequisitosDerivacion(id).subscribe({ next: r => this.requisitos.set(r), error: () => this.requisitos.set(null) });
+    // Los requisitos de la derivación solo aplican a la evaluación: en la subsanación la elevación tiene sus propias reglas.
+    if (this.modo() === 'evaluacion') {
+      this.api.obtenerRequisitosDerivacion(id).subscribe({ next: r => this.requisitos.set(r), error: () => this.requisitos.set(null) });
+    }
   }
 
   marcarSucio() {
@@ -243,7 +254,8 @@ export class InformeEvaluacionComponent {
         this.presentando.set(false);
         this.confirmarPresentar.set(false);
         this.archivo.set(null);
-        this.toast.success('Informe presentado', 'Ya puede elevar el expediente a la Dirección Ejecutiva.');
+        this.toast.success('Informe presentado',
+          this.modo() === 'evaluacion' ? 'Ya puede elevar el expediente a la Dirección Ejecutiva.' : 'Responda las observaciones y eleve el expediente a la DE.');
         this.cargar();
         this.cambio.emit();
       },

@@ -242,7 +242,7 @@
           @if (!completo()) { <span class="text-[11px] text-slate-400">Se habilita con el informe guardado, completo y sin cambios pendientes.</span> }
         </div>
       </section>
-    } @else {
+    } @else if (modo() === 'evaluacion') {
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Elevar el Expediente Único a la Dirección Ejecutiva</h5>
         @if (requisitos(); as req) {
