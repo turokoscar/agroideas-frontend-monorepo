@@ -142,7 +142,12 @@
 
           <div class="mt-4 grid items-center gap-5" [ngClass]="{ 'md:grid-cols-[auto_1fr]': etapa.situacion === 'activa' && etapa.plazo?.estPlazo === 'VIGENTE' }">
             @if (etapa.situacion === 'activa' && etapa.plazo; as plazo) {
-              @if (plazo.estPlazo === 'VIGENTE') {
+              @if (plazo.estPlazo === 'VIGENTE' && aunNoCorre(plazo)) {
+                <div class="flex h-[140px] w-[140px] flex-col items-center justify-center rounded-full border-4 border-border text-center">
+                  <span class="material-symbols-outlined text-[22px] text-muted-foreground">schedule</span>
+                  <span class="px-3 text-[11px] font-semibold leading-tight text-foreground">Corre desde el {{ plazo.fecInicio | date: 'dd/MM/yyyy' }}</span>
+                </div>
+              } @else if (plazo.estPlazo === 'VIGENTE') {
                 <ui-countdown-ring
                   [totalDays]="plazo.canDias"
                   [elapsedDays]="transcurridos(plazo)"
@@ -205,7 +210,8 @@
           <!-- Acción de la etapa activa (ADR 0013, Fases 2 a 4) -->
           @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20') {
             @if (esPersonal() && puede('PresentarAnexo20')) {
-              <app-presentacion-anexo20 [ideCierre]="c.ideCierreConvenio" [ideConvenio]="c.ideConvenio" [plazo]="etapa.plazo" (cambio)="cargar()" />
+              <app-presentacion-anexo20 [ideCierre]="c.ideCierreConvenio" [ideConvenio]="c.ideConvenio" [plazo]="etapa.plazo"
+                (ver)="abrirVisor($event.nombre, $event.contenido)" (cambio)="cargar()" />
             } @else if (!esPersonal()) {
               <p class="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
                 Su último RTF se envió sin el Informe de Cierre (Anexo 20). Complételo en el módulo de Reporte Técnico Financiero

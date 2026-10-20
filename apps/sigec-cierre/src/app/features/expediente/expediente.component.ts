@@ -189,18 +189,25 @@ export class ExpedienteComponent implements OnDestroy {
     return diasRestantes(plazo.fecLimite);
   }
 
+  /** El plazo aún no empieza (p. ej. el del Anexo 20 corre desde el fin de la vigencia del convenio). */
+  aunNoCorre(plazo: PlazoDto): boolean {
+    return this.restantes(plazo) > plazo.canDias;
+  }
+
   transcurridos(plazo: PlazoDto): number {
     return Math.max(0, plazo.canDias - Math.max(0, this.restantes(plazo)));
   }
 
   verDocumento(documento: DocumentoCierreDto) {
     this.api.descargarDocumento(documento.ideCierreConvenio, documento.tipDocumento).subscribe({
-      next: blob => {
-        this.liberarVisor();
-        this.visor.set({ abierto: true, nombre: documento.txtNombreArchivo, url: URL.createObjectURL(blob) });
-      },
+      next: blob => this.abrirVisor(documento.txtNombreArchivo, blob),
       error: () => this.toast.error('No se pudo abrir el documento', etiquetaDocumento(documento.tipDocumento))
     });
+  }
+
+  abrirVisor(nombre: string, blob: Blob) {
+    this.liberarVisor();
+    this.visor.set({ abierto: true, nombre, url: URL.createObjectURL(blob) });
   }
 
   cerrarVisor(abierto: boolean) {

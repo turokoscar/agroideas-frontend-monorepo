@@ -40,7 +40,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
           } @else if (formularioCompleto()) {
             <p class="flex items-center gap-2 text-success">
               <span class="material-symbols-outlined text-[18px]">check_circle</span>
-              La organización completó el formulario@if (anexo()?.numAnexo20) { (N° {{ anexo()?.numAnexo20 }}) }.
+              La organización completó el formulario{{ anexo()?.numAnexo20 ? ' (N° ' + anexo()?.numAnexo20 + ')' : '' }}.
             </p>
             <ui-button class="mt-2 inline-block" icon="description" label="Ver el formulario sin firma" size="sm" appearance="soft"
               severity="secondary" [loading]="descargando()" [disabled]="descargando()" (onClick)="verFormulario()" />
@@ -75,6 +75,8 @@ export class PresentacionAnexo20Component {
   ideConvenio = input.required<number>();
   /** Plazo del Anexo 20 (30 días): vencido, la API ya no acepta la presentación. */
   plazo = input<PlazoDto | null>(null);
+  /** PDF sin firma, para que el expediente lo muestre en su visor. */
+  ver = output<{ nombre: string; contenido: Blob }>();
   cambio = output<void>();
 
   cargando = signal(false);
@@ -121,9 +123,7 @@ export class PresentacionAnexo20Component {
     this.api.descargarFormularioAnexo20(this.ideConvenio()).subscribe({
       next: blob => {
         this.descargando.set(false);
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank', 'noopener');
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        this.ver.emit({ nombre: `Anexo20_${this.anexo()?.numAnexo20 ?? this.ideConvenio()}_sin_firma.pdf`, contenido: blob });
       },
       error: err => {
         this.descargando.set(false);

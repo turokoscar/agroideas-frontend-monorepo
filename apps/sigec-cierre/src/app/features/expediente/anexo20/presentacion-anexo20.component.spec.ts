@@ -73,4 +73,17 @@ describe('PresentacionAnexo20Component', () => {
     api.obtenerAnexo20.mockReturnValue(throwError(() => ({ error: { mensaje: 'CIE_1001:Sin acceso al convenio.' } })));
     expect(crear().componentInstance.errorFormulario()).toBeTruthy();
   });
+
+  it('el formulario sin firma se entrega al visor del expediente', () => {
+    api.obtenerAnexo20.mockReturnValue(of(resumen()));
+    const pdf = new Blob(['%PDF-'], { type: 'application/pdf' });
+    api.descargarFormularioAnexo20.mockReturnValue(of(pdf));
+    const c = crear().componentInstance;
+    const ver = jest.fn();
+    c.ver.subscribe(ver);
+    c.verFormulario();
+    expect(api.descargarFormularioAnexo20).toHaveBeenCalledWith(2388);
+    expect(ver).toHaveBeenCalledWith({ nombre: 'Anexo20_001-2026_sin_firma.pdf', contenido: pdf });
+  });
 });
+

@@ -6,6 +6,7 @@ import { ExpedienteComponent } from './expediente.component';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CierreDetalleDto } from '../../core/models/cierre.model';
+import { PlazoDto } from '../../core/models/plazo.model';
 import { CierreRol } from '../../core/models/rol-cierre.model';
 
 const detalle: CierreDetalleDto = {
@@ -195,6 +196,14 @@ describe('ExpedienteComponent', () => {
     const oa = crear(['OA']).nativeElement as HTMLElement;
     expect(oa.querySelector('app-presentacion-anexo20')).toBeNull();
     expect(oa.textContent).toContain('entregue el PDF');
+  });
+
+  it('un plazo que aún no empieza muestra desde cuándo corre, no un anillo lleno', () => {
+    const c = crear(['UN']).componentInstance;
+    const futuro = new Date(Date.now() + 400 * 86_400_000).toISOString();
+    const plazo = { canDias: 30, fecInicio: futuro, fecLimite: new Date(Date.now() + 430 * 86_400_000).toISOString() } as PlazoDto;
+    expect(c.aunNoCorre(plazo)).toBe(true);
+    expect(c.aunNoCorre({ ...plazo, fecLimite: new Date(Date.now() + 10 * 86_400_000).toISOString() })).toBe(false);
   });
 });
 
