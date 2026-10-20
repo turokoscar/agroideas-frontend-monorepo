@@ -543,3 +543,15 @@ A partir del formato del Instructivo (páginas 107–108) que compartió el owne
 - **Pruebas:** 140/140 (nuevas: `anexo22.model`, `tabla-indicadores`, `informe-evaluacion` y casos de la API y del
   expediente); lint sin advertencias; build. Falta la prueba manual con un expediente en `EN_EVALUACION_UN`.
 
+### Fase 3 (ajuste) — 2026-10-20: contrapartida de la OA desde el marco lógico
+Indicación del owner: la contrapartida se obtiene del marco lógico del SEL, como el aporte de AGROIDEAS
+(`marco_logico.aporteOpa` / `aportePcc`, estructura 5; son montos).
+- **sel-api-general** (`desarrollo`, `a4e54e5` y `e65878f`): `datos-generales` devuelve `MontoAprobadoOa` (suma de
+  `aporteOpa` o `proyecto.progEntidad`) y los ítems, `MontoAprobadoOa` por ítem. Requiere volver a ejecutar
+  `Database/004_procedimientos.sql` en cada ambiente (en local ya está aplicado).
+- **sigec-api-cierre** (`opazos`, `5ce50aa`, ADR-003 P-G resuelto): en 4.1 el aprobado de la organización viene del
+  SEL y el ejecutado lo escribe la UN (origen `SEL_GENERAL+MANUAL`); el "Financiamiento OA" del Anexo 20 también.
+- **UI:** en sigec-cierre el aprobado de la contrapartida es de solo lectura (se quitó "Agregar contrapartida") y
+  el origen se muestra como "SEL + UN"; en sigec-rtf el "Financiamiento OA" del Anexo 20 se bloquea cuando viene del
+  SEL.
+

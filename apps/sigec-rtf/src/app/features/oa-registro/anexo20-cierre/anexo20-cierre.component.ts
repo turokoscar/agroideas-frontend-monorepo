@@ -58,6 +58,11 @@ export class Anexo20CierreComponent {
     return !!anexo && anexo.ideAnexo20 > 0 && anexo.faltantes.length === 0 && !this.sucio();
   });
   tieneAdjunto = computed(() => this.adjuntos().length > 0);
+  /**
+   * La contrapartida aprobada llegó del SEL (marco lógico): la API la repone al guardar, así que no se edita. Se
+   * fija al cargar, para que el campo no se bloquee mientras la OA lo escribe cuando el SEL no la tiene.
+   */
+  contrapartidaDelSel = signal(false);
 
   constructor() {
     effect(() => {
@@ -73,6 +78,7 @@ export class Anexo20CierreComponent {
     this.cierre.obtenerAnexo20(ideConvenio).subscribe({
       next: anexo => {
         this.anexo.set(anexo);
+        this.contrapartidaDelSel.set(anexo.impFinanciamientoOa !== null);
         this.sucio.set(false);
         this.cargando.set(false);
       },

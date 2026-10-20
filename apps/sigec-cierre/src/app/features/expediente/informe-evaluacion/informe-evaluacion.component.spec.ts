@@ -73,11 +73,20 @@ describe('InformeEvaluacionComponent', () => {
     expect(c.sucio()).toBe(true);
   });
 
-  it('la contrapartida de la organización se agrega una vez y la de AGROIDEAS no se edita', () => {
-    const { componentInstance: c } = crear();
-    expect(c.contrapartida()).toBeNull();
-    c.agregarContrapartida();
-    expect(c.contrapartida()?.tipFuente).toBe('ORGANIZACION');
+  it('de la contrapartida solo se edita lo ejecutado; el aprobado viene del SEL', () => {
+    api.obtenerAnexo22.mockReturnValue(
+      of(anexo({
+        financiamiento: [
+          { tipFuente: 'AGROIDEAS', impAprobado: 285132, impEjecutado: 200000, txtOrigen: 'SEL_GENERAL+KOFIX' },
+          { tipFuente: 'ORGANIZACION', impAprobado: 71283, impEjecutado: 0, txtOrigen: 'SEL_GENERAL+MANUAL' }
+        ]
+      }))
+    );
+    const el: HTMLElement = crear().nativeElement;
+    expect(el.querySelector('input[aria-label="Aprobado de la organización"]')).toBeNull();
+    expect(el.querySelector('input[aria-label="Ejecutado de la organización"]')).not.toBeNull();
+    expect(el.textContent).toContain('71,283.00');
+    expect(el.textContent).toContain('SEL + UN');
   });
 
   it('presentar exige el informe guardado, completo y el PDF; luego avisa al expediente', () => {

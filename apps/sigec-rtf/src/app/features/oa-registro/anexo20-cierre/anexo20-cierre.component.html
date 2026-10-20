@@ -78,8 +78,10 @@
       <div class="grid gap-4 sm:grid-cols-3">
         <label class="space-y-1 text-xs">
           <span class="font-semibold text-foreground">Financiamiento OA (S/) <span class="text-destructive">*</span></span>
+          <!-- La contrapartida viene del marco lógico del SEL; solo se escribe si el SEL no la tiene. -->
           <input type="number" min="0" step="0.01" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            [disabled]="soloLectura()" [(ngModel)]="a.impFinanciamientoOa" (ngModelChange)="marcarSucio()" />
+            [disabled]="soloLectura() || contrapartidaDelSel()" [(ngModel)]="a.impFinanciamientoOa" (ngModelChange)="marcarSucio()" />
+          @if (contrapartidaDelSel()) { <span class="block text-[11px] text-muted-foreground">Contrapartida aprobada en el SEL.</span> }
         </label>
         <label class="space-y-1 text-xs">
           <span class="font-semibold text-foreground">Centro poblado</span>

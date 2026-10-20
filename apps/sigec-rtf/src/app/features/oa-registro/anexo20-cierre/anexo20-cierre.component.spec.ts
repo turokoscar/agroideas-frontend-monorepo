@@ -147,4 +147,13 @@ describe('Anexo20CierreComponent', () => {
     cierre.obtenerAnexo20.mockReturnValue(of(anexo()));
     expect(crear({ editable: false }).componentInstance.soloLectura()).toBe(true);
   });
+
+  it('la contrapartida que viene del SEL no se edita; si el SEL no la tiene, la escribe la OA', () => {
+    cierre.obtenerAnexo20.mockReturnValue(of(anexo({ impFinanciamientoOa: 71283 })));
+    expect(crear().componentInstance.contrapartidaDelSel()).toBe(true);
+    TestBed.resetTestingModule();
+    cierre.obtenerAnexo20.mockReturnValue(of(anexo()));
+    expect(crear().componentInstance.contrapartidaDelSel()).toBe(false);
+  });
 });
+

@@ -7,6 +7,7 @@ import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
 import {
   Anexo22Dto,
+  ETIQUETA_ORIGEN_DATO,
   RESULTADOS,
   SeccionManual,
   VersionAnexo22Dto,
@@ -118,14 +119,7 @@ export class InformeEvaluacionComponent {
     this.mutar(a => a[seccion].splice(indice, 1));
   }
 
-  /** Fila de la contrapartida de la OA (4.1): la escribe la UN; la de AGROIDEAS viene de KOFIX. */
-  contrapartida() {
-    return this.anexo()?.financiamiento.find(f => f.tipFuente === 'ORGANIZACION') ?? null;
-  }
-
-  agregarContrapartida() {
-    this.mutar(a => a.financiamiento.push({ tipFuente: 'ORGANIZACION', impAprobado: 0, impEjecutado: 0, txtOrigen: 'MANUAL' }));
-  }
+  readonly etiquetaOrigen = (origen: string) => ETIQUETA_ORIGEN_DATO[origen] ?? origen;
 
   pctEjecucion(aprobado: number, ejecutado: number): number | null {
     return aprobado > 0 ? Math.round((ejecutado / aprobado) * 10000) / 100 : null;
@@ -239,8 +233,7 @@ export class InformeEvaluacionComponent {
       precios: [...anexo.precios],
       comercializacion: [...anexo.comercializacion],
       ingresos: [...anexo.ingresos],
-      objetivosEspecificos: [...anexo.objetivosEspecificos],
-      financiamiento: [...anexo.financiamiento]
+      objetivosEspecificos: [...anexo.objetivosEspecificos]
     };
     cambio(copia);
     for (const lista of [copia.precios, copia.comercializacion, copia.ingresos, copia.objetivosEspecificos]) {

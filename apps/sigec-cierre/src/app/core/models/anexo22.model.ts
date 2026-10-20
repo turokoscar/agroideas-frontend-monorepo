@@ -7,11 +7,13 @@ import { environment } from '../../../environments/environment';
  * OA, la sección VI (actividad y comentarios), VII a XI y el resultado.
  */
 
-export type OrigenDato = 'SEL_GENERAL+RTF' | 'SEL_GENERAL+KOFIX' | 'MANUAL';
+export type OrigenDato = 'SEL_GENERAL+RTF' | 'SEL_GENERAL+KOFIX' | 'SEL_GENERAL+MANUAL' | 'MANUAL';
 
 export const ETIQUETA_ORIGEN_DATO: Readonly<Record<string, string>> = {
   'SEL_GENERAL+RTF': 'SEL + RTF',
   'SEL_GENERAL+KOFIX': 'SEL + KOFIX',
+  /** Contrapartida de la OA: aprobado del marco lógico del SEL, ejecutado registrado por la UN. */
+  'SEL_GENERAL+MANUAL': 'SEL + UN',
   MANUAL: 'Manual'
 };
 
