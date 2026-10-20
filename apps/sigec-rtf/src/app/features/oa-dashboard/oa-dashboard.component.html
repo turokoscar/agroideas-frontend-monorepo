@@ -135,8 +135,9 @@
       <div class="space-y-2">
         <ui-countdown-banner [hours]="horasPlazoAnexo20()" tone="warning" label="Plazo para presentar el Anexo 20 (Informe de Cierre del PNT)" />
         <p class="text-xs text-muted-foreground">
-          Su expediente de cierre espera el Anexo 20. Reenvíe el RTF del último paso crítico con el Anexo 20 firmado adjunto;
-          vence el {{ plazoAnexo20()!.fecLimite | date: 'dd/MM/yyyy' }}. Si vence sin presentarlo, el cierre continúa de oficio.
+          Su expediente de cierre espera el Anexo 20; vence el {{ plazoAnexo20()!.fecLimite | date: 'dd/MM/yyyy' }}. Complételo en la
+          pestaña "Anexo 20 · Cierre" del RTF del último paso crítico, hágalo firmar y entregue el PDF firmado a la Unidad de
+          Negocios, que lo presentará en el expediente. Si vence sin presentarlo, el cierre continúa de oficio.
         </p>
       </div>
     }

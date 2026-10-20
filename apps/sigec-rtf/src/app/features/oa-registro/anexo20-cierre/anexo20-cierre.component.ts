@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent } from '@agroideas/ui';
 import { mensajeParaUsuario } from '@agroideas/utils';
+import { catchError, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CierreService } from '../../../core/services/cierre.service';
 import { RtfService } from '../../../core/services/rtf.service';
@@ -14,6 +15,9 @@ import { Anexo20Dto, EvidenceDto, TIPO_INFORME_CIERRE } from '../../../core/mode
  * el PDF/A oficial, la OA lo firma fuera del sistema y lo adjunta aquí como evidencia
  * `INFORME_CIERRE_PNT` del RTF. Al enviar el RTF, sigec-api-rtf avisa a Cierre, que toma ese PDF y abre
  * el expediente de cierre.
+ *
+ * Si el RTF ya se envió sin el Anexo 20 (expediente en `ESPERA_ANEXO20`), el formulario sigue editable aunque el RTF
+ * no lo sea: la OA lo completa, lo firma y entrega el PDF a la UN, que lo presenta en sigec-cierre.
  */
 @Component({
   selector: 'app-anexo20-cierre',
@@ -50,8 +54,15 @@ export class Anexo20CierreComponent {
   /** Copia editable del formulario; se reemplaza con la respuesta del servidor al guardar. */
   anexo = signal<Anexo20Dto | null>(null);
 
+  /** El expediente de cierre ya está abierto y espera el Anexo 20 (el RTF se envió sin él). */
+  esperaCierre = signal(false);
+  /** Vencimiento del plazo del Anexo 20 en esa espera. */
+  limiteAnexo20 = signal<string | null>(null);
+  /** El RTF ya no admite el adjunto, pero el expediente espera el Anexo 20: lo presenta la UN. */
+  entregaALaUn = computed(() => !this.editable() && this.esperaCierre());
+
   presentado = computed(() => this.anexo()?.estAnexo20 === 'PRESENTADO');
-  soloLectura = computed(() => !this.editable() || this.presentado());
+  soloLectura = computed(() => this.presentado() || (!this.editable() && !this.esperaCierre()));
   /** Guardado, sin faltantes y sin cambios pendientes: listo para generar el PDF. */
   completo = computed(() => {
     const anexo = this.anexo();
@@ -75,6 +86,7 @@ export class Anexo20CierreComponent {
     if (!ideConvenio) return;
     this.cargando.set(true);
     this.error.set(null);
+    this.cargarEspera(ideConvenio);
     this.cierre.obtenerAnexo20(ideConvenio).subscribe({
       next: anexo => {
         this.anexo.set(anexo);
@@ -87,6 +99,26 @@ export class Anexo20CierreComponent {
         this.error.set(mensajeParaUsuario(err, 'No se pudo cargar el Anexo 20 desde el módulo de Cierre.'));
       }
     });
+  }
+
+  /** Si falla, se asume que no hay espera: el formulario sigue la editabilidad del RTF. */
+  private cargarEspera(ideConvenio: number) {
+    this.cierre
+      .obtenerExpediente(ideConvenio)
+      .pipe(
+        switchMap(expediente =>
+          expediente?.estCierre === 'ESPERA_ANEXO20'
+            ? this.cierre.listarPlazos(expediente.ideCierreConvenio).pipe(
+                map(plazos => ({ espera: true, limite: plazos.find(p => p.tipPlazo === 'ANEXO20' && p.estPlazo === 'VIGENTE')?.fecLimite ?? null }))
+              )
+            : of({ espera: false, limite: null })
+        ),
+        catchError(() => of({ espera: false, limite: null }))
+      )
+      .subscribe(({ espera, limite }) => {
+        this.esperaCierre.set(espera);
+        this.limiteAnexo20.set(limite);
+      });
   }
 
   /** Avisa que hay cambios sin guardar: la descarga del PDF se bloquea hasta guardar. */

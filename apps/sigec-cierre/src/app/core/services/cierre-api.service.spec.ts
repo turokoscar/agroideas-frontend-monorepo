@@ -204,5 +204,19 @@ describe('CierreApiService', () => {
     req.flush(new Blob(['%PDF-']));
     expect(pdf).toBeInstanceOf(Blob);
   });
+
+  it('Anexo 20 por la UN: consulta el formulario del convenio y presenta el PDF firmado en el expediente', () => {
+    service.obtenerAnexo20(2388).subscribe();
+    http.expectOne(`${API}/convenios/2388/anexos20`).flush({ respuesta: 'OK', mensaje: '', datos: {} });
+
+    service.descargarFormularioAnexo20(2388).subscribe();
+    expect(http.expectOne(`${API}/convenios/2388/anexos20/documento`).request.responseType).toBe('blob');
+
+    const pdf = new File(['%PDF-'], 'a20.pdf', { type: 'application/pdf' });
+    service.presentarAnexo20(5, pdf).subscribe();
+    const req = http.expectOne(`${API}/cierres/5/anexos20`);
+    expect([req.request.method, (req.request.body as FormData).get('archivo')]).toEqual(['POST', pdf]);
+    http.match(() => true).forEach(r => r.flush({ respuesta: 'OK', mensaje: '', datos: {} }));
+  });
 });
 

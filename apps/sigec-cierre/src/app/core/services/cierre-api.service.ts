@@ -20,6 +20,7 @@ import { ObservacionUajDto } from '../models/revision-legal.model';
 import { EvaluacionImpactoDto, FiltroEvaluaciones } from '../models/evaluacion-impacto.model';
 import { ActualizarFeriadoRequest, CrearFeriadoRequest, FeriadoDto, FeriadoPropuestoDto } from '../models/calendario.model';
 import { ParametroDto } from '../models/parametro.model';
+import { Anexo20ResumenDto } from '../models/anexo20.model';
 
 /**
  * Desenvuelve el sobre MIDAGRI. La API responde los errores con su código HTTP (llegan como
@@ -293,6 +294,29 @@ export class CierreApiService {
   actualizarParametro(codigo: string, valor: string): Observable<ParametroDto> {
     return this.http
       .put<ApiResponse<ParametroDto>>(`${this.apiUrl}/parametros/${encodeURIComponent(codigo)}`, { valor })
+      .pipe(desenvolver());
+  }
+
+  // --- Anexo 20 presentado por la UN (expediente en ESPERA_ANEXO20) ---
+
+  /** Formulario del Anexo 20 del convenio: la UN solo verifica que la OA lo haya completado. */
+  obtenerAnexo20(ideConvenio: number): Observable<Anexo20ResumenDto> {
+    return this.http.get<ApiResponse<Anexo20ResumenDto>>(`${this.apiUrl}/convenios/${ideConvenio}/anexos20`).pipe(desenvolver());
+  }
+
+  /** PDF/A del Anexo 20 sin firma, para cotejarlo con el firmado que entrega la OA. */
+  descargarFormularioAnexo20(ideConvenio: number): Observable<Blob> {
+    return this.http
+      .get(`${this.apiUrl}/convenios/${ideConvenio}/anexos20/documento`, { responseType: 'blob' })
+      .pipe(catchError(leerErrorBlob));
+  }
+
+  /** La UN presenta en el expediente el Anexo 20 firmado que le entregó la OA: pasa a EN_VERIFICACION. */
+  presentarAnexo20(ideCierreConvenio: number, pdfFirmado: File): Observable<CierreDto> {
+    const formulario = new FormData();
+    formulario.append('archivo', pdfFirmado);
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos20`, formulario)
       .pipe(desenvolver());
   }
 

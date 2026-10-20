@@ -203,6 +203,17 @@
           </div>
 
           <!-- Acción de la etapa activa (ADR 0013, Fases 2 a 4) -->
+          @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20') {
+            @if (esPersonal() && puede('PresentarAnexo20')) {
+              <app-presentacion-anexo20 [ideCierre]="c.ideCierreConvenio" [ideConvenio]="c.ideConvenio" [plazo]="etapa.plazo" (cambio)="cargar()" />
+            } @else if (!esPersonal()) {
+              <p class="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+                Su último RTF se envió sin el Informe de Cierre (Anexo 20). Complételo en el módulo de Reporte Técnico Financiero
+                (pestaña "Anexo 20 · Cierre" de ese RTF), descárguelo, hágalo firmar por su representante legal y entregue el PDF
+                firmado a la Unidad de Negocios, que lo presentará en este expediente.
+              </p>
+            }
+          }
           @if (etapa.situacion === 'activa' && etapa.clave === 'VERIFICACION' && puede('RegistrarVerificacionCampo')) {
             <app-acta-cierre [ideCierre]="c.ideCierreConvenio" [nombreUsuario]="nombreUsuario()" (registrado)="cargar()" />
           }

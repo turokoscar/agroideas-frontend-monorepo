@@ -54,7 +54,8 @@ describe('ExpedienteComponent', () => {
     obtenerAnexo22: jest.fn().mockReturnValue(NEVER),
     listarVersionesAnexo22: jest.fn().mockReturnValue(NEVER),
     obtenerRequisitosDerivacion: jest.fn().mockReturnValue(NEVER),
-    listarObservaciones: jest.fn().mockReturnValue(of([]))
+    listarObservaciones: jest.fn().mockReturnValue(of([])),
+    obtenerAnexo20: jest.fn().mockReturnValue(NEVER)
   };
   const toast = { error: jest.fn() };
 
@@ -184,6 +185,16 @@ describe('ExpedienteComponent', () => {
     fixture.componentInstance.cambiarPestana('observaciones');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Se adjuntó');
+  });
+
+  it('en ESPERA_ANEXO20 la UN puede presentar el Anexo 20 y la OA solo ve la indicación', () => {
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: 'ESPERA_ANEXO20' }));
+    expect(crear(['UN']).nativeElement.querySelector('app-presentacion-anexo20')).not.toBeNull();
+    TestBed.resetTestingModule();
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: 'ESPERA_ANEXO20' }));
+    const oa = crear(['OA']).nativeElement as HTMLElement;
+    expect(oa.querySelector('app-presentacion-anexo20')).toBeNull();
+    expect(oa.textContent).toContain('entregue el PDF');
   });
 });
 

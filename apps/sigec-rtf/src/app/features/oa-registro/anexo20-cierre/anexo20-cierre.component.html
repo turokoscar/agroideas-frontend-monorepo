@@ -6,6 +6,14 @@
         Este es el RTF del último paso crítico: debe adjuntar el Anexo 20 firmado para poder enviarlo. Con él se abre el
         expediente de cierre de su convenio.
       </p>
+      @if (entregaALaUn() && !presentado()) {
+        <p class="mt-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+          Este RTF se envió sin el Anexo 20 y su expediente de cierre lo espera@if (limiteAnexo20(); as limite) { hasta el
+          <span class="font-semibold">{{ limite | date: 'dd/MM/yyyy' }}</span>}. Complete y guarde el formulario, descárguelo,
+          hágalo firmar por su representante legal y entregue el PDF firmado a la Unidad de Negocios, que lo presentará en el
+          expediente. Si vence sin presentarlo, el cierre continúa de oficio.
+        </p>
+      }
     </div>
     @if (anexo(); as a) {
       <span
@@ -35,8 +43,13 @@
       <span class="material-symbols-outlined text-[18px]" [ngClass]="tieneAdjunto() ? 'text-success' : 'text-muted-foreground'">
         {{ tieneAdjunto() ? 'check_circle' : 'radio_button_unchecked' }}
       </span>
-      <span><span class="font-semibold text-foreground">3. Adjuntar el PDF firmado</span><br />
-        <span class="text-muted-foreground">Se envía a Cierre junto con este RTF.</span></span>
+      @if (entregaALaUn()) {
+        <span><span class="font-semibold text-foreground">3. Entregar el PDF firmado a la UN</span><br />
+          <span class="text-muted-foreground">La Unidad de Negocios lo presenta en el expediente de cierre.</span></span>
+      } @else {
+        <span><span class="font-semibold text-foreground">3. Adjuntar el PDF firmado</span><br />
+          <span class="text-muted-foreground">Se envía a Cierre junto con este RTF.</span></span>
+      }
     </li>
   </ol>
 
@@ -229,6 +242,10 @@
             <ui-button icon="upload" label="Adjuntar" [loading]="subiendo()" [disabled]="!archivo() || subiendo()" (onClick)="adjuntar()" />
           </div>
         }
+      } @else if (entregaALaUn()) {
+        <p class="text-xs text-muted-foreground">
+          Este RTF ya fue enviado y no admite adjuntos: entregue el PDF firmado a la Unidad de Negocios.
+        </p>
       }
     </section>
   }

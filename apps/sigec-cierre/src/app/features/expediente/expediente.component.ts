@@ -22,6 +22,7 @@ import { EstadoCierrePillComponent } from '../../shared/estado-cierre-pill.compo
 import { AccionCierre, puedeEjecutar } from '../../core/models/acciones-cierre';
 import { ActaCierreComponent } from './acta-cierre/acta-cierre.component';
 import { InformeEvaluacionComponent } from './informe-evaluacion/informe-evaluacion.component';
+import { PresentacionAnexo20Component } from './anexo20/presentacion-anexo20.component';
 import { TrasladoUajComponent } from './revision-legal/traslado-uaj.component';
 import { RevisionUajComponent } from './revision-legal/revision-uaj.component';
 import { SubsanacionComponent } from './revision-legal/subsanacion.component';
@@ -43,6 +44,7 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones'
   imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
     ActaCierreComponent,
     InformeEvaluacionComponent,
+    PresentacionAnexo20Component,
     TrasladoUajComponent,
     RevisionUajComponent,
     SubsanacionComponent,

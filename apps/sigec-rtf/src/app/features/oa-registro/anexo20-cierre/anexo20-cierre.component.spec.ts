@@ -45,7 +45,9 @@ function anexo(extra: Partial<Anexo20Dto> = {}): Anexo20Dto {
 }
 
 describe('Anexo20CierreComponent', () => {
-  const cierre = { obtenerAnexo20: jest.fn(), guardarAnexo20: jest.fn(), descargarAnexo20: jest.fn() };
+  const cierre = {
+    obtenerAnexo20: jest.fn(), guardarAnexo20: jest.fn(), descargarAnexo20: jest.fn(), obtenerExpediente: jest.fn(), listarPlazos: jest.fn()
+  };
   const rtfService = { uploadEvidencia: jest.fn() };
   const toast = { success: jest.fn(), info: jest.fn(), error: jest.fn() };
 
@@ -70,6 +72,8 @@ describe('Anexo20CierreComponent', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     cierre.obtenerAnexo20.mockReturnValue(of(anexo()));
+    cierre.obtenerExpediente.mockReturnValue(of(null));
+    cierre.listarPlazos.mockReturnValue(of([]));
   });
 
   it('carga la propuesta precargada del SEL y lista lo que falta', () => {
@@ -154,6 +158,35 @@ describe('Anexo20CierreComponent', () => {
     TestBed.resetTestingModule();
     cierre.obtenerAnexo20.mockReturnValue(of(anexo()));
     expect(crear().componentInstance.contrapartidaDelSel()).toBe(false);
+  });
+
+  it('RTF enviado sin el Anexo 20: el formulario sigue editable y el PDF firmado se entrega a la UN', () => {
+    cierre.obtenerExpediente.mockReturnValue(of({
+      ideCierreConvenio: 8, ideConvenio: 2388, estCierre: 'ESPERA_ANEXO20', fecInicio: '2026-10-01T00:00:00', flgDeOficio: false, fecRecepcionAnexo20: null
+    }));
+    cierre.listarPlazos.mockReturnValue(of([
+      { idePlazo: 1, tipPlazo: 'ANEXO20', canDias: 30, fecLimite: '2026-11-15T23:59:59', estPlazo: 'VIGENTE' }
+    ]));
+    const fixture = crear({ editable: false });
+    const c = fixture.componentInstance;
+
+    expect(cierre.listarPlazos).toHaveBeenCalledWith(8);
+    expect(c.entregaALaUn()).toBe(true);
+    expect(c.soloLectura()).toBe(false);
+    const texto = fixture.nativeElement.textContent as string;
+    expect(texto).toContain('15/11/2026');
+    expect(texto).toContain('Entregar el PDF firmado a la UN');
+    expect(fixture.nativeElement.querySelector('input[type="file"]')).toBeNull();
+  });
+
+  it('sin expediente en espera, con el RTF enviado sigue en solo lectura', () => {
+    cierre.obtenerExpediente.mockReturnValue(of({
+      ideCierreConvenio: 8, ideConvenio: 2388, estCierre: 'EN_VERIFICACION', fecInicio: '2026-10-01T00:00:00', flgDeOficio: false, fecRecepcionAnexo20: null
+    }));
+    const c = crear({ editable: false }).componentInstance;
+    expect(c.entregaALaUn()).toBe(false);
+    expect(c.soloLectura()).toBe(true);
+    expect(cierre.listarPlazos).not.toHaveBeenCalled();
   });
 });
 

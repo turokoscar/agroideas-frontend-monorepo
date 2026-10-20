@@ -140,6 +140,11 @@ el flujo de evidencias existente. El último paso se detecta en la UI con
 `oa-rtf.service` → `postulantes/{id}/pasos-criticos` (el de mayor número), para avisar antes de que la regla V3
 rechace el envío. `sigec-cierre` no tiene ninguna acción para la OA sobre el Anexo 20.
 
+**Enmienda (20/10/2026, decisión del owner):** si el último RTF se envió sin el Anexo 20 (expediente en
+`ESPERA_ANEXO20`, p. ej. RTF anteriores a la regla V3), la OA ya no puede adjuntarlo a un RTF enviado. En ese caso la
+OA completa el formulario en `sigec-rtf` (editable aunque el RTF no lo sea), lo firma y entrega el PDF a la **UN**, que
+lo presenta en `sigec-cierre` (`POST /cierres/{id}/anexos20`). La OA sigue sin acciones en `sigec-cierre`.
+
 ### D2 — Modelo de roles: códigos propios, todos los roles del usuario
 `AuthUser.roles: CierreRol[]` (no un único `role`), con
 `CierreRol = 'OA' | 'UN' | 'JEFE_UN' | 'UR' | 'DE' | 'UAJ' | 'USE' | 'ADMIN'`, mapeados desde el texto exacto de
@@ -638,3 +643,16 @@ Cada acción aparece en la tarjeta de su etapa solo para el rol y el estado que 
   documento vigente de cada tipo y el formulario JSON de la versión): se agregó
   `GET /cierres/{id}/anexos22/versiones/{n}/documento` en `sigec-api-cierre` (commit `cee659b`, rama `opazos`).
 - **Pruebas:** 185/185 en la UI y 370/370 en la API; lint sin advertencias; build.
+
+### Anexo 20 presentado por la UN — 2026-10-20
+- **`sigec-cierre`:** `PresentacionAnexo20Component` en la etapa 1 activa (`ESPERA_ANEXO20`) para la UN y el Jefe UN.
+  Consulta el formulario del convenio (`GET /convenios/{id}/anexos20`) y solo deja presentar si la OA lo completó;
+  si no, enumera lo que falta. Permite ver el formulario sin firma para cotejarlo, y presenta el PDF firmado con
+  confirmación. Con el plazo de 30 días vencido no ofrece la carga, porque el proceso sigue de oficio. A la OA, la
+  etapa le indica qué hacer.
+- **`sigec-rtf`:** `Anexo20CierreComponent` consulta el expediente del convenio. En `ESPERA_ANEXO20` con el RTF ya
+  enviado, el formulario sigue editable, el paso 3 pasa a ser "Entregar el PDF firmado a la UN" con el vencimiento del
+  plazo, y no se ofrece adjuntar al RTF. El aviso del dashboard de la OA dejó de pedir "reenviar el RTF".
+- **Pruebas:** 191/191 en sigec-cierre (lint sin advertencias) y 206/206 en sigec-rtf (104 advertencias de lint,
+  las mismas de antes); build de ambas.
+
