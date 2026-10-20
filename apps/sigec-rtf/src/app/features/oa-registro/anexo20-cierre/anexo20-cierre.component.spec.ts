@@ -176,6 +176,7 @@ describe('Anexo20CierreComponent', () => {
     const texto = fixture.nativeElement.textContent as string;
     expect(texto).toContain('15/11/2026');
     expect(texto).toContain('Entregar el PDF firmado a la UN');
+    expect(texto).not.toContain('debe adjuntar el Anexo 20 firmado para poder enviarlo');
     expect(fixture.nativeElement.querySelector('input[type="file"]')).toBeNull();
   });
 

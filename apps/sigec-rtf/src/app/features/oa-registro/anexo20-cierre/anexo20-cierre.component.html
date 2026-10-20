@@ -2,10 +2,12 @@
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
       <h3 class="text-base font-bold text-foreground">Informe de Cierre del PNT (Anexo 20)</h3>
-      <p class="text-sm text-muted-foreground">
-        Este es el RTF del último paso crítico: debe adjuntar el Anexo 20 firmado para poder enviarlo. Con él se abre el
-        expediente de cierre de su convenio.
-      </p>
+      @if (!entregaALaUn()) {
+        <p class="text-sm text-muted-foreground">
+          Este es el RTF del último paso crítico: debe adjuntar el Anexo 20 firmado para poder enviarlo. Con él se abre el
+          expediente de cierre de su convenio.
+        </p>
+      }
       @if (entregaALaUn() && !presentado()) {
         <p class="mt-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
           Este RTF se envió sin el Anexo 20 y su expediente de cierre lo espera@if (limiteAnexo20(); as limite) { hasta el
