@@ -22,7 +22,7 @@ npx nx graph
 npx nx reset                     # clear cache (after version/generator/config changes)
 ```
 
-**Docker builds:** `Dockerfile` (kofix-ejecucion, `--configuration=quality`), `Dockerfile.sat-ui` (`production`), `Dockerfile.sigec-rtf-ui` (`quality`; its Nginx proxies the relative API paths of `environment.quality.ts`).
+**Docker builds:** `Dockerfile` (kofix-ejecucion, `--configuration=quality`), `Dockerfile.sat-ui` (`production`), `Dockerfile.sigec-rtf-ui` and `Dockerfile.sigec-cierre-ui` (`quality`; their Nginx proxies the relative API paths of `environment.quality.ts`). API Dockerfiles, compose and deploy scripts live in `AGROIDEAS/despliegue`.
 
 ## Module boundaries
 

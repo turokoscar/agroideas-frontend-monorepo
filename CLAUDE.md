@@ -51,11 +51,13 @@ Environments are swapped via `fileReplacements` in each app's `project.json`:
 
 Deployment is via multi-stage Dockerfiles at the repo root (node:20 build → nginx SPA):
 `Dockerfile` (kofix-ejecucion, `quality`), `Dockerfile.sat-ui` (`production`),
-`Dockerfile.sigec-rtf-ui` (`quality`). sigec-rtf's `environment.quality.ts` uses **relative**
+`Dockerfile.sigec-rtf-ui` and `Dockerfile.sigec-cierre-ui` (both `quality`). sigec-rtf's `environment.quality.ts` uses **relative**
 URLs (`/api/v1`, `/api-seguridad/...`, `/api-general/...`) that the container's Nginx
 reverse-proxies to `sigec-rtf-api:8080` (Docker network) and `test.agroideas.gob.pe`, because
 the RTF API has no CORS outside Development — keep those paths and the Nginx `location`
-blocks in sync when adding an endpoint base.
+blocks in sync when adding an endpoint base. sigec-cierre follows the same pattern (`/api/v1` →
+`sigec-cierre-api:8080`, `/api-seguridad/`), and sigec-rtf also proxies `/api-cierre/` to it. The
+API Dockerfiles, compose services and `deploy_sigec_*.sh` scripts live in `AGROIDEAS/despliegue`.
 
 ## Architecture — the big picture
 

@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fases 0, 1, A, 2, 3, 4 y 5 implementadas** (20/10/2026) · Fase D pendiente. Ver el
+Aceptado · **Fases 0, 1, A, 2, 3, 4, 5 y D implementadas** (20/10/2026) · falta ejecutar el primer despliegue en Calidad. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -329,7 +329,7 @@ RDE → RDE → `CERRADO` desde la UI, y el estado 77 se ve sincronizado o con o
 
 **Criterio de aceptación:** la USE y el administrador operan sus pantallas.
 
-### Fase D — Despliegue en Calidad (`AGROIDEAS/despliegue` + monorepo) 🟠
+### Fase D — Despliegue en Calidad (`AGROIDEAS/despliegue` + monorepo) ✅
 Puede hacerse en cuanto exista la Fase 0; conviene antes de probar la Fase A en Calidad.
 - En `despliegue/`: `Dockerfile.sigec-cierre-api`, `sigec-cierre.env.example`, `deploy_sigec_cierre.sh`, servicios
   `sigec-cierre-api` y `sigec-cierre-ui` en `docker-compose.apps.yml`, `ExternalServices__CierreApiUrl` en
@@ -604,4 +604,31 @@ Cada acción aparece en la tarjeta de su etapa solo para el rol y el estado que 
     `ParametroServicio` (días 1–365, ubigeos, correos separados por coma o punto y coma).
 - Límites de la API en `AppSettings.administracion`; el catálogo de departamentos replica `DepartamentosPeru`.
 - **Pruebas:** 183/183; lint sin advertencias; build sin avisos. Falta la prueba manual con usuarios de USE y ADMIN.
+
+### Fase D — 2026-10-20
+- **`AGROIDEAS/despliegue`** (no es repositorio git):
+  - `Dockerfile.sigec-cierre-api`: proyectos `SIGEC_CIERRE.*`, hora de Lima y usuario sin privilegios.
+  - `sigec-cierre.env.example`.
+  - `deploy_sigec_cierre.sh`: `git archive` de `opazos` (`RAMA_CIERRE`); BD nueva con `schema.sql` o, si ya existe,
+    las migraciones en orden (`LC_ALL=C sort`); siempre `cierre_procedures.sql` y `datos_iniciales.sql` con `-I`.
+  - Servicios `sigec-cierre-api` y `sigec-cierre-ui` en `docker-compose.apps.yml` y sección 8 del `README.md`.
+  - Como el compose referencia `sigec-cierre.env`, todos los scripts que levantan el compose lo crean vacío si falta,
+    igual que `sigec-rtf.env`. Se sumó también a los cuatro que no lo hacían (KOFIX limpio y actualizaciones, SAT y
+    archivos): ya dependían de que `sigec-rtf.env` existiera en el VPS.
+  - `sigec-rtf.env.example` suma `ExternalServices__CierreApiUrl` y `ApiKeySettings__ApiKey`. Esta llave debe ser
+    igual a `ApiKeySettings__RtfApiKey` de Cierre: el worker de respaldo usa las rutas `external/` de RTF.
+- **Monorepo:** `Dockerfile.sigec-cierre-ui` (configuración `quality`; `/api/v1/` → `sigec-cierre-api:8080` y
+  `/api-seguridad/`). No lleva `/api-general/`: el entorno de Calidad de cierre no lo usa.
+- **Validado en local:**
+  - `nginx -t` de la configuración y `docker compose config`;
+  - la imagen de la API, que arranca en `Quality` como `appuser` con hora de Lima y responde `/health`;
+  - `nx build sigec-cierre --configuration=quality`.
+
+  La imagen de la UI no se construyó en local: el builder de Docker local no soporta `COPY <<EOF`; el del VPS sí, porque
+  ya lo usa con RTF.
+- **Pendiente (lo ejecuta el usuario):**
+  - completar `sigec-cierre.env`;
+  - correr `deploy_sigec_cierre.sh`;
+  - agregar a `sigec-rtf.env` la URL de Cierre y la llave compartida, y volver a desplegar RTF;
+  - en el Proxy Manager, `sigec-cierre.oscar-pazos.com` → `sigec-cierre-ui:80`.
 
