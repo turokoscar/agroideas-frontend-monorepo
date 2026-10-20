@@ -277,7 +277,13 @@
         <h5 class="form-section-title">Versiones firmadas</h5>
         <ul class="space-y-1 text-xs text-slate-700">
           @for (v of versiones(); track v.numVersion) {
-            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">history</span>Versión {{ v.numVersion }} · firmada el {{ v.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</li>
+            <li class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px] text-primary">history</span>
+              <span class="flex-1">Versión {{ v.numVersion }} · firmada el {{ v.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <ui-button icon="download" label="PDF firmado" size="sm" appearance="soft" severity="secondary"
+                [loading]="descargandoVersion() === v.numVersion" [disabled]="descargandoVersion() !== null"
+                (onClick)="descargarVersion(v.numVersion)" />
+            </li>
           }
         </ul>
       </section>

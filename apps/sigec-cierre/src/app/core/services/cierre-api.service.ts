@@ -157,6 +157,13 @@ export class CierreApiService {
       .pipe(desenvolver());
   }
 
+  /** PDF firmado de una versión anterior del Anexo 22, tal como se presentó. */
+  descargarVersionAnexo22(ideCierreConvenio: number, numVersion: number): Observable<Blob> {
+    return this.http
+      .get(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22/versiones/${numVersion}/documento`, { responseType: 'blob' })
+      .pipe(catchError(leerErrorBlob));
+  }
+
   listarVersionesAnexo22(ideCierreConvenio: number): Observable<VersionAnexo22Dto[]> {
     return this.http
       .get<ApiResponse<VersionAnexo22Dto[]>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22/versiones`)

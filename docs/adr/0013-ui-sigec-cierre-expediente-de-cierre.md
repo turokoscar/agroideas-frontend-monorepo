@@ -632,3 +632,9 @@ Cada acción aparece en la tarjeta de su etapa solo para el rol y el estado que 
   - agregar a `sigec-rtf.env` la URL de Cierre y la llave compartida, y volver a desplegar RTF;
   - en el Proxy Manager, `sigec-cierre.oscar-pazos.com` → `sigec-cierre-ui:80`.
 
+
+### Versiones del Anexo 22 — 2026-10-20
+- La lista "Versiones firmadas" del Anexo 22 ofrece el **PDF firmado** de cada versión. La API no lo exponía (solo el
+  documento vigente de cada tipo y el formulario JSON de la versión): se agregó
+  `GET /cierres/{id}/anexos22/versiones/{n}/documento` en `sigec-api-cierre` (commit `cee659b`, rama `opazos`).
+- **Pruebas:** 185/185 en la UI y 370/370 en la API; lint sin advertencias; build.

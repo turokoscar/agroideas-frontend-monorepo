@@ -195,5 +195,14 @@ describe('CierreApiService', () => {
     expect([par.request.method, par.request.body]).toEqual(['PUT', { valor: 'a@x.pe' }]);
     http.match(() => true).forEach(r => r.flush({ respuesta: 'OK', mensaje: '', datos: [] }));
   });
+
+  it('descarga el PDF firmado de una versión del Anexo 22', () => {
+    let pdf: Blob | undefined;
+    service.descargarVersionAnexo22(6, 2).subscribe(b => (pdf = b));
+    const req = http.expectOne(`${API}/cierres/6/anexos22/versiones/2/documento`);
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob(['%PDF-']));
+    expect(pdf).toBeInstanceOf(Blob);
+  });
 });
 

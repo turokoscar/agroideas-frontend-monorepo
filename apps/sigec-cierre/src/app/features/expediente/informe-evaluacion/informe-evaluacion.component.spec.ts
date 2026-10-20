@@ -40,7 +40,7 @@ function filaEnEdicion(c: InformeEvaluacionComponent) {
 describe('InformeEvaluacionComponent', () => {
   const api = {
     obtenerAnexo22: jest.fn(), listarVersionesAnexo22: jest.fn(), guardarAnexo22: jest.fn(),
-    descargarAnexo22: jest.fn(), presentarAnexo22: jest.fn(), derivar: jest.fn(), obtenerRequisitosDerivacion: jest.fn()
+    descargarAnexo22: jest.fn(), descargarVersionAnexo22: jest.fn(), presentarAnexo22: jest.fn(), derivar: jest.fn(), obtenerRequisitosDerivacion: jest.fn()
   };
   const requisitos = (rtfAprobado: boolean, contingencia = false) => ({
     flgPuedeDerivar: rtfAprobado,
@@ -203,4 +203,22 @@ describe('InformeEvaluacionComponent', () => {
     c.derivar();
     expect(api.derivar).toHaveBeenCalledWith(5, 'DE', null);
   });
+
+  it('descarga el PDF firmado de una versión anterior', () => {
+    api.listarVersionesAnexo22.mockReturnValue(of([{ numVersion: 1, codArchivo: 'x', ideUsuario: 3, fecRegistro: '2026-10-15T10:00:00' }]));
+    api.descargarVersionAnexo22.mockReturnValue(of(new Blob(['%PDF-'], { type: 'application/pdf' })));
+    URL.createObjectURL = jest.fn().mockReturnValue('blob:version');
+    URL.revokeObjectURL = jest.fn();
+    const clic = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const fixture = crear();
+    const boton = Array.from(fixture.nativeElement.querySelectorAll('ui-button button') as NodeListOf<HTMLButtonElement>)
+      .find(b => b.textContent?.includes('PDF firmado'));
+    boton?.click();
+
+    expect(api.descargarVersionAnexo22).toHaveBeenCalledWith(5, 1);
+    expect(clic).toHaveBeenCalled();
+    expect(fixture.componentInstance.descargandoVersion()).toBeNull();
+    clic.mockRestore();
+  });
 });
+

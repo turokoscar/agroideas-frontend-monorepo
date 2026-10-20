@@ -98,6 +98,8 @@ export class InformeEvaluacionComponent {
   edicion = signal<EdicionIndicador | null>(null);
   readonly secciones = SECCIONES;
   versiones = signal<VersionAnexo22Dto[]>([]);
+  /** Versión firmada que se está descargando. */
+  descargandoVersion = signal<number | null>(null);
   /** Requisitos para elevar a la DE; null mientras cargan o si la consulta falló (la API valida igual al derivar). */
   requisitos = signal<RequisitosDerivacionDto | null>(null);
   /** Requisito del último RTF que no se cumple: se avisa desde el borrador, antes de firmar. */
@@ -215,18 +217,36 @@ export class InformeEvaluacionComponent {
     this.api.descargarAnexo22(this.ideCierre()).subscribe({
       next: blob => {
         this.descargando.set(false);
-        const url = URL.createObjectURL(blob);
-        const enlace = document.createElement('a');
-        enlace.href = url;
-        enlace.download = `Anexo22_${this.anexo()?.txtNumeroConvenio ?? this.ideCierre()}_v${this.anexo()?.numVersion ?? 1}.pdf`;
-        enlace.click();
-        URL.revokeObjectURL(url);
+        this.guardarArchivo(blob, `Anexo22_${this.anexo()?.txtNumeroConvenio ?? this.ideCierre()}_v${this.anexo()?.numVersion ?? 1}.pdf`);
       },
       error: err => {
         this.descargando.set(false);
         this.toast.error('No se pudo generar el informe', mensajeParaUsuario(err, 'Intente nuevamente.'));
       }
     });
+  }
+
+  descargarVersion(numVersion: number) {
+    this.descargandoVersion.set(numVersion);
+    this.api.descargarVersionAnexo22(this.ideCierre(), numVersion).subscribe({
+      next: blob => {
+        this.descargandoVersion.set(null);
+        this.guardarArchivo(blob, `Anexo22_${this.anexo()?.txtNumeroConvenio ?? this.ideCierre()}_v${numVersion}_firmado.pdf`);
+      },
+      error: err => {
+        this.descargandoVersion.set(null);
+        this.toast.error(`No se pudo descargar la versión ${numVersion}`, mensajeParaUsuario(err, 'Intente nuevamente.'));
+      }
+    });
+  }
+
+  private guardarArchivo(blob: Blob, nombre: string) {
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombre;
+    enlace.click();
+    URL.revokeObjectURL(url);
   }
 
   seleccionarArchivo(event: Event) {
