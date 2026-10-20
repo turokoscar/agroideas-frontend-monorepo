@@ -30,6 +30,12 @@ export const appRoutes: Route[] = [
         canActivate: [roleGuard(['OA'])]
       },
       {
+        // Personal y OA: la API decide si el usuario puede ver ese expediente (la OA, solo el suyo).
+        path: 'expedientes/:id',
+        loadComponent: () => import('./features/expediente/expediente.component').then(m => m.ExpedienteComponent),
+        canActivate: [roleGuard([...ROLES_PERSONAL, 'OA'])]
+      },
+      {
         path: '',
         pathMatch: 'full',
         redirectTo: () => inject(AuthService).inicio()

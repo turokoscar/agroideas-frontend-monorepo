@@ -154,7 +154,9 @@ Unlike kofix-ejecucion, `sat-ui`, `sigec-rtf`, and `sigec-cierre` use a flatter
   (`core/models/rol-cierre.model.ts`): users keep *all* their roles (`AuthUser.roles: CierreRol[]`),
   unknown roles are dropped (no fallback to OA), and guards redirect to `rutaInicio(roles)`, which only
   returns routes the user can activate (`/bandeja`, `/mi-cierre`, `/sin-acceso`). Don't copy RTF's role
-  map: "Unidad de Monitoreo" is UN in RTF but USE in Cierre.
+  map: "Unidad de Monitoreo" is UN in RTF but USE in Cierre. **Every tunable value** (page sizes,
+  polling intervals, `deviceId`…) goes in the `environment*.ts` files, typed by
+  `environments/app-settings.model.ts` — never hardcoded in services/components (owner's rule).
 
 All four apps wire `provideHttpClient(withInterceptors([authInterceptor]))` from
 `@agroideas/auth` in their `app.config.ts` — kofix-ejecucion is not the only consumer of the

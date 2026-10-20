@@ -1,0 +1,189 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight text-foreground">Bandeja de expedientes</h2>
+      <p class="text-sm text-muted-foreground">Expedientes de cierre que esperan una acción suya, ordenados por vencimiento.</p>
+    </div>
+    @if (puedeIniciar()) {
+      <ui-button icon="add" label="Iniciar expediente" (onClick)="abrirModalIniciar()" />
+    }
+  </div>
+
+  <!-- Pestañas -->
+  <div class="flex flex-wrap gap-2" role="tablist">
+    @for (s of semaforos; track s) {
+      <button
+        type="button"
+        role="tab"
+        class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all"
+        [attr.aria-selected]="pestana() === s"
+        [class.bg-primary]="pestana() === s"
+        [class.text-primary-foreground]="pestana() === s"
+        [class.bg-surface-container]="pestana() !== s"
+        [class.text-muted-foreground]="pestana() !== s"
+        (click)="cambiarPestana(s)"
+      >
+        {{ etiquetaSemaforo[s] }}
+        <span
+          class="min-w-[20px] rounded-full px-1.5 py-0.5 text-[10px]"
+          [ngClass]="pestana() === s ? 'bg-primary-foreground/20' : 'bg-muted'"
+        >{{ cargandoPendientes() ? '…' : conteo()[s] }}</span>
+      </button>
+    }
+    <button
+      type="button"
+      role="tab"
+      class="rounded-xl px-4 py-2 text-xs font-semibold transition-all"
+      [attr.aria-selected]="pestana() === 'TODOS'"
+      [class.bg-primary]="pestana() === 'TODOS'"
+      [class.text-primary-foreground]="pestana() === 'TODOS'"
+      [class.bg-surface-container]="pestana() !== 'TODOS'"
+      [class.text-muted-foreground]="pestana() !== 'TODOS'"
+      (click)="cambiarPestana('TODOS')"
+    >
+      Todos los expedientes
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <app-ui-filter-bar [showSearch]="false">
+    <div class="filter-group filter-group--search flex-1">
+      <label class="filter-label" for="bandeja-busqueda">Buscar</label>
+      <div class="filter-search-wrap">
+        <span class="material-symbols-outlined filter-search-icon">search</span>
+        <input
+          id="bandeja-busqueda"
+          type="text"
+          class="filter-input filter-input--search"
+          placeholder="N° de convenio, organización o ID…"
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+    @if (pestana() === 'TODOS') {
+      <div class="filter-group">
+        <label class="filter-label" for="bandeja-estado">Estado</label>
+        <select id="bandeja-estado" class="filter-input" [ngModel]="filtroEstado()" (ngModelChange)="cambiarFiltroEstado($event)">
+          <option value="">Todos</option>
+          @for (e of estados; track e) {
+            <option [value]="e">{{ etiquetaEstado(e) }}</option>
+          }
+        </select>
+      </div>
+    }
+  </app-ui-filter-bar>
+
+  @if (pestana() !== 'TODOS') {
+    <app-ui-data-table
+      [columns]="columnasPendientes"
+      [data]="pendientesVisibles()"
+      [loading]="cargandoPendientes()"
+      [rows]="cantidadPorPagina"
+      [hasActions]="true"
+      [rowTemplate]="filaPendiente"
+      [actionsTemplate]="accionesFila"
+      emptyIcon="inbox"
+      [emptyMessage]="mensajeVacio()"
+      emptySubMessage="Aquí aparecen los expedientes cuando esperan una acción suya."
+      (onRowClick)="abrir($event)"
+    >
+      <ng-template #filaPendiente let-row let-col="col">
+        @switch (col.field) {
+          @case ('txtNumeroConvenio') {
+            <span class="font-medium text-foreground">{{ row.txtNumeroConvenio ?? row.ideConvenio }}</span>
+            @if (row.flgDeOficio) {
+              <span class="ml-1 text-[10px] font-semibold text-warning">· de oficio</span>
+            }
+          }
+          @case ('estCierre') {
+            <app-estado-cierre-pill [estado]="row.estCierre" />
+          }
+          @case ('plazo') {
+            <span class="text-xs font-semibold" [class]="claseSemaforo(row.tipSemaforo)">{{ textoPlazo(row) }}</span>
+            @if (row.tipPlazo) {
+              <span class="block text-[10px] text-muted-foreground">{{ etiquetaTipoPlazo(row.tipPlazo) }}</span>
+            }
+          }
+          @case ('acciones') {
+            <span class="text-xs text-foreground">{{ row.acciones.length ? etiquetaAccion(row.acciones[0]) : '—' }}</span>
+          }
+        }
+      </ng-template>
+    </app-ui-data-table>
+  } @else {
+    <app-ui-data-table
+      [columns]="columnasTodos"
+      [data]="todosVisibles()"
+      [loading]="cargandoTodos()"
+      [paginator]="false"
+      [hasActions]="true"
+      [rowTemplate]="filaTodos"
+      [actionsTemplate]="accionesFila"
+      emptyIcon="folder_off"
+      emptyMessage="No hay expedientes con estos filtros."
+      emptySubMessage="Cambie el estado o la búsqueda."
+      (onRowClick)="abrir($event)"
+    >
+      <ng-template #filaTodos let-row let-col="col">
+        @switch (col.field) {
+          @case ('txtNumeroConvenio') {
+            <span class="font-medium text-foreground">{{ row.txtNumeroConvenio ?? row.ideConvenio }}</span>
+          }
+          @case ('estCierre') {
+            <app-estado-cierre-pill [estado]="row.estCierre" />
+          }
+          @case ('fecInicio') {
+            <span class="text-xs text-muted-foreground">{{ row.fecInicio | date: 'dd/MM/yyyy' }}</span>
+          }
+        }
+      </ng-template>
+    </app-ui-data-table>
+
+    @if (totalTodos() > cantidadPorPagina) {
+      <app-ui-pagination [total]="totalTodos()" [pageSize]="cantidadPorPagina" [currentPage]="paginaTodos()" (pageChange)="cargarTodos($event)" />
+    }
+  }
+
+  <ng-template #accionesFila let-row>
+    <div class="flex justify-end">
+      <ui-button
+        iconOnly
+        size="sm"
+        appearance="soft"
+        severity="secondary"
+        icon="arrow_forward"
+        [ariaLabel]="'Abrir el expediente ' + row.ideCierreConvenio"
+        (onClick)="$event.stopPropagation(); abrir(row)"
+      />
+    </div>
+  </ng-template>
+</div>
+
+<app-ui-modal
+  [visible]="modalIniciar()"
+  title="Iniciar expediente de cierre"
+  subtitle="La API verifica en el SEL y en RTF que corresponda abrirlo."
+  icon="add_circle"
+  maxWidth="480px"
+  saveLabel="Iniciar"
+  saveIcon="play_arrow"
+  [isSubmitting]="iniciando()"
+  [saveDisabled]="!ideConvenioNuevo"
+  (onHide)="modalIniciar.set(false)"
+  (onSave)="iniciar()"
+>
+  <div class="space-y-2">
+    <label for="ide-convenio" class="text-xs font-semibold text-foreground">ID del convenio en el SEL (postulanteId)</label>
+    <input
+      id="ide-convenio"
+      type="number"
+      min="1"
+      class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+      [(ngModel)]="ideConvenioNuevo"
+    />
+    <p class="text-[11px] text-muted-foreground">
+      Se abre si el último RTF ya se presentó o si venció el plazo del Anexo 20. Si el expediente ya existe, se abrirá el existente.
+    </p>
+  </div>
+</app-ui-modal>

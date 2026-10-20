@@ -115,7 +115,7 @@ export class UiCountdownBannerComponent implements OnDestroy {
             [attr.cx]="size() / 2"
             [attr.cy]="size() / 2"
             [attr.r]="radius()"
-            stroke="var(--muted)"
+            stroke="hsl(var(--muted))"
             [attr.stroke-width]="stroke"
             fill="none"
           />
@@ -165,8 +165,8 @@ export class UiCountdownRingComponent {
   ringColor = computed(() => {
     const r = this.remainingDays();
     const t = this.totalDays();
-    if (this.forceExpire() || r < t * 0.15) return 'var(--destructive)';
-    if (r < t * 0.4) return 'var(--warning)';
-    return 'var(--primary)';
+    if (this.forceExpire() || r < t * 0.15) return 'hsl(var(--destructive))';
+    if (r < t * 0.4) return 'hsl(var(--warning))';
+    return 'hsl(var(--primary))';
   });
 }

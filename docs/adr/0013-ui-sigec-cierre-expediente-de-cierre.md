@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fase 0 implementada** (20/10/2026) · Fases A, 1–5 y D pendientes. Ver el
+Aceptado · **Fases 0 y 1 implementadas** (20/10/2026) · Fases A, 2–5 y D pendientes. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -427,3 +427,32 @@ expediente de cierre sin esperar al worker de respaldo.
   -p sigec-cierre`: lint sin errores ni advertencias, 53/53 pruebas, build de producción y de `quality` (503 kB
   iniciales; antes 571 kB).
 - `CLAUDE.md` y `AGENTS.md` actualizados (puerto, configuraciones, catálogo de roles).
+
+### Fase 1 — 2026-10-20
+- **Configuración (decisión del owner, 20/10/2026):** todo valor ajustable vive en los `environment*.ts`, tipados con
+  `environments/app-settings.model.ts` (`AppSettings`): `deviceId`, `paginacion.cantidadPorPagina`,
+  `paginacion.cantidadMaxima` (debe coincidir con `ValidadoresCierre.CantidadMaxima` de la API),
+  `notificaciones.intervaloRefrescoMs` y `notificaciones.cantidadEnCampana`. Los catálogos que espejan contratos
+  de la API (estados, tipos de documento, etiquetas) siguen en `core/models/`.
+- **Cliente de la API (D5):** `CierreApiService` con el operador `desenvolver()` (un sobre `ERROR` con 200 se relanza
+  con la forma que lee `mensajeParaUsuario`) y `listarTodosLosPendientes()`, que pagina hasta traer la bandeja
+  completa. Modelos en `core/models/` (`cierre`, `plazo`, `notificacion`, `api`).
+- **Etapas (D3):** `core/models/etapas-cierre.ts` (puro) arma las seis etapas desde el estado, los documentos
+  vigentes y los plazos; el ciclo `OBSERVADO_UAJ` es una nota sobre la etapa UAJ. El número de ronda de
+  observaciones queda para la Fase 4 (necesita `GET …/observaciones`).
+- **Pantallas:** `/bandeja` (pestañas por semáforo con contadores exactos, búsqueda en el cliente, "Todos" con
+  paginación del servidor y filtro de estado, "Iniciar expediente" para UN/Jefe UN); `/expedientes/:id`
+  (cabecera, estado 77, stepper, tarjetas por etapa con `ui-countdown-ring`, pestañas de documentos, plazos,
+  bitácora y correos enviados —esta última solo para el personal—, visor de PDF); `/mi-cierre` reutiliza el
+  expediente para la OA. Campana de notificaciones en el header (sin endpoint de conteo: el total sale de
+  `soloNoLeidas=true&cantidad=1`; el polling sobrevive a errores).
+- **Limitación conocida:** en "Todos" la búsqueda de texto filtra solo la página cargada (la API no tiene filtro
+  de texto en `GET /cierres`); los filtros de estado sí van al servidor.
+- **`@agroideas/ui`:** `ui-countdown-ring` usaba `var(--primary)` como color, pero los tokens son componentes HSL
+  sueltos: el anillo no se pintaba (ninguna app lo usaba). Ahora usa `hsl(var(--token))`.
+- **Bundle:** el contenedor de toasts va en el shell (lazy) y no en `AppComponent`, para no arrastrar el barrel de
+  `@agroideas/ui` al bundle inicial (544 kB; 665 kB si se pone en `AppComponent`). Se agregan los assets de pdf.js
+  a `project.json`, como en `sigec-rtf`.
+- **Pruebas:** 98/98 (etapas, servicios, bandeja, expediente, mi-cierre) y 44/44 en `ui`; lint sin advertencias;
+  build de producción y `quality`. `nx serve sigec-cierre` levanta en :4400 contra las APIs locales; falta la
+  prueba manual con un usuario de cada rol.

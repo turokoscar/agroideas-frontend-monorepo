@@ -1,8 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { UiAppShellComponent } from '@agroideas/ui';
+import { UiAppShellComponent, UiToastContainerComponent } from '@agroideas/ui';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificacionBellComponent } from '../notificacion-bell/notificacion-bell.component';
 import { CierreRol, ETIQUETA_ROL, ROLES_PERSONAL, tieneAlgunRol } from '../../core/models/rol-cierre.model';
 
 interface ItemMenu {
@@ -20,7 +21,7 @@ const MENU: readonly ItemMenu[] = [
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, UiAppShellComponent],
+  imports: [CommonModule, RouterModule, UiAppShellComponent, UiToastContainerComponent, NotificacionBellComponent],
   template: `
     <!-- El comportamiento responsive del menú vive en @agroideas/ui -->
     <app-ui-app-shell>
@@ -74,15 +75,20 @@ const MENU: readonly ItemMenu[] = [
       </div>
 
       <!-- Header -->
-      <div shell-header class="flex flex-1 items-center gap-2 min-w-0">
-        <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SIGEC</span>
-        <span class="text-xs text-surface-400">/</span>
-        <span class="text-xs text-foreground font-medium truncate">Cierre de Convenios</span>
+      <div shell-header class="flex flex-1 items-center justify-between gap-4 min-w-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SIGEC</span>
+          <span class="text-xs text-surface-400">/</span>
+          <span class="text-xs text-foreground font-medium truncate">Cierre de Convenios</span>
+        </div>
+        <app-notificacion-bell />
       </div>
 
       <!-- Page Content -->
       <router-outlet></router-outlet>
     </app-ui-app-shell>
+    <!-- Aquí y no en AppComponent: así el barrel de @agroideas/ui no entra en el bundle inicial -->
+    <app-ui-toast-container></app-ui-toast-container>
   `
 })
 export class AppShellComponent {

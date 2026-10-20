@@ -1,5 +1,16 @@
-export const environment = {
+import { AppSettings } from './app-settings.model';
+
+export const environment: AppSettings = {
   production: false,
   apiAuth: 'https://localhost:7101/api/Auth',
-  apiUrl: 'https://localhost:7400/api/v1'
+  apiUrl: 'https://localhost:7400/api/v1',
+  deviceId: 'web-admin',
+  paginacion: {
+    cantidadPorPagina: 20,
+    cantidadMaxima: 100
+  },
+  notificaciones: {
+    intervaloRefrescoMs: 60_000,
+    cantidadEnCampana: 20
+  }
 };

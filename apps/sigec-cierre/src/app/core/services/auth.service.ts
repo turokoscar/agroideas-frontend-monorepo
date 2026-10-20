@@ -66,7 +66,7 @@ export class AuthService {
     return this.http.post<SelLoginResponse>(`${this.apiUrl}/login`, {
       email: usuario,
       password: password,
-      deviceId: 'web-admin'
+      deviceId: environment.deviceId
     }).pipe(
       map(res => {
         if (res && res.respuesta === 'OK' && res.datos) {
