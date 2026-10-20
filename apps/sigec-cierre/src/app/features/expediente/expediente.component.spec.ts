@@ -52,7 +52,8 @@ describe('ExpedienteComponent', () => {
     obtenerAnexo21: jest.fn().mockReturnValue(NEVER),
     // Lo mismo para el Anexo 22 (Fase 3).
     obtenerAnexo22: jest.fn().mockReturnValue(NEVER),
-    listarVersionesAnexo22: jest.fn().mockReturnValue(NEVER)
+    listarVersionesAnexo22: jest.fn().mockReturnValue(NEVER),
+    obtenerRequisitosDerivacion: jest.fn().mockReturnValue(NEVER)
   };
   const toast = { error: jest.fn() };
 

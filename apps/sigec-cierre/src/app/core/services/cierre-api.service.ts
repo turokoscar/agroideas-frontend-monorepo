@@ -15,7 +15,7 @@ import {
 import { PlazoDto } from '../models/plazo.model';
 import { EnvioNotificacionDto } from '../models/notificacion.model';
 import { Anexo21Datos, Anexo21Dto } from '../models/anexo21.model';
-import { Anexo22Datos, Anexo22Dto, VersionAnexo22Dto } from '../models/anexo22.model';
+import { Anexo22Datos, Anexo22Dto, RequisitosDerivacionDto, VersionAnexo22Dto } from '../models/anexo22.model';
 
 /**
  * Desenvuelve el sobre MIDAGRI. La API responde los errores con su código HTTP (llegan como
@@ -156,6 +156,13 @@ export class CierreApiService {
   listarVersionesAnexo22(ideCierreConvenio: number): Observable<VersionAnexo22Dto[]> {
     return this.http
       .get<ApiResponse<VersionAnexo22Dto[]>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22/versiones`)
+      .pipe(desenvolver());
+  }
+
+  /** Requisitos para elevar el expediente a la DE (Anexo 22 firmado, último RTF aprobado) y si exigirá contingencia. */
+  obtenerRequisitosDerivacion(ideCierreConvenio: number): Observable<RequisitosDerivacionDto> {
+    return this.http
+      .get<ApiResponse<RequisitosDerivacionDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/derivaciones/requisitos`)
       .pipe(desenvolver());
   }
 

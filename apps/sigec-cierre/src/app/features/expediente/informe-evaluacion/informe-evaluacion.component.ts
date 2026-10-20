@@ -10,6 +10,7 @@ import {
   ETIQUETA_ORIGEN_DATO,
   IndicadorEvaluacionDto,
   RESULTADOS,
+  RequisitosDerivacionDto,
   SeccionManual,
   VersionAnexo22Dto,
   nuevoIndicador,
@@ -90,14 +91,22 @@ export class InformeEvaluacionComponent {
   edicion = signal<EdicionIndicador | null>(null);
   readonly secciones = SECCIONES;
   versiones = signal<VersionAnexo22Dto[]>([]);
+  /** Requisitos para elevar a la DE; null mientras cargan o si la consulta falló (la API valida igual al derivar). */
+  requisitos = signal<RequisitosDerivacionDto | null>(null);
+  /** Requisito del último RTF que no se cumple: se avisa desde el borrador, antes de firmar. */
+  rtfPendiente = computed(() => this.requisitos()?.requisitos.find(r => r.txtCodigo === 'ULTIMO_RTF_APROBADO' && !r.flgCumple) ?? null);
 
   firmado = computed(() => this.anexo()?.estAnexo22 === 'FIRMADO');
   guardado = computed(() => (this.anexo()?.ideAnexo22 ?? 0) > 0);
   completo = computed(() => this.guardado() && (this.anexo()?.faltantes.length ?? 1) === 0 && !this.sucio());
+  /** Lo dice la API (requisitos); si aún no respondió, se estima con el plazo del expediente. */
   plazoVencido = computed(() => {
+    const requisitos = this.requisitos();
+    if (requisitos) return requisitos.flgContingenciaRequerida;
     const plazo = this.plazoUn();
     return !!plazo && plazo.estPlazo !== 'CUMPLIDO' && diasRestantes(plazo.fecLimite) < 0;
   });
+  puedeDerivar = computed(() => this.requisitos()?.flgPuedeDerivar ?? false);
   /** Indicadores con desviación crítica en algún año, para el aviso de la cabecera. */
   criticos = computed(() => {
     const a = this.anexo();
@@ -128,6 +137,7 @@ export class InformeEvaluacionComponent {
       }
     });
     this.api.listarVersionesAnexo22(id).subscribe({ next: v => this.versiones.set(v), error: () => this.versiones.set([]) });
+    this.api.obtenerRequisitosDerivacion(id).subscribe({ next: r => this.requisitos.set(r), error: () => this.requisitos.set(null) });
   }
 
   marcarSucio() {

@@ -27,6 +27,12 @@
         <span>{{ criticos() }} indicador(es) con desviación crítica (una caída de más de {{ -umbral }} % frente a lo programado en algún año). Se resaltan en las tablas.</span>
       </div>
     }
+    @if (!ro && rtfPendiente(); as r) {
+      <div class="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+        <span class="material-symbols-outlined text-[18px] text-warning">info</span>
+        <span>Para elevar el expediente a la DE, además del informe firmado: {{ r.txtDetalle }}</span>
+      </div>
+    }
     @if (!ro && a.faltantes.length > 0) {
       <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
         <p class="font-semibold">Para generar y presentar el informe falta:</p>
@@ -239,11 +245,30 @@
     } @else {
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Elevar el Expediente Único a la Dirección Ejecutiva</h5>
-        <p class="text-xs text-slate-600">
-          El informe está firmado. Al elevarlo, la API verifica además que el último RTF esté aprobado.
-          @if (plazoVencido()) { <span class="font-semibold text-destructive"> El plazo de la evaluación venció: se exige registrar la contingencia.</span> }
-        </p>
-        <ui-button icon="send" label="Derivar a la Dirección Ejecutiva" (onClick)="abrirDerivar()" />
+        @if (requisitos(); as req) {
+          <ul class="space-y-2">
+            @for (r of req.requisitos; track r.txtCodigo) {
+              <li class="flex items-start gap-2 text-xs">
+                <span class="material-symbols-outlined text-[18px]" [ngClass]="r.flgCumple ? 'text-success' : 'text-destructive'">
+                  {{ r.flgCumple ? 'check_circle' : 'cancel' }}
+                </span>
+                <span>
+                  <span class="font-semibold text-slate-700">{{ r.txtDescripcion }}</span>
+                  @if (r.txtCodigo === 'ULTIMO_RTF_APROBADO' && req.ideRtfUltimo) {
+                    <span class="text-slate-400"> · RTF {{ req.ideRtfUltimo }} ({{ req.estRtfUltimo }})</span>
+                  }
+                  @if (!r.flgCumple && r.txtDetalle) { <span class="block text-destructive">{{ r.txtDetalle }}</span> }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="text-xs text-slate-400">No se pudieron consultar los requisitos; la API los verificará al derivar.</p>
+        }
+        @if (plazoVencido()) {
+          <p class="text-xs font-semibold text-destructive">El plazo de la evaluación venció: al derivar se exigirá registrar la contingencia.</p>
+        }
+        <ui-button icon="send" label="Derivar a la Dirección Ejecutiva" [disabled]="requisitos() !== null && !puedeDerivar()" (onClick)="abrirDerivar()" />
       </section>
     }
 

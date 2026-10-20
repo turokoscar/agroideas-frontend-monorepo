@@ -40,8 +40,22 @@ function filaEnEdicion(c: InformeEvaluacionComponent) {
 describe('InformeEvaluacionComponent', () => {
   const api = {
     obtenerAnexo22: jest.fn(), listarVersionesAnexo22: jest.fn(), guardarAnexo22: jest.fn(),
-    descargarAnexo22: jest.fn(), presentarAnexo22: jest.fn(), derivar: jest.fn()
+    descargarAnexo22: jest.fn(), presentarAnexo22: jest.fn(), derivar: jest.fn(), obtenerRequisitosDerivacion: jest.fn()
   };
+  const requisitos = (rtfAprobado: boolean, contingencia = false) => ({
+    flgPuedeDerivar: rtfAprobado,
+    requisitos: [
+      { txtCodigo: 'ANEXO22_FIRMADO', txtDescripcion: 'Informe de Evaluación (Anexo 22) firmado', flgCumple: true, txtDetalle: null },
+      {
+        txtCodigo: 'ULTIMO_RTF_APROBADO', txtDescripcion: 'Último RTF del convenio aprobado', flgCumple: rtfAprobado,
+        txtDetalle: rtfAprobado ? null : 'El último RTF (30005) está en estado EN_REVISION: debe estar APROBADO antes de elevar el expediente a la DE.'
+      }
+    ],
+    flgContingenciaRequerida: contingencia,
+    fecLimitePlazo: null,
+    ideRtfUltimo: 30005,
+    estRtfUltimo: rtfAprobado ? 'APROBADO' : 'EN_REVISION'
+  });
   const toast = { success: jest.fn(), info: jest.fn(), error: jest.fn() };
 
   function crear(plazoUn: PlazoDto | null = null) {
@@ -61,6 +75,26 @@ describe('InformeEvaluacionComponent', () => {
     jest.clearAllMocks();
     api.obtenerAnexo22.mockReturnValue(of(anexo()));
     api.listarVersionesAnexo22.mockReturnValue(of([]));
+    api.obtenerRequisitosDerivacion.mockReturnValue(of(requisitos(true)));
+  });
+
+  it('con el último RTF sin aprobar avisa desde el borrador y, ya firmado, no deja derivar', () => {
+    api.obtenerRequisitosDerivacion.mockReturnValue(of(requisitos(false)));
+    const borrador = crear();
+    expect(borrador.nativeElement.textContent).toContain('El último RTF (30005) está en estado EN_REVISION');
+    TestBed.resetTestingModule();
+
+    api.obtenerAnexo22.mockReturnValue(of(anexo({ ideAnexo22: 9, faltantes: [], estAnexo22: 'FIRMADO' })));
+    const firmado = crear();
+    expect(firmado.componentInstance.puedeDerivar()).toBe(false);
+    const boton = Array.from(firmado.nativeElement.querySelectorAll('ui-button button') as NodeListOf<HTMLButtonElement>)
+      .find(b => b.textContent?.includes('Derivar a la Dirección Ejecutiva'));
+    expect(boton?.disabled).toBe(true);
+  });
+
+  it('la contingencia la decide la API (plazo vencido según los requisitos)', () => {
+    api.obtenerRequisitosDerivacion.mockReturnValue(of(requisitos(true, true)));
+    expect(crear(plazo('2099-12-31T23:59:59')).componentInstance.plazoVencido()).toBe(true);
   });
 
   it('carga la propuesta, muestra lo que falta y los datos del SEL', () => {
@@ -148,6 +182,7 @@ describe('InformeEvaluacionComponent', () => {
   it('con el plazo de la UN vencido, derivar exige la contingencia', () => {
     api.obtenerAnexo22.mockReturnValue(of(anexo({ ideAnexo22: 9, faltantes: [], estAnexo22: 'FIRMADO' })));
     api.derivar.mockReturnValue(of({ ideCierreConvenio: 5, estCierre: 'DERIVADO_DE' }));
+    api.obtenerRequisitosDerivacion.mockReturnValue(of(requisitos(true, true)));
     const { componentInstance: c } = crear(plazo('2026-01-01T23:59:59'));
     expect(c.plazoVencido()).toBe(true);
 

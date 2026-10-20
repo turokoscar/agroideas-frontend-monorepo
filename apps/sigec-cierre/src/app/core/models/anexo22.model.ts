@@ -202,3 +202,24 @@ export function nuevoIndicador(numOrden: number): IndicadorEvaluacionDto {
     txtOrigen: 'MANUAL'
   };
 }
+
+/** Requisito para elevar el expediente a la DE (`GET …/derivaciones/requisitos`). */
+export interface RequisitoDerivacionDto {
+  /** ANEXO22_FIRMADO | ULTIMO_RTF_APROBADO. */
+  txtCodigo: string;
+  txtDescripcion: string;
+  flgCumple: boolean;
+  /** Qué falta, con el mismo texto con que la API rechazaría la derivación. */
+  txtDetalle: string | null;
+}
+
+export interface RequisitosDerivacionDto {
+  flgPuedeDerivar: boolean;
+  requisitos: RequisitoDerivacionDto[];
+  /** Venció el plazo de la UN: la derivación exige la contingencia. */
+  flgContingenciaRequerida: boolean;
+  fecLimitePlazo: string | null;
+  ideRtfUltimo: number | null;
+  estRtfUltimo: string | null;
+}
+

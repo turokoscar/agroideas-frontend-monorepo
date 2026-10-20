@@ -562,3 +562,16 @@ unidad, destino/objetivo/actividad según la sección, línea base, programado y
 vivo, resultado, medio de verificación y comentarios. El modal trabaja sobre una copia (cancelar no cambia la fila).
 En las filas del SEL de la sección VI solo habilita la actividad y los comentarios. 146/146 pruebas.
 
+### Fase 3 (ajuste) — 2026-10-20: aviso previo de los requisitos para elevar a la DE
+Al probar la derivación del expediente 6, la API la rechazó porque el último RTF (30005) estaba EN_REVISION; la UI
+solo se enteraba al intentarlo.
+- **sigec-api-cierre** (`opazos`, `42787d7`): `GET /cierres/{id}/derivaciones/requisitos` devuelve cada requisito
+  (Anexo 22 firmado, último RTF aprobado —salvo de oficio sin RTF—) con el mismo mensaje con que la derivación
+  rechaza, el RTF y su estado, y si se exigirá contingencia. La derivación y la consulta usan la misma evaluación
+  (`EvaluarRequisitosDeAsync`).
+- **sigec-cierre:** el informe consulta los requisitos al cargar; con el RTF sin aprobar avisa desde el borrador, y ya
+  firmado muestra la lista con ✔/✖ y deja "Derivar" deshabilitado mientras falte algo. La exigencia de contingencia
+  la decide la API. 148/148 pruebas.
+- En local se aprobó a mano el RTF 30005 (`SIGEC_RTF.rtf.SRT_TMC_RTF`, de EN_REVISION a APROBADO) para continuar
+  las pruebas de la derivación.
+
