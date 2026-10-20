@@ -5,6 +5,8 @@ import { provideRouter, Router } from '@angular/router';
 import { signal } from '@angular/core';
 import { OaDashboardComponent } from './oa-dashboard.component';
 import { AuthService } from '../../core/services/auth.service';
+import { CierreService } from '../../core/services/cierre.service';
+import { of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, EvaluacionUrEstadoDto } from '../../core/models';
 
@@ -20,7 +22,9 @@ describe('OaDashboardComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: AuthService, useValue: { user: signal(userId ? { id: userId } : null) } }
+        { provide: AuthService, useValue: { user: signal(userId ? { id: userId } : null) } },
+        // El hito de cierre tiene su propio spec; aquí no debe agregar peticiones al HttpTestingController.
+        { provide: CierreService, useValue: { obtenerExpediente: () => of(null), listarPlazos: () => of([]) } }
       ]
     });
     httpMock = TestBed.inject(HttpTestingController);

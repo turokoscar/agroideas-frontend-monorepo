@@ -31,6 +31,7 @@ npx nx build sigec-rtf     # dist/apps/sigec-rtf/browser/
 
 Requires three backend APIs running to exercise real flows: `apiAuth` (sel-api-seguridad,
 :7101), `apiUrl` (sigec-api-rtf, :7300), `apiGeneral` (:7080) — see `environments/` for URLs.
+A fourth, `cierre.apiUrl` (sigec-api-cierre, :7400), backs the Anexo 20 tab and the cierre milestone.
 
 ## Things not obvious from the README
 
@@ -74,3 +75,10 @@ Requires three backend APIs running to exercise real flows: `apiAuth` (sel-api-s
   "sitting" in either state.
 - **`GlobalErrorHandler`** is app-specific (`core/error-handler.ts`), not shared — don't
   confuse it with anything in `@agroideas/feedback`.
+- **Anexo 20 (Informe de Cierre del PNT) lives here, not in sigec-cierre** (monorepo ADR 0013, Fase A):
+  `oa-registro` shows the "Anexo 20 · Cierre" tab only on the last paso crítico
+  (`ultimoPasoCritico()` = highest `endMonth`, since the dashboard DTO has no paso number). The form
+  belongs to sigec-api-cierre (`CierreService`); the signed PDF is uploaded as RTF evidence
+  `INFORME_CIERRE_PNT`, which sigec-api-rtf's rule V3 requires to send that RTF. A Cierre API outage must
+  never block the rest of the RTF.
+

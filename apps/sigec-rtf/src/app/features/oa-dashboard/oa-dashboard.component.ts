@@ -5,14 +5,18 @@ import { Router, RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FormatConvenioPipe } from '../../core/pipes/format-convenio.pipe';
-import { KpiVariant, UiKpiComponent } from '@agroideas/ui';
+import { KpiVariant, UiCountdownBannerComponent, UiKpiComponent } from '@agroideas/ui';
+import { environment } from '../../../environments/environment';
+import { CierreService } from '../../core/services/cierre.service';
+import { ETIQUETA_ESTADO_CIERRE, ExpedienteCierreDto, PlazoCierreDto } from '../../core/models';
 import { switchMap } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-oa-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, RouterModule, FormatConvenioPipe, UiKpiComponent],
+  imports: [CommonModule, DecimalPipe, RouterModule, FormatConvenioPipe, UiKpiComponent, UiCountdownBannerComponent],
   providers: [DecimalPipe],
   templateUrl: './oa-dashboard.component.html'
 })
@@ -22,6 +26,24 @@ export class OaDashboardComponent implements OnInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private decimal = inject(DecimalPipe);
+  private cierreService = inject(CierreService);
+
+  /**
+   * ADR 0013 del monorepo (Fase A): hito de cierre al final del cronograma. `undefined` mientras carga;
+   * null si el expediente aún no se abre. Un fallo de la API de Cierre no afecta al resto del dashboard.
+   */
+  expedienteCierre = signal<ExpedienteCierreDto | null | undefined>(undefined);
+  cierreNoDisponible = signal(false);
+  /** Plazo vigente del Anexo 20 cuando el expediente espera que la OA lo presente. */
+  plazoAnexo20 = signal<PlazoCierreDto | null>(null);
+  readonly urlMiCierre = `${environment.cierre.urlApp}/mi-cierre`;
+  readonly etiquetaEstadoCierre = ETIQUETA_ESTADO_CIERRE;
+
+  /** Horas que quedan del plazo del Anexo 20, para `ui-countdown-banner`. */
+  horasPlazoAnexo20 = computed(() => {
+    const plazo = this.plazoAnexo20();
+    return plazo ? Math.max(0, (new Date(plazo.fecLimite).getTime() - Date.now()) / 3_600_000) : 0;
+  });
 
   isLoading = signal(true);
   hasError = signal(false);
@@ -66,6 +88,7 @@ export class OaDashboardComponent implements OnInit {
       next: () => {
         this.isLoading.set(false);
         this.cargarObservacionesPendientes();
+        this.cargarCierre();
       },
       error: () => {
         this.isLoading.set(false);
@@ -93,6 +116,28 @@ export class OaDashboardComponent implements OnInit {
         this.observacionesPendientes.set(count);
       },
       error: () => { /* silencioso: el tile simplemente no muestra el badge de conteo */ }
+    });
+  }
+
+  private cargarCierre() {
+    const postulanteId = this.rtfService.postulanteId();
+    if (!postulanteId) return;
+    this.cierreService.obtenerExpediente(postulanteId).pipe(
+      switchMap(expediente =>
+        expediente?.estCierre === 'ESPERA_ANEXO20'
+          ? this.cierreService.listarPlazos(expediente.ideCierreConvenio).pipe(
+              map(plazos => ({ expediente, plazo: plazos.find(p => p.tipPlazo === 'ANEXO20' && p.estPlazo === 'VIGENTE') ?? null }))
+            )
+          : of({ expediente, plazo: null })
+      ),
+      catchError(() => {
+        this.cierreNoDisponible.set(true);
+        return of({ expediente: null, plazo: null });
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(({ expediente, plazo }) => {
+      this.expedienteCierre.set(expediente);
+      this.plazoAnexo20.set(plazo);
     });
   }
 

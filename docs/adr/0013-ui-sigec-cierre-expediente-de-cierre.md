@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fases 0 y 1 implementadas** (20/10/2026) · Fases A, 2–5 y D pendientes. Ver el
+Aceptado · **Fases 0, 1 y A implementadas** (20/10/2026) · Fases 2–5 y D pendientes. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -456,3 +456,28 @@ expediente de cierre sin esperar al worker de respaldo.
 - **Pruebas:** 98/98 (etapas, servicios, bandeja, expediente, mi-cierre) y 44/44 en `ui`; lint sin advertencias;
   build de producción y `quality`. `nx serve sigec-cierre` levanta en :4400 contra las APIs locales; falta la
   prueba manual con un usuario de cada rol.
+
+### Fase A — 2026-10-20
+- **Configuración:** `cierre.apiUrl`, `cierre.urlApp` y `cierre.tamanoMaximoPdfMb` en los `environment*.ts` de
+  `sigec-rtf` (Calidad: `/api-cierre/api/v1` y `https://sigec-cierre.oscar-pazos.com`).
+- **`CierreService`** (sigec-rtf): Anexo 20 (`GET/PUT /convenios/{id}/anexos20`, `…/documento`), expediente del
+  convenio (`GET /cierres?ideConvenio=`) y sus plazos. El error del PDF llega como Blob y se convierte al sobre con
+  `FileReader` para mostrar su mensaje.
+- **Último paso crítico:** `ultimoPasoCritico()` toma el de mayor mes de fin, porque el dashboard de RTF no expone
+  el número del paso; la regla V3 de la API sigue siendo la fuente de verdad.
+- **`oa-registro`:** pestaña "Anexo 20 · Cierre" solo en el último paso crítico, con `Anexo20CierreComponent`
+  (secciones I–III del SEL en solo lectura; financiamiento OA, centro poblado, adenda, metas, comercialización y
+  práctica ambiental editables; faltantes; descarga del PDF/A solo con el formulario guardado y completo; carga del
+  PDF firmado como evidencia `INFORME_CIERRE_PNT`). Banner y bloqueo antes de enviar si falta el PDF firmado, y el
+  error de envío muestra ahora el mensaje de la API (antes decía siempre "No se pudo enviar"). Si la API de Cierre no
+  responde, el bloque lo dice y el resto del RTF sigue funcionando.
+- **`oa-dashboard`:** hito "Cierre de convenio" al final del cronograma con el estado del expediente y enlace a
+  `sigec-cierre/mi-cierre` (otro origen: pide login, D7b), y `ui-countdown-banner` del plazo del Anexo 20 cuando el
+  expediente está en `ESPERA_ANEXO20`.
+- **`Dockerfile.sigec-rtf-ui`:** `location /api-cierre/` → `sigec-cierre-api:8080` con resolución diferida
+  (`resolver 127.0.0.11` + variable): el contenedor de RTF arranca aunque la API de Cierre aún no esté desplegada
+  (Fase D). Validado con `nginx -t`.
+- **Pruebas:** 201/201 en sigec-rtf (nuevas: `paso-critico.model`, `cierre.service`, `anexo20-cierre`); lint sin
+  errores y sin advertencias nuevas (104, las mismas de antes); build de producción. Falta la prueba manual con una
+  OA cuyo último paso crítico aún no tenga RTF enviado.
+

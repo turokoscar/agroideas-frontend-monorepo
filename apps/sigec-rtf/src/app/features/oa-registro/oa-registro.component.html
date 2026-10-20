@@ -40,6 +40,20 @@
     </div>
   }
 
+  @if (faltaAnexo20() && isEditable()) {
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4">
+      <div class="flex items-start gap-2 text-sm text-foreground">
+        <span class="material-symbols-outlined text-[20px] text-warning">assignment_late</span>
+        <span>
+          <span class="font-semibold">Último paso crítico:</span> antes de enviar este RTF debe adjuntar el Informe de Cierre del
+          PNT (Anexo 20) firmado. Con él se abre el expediente de cierre de su convenio.
+        </span>
+      </div>
+      <button type="button" class="shrink-0 rounded-lg bg-warning px-4 py-2 text-xs font-semibold text-warning-foreground hover:bg-warning/90"
+        (click)="activeTab.set('ANEXO20')">Completar el Anexo 20</button>
+    </div>
+  }
+
   <!-- Header KPIs: mismo diseño que el resumen ejecutivo de kofix (app-ui-kpi) -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <app-ui-kpi
@@ -79,7 +93,7 @@
   <div class="bg-surface-container-lowest border border-border rounded-xl overflow-hidden shadow-sm">
     <!-- Tab Navigation -->
     <div class="flex border-b border-border bg-muted/20">
-      @for (tab of tabs; track tab.key) {
+      @for (tab of tabsVisibles(); track tab.key) {
         <div class="relative flex items-center">
           <button
             class="relative px-6 py-3 text-sm font-medium transition-all"
@@ -101,6 +115,17 @@
 
     <!-- Tab Content -->
     <div class="p-6">
+
+      <!-- Anexo 20 (ADR 0013 del monorepo, Fase A): solo en el último paso crítico -->
+      @if (activeTab() === 'ANEXO20') {
+        <app-anexo20-cierre
+          [ideConvenio]="rtfService.postulanteId()"
+          [rtfId]="rtfService.rtfId()"
+          [editable]="isEditable()"
+          [adjuntos]="informesCierre()"
+          (adjuntado)="recargarEvidencias()"
+        />
+      }
 
       <!-- R1 - Información Cualitativa -->
       @if (activeTab() === 'R1') {

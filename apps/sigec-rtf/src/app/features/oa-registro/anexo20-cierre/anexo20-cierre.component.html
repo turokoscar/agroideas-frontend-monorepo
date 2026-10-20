@@ -1,0 +1,233 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h3 class="text-base font-bold text-foreground">Informe de Cierre del PNT (Anexo 20)</h3>
+      <p class="text-sm text-muted-foreground">
+        Este es el RTF del último paso crítico: debe adjuntar el Anexo 20 firmado para poder enviarlo. Con él se abre el
+        expediente de cierre de su convenio.
+      </p>
+    </div>
+    @if (anexo(); as a) {
+      <span
+        class="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+        [ngClass]="presentado() ? 'border-success/30 bg-success/10 text-success' : 'border-border bg-muted text-muted-foreground'"
+      >
+        {{ presentado() ? 'Presentado' : 'Borrador' }}@if (a.numAnexo20) { · N° {{ a.numAnexo20 }} }
+      </span>
+    }
+  </div>
+
+  <!-- Checklist -->
+  <ol class="grid gap-3 sm:grid-cols-3">
+    <li class="flex items-start gap-2 rounded-lg border border-border p-3 text-xs">
+      <span class="material-symbols-outlined text-[18px]" [ngClass]="completo() || presentado() ? 'text-success' : 'text-muted-foreground'">
+        {{ completo() || presentado() ? 'check_circle' : 'radio_button_unchecked' }}
+      </span>
+      <span><span class="font-semibold text-foreground">1. Completar y guardar el formulario</span><br />
+        <span class="text-muted-foreground">Lo que ya está en el SEL viene precargado.</span></span>
+    </li>
+    <li class="flex items-start gap-2 rounded-lg border border-border p-3 text-xs">
+      <span class="material-symbols-outlined text-[18px] text-muted-foreground">draw</span>
+      <span><span class="font-semibold text-foreground">2. Descargar y firmar</span><br />
+        <span class="text-muted-foreground">El representante legal lo firma fuera del sistema.</span></span>
+    </li>
+    <li class="flex items-start gap-2 rounded-lg border border-border p-3 text-xs">
+      <span class="material-symbols-outlined text-[18px]" [ngClass]="tieneAdjunto() ? 'text-success' : 'text-muted-foreground'">
+        {{ tieneAdjunto() ? 'check_circle' : 'radio_button_unchecked' }}
+      </span>
+      <span><span class="font-semibold text-foreground">3. Adjuntar el PDF firmado</span><br />
+        <span class="text-muted-foreground">Se envía a Cierre junto con este RTF.</span></span>
+    </li>
+  </ol>
+
+  @if (cargando()) {
+    <p class="py-6 text-center text-sm text-muted-foreground">Cargando el Anexo 20…</p>
+  } @else if (error()) {
+    <div class="flex flex-col items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center">
+      <p class="text-sm text-foreground">{{ error() }}</p>
+      <p class="text-xs text-muted-foreground">Puede seguir registrando el RTF; el Anexo 20 se podrá completar cuando el módulo de Cierre responda.</p>
+      <ui-button label="Reintentar" icon="refresh" appearance="soft" severity="secondary" (onClick)="cargar()" />
+    </div>
+  } @else if (anexo()) {
+    @let a = anexo()!;
+    @if (a.faltantes.length > 0 && !soloLectura()) {
+      <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+        <p class="font-semibold">Para generar el documento falta:</p>
+        <ul class="mt-1 list-disc pl-5">
+          @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
+        </ul>
+      </div>
+    }
+
+    <!-- I. Información general -->
+    <section class="space-y-3">
+      <h4 class="text-sm font-semibold text-foreground">I. Información general</h4>
+      <dl class="grid grid-cols-1 gap-x-6 gap-y-2 rounded-lg bg-muted/30 p-4 text-xs sm:grid-cols-2 lg:grid-cols-3">
+        <div><dt class="text-muted-foreground">Organización</dt><dd class="font-medium text-foreground">{{ a.txtOrganizacion ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Plan de negocio</dt><dd class="font-medium text-foreground">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Convenio N°</dt><dd class="font-medium text-foreground">{{ a.txtNumeroConvenio ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Ubicación</dt><dd class="font-medium text-foreground">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Vigencia</dt><dd class="font-medium text-foreground">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Financiamiento AGROIDEAS</dt><dd class="font-medium text-foreground">{{ a.impFinanciamientoAgroideas !== null ? ('S/ ' + (a.impFinanciamientoAgroideas | number: '1.2-2')) : '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Cadena productiva</dt><dd class="font-medium text-foreground">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Socios (mujeres / hombres)</dt><dd class="font-medium text-foreground">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Hectáreas</dt><dd class="font-medium text-foreground">{{ a.numHectareas ?? '—' }}</dd></div>
+      </dl>
+      <p class="text-[11px] text-muted-foreground">Estos datos vienen del SEL y no se editan aquí.</p>
+
+      <div class="grid gap-4 sm:grid-cols-3">
+        <label class="space-y-1 text-xs">
+          <span class="font-semibold text-foreground">Financiamiento OA (S/) <span class="text-destructive">*</span></span>
+          <input type="number" min="0" step="0.01" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            [disabled]="soloLectura()" [(ngModel)]="a.impFinanciamientoOa" (ngModelChange)="marcarSucio()" />
+        </label>
+        <label class="space-y-1 text-xs">
+          <span class="font-semibold text-foreground">Centro poblado</span>
+          <input type="text" maxlength="150" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            [disabled]="soloLectura()" [(ngModel)]="a.txtCentroPoblado" (ngModelChange)="marcarSucio()" />
+        </label>
+        <label class="space-y-1 text-xs">
+          <span class="font-semibold text-foreground">Término con adenda</span>
+          <input type="date" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            [disabled]="soloLectura()" [(ngModel)]="a.fecTerminoAdenda" (ngModelChange)="marcarSucio()" />
+        </label>
+      </div>
+    </section>
+
+    <!-- II y III: del SEL -->
+    <section class="grid gap-4 lg:grid-cols-2">
+      <div class="space-y-2">
+        <h4 class="text-sm font-semibold text-foreground">II. Problema identificado</h4>
+        @if (a.problematica.length === 0) {
+          <p class="text-xs text-muted-foreground">El SEL no registra el problema identificado de este convenio.</p>
+        } @else {
+          <ol class="list-decimal space-y-1 pl-5 text-xs text-foreground">
+            @for (p of a.problematica; track p.numOrden) { <li>{{ p.txtProblema }}</li> }
+          </ol>
+        }
+      </div>
+      <div class="space-y-2">
+        <h4 class="text-sm font-semibold text-foreground">III. Objetivos del plan de negocio</h4>
+        <p class="text-xs text-foreground"><span class="font-medium">General:</span> {{ a.txtObjetivoGeneral ?? '—' }}</p>
+        <p class="whitespace-pre-line text-xs text-foreground"><span class="font-medium">Específicos:</span> {{ a.txtObjetivosEspecificos ?? '—' }}</p>
+      </div>
+    </section>
+
+    <!-- IV. Metas -->
+    <section class="space-y-2">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-foreground">IV. Metas logradas al tercer año <span class="text-destructive">*</span></h4>
+        @if (!soloLectura()) {
+          <ui-button size="sm" appearance="soft" icon="add" label="Agregar meta" (onClick)="agregarMeta()" />
+        }
+      </div>
+      @if (a.metas.length === 0) {
+        <p class="text-xs text-muted-foreground">Agregue al menos una meta por objetivo específico.</p>
+      }
+      @for (m of a.metas; track $index) {
+        <div class="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-[1fr_1fr_160px_1fr_auto]">
+          <input type="text" maxlength="500" placeholder="Objetivo específico" aria-label="Objetivo específico" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="m.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="500" placeholder="Indicador" aria-label="Indicador" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="m.txtIndicador" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="200" placeholder="Logrado (p. ej. 18 qq/ha/año)" aria-label="Logrado al tercer año" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="m.txtLogradoAnio3" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="500" placeholder="Comentarios (opcional)" aria-label="Comentarios" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="m.txtComentarios" (ngModelChange)="marcarSucio()" />
+          @if (!soloLectura()) {
+            <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar la meta ' + (m.numOrden)" (onClick)="quitarMeta($index)" />
+          }
+        </div>
+      }
+    </section>
+
+    <!-- V. Comercialización -->
+    <section class="space-y-2">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-foreground">V. Comercialización al finalizar el PNT <span class="text-destructive">*</span></h4>
+        @if (!soloLectura()) {
+          <ui-button size="sm" appearance="soft" icon="add" label="Agregar producto" (onClick)="agregarProducto()" />
+        }
+      </div>
+      @if (a.comercializacion.length === 0) {
+        <p class="text-xs text-muted-foreground">Agregue al menos un producto comercializado.</p>
+      }
+      @for (c of a.comercializacion; track $index) {
+        <div class="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_110px_110px_110px_130px_auto]">
+          <input type="text" maxlength="250" placeholder="Producto" aria-label="Producto" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="c.txtProducto" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="250" placeholder="Destino" aria-label="Destino" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="c.txtDestino" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="50" placeholder="Unidad" aria-label="Unidad de medida" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="c.txtUnidadMedida" (ngModelChange)="marcarSucio()" />
+          <input type="number" min="0" placeholder="Cantidad" aria-label="Cantidad comercializada" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="c.canComercializada" (ngModelChange)="marcarSucio()" />
+          <input type="number" min="0" step="0.01" placeholder="Precio (S/)" aria-label="Precio de venta" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="c.impPrecioVenta" (ngModelChange)="marcarSucio()" />
+          <input type="number" min="0" step="0.01" placeholder="Ingresos año 3 (S/)" aria-label="Total de ingresos al tercer año" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+            [disabled]="soloLectura()" [(ngModel)]="c.impTotalIngreso" (ngModelChange)="marcarSucio()" />
+          @if (!soloLectura()) {
+            <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar el producto ' + c.numOrden" (onClick)="quitarProducto($index)" />
+          }
+        </div>
+      }
+      <label class="block space-y-1 text-xs">
+        <span class="font-semibold text-foreground">Comentarios sobre la comercialización</span>
+        <textarea rows="2" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          [disabled]="soloLectura()" [(ngModel)]="a.txtComentariosComercial" (ngModelChange)="marcarSucio()"></textarea>
+      </label>
+    </section>
+
+    <!-- VI. Práctica ambiental -->
+    <label class="block space-y-1 text-xs">
+      <span class="text-sm font-semibold text-foreground">VI. Actividades desarrolladas de la práctica ambiental <span class="text-destructive">*</span></span>
+      <textarea rows="3" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        [disabled]="soloLectura()" [(ngModel)]="a.txtPracticaAmbiental" (ngModelChange)="marcarSucio()"></textarea>
+    </label>
+
+    <!-- Acciones -->
+    <div class="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+      @if (!soloLectura()) {
+        <ui-button icon="save" label="Guardar borrador" [loading]="guardando()" [disabled]="guardando()" (onClick)="guardar()" />
+      }
+      <ui-button
+        icon="download"
+        label="Descargar para firmar"
+        appearance="soft"
+        severity="secondary"
+        [loading]="descargando()"
+        [disabled]="!completo() || descargando()"
+        (onClick)="descargar()"
+      />
+      @if (sucio()) {
+        <span class="text-[11px] text-warning">Hay cambios sin guardar.</span>
+      } @else if (!completo() && !presentado()) {
+        <span class="text-[11px] text-muted-foreground">Guarde el formulario completo para poder descargarlo.</span>
+      }
+    </div>
+
+    <!-- Adjuntar firmado -->
+    <section class="space-y-3 rounded-lg border border-border p-4">
+      <h4 class="text-sm font-semibold text-foreground">Anexo 20 firmado</h4>
+      @for (doc of adjuntos(); track doc.ideEvidencia) {
+        <p class="flex items-center gap-2 text-xs text-foreground">
+          <span class="material-symbols-outlined text-[18px] text-success">picture_as_pdf</span>
+          {{ doc.txtNombreArchivo }}
+        </p>
+      }
+      @if (editable()) {
+        @if (!rtfId()) {
+          <p class="text-xs text-muted-foreground">Guarde primero el borrador del RTF para poder adjuntar el Anexo 20 firmado.</p>
+        } @else {
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="cursor-pointer rounded-lg border border-dashed border-input px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50">
+              <input type="file" accept="application/pdf" class="sr-only" (change)="seleccionarArchivo($event)" />
+              {{ archivo()?.name ?? (tieneAdjunto() ? 'Reemplazar por otro PDF firmado…' : 'Seleccionar el PDF firmado (máx. ' + tamanoMaximoMb + ' MB)…') }}
+            </label>
+            <ui-button icon="upload" label="Adjuntar" [loading]="subiendo()" [disabled]="!archivo() || subiendo()" (onClick)="adjuntar()" />
+          </div>
+        }
+      }
+    </section>
+  }
+</div>

@@ -7,6 +7,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService, UiCountdownBannerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent, UiKpiComponent, KpiVariant, StatusType, TableColumn } from '@agroideas/ui';
 import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { TIPOS_INFORME, TIPOS_SUSTENTO, TIPO_OTROS, esDocumentoAnexo, etiquetaTipoDocumento } from '../../core/models/tipo-documento-anexo.model';
+import { TIPO_INFORME_CIERRE } from '../../core/models/cierre.dto';
+import { esUltimoPasoCritico } from '../../core/models/paso-critico.model';
+import { mensajeParaUsuario } from '@agroideas/utils';
+import { Anexo20CierreComponent } from './anexo20-cierre/anexo20-cierre.component';
 
 /** Porcentaje entero acotado a [0, 100]; 0 si no hay total. */
 const porcentaje = (parte: number, total: number): number =>
@@ -15,7 +19,7 @@ const porcentaje = (parte: number, total: number): number =>
 @Component({
   selector: 'app-oa-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent, UiKpiComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DecimalPipe, PercentPipe, UiCountdownBannerComponent, UiPdfViewerComponent, UiDataTableComponent, UIModalComponent, UiStatusPillComponent, UiInfoTooltipComponent, UiKpiComponent, Anexo20CierreComponent],
   providers: [DecimalPipe],
   templateUrl: './oa-registro.component.html'
 })
@@ -264,6 +268,7 @@ export class OaRegistroComponent implements OnInit {
 
   ngOnInit() {
     const idpc = this.route.snapshot.paramMap.get('idpc');
+    if (idpc) this.pasoCriticoId.set(Number(idpc));
     if (idpc) {
       this.useBdSelMetas.set(true);
       const pasoCriticoId = Number(idpc);
@@ -343,6 +348,7 @@ export class OaRegistroComponent implements OnInit {
         this.rtfService.loadDetalleRtf(rtfId).subscribe({
           next: (data) => {
             if (data?.idePasoCritico != null) {
+              this.pasoCriticoId.set(data.idePasoCritico);
               this.useBdSelMetas.set(true);
               this.rtfService.loadMetasPorPasoCritico(data.idePasoCritico, rtfId).subscribe();
               this.rtfService.loadIndicadoresPorPasoCritico(data.idePasoCritico, rtfId).subscribe();
@@ -360,7 +366,19 @@ export class OaRegistroComponent implements OnInit {
   }
 
   // Tab state
-  activeTab = signal<'R1' | 'T1' | 'R2' | 'F1' | 'ANEXO17' | 'ANEXOS'>('R1');
+  activeTab = signal<'R1' | 'T1' | 'R2' | 'F1' | 'ANEXO17' | 'ANEXOS' | 'ANEXO20'>('R1');
+
+  /** Paso crítico de este RTF (de la ruta o, sin ella, del detalle del RTF). */
+  pasoCriticoId = signal<number | null>(null);
+
+  /**
+   * ADR 0013 del monorepo (Fase A): el RTF del último paso crítico lleva el Informe de Cierre del PNT
+   * (Anexo 20). sigec-api-rtf lo exige al enviar (regla V3); aquí solo se muestra su pestaña y se
+   * avisa antes, en vez de esperar al rechazo del servidor.
+   */
+  esUltimoPaso = computed(() => esUltimoPasoCritico(this.rtfService.pasos(), this.pasoCriticoId()));
+  informesCierre = computed(() => this.rtfService.evidencias().filter(e => e.tipConcepto === TIPO_INFORME_CIERRE));
+  faltaAnexo20 = computed(() => this.esUltimoPaso() && this.informesCierre().length === 0);
 
   // `hint`: hallazgo #7 de la revisión UX (ADR-017/019 de sigec-rtf) -- jerga institucional sin
   // apoyo contextual para un usuario nuevo. Solo las pestañas con nomenclatura del Instructivo
@@ -373,6 +391,20 @@ export class OaRegistroComponent implements OnInit {
     { key: 'ANEXOS' as const, label: 'Anexos', hint: undefined as string | undefined },
     { key: 'ANEXO17' as const, label: 'Anexo 17', hint: 'Anexo 17 — Reporte Técnico Financiero: el documento oficial que presentas para rendir cuentas de este paso crítico (Instructivo AGROIDEAS).' }
   ];
+
+  private readonly tabAnexo20 = {
+    key: 'ANEXO20' as const,
+    label: 'Anexo 20 · Cierre',
+    hint: 'Anexo 20 — Informe de Cierre del PNT: obligatorio en el RTF del último paso crítico. Con él se abre el expediente de cierre del convenio.' as string | undefined
+  };
+
+  /** Pestañas visibles: la del Anexo 20 solo en el último paso crítico. */
+  tabsVisibles = computed(() => (this.esUltimoPaso() ? [...this.tabs, this.tabAnexo20] : this.tabs));
+
+  recargarEvidencias() {
+    const rtfId = this.rtfService.rtfId();
+    if (rtfId) this.rtfService.loadEvidencias(rtfId).subscribe();
+  }
 
   // Modal state
   modalOpen = signal(false);
@@ -1024,6 +1056,11 @@ export class OaRegistroComponent implements OnInit {
       return;
     }
     if (!this.canSubmit()) return;
+    if (this.faltaAnexo20()) {
+      this.activeTab.set('ANEXO20');
+      this.toast.error('Falta el Anexo 20', 'Este es el RTF del último paso crítico: adjunte el Informe de Cierre del PNT (Anexo 20) firmado antes de enviarlo.');
+      return;
+    }
     this.isSubmitting.set(true);
 
     let rtfId = this.rtfService.rtfId();
@@ -1043,9 +1080,10 @@ export class OaRegistroComponent implements OnInit {
           this.toast.success('RTF enviado', 'El Reporte Técnico Financiero se ha guardado correctamente.');
           this.router.navigate(['/rtf/dashboard']);
         },
-        error: () => {
+        error: err => {
           this.isSubmitting.set(false);
-          this.toast.error('Error al enviar', 'No se pudo enviar el RTF. Intente nuevamente.');
+          // El mensaje de la API explica el rechazo (p. ej. la regla V3: falta el Anexo 20).
+          this.toast.error('Error al enviar', mensajeParaUsuario(err, 'No se pudo enviar el RTF. Intente nuevamente.'));
         }
       });
     };
