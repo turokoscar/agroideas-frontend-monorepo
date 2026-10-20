@@ -48,6 +48,11 @@ export interface AppSettings {
     longitudValorParametro: number;
     /** Primer año que publica gob.pe (`ImportarFeriadosRequestValidator`). */
     primerAnioGobPe: number;
+    /**
+     * Días hacia adelante que debe cubrir el calendario: se avisa si algún año entre hoy y hoy + este número no
+     * tiene días inhábiles registrados (cubre el plazo de 90 días de la UN con margen).
+     */
+    diasAnticipacionCalendario: number;
   };
   notificaciones: {
     /** Cada cuánto se refresca el contador de no leídas de la campana. */

@@ -656,3 +656,13 @@ Cada acción aparece en la tarjeta de su etapa solo para el rol y el estado que 
 - **Pruebas:** 191/191 en sigec-cierre (lint sin advertencias) y 206/206 en sigec-rtf (104 advertencias de lint,
   las mismas de antes); build de ambas.
 
+
+### Aviso de calendario sin cubrir — 2026-10-20
+- Si algún año entre hoy y hoy + `AppSettings.administracion.diasAnticipacionCalendario` (120 días) no tiene días
+  inhábiles registrados, los plazos que vencen en él se calculan sin saltar sus feriados y nada lo indica. Lo
+  detectamos en local: 2027 sin calendario, porque gob.pe aún no lo publica, mientras los plazos de 90 días de la UN
+  ya vencen ese año.
+- `AvisoCalendarioComponent` consulta `GET /feriados?anio=` por cada año del periodo y avisa de los que están vacíos.
+  Aparece en la pestaña "Días inhábiles" de Administración, y se actualiza al registrar, importar o dar de baja, y en
+  la bandeja solo para el ADMIN, con enlace al calendario. Si la consulta falla no avisa: es una ayuda, no un bloqueo.
+- **Pruebas:** 196/196; lint sin advertencias; build. Falta verlo en el navegador con un usuario ADMIN.

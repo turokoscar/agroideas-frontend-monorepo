@@ -81,3 +81,11 @@ export function errorAlcance(tipo: string, departamento: string | null, provinci
   }
   return dep || prov ? 'Los feriados nacionales y los no laborables no llevan departamento ni provincia.' : null;
 }
+
+/** Años que toca un periodo de `dias` días desde `desde` (incluido): los que el calendario debe tener cubiertos. */
+export function aniosACubrir(dias: number, desde: Date = new Date()): number[] {
+  const hasta = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate() + dias);
+  const anios: number[] = [];
+  for (let anio = desde.getFullYear(); anio <= hasta.getFullYear(); anio++) anios.push(anio);
+  return anios;
+}

@@ -9,6 +9,10 @@
     }
   </div>
 
+  @if (esAdmin()) {
+    <app-aviso-calendario [enlace]="true" />
+  }
+
   <!-- Pestañas -->
   <div class="flex flex-wrap gap-2" role="tablist">
     @for (s of semaforos; track s) {

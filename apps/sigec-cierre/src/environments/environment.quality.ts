@@ -29,7 +29,8 @@ export const environment: AppSettings = {
     longitudDescripcionFeriado: 300,
     longitudSustentoFeriado: 500,
     longitudValorParametro: 200,
-    primerAnioGobPe: 2017
+    primerAnioGobPe: 2017,
+    diasAnticipacionCalendario: 120
   },
   notificaciones: {
     intervaloRefrescoMs: 60_000,

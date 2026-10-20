@@ -15,6 +15,7 @@ import { mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { AvisoCalendarioComponent } from '../../shared/aviso-calendario.component';
 import {
   CierreDto,
   ESTADOS_CIERRE,
@@ -55,6 +56,7 @@ export function coincide(expediente: Pick<ExpedientePendienteDto, 'txtNumeroConv
   selector: 'app-bandeja',
   standalone: true,
   imports: [
+    AvisoCalendarioComponent,
     DatePipe,
     NgClass,
     FormsModule,
@@ -109,6 +111,8 @@ export class BandejaComponent implements OnInit {
   filtroEstado = signal<EstadoCierre | ''>('');
   cargandoTodos = signal(false);
 
+  /** Solo el administrador puede completar el calendario de días inhábiles. */
+  esAdmin = computed(() => this.auth.roles().includes('ADMIN'));
   puedeIniciar = computed(() => tieneAlgunRol(this.auth.roles(), ['UN', 'JEFE_UN']));
   modalIniciar = signal(false);
   ideConvenioNuevo: number | null = null;

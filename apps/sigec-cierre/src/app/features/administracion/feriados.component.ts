@@ -6,6 +6,7 @@ import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui
 import { mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
+import { AvisoCalendarioComponent } from '../../shared/aviso-calendario.component';
 import {
   CrearFeriadoRequest,
   DEPARTAMENTOS,
@@ -41,7 +42,7 @@ interface PropuestaSeleccionable extends FeriadoPropuestoDto {
 @Component({
   selector: 'app-feriados',
   standalone: true,
-  imports: [DatePipe, NgClass, FormsModule, UIButtonComponent, UIModalComponent],
+  imports: [DatePipe, NgClass, FormsModule, UIButtonComponent, UIModalComponent, AvisoCalendarioComponent],
   templateUrl: './feriados.component.html'
 })
 export class FeriadosComponent implements OnInit {
@@ -60,6 +61,8 @@ export class FeriadosComponent implements OnInit {
   anio = signal(this.anioActual);
   cargando = signal(false);
   feriados = signal<FeriadoDto[]>([]);
+  /** Sube con cada cambio del calendario, para que el aviso de años sin días inhábiles se actualice. */
+  versionCalendario = signal(0);
   guardando = signal(false);
 
   formulario = signal<FormularioFeriado | null>(null);
@@ -177,6 +180,7 @@ export class FeriadosComponent implements OnInit {
     this.guardando.set(false);
     cerrar();
     this.toast.success(mensaje, 'Los plazos que venzan desde ahora usan el calendario actualizado.');
+    this.versionCalendario.update(v => v + 1);
     this.cargar();
   }
 
