@@ -8,7 +8,7 @@
 npx nx serve kofix-ejecucion     # dev server on :7100
 npx nx serve sat-ui              # dev server on :4200 (default)
 npx nx serve sigec-rtf --port=4300    # no port in project.json (else :4200)
-npx nx serve sigec-cierre --port=4400 # no port in project.json (else :4200)
+npx nx serve sigec-cierre        # dev server on :4400
 npx nx test <project>            # Jest
 npx nx test <project> -- --testPathPattern=<pattern>
 npx nx test <project> -- -t "test name"
@@ -52,7 +52,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - **kofix-ejecucion** (:7100, `scope:kofix`): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. `inlineStyleLanguage: "css"` (global, but most components use `.sass`). Auth via shared `@agroideas/auth` interceptor. Real backend permission provider. Talks to three .NET APIs (`apiSeguridad`, `apiEjecucion`, `apiGeneral`). Needs `@angular/localize/init` polyfill. Allows `sweetalert2` and `leaflet` as CommonJS deps.
 - **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth now goes through the shared `authInterceptor`/`AUTH_LOGOUT_HANDLER` from `@agroideas/auth` (no local interceptor anymore). Permissions provider is a stub (`of([])`). Its backend is a different one (:7081, `txtNombres`/`codUsuario`), so it does not use the `sel-usuario` mapper — only `inicialesDeNombre`.
 - **sigec-rtf** (:4300, `scope:sigec`): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure. Session comes from `sel-api-seguridad` (:7101) via the shared mapper.
-- **sigec-cierre** (:4400, `scope:sigec`): Feature-based with `core/` and `features/` (login, cierre-registro). Same structure and same auth backend as sigec-rtf.
+- **sigec-cierre** (:4400, `scope:sigec`): Feature-based with `core/` and `features/` (login, bandeja, mi-cierre, sin-acceso), built under ADR 0013. Same auth backend as sigec-rtf but its own role catalog (`core/models/rol-cierre.model.ts`): all roles kept, unknown roles dropped, guards redirect to `rutaInicio(roles)`.
 
 ## Lib state
 

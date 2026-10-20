@@ -190,10 +190,7 @@ export class LoginComponent {
       next: (success) => {
         this.loading.set(false);
         if (success) {
-          const user = this.authService.user();
-          if (user) {
-            this.redirectByUserRole(user.role);
-          }
+          this.router.navigateByUrl(this.authService.inicio());
         } else {
           this.errorMessage.set('Usuario o contraseña incorrectos.');
         }
@@ -203,13 +200,5 @@ export class LoginComponent {
         this.errorMessage.set('Error de conexión con el servidor de seguridad.');
       }
     });
-  }
-
-  private redirectByUserRole(role: string) {
-    if (role === 'POSTULANTE') {
-      this.router.navigate(['/cierre/registrar']);
-    } else {
-      this.router.navigate(['/cierre/registrar']);
-    }
   }
 }

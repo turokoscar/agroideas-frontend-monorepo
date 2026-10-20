@@ -1,12 +1,11 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '@agroideas/utils';
 import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
-
-export type UserRole = 'POSTULANTE' | 'UR' | 'UN' | 'DE' | 'UAJ' | 'USE' | 'TECNICO';
+import { CierreRol, ETIQUETA_ROL, mapearRolesCierre, rutaInicio } from '../models/rol-cierre.model';
 
 export interface AuthUser {
   id: string;
@@ -15,7 +14,8 @@ export interface AuthUser {
   usuario: string;
   email: string;
   sigla: string;
-  role: UserRole;
+  /** Todos los roles del usuario reconocidos por el módulo (ADR 0013, D2). */
+  roles: CierreRol[];
 }
 
 @Injectable({
@@ -25,6 +25,15 @@ export class AuthService {
   private http = inject(HttpClient);
   private _user = signal<AuthUser | null>(null);
   user = this._user.asReadonly();
+
+  roles = computed(() => this._user()?.roles ?? []);
+  /** Ruta a la que se envía al usuario al entrar o cuando un guard lo rechaza. */
+  inicio = computed(() => rutaInicio(this.roles()));
+  /** Etiqueta del rol principal (el primero del catálogo), para el shell. */
+  etiquetaRol = computed(() => {
+    const [principal] = this.roles();
+    return principal ? ETIQUETA_ROL[principal] : 'Sin rol';
+  });
 
   private apiUrl = environment.apiAuth;
 
@@ -71,7 +80,7 @@ export class AuthService {
             usuario: sesion.usuario,
             email: sesion.email,
             sigla: sesion.sigla,
-            role: sesion.rol as UserRole
+            roles: mapearRolesCierre(data.user.roles)
           };
 
           localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, data.accessToken);
@@ -96,10 +105,10 @@ export class AuthService {
 }
 
 /**
- * Descarta las sesiones guardadas con el mapeo antiguo, que no tenían `email`
- * y almacenaban el nombre como "undefined undefined". Obliga a un único
- * re-login en lugar de arrastrar el dato roto.
+ * Descarta las sesiones guardadas con un formato anterior: sin `email`, con el nombre
+ * "undefined undefined" o con un único `role` en lugar de la lista `roles` (antes del
+ * ADR 0013). Obliga a un único re-login en lugar de arrastrar el dato roto.
  */
 function esSesionVigente(user: AuthUser | null): boolean {
-  return !!user?.email && !!user.nombre && !user.nombre.includes('undefined');
+  return !!user?.email && !!user.nombre && !user.nombre.includes('undefined') && Array.isArray(user.roles);
 }

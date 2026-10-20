@@ -1,8 +1,9 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Propuesto · Ninguna fase iniciada. Ver el [Plan de implementación por fases](#plan-de-implementación-por-fases)
-y el [Registro de implementación](#registro-de-implementación).
+Aceptado · **Fase 0 implementada** (20/10/2026) · Fases A, 1–5 y D pendientes. Ver el
+[Plan de implementación por fases](#plan-de-implementación-por-fases) y el
+[Registro de implementación](#registro-de-implementación).
 
 ## Fecha
 2026-10-20 · Estado verificado contra el código el 2026-10-20 (`nx run-many -t lint,test,build -p sigec-cierre`:
@@ -402,4 +403,27 @@ expediente de cierre sin esperar al worker de respaldo.
 - `AGROIDEAS/despliegue/README.md`, `docker-compose.apps.yml`, `deploy_sigec_rtf.sh` — despliegue en Calidad.
 
 ## Registro de implementación
-_Sin fases iniciadas._
+
+### Fase 0 — 2026-10-20
+- **Roles (D2, H-01):** `core/models/rol-cierre.model.ts` con `CierreRol`, el catálogo espejo de
+  `RolesSigecCierre` (sin distinguir mayúsculas), `ROLES_PERSONAL`, `ETIQUETA_ROL`, `mapearRolesCierre` y
+  `rutaInicio` (personal → `/bandeja`, OA → `/mi-cierre`, sin roles → `/sin-acceso`). `AuthUser.roles` reemplaza a
+  `role`; `AuthService` expone `roles`, `inicio` y `etiquetaRol`. Las sesiones guardadas con el formato anterior se
+  descartan (un re-login).
+- **Guards:** devuelven `UrlTree` en lugar de navegar. `roleGuard` recibe un conjunto de roles y, si rechaza, envía a
+  `rutaInicio`, que solo devuelve rutas que el usuario puede activar.
+- **Rutas:** todas con `loadComponent`; la raíz redirige con `redirectTo` funcional a `AuthService.inicio()`; `**`
+  vuelve a la raíz. Páginas nuevas: `bandeja` y `mi-cierre` (estados vacíos que la Fase 1 llena) y `sin-acceso`
+  (fuera del shell, con cierre de sesión). El login navega a `inicio()`.
+- **Shell:** menú filtrado por roles; insignia con el rol principal y todos los roles en el `title`; se quitó el
+  indicador fijo "Servicio Activo".
+- **Entornos (H-02):** `apiUrl` con `api/v1`; nuevo `environment.quality.ts` con rutas relativas; configuración
+  `quality` en `project.json`; `serve` y `serve-static` en el puerto 4400.
+- **Limpieza (H-04, H-06):** se borraron `nx-welcome.component.ts` y el placeholder `cierre-registro`;
+  `index.html` con `lang="es"` y título; `styles.scss` sin el `@import` duplicado de `base.css` (`sigec-rtf`
+  conserva el suyo: fuera del alcance).
+- **Pruebas:** `rol-cierre.model.spec.ts`, `auth.service.spec.ts` y `auth.guard.spec.ts`; este último recorre las
+  rutas reales de la app con cada rol y comprueba que nadie entra en un bucle. `nx run-many -t lint,test,build
+  -p sigec-cierre`: lint sin errores ni advertencias, 53/53 pruebas, build de producción y de `quality` (503 kB
+  iniciales; antes 571 kB).
+- `CLAUDE.md` y `AGENTS.md` actualizados (puerto, configuraciones, catálogo de roles).

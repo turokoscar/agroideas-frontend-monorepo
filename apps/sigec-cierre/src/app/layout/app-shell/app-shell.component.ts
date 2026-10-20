@@ -1,8 +1,21 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UiAppShellComponent } from '@agroideas/ui';
 import { AuthService } from '../../core/services/auth.service';
+import { CierreRol, ETIQUETA_ROL, ROLES_PERSONAL, tieneAlgunRol } from '../../core/models/rol-cierre.model';
+
+interface ItemMenu {
+  ruta: string;
+  etiqueta: string;
+  icono: string;
+  roles: readonly CierreRol[];
+}
+
+const MENU: readonly ItemMenu[] = [
+  { ruta: '/bandeja', etiqueta: 'Bandeja', icono: 'inbox', roles: ROLES_PERSONAL },
+  { ruta: '/mi-cierre', etiqueta: 'Mi cierre', icono: 'assignment', roles: ['OA'] }
+];
 
 @Component({
   selector: 'app-shell',
@@ -24,14 +37,14 @@ import { AuthService } from '../../core/services/auth.service';
 
       <!-- Navigation Links -->
       <nav shell-nav class="p-3 space-y-1">
-        @if (user()?.role === 'POSTULANTE') {
+        @for (item of menu(); track item.ruta) {
           <a
-            routerLink="/cierre/registrar"
+            [routerLink]="item.ruta"
             routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all"
           >
-            <span class="material-symbols-outlined text-[20px]">lock_open</span>
-            Cierre Convenio
+            <span class="material-symbols-outlined text-[20px]">{{ item.icono }}</span>
+            {{ item.etiqueta }}
           </a>
         }
       </nav>
@@ -45,7 +58,10 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="min-w-0 flex-1">
             <span class="font-semibold text-xs block truncate text-sidebar-foreground">{{ user()?.nombre }}</span>
             <span class="text-[10px] block truncate text-sidebar-foreground/60">{{ user()?.email }}</span>
-            <span class="text-[8px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest">{{ user()?.role }}</span>
+            <span
+              class="text-[8px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest max-w-full truncate"
+              [title]="todosLosRoles()"
+            >{{ etiquetaRol() }}</span>
           </div>
         </div>
         <button
@@ -58,16 +74,10 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
 
       <!-- Header -->
-      <div shell-header class="flex flex-1 items-center justify-between gap-4 min-w-0">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SIGEC</span>
-          <span class="text-xs text-surface-400">/</span>
-          <span class="text-xs text-foreground font-medium truncate">Plataforma de Cierre</span>
-        </div>
-        <div class="hidden sm:flex items-center gap-1.5 bg-success-soft border border-success/20 text-success text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0">
-          <span class="h-1.5 w-1.5 rounded-full bg-success animate-pulse"></span>
-          Servicio Activo
-        </div>
+      <div shell-header class="flex flex-1 items-center gap-2 min-w-0">
+        <span class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SIGEC</span>
+        <span class="text-xs text-surface-400">/</span>
+        <span class="text-xs text-foreground font-medium truncate">Cierre de Convenios</span>
       </div>
 
       <!-- Page Content -->
@@ -80,6 +90,9 @@ export class AppShellComponent {
   private router = inject(Router);
 
   user = this.authService.user;
+  etiquetaRol = this.authService.etiquetaRol;
+  menu = computed(() => MENU.filter(item => tieneAlgunRol(this.authService.roles(), item.roles)));
+  todosLosRoles = computed(() => this.authService.roles().map(rol => ETIQUETA_ROL[rol]).join(' · '));
 
   onLogout() {
     this.authService.logout();

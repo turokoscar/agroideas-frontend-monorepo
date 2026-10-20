@@ -26,7 +26,8 @@ Use `npx nx` — there are no npm scripts.
 npx nx serve kofix-ejecucion             # :7100 (port in project.json; default config `local`)
 npx nx serve sat-ui                      # :4200 (Angular default)
 npx nx serve sigec-rtf --port=4300       # no port in project.json — without the flag it
-npx nx serve sigec-cierre --port=4400    #   takes :4200 and collides with sat-ui
+                                         #   takes :4200 and collides with sat-ui
+npx nx serve sigec-cierre                # :4400 (port in project.json)
 npx nx build <project>              # production build → dist/apps/<app>/browser/
 npx nx lint <project>              # lint one project
 npx nx test <project>              # unit tests (Jest) for one project
@@ -51,8 +52,9 @@ After changing versions, generators, or eslint config, clear the cache: `npx nx 
 Environments are swapped via `fileReplacements` in each app's `project.json`:
 - `kofix-ejecucion`: `development`, `local` (→ `environment.local.ts`, the serve default),
   `quality` (→ `environment.quality.ts`), `production`.
-- `sigec-rtf`: `development`, `quality` (→ `environment.quality.ts`), `production`.
-- `sat-ui`, `sigec-cierre`: only `development` / `production`.
+- `sigec-rtf`, `sigec-cierre`: `development`, `quality` (→ `environment.quality.ts`, relative URLs),
+  `production`.
+- `sat-ui`: only `development` / `production`.
 
 Deployment is via multi-stage Dockerfiles at the repo root (node:20 build → nginx SPA):
 `Dockerfile` (kofix-ejecucion, `quality`), `Dockerfile.sat-ui` (`production`),
@@ -146,8 +148,13 @@ Unlike kofix-ejecucion, `sat-ui`, `sigec-rtf`, and `sigec-cierre` use a flatter
   `un-gabinete`, `reportes`, `admin`, `login`. Has its own `core/error-handler.ts`
   (`GlobalErrorHandler`). Session comes from `sel-api-seguridad` (port 7101) through the
   shared `sel-usuario` mapper (see below).
-- **sigec-cierre** (`:4400`, `scope:sigec`): `features/` has `login` and `cierre-registro`.
-  Same auth backend and mapper usage as sigec-rtf.
+- **sigec-cierre** (`:4400`, `scope:sigec`): UI of `SIGEC/sigec-api-cierre` (`api/v1`), being built
+  under [ADR 0013](docs/adr/0013-ui-sigec-cierre-expediente-de-cierre.md) (phased plan there). Same
+  auth backend and mapper as sigec-rtf, but its **own role catalog**
+  (`core/models/rol-cierre.model.ts`): users keep *all* their roles (`AuthUser.roles: CierreRol[]`),
+  unknown roles are dropped (no fallback to OA), and guards redirect to `rutaInicio(roles)`, which only
+  returns routes the user can activate (`/bandeja`, `/mi-cierre`, `/sin-acceso`). Don't copy RTF's role
+  map: "Unidad de Monitoreo" is UN in RTF but USE in Cierre.
 
 All four apps wire `provideHttpClient(withInterceptors([authInterceptor]))` from
 `@agroideas/auth` in their `app.config.ts` — kofix-ejecucion is not the only consumer of the
