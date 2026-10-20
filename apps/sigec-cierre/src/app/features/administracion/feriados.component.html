@@ -1,0 +1,153 @@
+<section class="space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div class="form-field w-40">
+      <label class="form-label" for="fer-anio">Año</label>
+      <select id="fer-anio" class="form-select" [ngModel]="anio()" (ngModelChange)="cambiarAnio(+$event)">
+        @for (a of anios; track a) { <option [ngValue]="a">{{ a }}</option> }
+      </select>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <ui-button icon="cloud_download" label="Importar desde gob.pe" appearance="soft" severity="secondary"
+        [loading]="importando()" [disabled]="importando()" (onClick)="importar()" />
+      <ui-button icon="add" label="Agregar día" (onClick)="nuevo()" />
+    </div>
+  </div>
+
+  <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+    <table class="w-full min-w-[720px] border-collapse text-left text-xs">
+      <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+        <tr>
+          <th class="p-2.5">Fecha</th><th class="p-2.5">Tipo</th><th class="p-2.5">Alcance</th>
+          <th class="p-2.5">Descripción</th><th class="p-2.5">Origen</th><th class="w-24 p-2.5 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando()) {
+          <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando…</td></tr>
+        } @else {
+          @for (f of feriados(); track f.ideFeriado) {
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+              <td class="whitespace-nowrap p-2.5 font-semibold text-slate-800">{{ f.fecDia | date: 'EEE dd/MM/yyyy' }}</td>
+              <td class="p-2.5">{{ etiquetaTipoDia(f.tipDia) }}</td>
+              <td class="p-2.5">
+                @if (f.codDepartamento) { {{ nombreDepartamento(f.codDepartamento) }}@if (f.codProvincia) { · prov. {{ f.codProvincia }} } }
+                @else { <span class="text-slate-400">Nacional</span> }
+              </td>
+              <td class="p-2.5">
+                {{ f.txtDescripcion }}
+                @if (f.txtSustento) { <span class="block text-[10px] text-slate-400">{{ f.txtSustento }}</span> }
+              </td>
+              <td class="p-2.5">
+                <span class="rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+                  [ngClass]="f.tipOrigen === 'GOB_PE' ? 'border-primary/30 bg-primary/10 text-primary' : 'border-slate-200 bg-slate-50 text-slate-500'">
+                  {{ f.tipOrigen === 'GOB_PE' ? 'gob.pe' : 'Manual' }}
+                </span>
+              </td>
+              <td class="p-2.5 text-right">
+                <div class="row-actions justify-end">
+                  <button type="button" class="text-slate-500 hover:text-primary" [attr.aria-label]="'Editar ' + f.txtDescripcion" (click)="editar(f)">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button type="button" class="text-slate-500 hover:text-destructive" [attr.aria-label]="'Dar de baja ' + f.txtDescripcion" (click)="aBorrar.set(f)">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="p-6 text-center text-slate-400">No hay días inhábiles registrados para {{ anio() }}. Impórtelos desde gob.pe o agréguelos.</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@let f = formulario();
+<app-ui-modal [visible]="!!f" [title]="f?.ideFeriado ? 'Editar día inhábil' : 'Agregar día inhábil'"
+  subtitle="Los vencimientos de los plazos saltan estos días." icon="event_busy" maxWidth="560px"
+  [isSubmitting]="guardando()" [saveDisabled]="!!errorFormulario()" (onHide)="formulario.set(null)" (onSave)="guardar()">
+  @if (f) {
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div class="form-field">
+        <label class="form-label" for="fer-fecha">Fecha <span class="form-label-required">*</span></label>
+        <input id="fer-fecha" type="date" class="form-input" [disabled]="f.ideFeriado !== null" [ngModel]="f.fecDia" (ngModelChange)="f.fecDia = $event" />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="fer-tipo">Tipo <span class="form-label-required">*</span></label>
+        <select id="fer-tipo" class="form-select" [disabled]="f.ideFeriado !== null" [ngModel]="f.tipDia" (ngModelChange)="f.tipDia = $event">
+          @for (t of tipos; track t.valor) { <option [ngValue]="t.valor">{{ t.etiqueta }}</option> }
+        </select>
+      </div>
+      @if (f.tipDia === 'REGIONAL') {
+        <div class="form-field">
+          <label class="form-label" for="fer-dep">Departamento <span class="form-label-required">*</span></label>
+          <select id="fer-dep" class="form-select" [ngModel]="f.codDepartamento" (ngModelChange)="f.codDepartamento = $event">
+            <option [ngValue]="null">Seleccione…</option>
+            @for (d of departamentos; track d.codigo) { <option [ngValue]="d.codigo">{{ d.nombre }}</option> }
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fer-prov">Provincia (ubigeo, opcional)</label>
+          <input id="fer-prov" type="text" class="form-input" maxlength="4" inputmode="numeric" placeholder="Ej.: 1501"
+            [ngModel]="f.codProvincia" (ngModelChange)="f.codProvincia = $event" />
+        </div>
+      }
+      <div class="form-field sm:col-span-2">
+        <label class="form-label" for="fer-desc">Descripción <span class="form-label-required">*</span></label>
+        <input id="fer-desc" type="text" class="form-input" [maxlength]="limites.longitudDescripcionFeriado" placeholder="Ej.: Batalla de Junín"
+          [ngModel]="f.txtDescripcion" (ngModelChange)="f.txtDescripcion = $event" />
+      </div>
+      <div class="form-field sm:col-span-2">
+        <label class="form-label" for="fer-sustento">Sustento (norma, decreto)</label>
+        <textarea id="fer-sustento" rows="2" class="form-textarea" [maxlength]="limites.longitudSustentoFeriado" placeholder="Ej.: Ley N° 31788"
+          [ngModel]="f.txtSustento" (ngModelChange)="f.txtSustento = $event"></textarea>
+      </div>
+    </div>
+    @if (errorFormulario(); as error) { <p class="mt-3 text-[11px] text-destructive">{{ error }}</p> }
+  }
+</app-ui-modal>
+
+<app-ui-modal [visible]="!!aBorrar()" title="Dar de baja el día" subtitle="Queda como historial; los plazos ya calculados no cambian."
+  icon="event_busy" maxWidth="460px" saveLabel="Dar de baja" saveIcon="delete" [isSubmitting]="guardando()"
+  (onHide)="aBorrar.set(null)" (onSave)="desactivar()">
+  <p class="text-sm text-foreground">
+    ¿Dar de baja <span class="font-semibold">{{ aBorrar()?.txtDescripcion }}</span> ({{ aBorrar()?.fecDia | date: 'dd/MM/yyyy' }})?
+  </p>
+</app-ui-modal>
+
+@let lista = propuestas();
+<app-ui-modal [visible]="!!lista" [title]="'Días inhábiles ' + anio() + ' según gob.pe'"
+  subtitle="Elija los que se registrarán. Los marcados para revisar tienen un alcance territorial dudoso." icon="cloud_download"
+  maxWidth="820px" [saveLabel]="'Registrar ' + seleccionadas().length" saveIcon="save" [isSubmitting]="guardando()"
+  [saveDisabled]="seleccionadas().length === 0" (onHide)="propuestas.set(null)" (onSave)="registrarPropuestas()">
+  @if (lista) {
+    <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <table class="w-full min-w-[640px] border-collapse text-left text-xs">
+        <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <tr><th class="w-10 p-2.5"></th><th class="p-2.5">Fecha</th><th class="p-2.5">Tipo</th><th class="p-2.5">Alcance</th><th class="p-2.5">Descripción</th></tr>
+        </thead>
+        <tbody>
+          @for (p of lista; track $index) {
+            <tr class="border-b border-slate-100" [ngClass]="{ 'opacity-50': p.yaRegistrado, 'bg-warning/5': p.revisarAlcance && !p.yaRegistrado }">
+              <td class="p-2.5">
+                <input type="checkbox" class="h-4 w-4 accent-primary" [checked]="p.seleccionado && !p.yaRegistrado" [disabled]="p.yaRegistrado"
+                  [attr.aria-label]="'Registrar ' + p.txtDescripcion" (change)="alternarPropuesta($index)" />
+              </td>
+              <td class="whitespace-nowrap p-2.5 font-semibold text-slate-800">{{ p.fecDia | date: 'EEE dd/MM/yyyy' }}</td>
+              <td class="p-2.5">{{ etiquetaTipoDia(p.tipDia) }}</td>
+              <td class="p-2.5">{{ p.nombreDepartamento ?? nombreDepartamento(p.codDepartamento) ?? 'Nacional' }}</td>
+              <td class="p-2.5">
+                {{ p.txtDescripcion }}
+                @if (p.yaRegistrado) { <span class="block text-[10px] text-slate-400">Ya registrado</span> }
+                @else if (p.revisarAlcance) { <span class="block text-[10px] font-semibold text-warning">Revisar el alcance antes de registrar</span> }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="p-6 text-center text-slate-400">gob.pe no publica días inhábiles para {{ anio() }}.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</app-ui-modal>

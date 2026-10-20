@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fases 0, 1, A, 2, 3 y 4 implementadas** (20/10/2026) · Fases 5 y D pendientes. Ver el
+Aceptado · **Fases 0, 1, A, 2, 3, 4 y 5 implementadas** (20/10/2026) · Fase D pendiente. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -322,7 +322,7 @@ contingencia.
 **Criterio de aceptación:** un expediente recorre DE → UAJ → observación → subsanación → DE → UAJ → Proyecto de
 RDE → RDE → `CERRADO` desde la UI, y el estado 77 se ve sincronizado o con opción de reintento.
 
-### Fase 5 — USE y administración 🟡
+### Fase 5 — USE y administración ✅
 - USE: `/evaluaciones-impacto` con los Anexos 22 firmados, resultado y cantidad de indicadores con desviación
   crítica.
 - Administrador: feriados (CRUD e importación desde gob.pe) y parámetros de plazos.
@@ -591,4 +591,17 @@ Cada acción aparece en la tarjeta de su etapa solo para el rol y el estado que 
   indica "Observado por la UAJ (ronda N)" o "Subsanadas las observaciones de la ronda N".
 - **`SelectorPdfComponent`** (compartido): `form-file-upload` + `ui-file-chip` con la validación de tipo y tamaño.
 - **Pruebas:** 168/168; lint sin advertencias; build. Falta la prueba manual con usuarios de DE y UAJ.
+
+### Fase 5 — 2026-10-20
+- **`/evaluaciones-impacto`** (USE y ADMIN, en el menú): los Anexos 22 firmados (`GET /evaluaciones-impacto`), paginados
+  y filtrables por cadena y región; por convenio, socios, hectáreas, resultado y cuántos indicadores tienen desviación
+  crítica; al expandir la fila, cada indicador con línea base, programado/ejecutado y variación por año.
+- **`/administracion`** (solo ADMIN), en dos pestañas:
+  - *Días inhábiles:* por año; alta y corrección en modal (el regional exige departamento y la provincia debe ser de
+    ese departamento, como `FeriadoServicio`), baja con confirmación e importación asistida desde gob.pe: la API
+    propone, la UI preselecciona los nuevos sin alcance dudoso y registra los elegidos con origen `GOB_PE`.
+  - *Parámetros:* agrupados en plazos, sede y correos; cada uno se guarda por separado con la validación de
+    `ParametroServicio` (días 1–365, ubigeos, correos separados por coma o punto y coma).
+- Límites de la API en `AppSettings.administracion`; el catálogo de departamentos replica `DepartamentosPeru`.
+- **Pruebas:** 183/183; lint sin advertencias; build sin avisos. Falta la prueba manual con usuarios de USE y ADMIN.
 

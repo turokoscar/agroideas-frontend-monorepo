@@ -172,5 +172,28 @@ describe('CierreApiService', () => {
     expect(http.expectOne(`${API}/cierres/6/sincronizaciones-sel`).request.method).toBe('POST');
     http.match(() => true).forEach(r => r.flush({ respuesta: 'OK', mensaje: '', datos: {} }));
   });
+
+  it('Fase 5: evaluaciones de impacto, feriados y parámetros', () => {
+    service.listarEvaluacionesImpacto({ cadena: ' Café ', region: '', pagina: 2, cantidad: 10 }).subscribe();
+    const ev = http.expectOne(r => r.url === `${API}/evaluaciones-impacto`);
+    expect([ev.request.params.get('cadena'), ev.request.params.get('region'), ev.request.params.get('pagina')]).toEqual(['Café', null, '2']);
+
+    service.listarFeriados(2026).subscribe();
+    expect(http.expectOne(r => r.url === `${API}/feriados`).request.params.get('anio')).toBe('2026');
+
+    service.crearFeriados([]).subscribe();
+    expect(http.expectOne(r => r.url === `${API}/feriados` && r.method === 'POST').request.body).toEqual({ feriados: [] });
+
+    service.desactivarFeriado(3).subscribe();
+    expect(http.expectOne(`${API}/feriados/3`).request.method).toBe('DELETE');
+
+    service.proponerFeriadosGobPe(2027).subscribe();
+    expect(http.expectOne(`${API}/importaciones-feriados`).request.body).toEqual({ anio: 2027 });
+
+    service.actualizarParametro('CORREO_UAJ', 'a@x.pe').subscribe();
+    const par = http.expectOne(`${API}/parametros/CORREO_UAJ`);
+    expect([par.request.method, par.request.body]).toEqual(['PUT', { valor: 'a@x.pe' }]);
+    http.match(() => true).forEach(r => r.flush({ respuesta: 'OK', mensaje: '', datos: [] }));
+  });
 });
 

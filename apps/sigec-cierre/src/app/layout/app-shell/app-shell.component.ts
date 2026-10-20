@@ -15,7 +15,9 @@ interface ItemMenu {
 
 const MENU: readonly ItemMenu[] = [
   { ruta: '/bandeja', etiqueta: 'Bandeja', icono: 'inbox', roles: ROLES_PERSONAL },
-  { ruta: '/mi-cierre', etiqueta: 'Mi cierre', icono: 'assignment', roles: ['OA'] }
+  { ruta: '/mi-cierre', etiqueta: 'Mi cierre', icono: 'assignment', roles: ['OA'] },
+  { ruta: '/evaluaciones-impacto', etiqueta: 'Evaluaciones de impacto', icono: 'query_stats', roles: ['USE', 'ADMIN'] },
+  { ruta: '/administracion', etiqueta: 'Administración', icono: 'settings', roles: ['ADMIN'] }
 ];
 
 @Component({

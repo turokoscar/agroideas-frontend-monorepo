@@ -38,6 +38,17 @@ export interface AppSettings {
     /** Longitud máxima del número de la RDE (`SuscripcionRdeRequestValidator`). */
     longitudNumeroRde: number;
   };
+  administracion: {
+    /** Rango de los parámetros de plazo en días (`ParametroServicio.ValidarValor`). */
+    diasPlazoMinimo: number;
+    diasPlazoMaximo: number;
+    /** Longitudes de `FeriadoServicio` y `ActualizarParametroRequestValidator`. */
+    longitudDescripcionFeriado: number;
+    longitudSustentoFeriado: number;
+    longitudValorParametro: number;
+    /** Primer año que publica gob.pe (`ImportarFeriadosRequestValidator`). */
+    primerAnioGobPe: number;
+  };
   notificaciones: {
     /** Cada cuánto se refresca el contador de no leídas de la campana. */
     intervaloRefrescoMs: number;

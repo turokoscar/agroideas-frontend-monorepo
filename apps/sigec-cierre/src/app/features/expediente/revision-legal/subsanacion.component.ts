@@ -30,7 +30,7 @@ import { InformeEvaluacionComponent } from '../informe-evaluacion/informe-evalua
               <p class="text-xs text-slate-700"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
               <label class="form-label" [attr.for]="'resp-' + o.ideObservacion">Respuesta <span class="form-label-required">*</span></label>
               <textarea [id]="'resp-' + o.ideObservacion" rows="2" class="form-textarea" [maxlength]="longitud"
-                [ngModel]="respuestas()[o.ideObservacion] ?? ''" (ngModelChange)="responder(o.ideObservacion, $event)"></textarea>
+                [ngModel]="respuestas()[o.ideObservacion] || ''" (ngModelChange)="responder(o.ideObservacion, $event)"></textarea>
             </div>
           } @empty {
             <p class="text-xs text-slate-400">No hay observaciones pendientes de responder.</p>

@@ -21,6 +21,14 @@ export const environment: AppSettings = {
     longitudRespuesta: 4000,
     longitudNumeroRde: 50
   },
+  administracion: {
+    diasPlazoMinimo: 1,
+    diasPlazoMaximo: 365,
+    longitudDescripcionFeriado: 300,
+    longitudSustentoFeriado: 500,
+    longitudValorParametro: 200,
+    primerAnioGobPe: 2017
+  },
   notificaciones: {
     intervaloRefrescoMs: 60_000,
     cantidadEnCampana: 20

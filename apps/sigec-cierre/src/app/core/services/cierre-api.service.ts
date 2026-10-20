@@ -17,6 +17,9 @@ import { EnvioNotificacionDto } from '../models/notificacion.model';
 import { Anexo21Datos, Anexo21Dto } from '../models/anexo21.model';
 import { Anexo22Datos, Anexo22Dto, RequisitosDerivacionDto, VersionAnexo22Dto } from '../models/anexo22.model';
 import { ObservacionUajDto } from '../models/revision-legal.model';
+import { EvaluacionImpactoDto, FiltroEvaluaciones } from '../models/evaluacion-impacto.model';
+import { ActualizarFeriadoRequest, CrearFeriadoRequest, FeriadoDto, FeriadoPropuestoDto } from '../models/calendario.model';
+import { ParametroDto } from '../models/parametro.model';
 
 /**
  * Desenvuelve el sobre MIDAGRI. La API responde los errores con su código HTTP (llegan como
@@ -235,6 +238,54 @@ export class CierreApiService {
   reintentarSincronizacionSel(ideCierreConvenio: number): Observable<CierreDto> {
     return this.http
       .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/sincronizaciones-sel`, {})
+      .pipe(desenvolver());
+  }
+
+  // --- USE y administración (Fase 5) ---
+
+  /** Anexos 22 firmados, paginados y filtrables por cadena y región (personal del cierre). */
+  listarEvaluacionesImpacto(filtro: FiltroEvaluaciones = {}): Observable<DatosPaginados<EvaluacionImpactoDto>> {
+    let params = new HttpParams().set('pagina', filtro.pagina ?? 1).set('cantidad', filtro.cantidad ?? this.paginacion.cantidadPorPagina);
+    if (filtro.cadena?.trim()) params = params.set('cadena', filtro.cadena.trim());
+    if (filtro.region?.trim()) params = params.set('region', filtro.region.trim());
+    return this.http
+      .get<ApiResponse<DatosPaginados<EvaluacionImpactoDto>>>(`${this.apiUrl}/evaluaciones-impacto`, { params })
+      .pipe(desenvolver());
+  }
+
+  listarFeriados(anio: number): Observable<FeriadoDto[]> {
+    const params = new HttpParams().set('anio', anio);
+    return this.http.get<ApiResponse<FeriadoDto[]>>(`${this.apiUrl}/feriados`, { params }).pipe(desenvolver());
+  }
+
+  /** Registra uno o varios días (si alguno es inválido o ya existe, no se registra ninguno). */
+  crearFeriados(feriados: CrearFeriadoRequest[]): Observable<FeriadoDto[]> {
+    return this.http.post<ApiResponse<FeriadoDto[]>>(`${this.apiUrl}/feriados`, { feriados }).pipe(desenvolver());
+  }
+
+  actualizarFeriado(ideFeriado: number, datos: ActualizarFeriadoRequest): Observable<FeriadoDto> {
+    return this.http.put<ApiResponse<FeriadoDto>>(`${this.apiUrl}/feriados/${ideFeriado}`, datos).pipe(desenvolver());
+  }
+
+  /** Da de baja un día (queda como historial). */
+  desactivarFeriado(ideFeriado: number): Observable<unknown> {
+    return this.http.delete<ApiResponse<unknown>>(`${this.apiUrl}/feriados/${ideFeriado}`).pipe(desenvolver());
+  }
+
+  /** Lee gob.pe y propone los días del año; no guarda nada. */
+  proponerFeriadosGobPe(anio: number): Observable<FeriadoPropuestoDto[]> {
+    return this.http
+      .post<ApiResponse<FeriadoPropuestoDto[]>>(`${this.apiUrl}/importaciones-feriados`, { anio })
+      .pipe(desenvolver());
+  }
+
+  listarParametros(): Observable<ParametroDto[]> {
+    return this.http.get<ApiResponse<ParametroDto[]>>(`${this.apiUrl}/parametros`).pipe(desenvolver());
+  }
+
+  actualizarParametro(codigo: string, valor: string): Observable<ParametroDto> {
+    return this.http
+      .put<ApiResponse<ParametroDto>>(`${this.apiUrl}/parametros/${encodeURIComponent(codigo)}`, { valor })
       .pipe(desenvolver());
   }
 

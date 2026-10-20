@@ -1,0 +1,116 @@
+<div class="space-y-6">
+  <div>
+    <h2 class="text-2xl font-bold tracking-tight text-foreground">Evaluaciones de impacto</h2>
+    <p class="text-sm text-muted-foreground">Informes de Evaluación (Anexo 22) firmados de los convenios en cierre.</p>
+  </div>
+
+  <section class="form-card-flat">
+    <form class="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_1fr_auto]" (ngSubmit)="buscar(1)">
+      <div class="form-field">
+        <label class="form-label" for="ei-cadena">Cadena productiva</label>
+        <input id="ei-cadena" name="cadena" type="text" class="form-input" placeholder="Ej.: Café" [(ngModel)]="cadena" />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="ei-region">Región</label>
+        <input id="ei-region" name="region" type="text" class="form-input" placeholder="Ej.: Junín" [(ngModel)]="region" />
+      </div>
+      <div class="flex gap-2">
+        <ui-button type="submit" icon="search" label="Buscar" />
+        <ui-button icon="close" label="Limpiar" appearance="soft" severity="secondary" (onClick)="limpiar()" />
+      </div>
+    </form>
+  </section>
+
+  <section class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+    <table class="w-full min-w-[860px] border-collapse text-left text-xs">
+      <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+        <tr>
+          <th class="w-8 p-2.5"></th>
+          <th class="p-2.5">Convenio</th>
+          <th class="p-2.5">Cadena</th>
+          <th class="p-2.5">Región</th>
+          <th class="p-2.5 text-right">Socios</th>
+          <th class="p-2.5 text-right">Hectáreas</th>
+          <th class="p-2.5">Resultado</th>
+          <th class="p-2.5 text-center">Desviaciones críticas</th>
+          <th class="p-2.5">Firmado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando()) {
+          <tr><td colspan="9" class="p-6 text-center text-slate-400">Cargando…</td></tr>
+        } @else {
+          @for (e of evaluaciones(); track e.ideCierreConvenio) {
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+              <td class="p-2.5">
+                <button type="button" class="text-slate-400" [attr.aria-label]="(abierta() === e.ideCierreConvenio ? 'Ocultar' : 'Ver') + ' indicadores de ' + (e.txtNumeroConvenio ?? e.ideConvenio)"
+                  [attr.aria-expanded]="abierta() === e.ideCierreConvenio" (click)="alternar(e.ideCierreConvenio)">
+                  <span class="material-symbols-outlined text-[18px]">{{ abierta() === e.ideCierreConvenio ? 'expand_less' : 'expand_more' }}</span>
+                </button>
+              </td>
+              <td class="p-2.5">
+                <span class="font-semibold text-slate-800">{{ e.txtNumeroConvenio ?? e.ideConvenio }}</span>
+                <span class="block text-[10px] text-slate-400">{{ e.txtOrganizacion }}</span>
+              </td>
+              <td class="p-2.5">{{ e.txtCadenaProductiva ?? '—' }}</td>
+              <td class="p-2.5">{{ e.txtRegion ?? '—' }}</td>
+              <td class="p-2.5 text-right">{{ e.numSocios ?? '—' }}</td>
+              <td class="p-2.5 text-right">{{ numero(e.numHectareas) }}</td>
+              <td class="p-2.5"><span class="whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold" [ngClass]="claseResultado(e.tipResultado)">{{ resultado(e.tipResultado) }}</span></td>
+              <td class="p-2.5 text-center">
+                @if (criticos(e) > 0) {
+                  <span class="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-bold text-destructive">{{ criticos(e) }}</span>
+                } @else { <span class="text-success">0</span> }
+              </td>
+              <td class="p-2.5">{{ e.fecFirma | date: 'dd/MM/yyyy' }}</td>
+            </tr>
+            @if (abierta() === e.ideCierreConvenio) {
+              <tr class="border-b border-slate-100 bg-slate-50/50">
+                <td colspan="9" class="p-3">
+                  <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                    <table class="w-full min-w-[820px] border-collapse text-left text-[11px]">
+                      <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+                        <tr>
+                          <th class="p-2">Sección</th><th class="p-2">Indicador</th><th class="p-2 text-right">Línea base</th>
+                          @for (n of [1, 2, 3]; track n) { <th class="p-2 text-right">Año {{ n }} (prog. / ejec.)</th> }
+                          <th class="p-2 text-right">Al cierre</th><th class="p-2 text-right">Var. vs LB</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (i of e.indicadores; track $index) {
+                          <tr class="border-b border-slate-100" [ngClass]="{ 'bg-destructive/5': i.flgDesviacionCritica }">
+                            <td class="p-2 text-slate-500">{{ etiquetaSeccion(i.tipSeccion) }}</td>
+                            <td class="p-2 font-semibold text-slate-800">{{ i.txtConcepto }} <span class="font-normal text-slate-400">{{ i.txtUnidadMedida }}</span></td>
+                            <td class="p-2 text-right">{{ numero(i.numLineaBase) }}</td>
+                            @for (n of [0, 1, 2]; track n) {
+                              <td class="p-2 text-right">
+                                {{ numero(i.programado[n]) }} / {{ numero(i.ejecutado[n]) }}
+                                @if (i.variacionAnual[n] !== null && i.variacionAnual[n] !== undefined) {
+                                  <span class="block text-[10px]" [ngClass]="(i.variacionAnual[n] || 0) < 0 ? 'text-warning' : 'text-slate-400'">{{ i.variacionAnual[n] | number: '1.0-2' }} %</span>
+                                }
+                              </td>
+                            }
+                            <td class="p-2 text-right">{{ numero(i.numEjecutadoCierre) }}</td>
+                            <td class="p-2 text-right">{{ i.pctVariacionLineaBase !== null ? (i.pctVariacionLineaBase | number: '1.0-2') + ' %' : '—' }}</td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="8" class="p-3 text-center text-slate-400">El informe no tiene indicadores.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr><td colspan="9" class="p-6 text-center text-slate-400">No hay Informes de Evaluación firmados con estos filtros.</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </section>
+
+  @if (total() > cantidadPorPagina) {
+    <app-ui-pagination [total]="total()" [pageSize]="cantidadPorPagina" [currentPage]="pagina()" (pageChange)="buscar($event)" />
+  }
+</div>
