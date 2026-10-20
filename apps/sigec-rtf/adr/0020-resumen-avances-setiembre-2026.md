@@ -131,6 +131,25 @@ que ve el usuario final.
 - Seguir de cerca la pantalla de montos financieros (punto 4): dos ajustes distintos la tocaron el
   mismo día, y conviene confirmar que ambos quedaron alineados.
 
+### Actualización del 20/10/2026
+
+Revisión del estado de la pantalla tras el trabajo del Anexo 20 (ADR 0013 del monorepo):
+
+- **Deuda de lint (sigue pendiente, sin fecha):** 104 advertencias y 0 errores. Por regla: 59
+  `no-explicit-any`, 28 `label-has-associated-control`, 13 `no-non-null-assertion` y 4 de teclado
+  (`interactive-supports-focus` y `click-events-have-key-events`). Se ataca con las fases de
+  `plan-remediacion-lint.md`; el número no debe crecer.
+- **Corregido el 20/10/2026:** la barra "Guardar borrador / Enviar RTF" ya no aparece cuando el RTF
+  no admite cambios (en revisión mostraba "Complete todos los campos…"), y el build ya no da el
+  aviso NG8102 del dashboard.
+- **A tener en cuenta:** los roles `DE`, `UAJ`, `USE` y `TECNICO` se declaran para los guards, pero
+  ningún rol del SEL se convierte en ellos, así que no se alcanzan en la práctica.
+- **Prueba pendiente:** el camino normal del Anexo 20 en el navegador (la OA lo adjunta al RTF del
+  último paso crítico, lo envía y el expediente de cierre se abre solo). Se probó el camino
+  alternativo: el RTF ya enviado sin el Anexo 20, que presenta la UN en sigec-cierre.
+- **Calidad:** RTF no avisa a cierre hasta que `sigec-rtf.env` tenga `ExternalServices__CierreApiUrl`
+  y `ApiKeySettings__ApiKey` (ver `AGROIDEAS/despliegue/README.md`, sección 8).
+
 ---
 
 *Este resumen no reemplaza a los documentos de decisión originales — es una traducción a lenguaje
