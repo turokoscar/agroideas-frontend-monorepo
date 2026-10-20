@@ -1,0 +1,210 @@
+@if (cargando()) {
+  <p class="py-4 text-center text-xs text-muted-foreground">Cargando el Acta de Cierre…</p>
+} @else if (error()) {
+  <div class="flex flex-col items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
+    <p class="text-xs text-foreground">{{ error() }}</p>
+    <ui-button size="sm" label="Reintentar" icon="refresh" appearance="soft" severity="secondary" (onClick)="cargar()" />
+  </div>
+} @else if (acta()) {
+  @let a = acta()!;
+  <div class="space-y-6 border-t border-border pt-4">
+    <!-- Pasos -->
+    <ol class="grid gap-2 text-[11px] sm:grid-cols-3">
+      <li class="rounded-lg bg-muted/40 p-2"><span class="font-semibold text-foreground">1.</span> Complete y guarde el acta (viene precargada).</li>
+      <li class="rounded-lg bg-muted/40 p-2"><span class="font-semibold text-foreground">2.</span> Imprímala: los asistentes la firman a mano en la reunión.</li>
+      <li class="rounded-lg bg-muted/40 p-2"><span class="font-semibold text-foreground">3.</span> Registre el acta escaneada: el expediente pasa a la UN.</li>
+    </ol>
+
+    @if (a.faltantes.length > 0) {
+      <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+        <p class="font-semibold">Para registrar la verificación falta:</p>
+        <ul class="mt-1 list-disc pl-5">
+          @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
+        </ul>
+      </div>
+    }
+
+    <!-- Reunión -->
+    <section class="space-y-3">
+      <h4 class="text-sm font-semibold text-foreground">Lugar, fecha y participantes de la reunión</h4>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Localidad</span>
+          <input type="text" maxlength="150" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtLocalidad" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Distrito</span>
+          <input type="text" maxlength="100" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtDistrito" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Provincia</span>
+          <input type="text" maxlength="100" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtProvincia" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Región</span>
+          <input type="text" maxlength="100" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtRegion" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Inicio de la reunión</span>
+          <input type="datetime-local" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.fecInicioReunion" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Firma del acta (mismo día)</span>
+          <input type="datetime-local" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.fecFinReunion" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Local</span>
+          <input type="text" maxlength="200" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtLocal" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">Dirección del local</span>
+          <input type="text" maxlength="250" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtDireccionLocal" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs sm:col-span-2"><span class="font-medium text-foreground">Profesional de AGROIDEAS</span>
+          <input type="text" maxlength="200" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtProfesionalAgroideas" (ngModelChange)="marcarSucio()" /></label>
+        <label class="space-y-1 text-xs"><span class="font-medium text-foreground">DNI del profesional</span>
+          <input type="text" maxlength="12" [pattern]="patronDocumento" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.codDniProfesional" (ngModelChange)="marcarSucio()" /></label>
+      </div>
+      @if (horario()) {
+        <p class="text-xs text-destructive">{{ horario() }}</p>
+      }
+      <dl class="grid gap-2 rounded-lg bg-muted/30 p-3 text-xs sm:grid-cols-3">
+        <div><dt class="text-muted-foreground">Organización</dt><dd class="font-medium text-foreground">{{ a.txtOrganizacion ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Plan de negocio</dt><dd class="font-medium text-foreground">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Convenio N°</dt><dd class="font-medium text-foreground">{{ a.txtNumeroConvenio ?? '—' }}</dd></div>
+      </dl>
+    </section>
+
+    <!-- PRIMERO: bienes y servicios -->
+    <section class="space-y-4">
+      <h4 class="text-sm font-semibold text-foreground">PRIMERO. Bienes y servicios verificados</h4>
+      <p class="text-[11px] text-muted-foreground">
+        La cantidad propuesta es la ejecutada según KOFIX; corríjala con lo que se corroboró en campo. Programado, ejecutado y
+        monto pagado son referencias y no salen en el acta impresa.
+      </p>
+      <ng-container *ngTemplateOutlet="tablaItems; context: { $implicit: a.bienes, lista: 'bienes', titulo: 'Bienes e insumos' }" />
+      <ng-container *ngTemplateOutlet="tablaItems; context: { $implicit: a.servicios, lista: 'servicios', titulo: 'Servicios' }" />
+    </section>
+
+    <!-- SEGUNDO: presidente, logros, dificultades -->
+    <section class="space-y-3">
+      <h4 class="text-sm font-semibold text-foreground">SEGUNDO. Culminación del plan de negocio</h4>
+      <label class="block space-y-1 text-xs"><span class="font-medium text-foreground">Presidente de la organización</span>
+        <input type="text" maxlength="200" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm sm:w-1/2" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()" /></label>
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-foreground">Logros por objetivo específico</span>
+        <ui-button size="sm" appearance="soft" icon="add" label="Agregar logro" (onClick)="agregarLogro()" />
+      </div>
+      @for (l of a.logros; track $index) {
+        <div class="grid gap-2 rounded-lg border border-border p-2 sm:grid-cols-[1fr_2fr_auto]">
+          <input type="text" maxlength="500" placeholder="Objetivo específico" aria-label="Objetivo específico" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
+          <textarea rows="2" maxlength="4000" placeholder="Logro alcanzado" aria-label="Logro alcanzado" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="l.txtLogroAlcanzado" (ngModelChange)="marcarSucio()"></textarea>
+          <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar el logro ' + l.numOrden" (onClick)="quitarLogro($index)" />
+        </div>
+      }
+      <label class="block space-y-1 text-xs"><span class="font-medium text-foreground">Dificultades (opcional)</span>
+        <textarea rows="2" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" [(ngModel)]="a.txtDificultades" (ngModelChange)="marcarSucio()"></textarea></label>
+    </section>
+
+    <!-- Asistentes -->
+    <section class="space-y-2">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold text-foreground">Asistentes que firman el acta</h4>
+        <ui-button size="sm" appearance="soft" icon="person_add" label="Agregar asistente" (onClick)="agregarAsistente()" />
+      </div>
+      @for (p of a.asistentes; track $index) {
+        <div class="grid gap-2 rounded-lg border border-border p-2 sm:grid-cols-[2fr_1fr_140px_auto]">
+          <input type="text" maxlength="200" placeholder="Nombres y apellidos" aria-label="Nombres y apellidos" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="p.txtNombres" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="100" placeholder="Cargo" aria-label="Cargo" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="p.txtCargo" (ngModelChange)="marcarSucio()" />
+          <input type="text" maxlength="12" [pattern]="patronDocumento" placeholder="DNI" aria-label="DNI" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="p.codDni" (ngModelChange)="marcarSucio()" />
+          <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar al asistente ' + p.numOrden" (onClick)="quitarAsistente($index)" />
+        </div>
+      }
+      @if (repetidos().length) {
+        <p class="text-xs text-destructive">DNI repetido: {{ repetidos().join(', ') }}.</p>
+      }
+    </section>
+
+    <!-- Acciones -->
+    <div class="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+      <ui-button icon="save" label="Guardar acta" [loading]="guardando()" [disabled]="guardando()" (onClick)="guardar()" />
+      <ui-button icon="print" label="Descargar para imprimir" appearance="soft" severity="secondary"
+        [loading]="descargando()" [disabled]="!guardada() || sucio() || descargando()" (onClick)="descargar()" />
+      @if (sucio()) {
+        <span class="text-[11px] text-warning">Hay cambios sin guardar.</span>
+      }
+    </div>
+
+    <section class="space-y-3 rounded-lg border border-border p-4">
+      <h4 class="text-sm font-semibold text-foreground">Registrar la verificación de campo</h4>
+      <p class="text-xs text-muted-foreground">Adjunte el acta firmada por los asistentes, escaneada en PDF (máx. {{ tamanoMaximoMb }} MB).</p>
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="cursor-pointer rounded-lg border border-dashed border-input px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50">
+          <input type="file" accept="application/pdf" class="sr-only" (change)="seleccionarArchivo($event)" />
+          {{ archivo()?.name ?? 'Seleccionar el acta escaneada…' }}
+        </label>
+        <ui-button icon="task_alt" label="Registrar verificación" [disabled]="!puedeRegistrar()" (onClick)="confirmar.set(true)" />
+      </div>
+      @if (!completa()) {
+        <p class="text-[11px] text-muted-foreground">Se habilita con el acta guardada, completa y sin cambios pendientes.</p>
+      }
+    </section>
+  </div>
+
+  <ng-template #tablaItems let-items let-lista="lista" let-titulo="titulo">
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-medium text-foreground">{{ titulo }} ({{ items.length }})</span>
+        <ui-button size="sm" appearance="soft" icon="add" label="Agregar fila" (onClick)="agregarItem(lista)" />
+      </div>
+      @if (items.length > 0) {
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[720px] text-left text-xs">
+            <thead class="text-[10px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th class="pb-2 pr-2">Descripción</th><th class="pb-2 pr-2">Unidad</th>
+                <th class="pb-2 pr-2 text-right">Programado</th><th class="pb-2 pr-2 text-right">Ejecutado</th>
+                <th class="pb-2 pr-2 text-right">Pagado (S/)</th><th class="pb-2 pr-2">Verificado</th>
+                <th class="pb-2 pr-2">Observaciones</th><th class="pb-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items; track $index) {
+                <tr class="border-t border-border/60 align-top">
+                  <td class="py-1.5 pr-2">
+                    @if (item.ideItemSel !== null) { <span class="text-foreground">{{ item.txtDescripcion }}</span> }
+                    @else { <input type="text" maxlength="500" aria-label="Descripción" class="w-full rounded-md border border-input bg-background px-2 py-1 text-xs" [(ngModel)]="item.txtDescripcion" (ngModelChange)="marcarSucio()" /> }
+                  </td>
+                  <td class="py-1.5 pr-2">
+                    @if (item.ideItemSel !== null) { {{ item.txtUnidadMedida }} }
+                    @else { <input type="text" maxlength="50" aria-label="Unidad de medida" class="w-24 rounded-md border border-input bg-background px-2 py-1 text-xs" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()" /> }
+                  </td>
+                  <td class="py-1.5 pr-2 text-right text-muted-foreground">{{ item.canProgramada ?? '—' }}</td>
+                  <td class="py-1.5 pr-2 text-right text-muted-foreground">{{ item.canEjecutada ?? '—' }}</td>
+                  <td class="py-1.5 pr-2 text-right text-muted-foreground">{{ item.impEjecutado !== null ? (item.impEjecutado | number: '1.2-2') : '—' }}</td>
+                  <td class="py-1.5 pr-2">
+                    <input type="number" min="0" aria-label="Cantidad verificada" class="w-24 rounded-md border bg-background px-2 py-1 text-xs"
+                      [ngClass]="difiere(item) ? 'border-warning' : 'border-input'" [(ngModel)]="item.canCantidad" (ngModelChange)="marcarSucio()" />
+                    @if (difiere(item)) { <span class="block text-[10px] text-warning">Difiere de lo ejecutado</span> }
+                  </td>
+                  <td class="py-1.5 pr-2">
+                    <input type="text" maxlength="500" aria-label="Observaciones" class="w-full rounded-md border border-input bg-background px-2 py-1 text-xs" [(ngModel)]="item.txtObservaciones" (ngModelChange)="marcarSucio()" />
+                  </td>
+                  <td class="py-1.5 text-right">
+                    @if (item.ideItemSel === null) {
+                      <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar la fila ' + item.numOrden" (onClick)="quitarItem(lista, $index)" />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="text-[11px] text-muted-foreground">Sin ítems programados.</p>
+      }
+    </div>
+  </ng-template>
+
+  <app-ui-modal
+    [visible]="confirmar()"
+    title="Registrar la verificación de campo"
+    subtitle="El acta queda registrada y ya no podrá modificarse."
+    icon="task_alt"
+    maxWidth="460px"
+    saveLabel="Registrar"
+    saveIcon="task_alt"
+    [isSubmitting]="registrando()"
+    (onHide)="confirmar.set(false)"
+    (onSave)="registrar()"
+  >
+    <p class="text-sm text-foreground">
+      Se registrará el acta <span class="font-semibold">{{ archivo()?.name }}</span> y el expediente pasará a la evaluación de la
+      Unidad de Negocios, que tendrá su propio plazo para elaborar el Informe de Evaluación.
+    </p>
+  </app-ui-modal>
+}

@@ -11,6 +11,9 @@ export const environment: AppSettings = {
     cantidadPorPagina: 20,
     cantidadMaxima: 100
   },
+  archivos: {
+    tamanoMaximoPdfMb: 10
+  },
   notificaciones: {
     intervaloRefrescoMs: 60_000,
     cantidadEnCampana: 20

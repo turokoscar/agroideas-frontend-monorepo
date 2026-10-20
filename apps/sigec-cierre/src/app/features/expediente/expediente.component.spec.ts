@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { ToastService } from '@agroideas/ui';
 import { ExpedienteComponent } from './expediente.component';
 import { CierreApiService } from '../../core/services/cierre-api.service';
@@ -47,7 +47,9 @@ describe('ExpedienteComponent', () => {
     listarPlazos: jest.fn(),
     listarAuditorias: jest.fn(),
     listarEnvios: jest.fn(),
-    descargarDocumento: jest.fn()
+    descargarDocumento: jest.fn(),
+    // El acta (Fase 2) se prueba en su propio spec; aquí basta con que no responda.
+    obtenerAnexo21: jest.fn().mockReturnValue(NEVER)
   };
   const toast = { error: jest.fn() };
 
@@ -58,7 +60,7 @@ describe('ExpedienteComponent', () => {
         provideRouter([]),
         { provide: CierreApiService, useValue: api },
         { provide: ToastService, useValue: toast },
-        { provide: AuthService, useValue: { roles: () => roles } }
+        { provide: AuthService, useValue: { roles: () => roles, user: () => ({ nombre: 'Rosa Quispe' }) } }
       ]
     });
     const fixture = TestBed.createComponent(ExpedienteComponent);
@@ -127,5 +129,15 @@ describe('ExpedienteComponent', () => {
 
     expect(api.descargarDocumento).toHaveBeenCalledWith(12, 'ANEXO_20');
     expect(c.visor()).toEqual({ abierto: true, nombre: 'anexo20.pdf', url: 'blob:local/1' });
+  });
+
+  it('en EN_VERIFICACION muestra el acta a la UR, pero no a la DE', () => {
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: 'EN_VERIFICACION' }));
+    const ur = crear(['UR']);
+    expect(ur.nativeElement.querySelector('app-acta-cierre')).not.toBeNull();
+    TestBed.resetTestingModule();
+    api.obtener.mockReturnValue(of({ ...detalle, estCierre: 'EN_VERIFICACION' }));
+    const de = crear(['DE']);
+    expect(de.nativeElement.querySelector('app-acta-cierre')).toBeNull();
   });
 });

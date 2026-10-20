@@ -186,6 +186,10 @@
                 <p class="text-xs text-muted-foreground">Esta etapa aún no inicia.</p>
               }
 
+              @if (etapa.situacion === 'activa' && etapa.clave !== 'ANEXO20' && !esPersonal()) {
+                <p class="text-xs text-muted-foreground">Esta etapa la realiza AGROIDEAS; aquí verá su avance.</p>
+              }
+
               @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20' && !esPersonal()) {
                 <p class="text-xs text-muted-foreground">
                   El Anexo 20 se presenta junto con el RTF del último paso crítico, en el módulo de Reporte Técnico Financiero.
@@ -193,6 +197,11 @@
               }
             </div>
           </div>
+
+          <!-- Acción de la etapa activa (ADR 0013, Fases 2 a 4) -->
+          @if (etapa.situacion === 'activa' && etapa.clave === 'VERIFICACION' && puede('RegistrarVerificacionCampo')) {
+            <app-acta-cierre [ideCierre]="c.ideCierreConvenio" [nombreUsuario]="nombreUsuario()" (registrado)="cargar()" />
+          }
         </article>
       }
     </section>

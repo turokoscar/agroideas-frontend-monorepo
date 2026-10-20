@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of, OperatorFunction } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { Observable, forkJoin, of, OperatorFunction, throwError } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, DatosPaginados } from '../models/api.model';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../models/cierre.model';
 import { PlazoDto } from '../models/plazo.model';
 import { EnvioNotificacionDto } from '../models/notificacion.model';
+import { Anexo21Datos, Anexo21Dto } from '../models/anexo21.model';
 
 /**
  * Desenvuelve el sobre MIDAGRI. La API responde los errores con su código HTTP (llegan como
@@ -88,11 +89,75 @@ export class CierreApiService {
 
   /** PDF vigente del tipo indicado (`ANEXO_20`, `RDE`…). */
   descargarDocumento(ideCierreConvenio: number, tipoDocumento: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/cierres/${ideCierreConvenio}/documentos/${tipoDocumento}`, { responseType: 'blob' });
+    return this.http
+      .get(`${this.apiUrl}/cierres/${ideCierreConvenio}/documentos/${tipoDocumento}`, { responseType: 'blob' })
+      .pipe(catchError(leerErrorBlob));
+  }
+
+  // --- Acta de Cierre (Anexo 21) y verificación de campo (Fase 2) ---
+
+  obtenerAnexo21(ideCierreConvenio: number): Observable<Anexo21Dto> {
+    return this.http.get<ApiResponse<Anexo21Dto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos21`).pipe(desenvolver());
+  }
+
+  /** Guarda el borrador (puede ir incompleto). La API repone los datos del SEL y de KOFIX. */
+  guardarAnexo21(ideCierreConvenio: number, datos: Anexo21Datos): Observable<Anexo21Dto> {
+    return this.http
+      .put<ApiResponse<Anexo21Dto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos21`, datos)
+      .pipe(desenvolver());
+  }
+
+  /** PDF/A del acta para imprimir y firmar a mano (lo que falta sale en blanco). */
+  descargarAnexo21(ideCierreConvenio: number): Observable<Blob> {
+    return this.http
+      .get(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos21/documento`, { responseType: 'blob' })
+      .pipe(catchError(leerErrorBlob));
+  }
+
+  /** Registra la verificación con el acta escaneada; el expediente pasa a EN_EVALUACION_UN. */
+  registrarVerificacion(ideCierreConvenio: number, actaFirmada: File): Observable<CierreDto> {
+    const formulario = new FormData();
+    formulario.append('archivo', actaFirmada);
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/verificaciones`, formulario)
+      .pipe(desenvolver());
   }
 
   /** Apertura manual por la UN (`POST /cierres`). 409 con el motivo si aún no corresponde. */
   iniciar(ideConvenio: number): Observable<ResultadoAperturaDto> {
     return this.http.post<ApiResponse<ResultadoAperturaDto>>(`${this.apiUrl}/cierres`, { ideConvenio }).pipe(desenvolver());
+  }
+}
+
+/**
+ * Con `responseType: 'blob'` el sobre de error de la API también llega como Blob. Se lee y se relanza
+ * con la forma `{ status, error: sobre }`, para que `mensajeParaUsuario` muestre su mensaje.
+ */
+export function leerErrorBlob(err: HttpErrorResponse): Observable<never> {
+  if (!(err?.error instanceof Blob)) return throwError(() => err);
+  return leerTexto(err.error).pipe(switchMap(texto => throwError(() => ({ status: err.status, error: comoJson(texto) }))));
+}
+
+/** Texto de un Blob con FileReader (`Blob.text()` no existe en todos los entornos, p. ej. jsdom). */
+function leerTexto(blob: Blob): Observable<string> {
+  return new Observable<string>(suscriptor => {
+    const lector = new FileReader();
+    lector.onload = () => {
+      suscriptor.next(String(lector.result ?? ''));
+      suscriptor.complete();
+    };
+    lector.onerror = () => {
+      suscriptor.next('');
+      suscriptor.complete();
+    };
+    lector.readAsText(blob);
+  });
+}
+
+function comoJson(texto: string): unknown {
+  try {
+    return JSON.parse(texto);
+  } catch {
+    return null;
   }
 }

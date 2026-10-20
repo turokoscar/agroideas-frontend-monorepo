@@ -19,6 +19,8 @@ import { EnvioNotificacionDto } from '../../core/models/notificacion.model';
 import { EtapaCierre, construirEtapas } from '../../core/models/etapas-cierre';
 import { ROLES_PERSONAL, tieneAlgunRol } from '../../core/models/rol-cierre.model';
 import { EstadoCierrePillComponent } from '../../shared/estado-cierre-pill.component';
+import { AccionCierre, puedeEjecutar } from '../../core/models/acciones-cierre';
+import { ActaCierreComponent } from './acta-cierre/acta-cierre.component';
 
 type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios';
 
@@ -31,7 +33,7 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios';
 @Component({
   selector: 'app-expediente',
   standalone: true,
-  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent],
+  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent, ActaCierreComponent],
   templateUrl: './expediente.component.html'
 })
 export class ExpedienteComponent implements OnDestroy {
@@ -57,6 +59,13 @@ export class ExpedienteComponent implements OnDestroy {
   visor = signal<{ abierto: boolean; nombre: string | null; url: string | null }>({ abierto: false, nombre: null, url: null });
 
   esPersonal = computed(() => tieneAlgunRol(this.auth.roles(), ROLES_PERSONAL));
+  nombreUsuario = computed(() => this.auth.user()?.nombre ?? null);
+
+  /** El usuario puede ejecutar esa acción en el estado actual (espejo de la máquina de estados). */
+  puede(accion: AccionCierre): boolean {
+    const cierre = this.cierre();
+    return !!cierre && puedeEjecutar(accion, cierre.estCierre, this.auth.roles());
+  }
   etapas = computed<EtapaCierre[]>(() => {
     const cierre = this.cierre();
     return cierre ? construirEtapas(cierre, this.plazos()) : [];

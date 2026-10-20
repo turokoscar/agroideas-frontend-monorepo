@@ -114,4 +114,22 @@ describe('CierreApiService', () => {
     req.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
     expect(tipo).toBe('application/pdf');
   });
+
+  it('registra la verificación con el acta en multipart (campo "archivo")', () => {
+    const acta = new File(['%PDF-'], 'acta.pdf', { type: 'application/pdf' });
+    service.registrarVerificacion(5, acta).subscribe();
+    const req = http.expectOne(`${API}/cierres/5/verificaciones`);
+    expect(req.request.method).toBe('POST');
+    expect((req.request.body as FormData).get('archivo')).toBe(acta);
+    req.flush({ respuesta: 'OK', mensaje: '', datos: { ideCierreConvenio: 5, estCierre: 'EN_EVALUACION_UN' } });
+  });
+
+  it('el error de un PDF (que llega como Blob) se puede mostrar con su mensaje', async () => {
+    const error = new Promise<unknown>(resolve => service.descargarAnexo21(5).subscribe({ error: resolve }));
+    const sobre = { respuesta: 'ERROR', mensaje: 'CIE_3001:No tiene acceso al expediente.', datos: null };
+    http
+      .expectOne(`${API}/cierres/5/anexos21/documento`)
+      .flush(new Blob([JSON.stringify(sobre)], { type: 'application/json' }), { status: 403, statusText: 'Forbidden' });
+    expect(mensajeParaUsuario(await error, 'por defecto')).toBe('No tiene acceso al expediente.');
+  });
 });

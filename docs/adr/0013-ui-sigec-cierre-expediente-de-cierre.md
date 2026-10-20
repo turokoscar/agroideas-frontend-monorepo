@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fases 0, 1 y A implementadas** (20/10/2026) · Fases 2–5 y D pendientes. Ver el
+Aceptado · **Fases 0, 1, A y 2 implementadas** (20/10/2026) · Fases 3–5 y D pendientes. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -480,4 +480,23 @@ expediente de cierre sin esperar al worker de respaldo.
 - **Pruebas:** 201/201 en sigec-rtf (nuevas: `paso-critico.model`, `cierre.service`, `anexo20-cierre`); lint sin
   errores y sin advertencias nuevas (104, las mismas de antes); build de producción. Falta la prueba manual con una
   OA cuyo último paso crítico aún no tenga RTF enviado.
+
+### Fase 2 — 2026-10-20
+- **Acciones por etapa:** `core/models/acciones-cierre.ts` es la copia en el cliente de la tabla de
+  `MaquinaEstadosCierre` (acción → estados de origen → roles); `puedeEjecutar()` decide qué formulario mostrar
+  en la etapa activa. La API vuelve a validar cada acción. Si la API cambia su tabla, hay que actualizar esta copia.
+- **`ActaCierreComponent`** (dentro de la tarjeta de la etapa de verificación, solo para UR, UN y Jefe UN en
+  `EN_VERIFICACION`): reunión (lugar, inicio, firma el mismo día, local, profesional de AGROIDEAS —propuesto con el
+  nombre del usuario— y su DNI); bienes y servicios precargados con programado, ejecutado y pagado de KOFIX como
+  referencia y la cantidad verificada editable (resaltada si difiere de lo ejecutado), más filas a mano; presidente,
+  logros por objetivo (propuestos desde el Anexo 20) y dificultades; asistentes. Valida en el cliente el horario y
+  los DNI repetidos; guarda el borrador, descarga el PDF/A para imprimir y registra el acta escaneada
+  (`POST …/verificaciones`, con confirmación). Al registrar, el expediente se recarga en `EN_EVALUACION_UN`.
+- **API:** `obtenerAnexo21`, `guardarAnexo21`, `descargarAnexo21` y `registrarVerificacion` en
+  `CierreApiService`; `leerErrorBlob` convierte el error de una descarga (un Blob) al sobre MIDAGRI, y se aplica
+  también a `descargarDocumento`.
+- **Configuración:** `archivos.tamanoMaximoPdfMb` en `AppSettings`.
+- **Pruebas:** 117/117 (nuevas: `acciones-cierre`, `acta-cierre` y casos de `cierre-api.service` y del
+  expediente); lint sin advertencias; build. Falta la prueba manual con un usuario de Unidad regional sobre uno de
+  los expedientes locales en `EN_VERIFICACION`.
 

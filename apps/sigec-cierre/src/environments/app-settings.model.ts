@@ -19,6 +19,10 @@ export interface AppSettings {
      */
     cantidadMaxima: number;
   };
+  archivos: {
+    /** Tamaño máximo de un PDF que se sube (el mismo límite que valida sel-api-archivos: 10 MB). */
+    tamanoMaximoPdfMb: number;
+  };
   notificaciones: {
     /** Cada cuánto se refresca el contador de no leídas de la campana. */
     intervaloRefrescoMs: number;

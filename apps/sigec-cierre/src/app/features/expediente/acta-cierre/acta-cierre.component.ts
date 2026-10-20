@@ -1,0 +1,226 @@
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { mensajeParaUsuario } from '@agroideas/utils';
+import { environment } from '../../../../environments/environment';
+import { CierreApiService } from '../../../core/services/cierre-api.service';
+import { Anexo21Dto, ItemVerificadoDto, PATRON_DOCUMENTO, dnisRepetidos, errorHorario } from '../../../core/models/anexo21.model';
+
+type ListaItems = 'bienes' | 'servicios';
+
+/**
+ * Verificación de campo y Acta de Cierre (Anexo 21), ADR 0013 Fase 2. La llenan la UR o la UN con el
+ * expediente en `EN_VERIFICACION`: el formulario viene precargado (organización, PNT y convenio del SEL;
+ * bienes y servicios programados con su ejecución en KOFIX; objetivos del Anexo 20). Se imprime, los
+ * asistentes lo firman a mano y se registra el acta escaneada: el expediente pasa a la evaluación de la UN.
+ */
+@Component({
+  selector: 'app-acta-cierre',
+  standalone: true,
+  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent],
+  templateUrl: './acta-cierre.component.html'
+})
+export class ActaCierreComponent {
+  private api = inject(CierreApiService);
+  private toast = inject(ToastService);
+
+  ideCierre = input.required<number>();
+  /** Nombre del usuario, para proponerlo como profesional de AGROIDEAS si el acta no tiene uno. */
+  nombreUsuario = input<string | null>(null);
+  /** Se emite al registrar la verificación: el expediente cambió de estado. */
+  registrado = output<void>();
+
+  readonly tamanoMaximoMb = environment.archivos.tamanoMaximoPdfMb;
+  readonly patronDocumento = PATRON_DOCUMENTO.source;
+
+  cargando = signal(false);
+  error = signal<string | null>(null);
+  guardando = signal(false);
+  descargando = signal(false);
+  registrando = signal(false);
+  confirmar = signal(false);
+  sucio = signal(false);
+  archivo = signal<File | null>(null);
+  acta = signal<Anexo21Dto | null>(null);
+
+  guardada = computed(() => (this.acta()?.ideAnexo21 ?? 0) > 0);
+  completa = computed(() => this.guardada() && (this.acta()?.faltantes.length ?? 1) === 0 && !this.sucio());
+  repetidos = computed(() => dnisRepetidos(this.acta()?.asistentes ?? []));
+  horario = computed(() => errorHorario(this.acta()?.fecInicioReunion ?? null, this.acta()?.fecFinReunion ?? null));
+  puedeRegistrar = computed(() => this.completa() && !!this.archivo() && !this.registrando());
+
+  constructor() {
+    effect(() => {
+      const id = this.ideCierre();
+      untracked(() => this.cargar(id));
+    });
+  }
+
+  cargar(id = this.ideCierre()) {
+    this.cargando.set(true);
+    this.error.set(null);
+    this.api.obtenerAnexo21(id).subscribe({
+      next: acta => {
+        if (!acta.txtProfesionalAgroideas && this.nombreUsuario()) {
+          acta = { ...acta, txtProfesionalAgroideas: this.nombreUsuario() };
+        }
+        this.acta.set(acta);
+        this.sucio.set(false);
+        this.cargando.set(false);
+      },
+      error: err => {
+        this.cargando.set(false);
+        this.error.set(mensajeParaUsuario(err, 'No se pudo cargar el Acta de Cierre.'));
+      }
+    });
+  }
+
+  marcarSucio() {
+    this.sucio.set(true);
+  }
+
+  /** La cantidad verificada difiere de lo ejecutado según KOFIX: se resalta para que se observe. */
+  difiere(item: ItemVerificadoDto): boolean {
+    return item.canEjecutada !== null && Number(item.canCantidad) !== Number(item.canEjecutada);
+  }
+
+  agregarItem(lista: ListaItems) {
+    this.mutar(a =>
+      a[lista].push({
+        numOrden: a[lista].length + 1,
+        txtDescripcion: '',
+        txtUnidadMedida: '',
+        canCantidad: 0,
+        txtObservaciones: null,
+        ideItemSel: null,
+        canProgramada: null,
+        canEjecutada: null,
+        impEjecutado: null
+      })
+    );
+  }
+
+  quitarItem(lista: ListaItems, indice: number) {
+    this.mutar(a => a[lista].splice(indice, 1));
+  }
+
+  agregarLogro() {
+    this.mutar(a => a.logros.push({ numOrden: a.logros.length + 1, txtObjetivoEspecifico: '', txtLogroAlcanzado: '' }));
+  }
+
+  quitarLogro(indice: number) {
+    this.mutar(a => a.logros.splice(indice, 1));
+  }
+
+  agregarAsistente() {
+    this.mutar(a => a.asistentes.push({ numOrden: a.asistentes.length + 1, txtNombres: '', txtCargo: '', codDni: '' }));
+  }
+
+  quitarAsistente(indice: number) {
+    this.mutar(a => a.asistentes.splice(indice, 1));
+  }
+
+  guardar() {
+    const acta = this.acta();
+    if (!acta) return;
+    if (this.horario()) {
+      this.toast.error('Revise el horario de la reunión', this.horario() ?? '');
+      return;
+    }
+    if (this.repetidos().length) {
+      this.toast.error('DNI repetido', `Figura más de una vez entre los asistentes: ${this.repetidos().join(', ')}.`);
+      return;
+    }
+    this.guardando.set(true);
+    this.api.guardarAnexo21(this.ideCierre(), acta).subscribe({
+      next: guardada => {
+        this.acta.set(guardada);
+        this.sucio.set(false);
+        this.guardando.set(false);
+        if (guardada.faltantes.length === 0) {
+          this.toast.success('Acta guardada', 'Imprímala para la firma y registre luego el acta escaneada.');
+        } else {
+          this.toast.info('Borrador guardado', `Aún falta: ${guardada.faltantes.join('; ')}.`);
+        }
+      },
+      error: err => {
+        this.guardando.set(false);
+        this.toast.error('No se pudo guardar el acta', mensajeParaUsuario(err, 'Intente nuevamente.'));
+      }
+    });
+  }
+
+  descargar() {
+    this.descargando.set(true);
+    this.api.descargarAnexo21(this.ideCierre()).subscribe({
+      next: blob => {
+        this.descargando.set(false);
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `Anexo21_${this.acta()?.txtNumeroConvenio ?? this.ideCierre()}.pdf`;
+        enlace.click();
+        URL.revokeObjectURL(url);
+      },
+      error: err => {
+        this.descargando.set(false);
+        this.toast.error('No se pudo generar el acta', mensajeParaUsuario(err, 'Intente nuevamente.'));
+      }
+    });
+  }
+
+  seleccionarArchivo(event: Event) {
+    const entrada = event.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) return;
+    if (archivo.type !== 'application/pdf') {
+      this.toast.error('Formato no permitido', 'Adjunte el acta firmada y escaneada en PDF.');
+      return;
+    }
+    if (archivo.size > this.tamanoMaximoMb * 1024 * 1024) {
+      this.toast.error('Archivo muy grande', `El PDF no debe superar los ${this.tamanoMaximoMb} MB.`);
+      return;
+    }
+    this.archivo.set(archivo);
+  }
+
+  registrar() {
+    const archivo = this.archivo();
+    if (!archivo || !this.completa()) return;
+    this.registrando.set(true);
+    this.api.registrarVerificacion(this.ideCierre(), archivo).subscribe({
+      next: () => {
+        this.registrando.set(false);
+        this.confirmar.set(false);
+        this.archivo.set(null);
+        this.toast.success('Verificación registrada', 'El expediente pasa a la evaluación de la Unidad de Negocios.');
+        this.registrado.emit();
+      },
+      error: err => {
+        this.registrando.set(false);
+        this.confirmar.set(false);
+        this.toast.error('No se pudo registrar la verificación', mensajeParaUsuario(err, 'Intente nuevamente.'));
+      }
+    });
+  }
+
+  private mutar(cambio: (acta: Anexo21Dto) => void) {
+    const acta = this.acta();
+    if (!acta) return;
+    const copia: Anexo21Dto = {
+      ...acta,
+      bienes: [...acta.bienes],
+      servicios: [...acta.servicios],
+      logros: [...acta.logros],
+      asistentes: [...acta.asistentes]
+    };
+    cambio(copia);
+    for (const lista of [copia.bienes, copia.servicios, copia.logros, copia.asistentes]) {
+      lista.forEach((fila, i) => (fila.numOrden = i + 1));
+    }
+    this.acta.set(copia);
+    this.marcarSucio();
+  }
+}
