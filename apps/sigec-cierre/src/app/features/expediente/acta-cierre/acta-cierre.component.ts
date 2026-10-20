@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
 import { mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
@@ -18,7 +18,7 @@ type ListaItems = 'bienes' | 'servicios';
 @Component({
   selector: 'app-acta-cierre',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent],
+  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, UiFileChipComponent],
   templateUrl: './acta-cierre.component.html'
 })
 export class ActaCierreComponent {
@@ -78,6 +78,33 @@ export class ActaCierreComponent {
 
   marcarSucio() {
     this.sucio.set(true);
+  }
+
+  /** Hora de firma (HH:mm): el acta dice "siendo las … horas del mismo día", así que la fecha es la del inicio. */
+  horaFirma(): string {
+    return this.acta()?.fecFinReunion?.slice(11, 16) ?? '';
+  }
+
+  cambiarHoraFirma(hora: string) {
+    const acta = this.acta();
+    if (!acta) return;
+    const dia = acta.fecInicioReunion?.slice(0, 10);
+    acta.fecFinReunion = hora && dia ? `${dia}T${hora}` : null;
+    this.marcarSucio();
+  }
+
+  /** Al cambiar el inicio, la firma se mueve al mismo día conservando su hora. */
+  cambiarInicio(inicio: string | null) {
+    const acta = this.acta();
+    if (!acta) return;
+    acta.fecInicioReunion = inicio || null;
+    const hora = this.horaFirma();
+    acta.fecFinReunion = hora && acta.fecInicioReunion ? `${acta.fecInicioReunion.slice(0, 10)}T${hora}` : acta.fecFinReunion;
+    this.marcarSucio();
+  }
+
+  quitarArchivo() {
+    this.archivo.set(null);
   }
 
   /** La cantidad verificada difiere de lo ejecutado según KOFIX: se resalta para que se observe. */

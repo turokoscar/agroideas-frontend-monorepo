@@ -514,3 +514,14 @@ Unidad regional recibía una lista vacía:
   119/119 pruebas, lint sin advertencias.
 - Para verlo en local hay que reiniciar sel-api-general y sigec-api-cierre.
 
+### Fase 2 (ajuste) — 2026-10-20: el acta sigue el formato oficial
+A partir del formato del Instructivo (páginas 107–108) que compartió el owner:
+- **PDF (sigec-api-cierre, commit `6647de3`):** "Bienes e insumos adquiridos" imprime al menos 10 filas (servicios
+  sigue en 5) y "Dificultades" pasa de un recuadro a 4 renglones. Se ajustó el espaciado para que la página 1 termine
+  en el párrafo de cierre y las firmas empiecen en la página 2, como el formato. Verificado renderizando el PDF.
+- **Formulario (sigec-cierre):** mismo orden y títulos que el acta (lugar y participantes → PRIMERO → SEGUNDO →
+  Dificultades → cierre y firmas) con los estilos de formulario de kofix (`form-card-flat`, `form-section-title`,
+  `form-field`, `form-label`, `form-input`/`form-select`/`form-textarea`, `form-file-upload` + `ui-file-chip`).
+  La firma se captura como hora ("siendo las … horas del mismo día") sobre el día de inicio de la reunión.
+  121/121 pruebas.
+

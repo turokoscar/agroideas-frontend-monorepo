@@ -184,5 +184,34 @@ describe('ActaCierreComponent', () => {
     expect(fixture.nativeElement.querySelectorAll('select').length).toBe(0);
     expect(fixture.nativeElement.textContent).toContain('El SEL no registra representantes legales');
   });
+
+  it('la hora de firma se guarda en el mismo día del inicio y se mueve con él', () => {
+    const { componentInstance: c } = crear();
+    c.cambiarHoraFirma('12:30');
+    expect(actual(c).fecFinReunion).toBeNull();
+
+    c.cambiarInicio('2026-10-20T09:30');
+    c.cambiarHoraFirma('12:30');
+    expect(actual(c).fecFinReunion).toBe('2026-10-20T12:30');
+    expect(c.horaFirma()).toBe('12:30');
+
+    c.cambiarInicio('2026-10-22T08:00');
+    expect(actual(c).fecFinReunion).toBe('2026-10-22T12:30');
+    expect(c.horario()).toBeNull();
+  });
+
+  it('sigue el orden del formato oficial: reunión, PRIMERO, SEGUNDO, dificultades, cierre y firmas', () => {
+    const titulos = Array.from(crear().nativeElement.querySelectorAll('.form-section-title') as NodeListOf<HTMLElement>).map(t =>
+      t.textContent?.trim()
+    );
+    expect(titulos).toEqual([
+      'Lugar, fecha y participantes de la reunión',
+      'Primero',
+      'Segundo',
+      'Dificultades',
+      'Cierre del acta y firmas',
+      'Registrar la verificación de campo'
+    ]);
+  });
 });
 
