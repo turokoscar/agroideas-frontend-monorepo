@@ -73,15 +73,38 @@
     <!-- SEGUNDO: presidente, logros, dificultades -->
     <section class="space-y-3">
       <h4 class="text-sm font-semibold text-foreground">SEGUNDO. Culminación del plan de negocio</h4>
-      <label class="block space-y-1 text-xs"><span class="font-medium text-foreground">Presidente de la organización</span>
-        <input type="text" maxlength="200" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm sm:w-1/2" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()" /></label>
+      <div class="space-y-1 text-xs"><label for="acta-presidente" class="block font-medium text-foreground">Presidente de la organización</label>
+        @if (a.representantesLegalesSel.length > 0) {
+          <select id="acta-presidente" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm sm:w-1/2" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()">
+            <option [ngValue]="null">Seleccione un representante legal…</option>
+            @for (r of a.representantesLegalesSel; track r.txtNombres) {
+              <option [ngValue]="r.txtNombres">{{ r.txtNombres }}{{ r.txtCargo ? ' — ' + r.txtCargo : '' }}</option>
+            }
+          </select>
+          <span class="block text-[11px] text-muted-foreground">Representantes legales registrados en el SEL.</span>
+        } @else {
+          <input id="acta-presidente" type="text" maxlength="200" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm sm:w-1/2" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()" />
+          <span class="block text-[11px] text-muted-foreground">El SEL no registra representantes legales de esta organización.</span>
+        }
+      </div>
       <div class="flex items-center justify-between">
-        <span class="text-xs font-medium text-foreground">Logros por objetivo específico</span>
+        <span class="text-xs font-medium text-foreground">Logros por objetivo específico
+          @if (a.objetivosEspecificosSel.length > 0) { <span class="font-normal text-muted-foreground">(objetivos del marco lógico en el SEL)</span> }
+        </span>
         <ui-button size="sm" appearance="soft" icon="add" label="Agregar logro" (onClick)="agregarLogro()" />
       </div>
       @for (l of a.logros; track $index) {
         <div class="grid gap-2 rounded-lg border border-border p-2 sm:grid-cols-[1fr_2fr_auto]">
-          <input type="text" maxlength="500" placeholder="Objetivo específico" aria-label="Objetivo específico" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
+          @if (a.objetivosEspecificosSel.length > 0) {
+            <select aria-label="Objetivo específico" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()">
+              <option value="">Seleccione un objetivo específico…</option>
+              @for (o of a.objetivosEspecificosSel; track o) {
+                <option [value]="o">{{ o }}</option>
+              }
+            </select>
+          } @else {
+            <input type="text" maxlength="500" placeholder="Objetivo específico" aria-label="Objetivo específico" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
+          }
           <textarea rows="2" maxlength="4000" placeholder="Logro alcanzado" aria-label="Logro alcanzado" class="rounded-md border border-input bg-background px-2 py-1.5 text-xs" [(ngModel)]="l.txtLogroAlcanzado" (ngModelChange)="marcarSucio()"></textarea>
           <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar el logro ' + l.numOrden" (onClick)="quitarLogro($index)" />
         </div>

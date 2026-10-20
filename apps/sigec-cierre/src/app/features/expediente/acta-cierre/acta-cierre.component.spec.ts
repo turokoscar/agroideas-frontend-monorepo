@@ -35,6 +35,8 @@ function acta(extra: Partial<Anexo21Dto> = {}): Anexo21Dto {
     txtDificultades: null,
     txtNumeroConvenio: '319',
     asistentes: [],
+    representantesLegalesSel: [],
+    objetivosEspecificosSel: [],
     ...extra
   };
 }
@@ -155,4 +157,32 @@ describe('ActaCierreComponent', () => {
     c.registrar();
     expect(toast.error).toHaveBeenCalledWith('No se pudo registrar la verificación', expect.stringMatching(/^La reunión de cierre/));
   });
+
+  it('con datos del SEL, presidente y objetivos son selectores con sus opciones', () => {
+    api.obtenerAnexo21.mockReturnValue(
+      of(
+        acta({
+          txtPresidente: 'JUAN PEREZ',
+          representantesLegalesSel: [
+            { txtNombres: 'ANA ROJAS', txtCargo: 'TESORERA' },
+            { txtNombres: 'JUAN PEREZ', txtCargo: 'PRESIDENTE' }
+          ],
+          objetivosEspecificosSel: ['Renovar cafetales', 'Mejorar la calidad']
+        })
+      )
+    );
+    const fixture = crear();
+    const selects = fixture.nativeElement.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
+    const textos = Array.from(selects).map(s => Array.from(s.options).map(o => o.textContent?.trim()));
+
+    expect(textos).toContainEqual(['Seleccione un representante legal…', 'ANA ROJAS — TESORERA', 'JUAN PEREZ — PRESIDENTE']);
+    expect(textos).toContainEqual(['Seleccione un objetivo específico…', 'Renovar cafetales', 'Mejorar la calidad']);
+  });
+
+  it('sin datos del SEL, presidente y objetivo se escriben', () => {
+    const fixture = crear();
+    expect(fixture.nativeElement.querySelectorAll('select').length).toBe(0);
+    expect(fixture.nativeElement.textContent).toContain('El SEL no registra representantes legales');
+  });
 });
+

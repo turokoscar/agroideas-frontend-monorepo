@@ -500,3 +500,17 @@ expediente de cierre sin esperar al worker de respaldo.
   expediente); lint sin advertencias; build. Falta la prueba manual con un usuario de Unidad regional sobre uno de
   los expedientes locales en `EN_VERIFICACION`.
 
+### Fase 2 (ajuste) — 2026-10-20: presidente y objetivos desde el SEL
+Pedido del owner al revisar la pantalla: en "SEGUNDO", el presidente y el objetivo de cada logro se eligen del SEL.
+Requirió cambios en las dos APIs, porque `…/representantes-legales` de sel-api-general aplica control de cartera y la
+Unidad regional recibía una lista vacía:
+- **sel-api-general** (`desarrollo`, commit `3c2fda3`, ADR 010 ampliado): `datos-generales` incluye
+  `representantesLegales` (solo nombre y cargo) con la lectura global por rol.
+- **sigec-api-cierre** (`opazos`, commit `50b0d91`, ADR-003 ampliado): `Anexo21Dto` expone
+  `representantesLegalesSel` y `objetivosEspecificosSel`; propone al representante con cargo de presidente y los
+  objetivos del marco lógico (o los del Anexo 20 si el SEL no los tiene); al guardar exige que el valor esté en la
+  lista cuando el SEL la tiene (`CIE_1006`).
+- **sigec-cierre:** selectores con esas opciones; si el SEL no tiene la lista, campo de texto con un aviso.
+  119/119 pruebas, lint sin advertencias.
+- Para verlo en local hay que reiniciar sel-api-general y sigec-api-cierre.
+

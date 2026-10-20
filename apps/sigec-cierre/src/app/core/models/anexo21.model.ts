@@ -68,6 +68,15 @@ export interface Anexo21Dto extends Anexo21Datos {
   fecModificacion: string;
   /** Lo que falta para registrar la verificación (vacío = completo). */
   faltantes: string[];
+  /** Representantes legales del SEL para elegir al presidente (opciones; no se guardan). Vacío: se escribe. */
+  representantesLegalesSel: RepresentanteSelDto[];
+  /** Objetivos específicos del marco lógico del SEL para los logros (opciones; no se guardan). Vacío: se escriben. */
+  objetivosEspecificosSel: string[];
+}
+
+export interface RepresentanteSelDto {
+  txtNombres: string;
+  txtCargo: string | null;
 }
 
 /** DNI (8 dígitos) o carné de extranjería (hasta 12 alfanuméricos), como `Anexo21DatosValidator`. */
