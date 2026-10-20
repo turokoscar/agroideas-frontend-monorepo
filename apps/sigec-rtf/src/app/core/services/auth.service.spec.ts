@@ -6,6 +6,14 @@ import { SelLoginResponse, SelUsuarioDto } from '@agroideas/auth';
 import { AuthService, LoginResult } from './auth.service';
 import { environment } from '../../../environments/environment';
 
+/** JWT de prueba con `exp` a `segundos` de ahora (negativo: ya vencido). */
+function jwt(segundos: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + segundos })).replace(/=+$/, '');
+  return `eyJhbGciOiJIUzI1NiJ9.${payload}.firma`;
+}
+const TOKEN_VIGENTE = jwt(3600);
+const TOKEN_VENCIDO = jwt(-60);
+
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
@@ -29,7 +37,7 @@ describe('AuthService', () => {
     respuesta: 'OK',
     mensaje: 'OK',
     datos: {
-      accessToken: 'token-123',
+      accessToken: TOKEN_VIGENTE,
       refreshToken: 'refresh-123',
       expiresIn: 3600,
       user: usuario
@@ -71,7 +79,7 @@ describe('AuthService', () => {
     expect(resultado?.success).toBe(true);
     expect(service.user()?.role).toBe('POSTULANTE');
     expect(service.user()?.nombre).toBe('Piero Yataco Figueroa');
-    expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBe('token-123');
+    expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBe(TOKEN_VIGENTE);
     expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.SAT_USER_SESSION)!).role).toBe('POSTULANTE');
   });
 
@@ -126,19 +134,19 @@ describe('AuthService', () => {
 
   it('restores a valid persisted session on construction', () => {
     const user = { id: '1', nombre: 'Piero Yataco', iniciales: 'PY', usuario: 'pyataco', email: 'p@x.com', sigla: 'PY', role: 'UN' as const };
-    localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, 'token-123');
+    localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, TOKEN_VIGENTE);
     localStorage.setItem(STORAGE_KEYS.SAT_USER_SESSION, JSON.stringify(user));
 
     TestBed.resetTestingModule();
     configurar();
 
     expect(service.user()).toEqual(user);
-    expect(service.getToken()).toBe('token-123');
+    expect(service.getToken()).toBe(TOKEN_VIGENTE);
   });
 
   it('discards a stale session left over from the old mapping (missing email / "undefined" in the name)', () => {
     const userRoto = { id: '1', nombre: 'undefined undefined', iniciales: '', usuario: 'pyataco', email: '', sigla: '', role: 'POSTULANTE' as const };
-    localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, 'token-viejo');
+    localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, TOKEN_VIGENTE);
     localStorage.setItem(STORAGE_KEYS.SAT_USER_SESSION, JSON.stringify(userRoto));
 
     TestBed.resetTestingModule();
@@ -147,4 +155,27 @@ describe('AuthService', () => {
     expect(service.user()).toBeNull();
     expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBeNull();
   });
+
+  it('does not restore a session whose token already expired, and clears it', () => {
+    const user = { id: '1', nombre: 'Piero Yataco', iniciales: 'PY', usuario: 'pyataco', email: 'p@x.com', sigla: 'PY', role: 'UN' as const };
+    localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, TOKEN_VENCIDO);
+    localStorage.setItem(STORAGE_KEYS.SAT_USER_SESSION, JSON.stringify(user));
+
+    TestBed.resetTestingModule();
+    configurar();
+
+    expect(service.user()).toBeNull();
+    expect(service.isLoggedIn).toBe(false);
+    expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBeNull();
+  });
+
+  it('stops being logged in once the stored token expires (tab left open)', () => {
+    service.login('pyataco', 'secreto').subscribe();
+    httpMock.expectOne(`${environment.apiAuth}/login`).flush(buildRespuesta(buildUsuario()));
+    expect(service.isLoggedIn).toBe(true);
+
+    localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, TOKEN_VENCIDO);
+    expect(service.isLoggedIn).toBe(false);
+  });
 });
+

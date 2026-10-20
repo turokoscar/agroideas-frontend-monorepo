@@ -6,6 +6,14 @@ import { SelLoginResponse, SelUsuarioDto } from '@agroideas/auth';
 import { AuthService, AuthUser } from './auth.service';
 import { environment } from '../../../environments/environment';
 
+/** JWT de prueba con `exp` a `segundos` de ahora (negativo: ya vencido). */
+function jwt(segundos: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + segundos })).replace(/=+$/, '');
+  return `eyJhbGciOiJIUzI1NiJ9.${payload}.firma`;
+}
+const TOKEN_VIGENTE = jwt(3600);
+const TOKEN_VENCIDO = jwt(-60);
+
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
@@ -28,7 +36,7 @@ describe('AuthService', () => {
   const buildRespuesta = (usuario: SelUsuarioDto): SelLoginResponse => ({
     respuesta: 'OK',
     mensaje: 'OK',
-    datos: { accessToken: 'token-123', refreshToken: 'refresh-123', expiresIn: 3600, user: usuario }
+    datos: { accessToken: TOKEN_VIGENTE, refreshToken: 'refresh-123', expiresIn: 3600, user: usuario }
   });
 
   const sesionGuardada: AuthUser = {
@@ -83,7 +91,7 @@ describe('AuthService', () => {
       expect(service.user()?.nombre).toBe('Rosa Quispe Mamani');
       expect(service.inicio()).toBe('/bandeja');
       expect(service.etiquetaRol()).toBe('Unidad de Negocios');
-      expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBe('token-123');
+      expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBe(TOKEN_VIGENTE);
       expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.SAT_USER_SESSION) ?? '{}').roles).toEqual(['UN', 'USE']);
     });
 
@@ -118,9 +126,9 @@ describe('AuthService', () => {
   });
 
   describe('con sesión guardada', () => {
-    function guardar(sesion: unknown) {
+    function guardar(sesion: unknown, token = TOKEN_VIGENTE) {
       localStorage.clear();
-      localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, 'token-previo');
+      localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, token);
       localStorage.setItem(STORAGE_KEYS.SAT_USER_SESSION, JSON.stringify(sesion));
       configurar();
     }
@@ -138,6 +146,20 @@ describe('AuthService', () => {
 
       expect(service.isLoggedIn).toBe(false);
       expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBeNull();
+    });
+
+    it('no restaura una sesión cuyo token ya venció, y la limpia', () => {
+      guardar(sesionGuardada, TOKEN_VENCIDO);
+      expect(service.isLoggedIn).toBe(false);
+      expect(service.user()).toBeNull();
+      expect(localStorage.getItem(STORAGE_KEYS.SAT_TOKEN)).toBeNull();
+    });
+
+    it('deja de estar autenticado cuando el token vence con la pestaña abierta', () => {
+      guardar(sesionGuardada);
+      expect(service.isLoggedIn).toBe(true);
+      localStorage.setItem(STORAGE_KEYS.SAT_TOKEN, TOKEN_VENCIDO);
+      expect(service.isLoggedIn).toBe(false);
     });
 
     it('descarta la sesión con el nombre roto ("undefined undefined")', () => {

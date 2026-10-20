@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { STORAGE_KEYS } from '@agroideas/utils';
+import { STORAGE_KEYS, decodeJwt, isExpired } from '@agroideas/utils';
 import { mapSelUsuario, SelLoginResponse } from '@agroideas/auth';
 
 export interface LoginResult {
@@ -68,7 +68,11 @@ export class AuthService {
   constructor() {
     const token = localStorage.getItem(STORAGE_KEYS.SAT_TOKEN);
     const userStr = localStorage.getItem(STORAGE_KEYS.SAT_USER_SESSION);
-    if (token && userStr) {
+    // Un token vencido no restaura la sesión: se limpia y el guard lleva al login, en vez de
+    // disparar peticiones que la API rechazará con 401.
+    if (token && !tokenVigente(token)) {
+      this.limpiarSesion();
+    } else if (token && userStr) {
       try {
         const user = JSON.parse(userStr) as AuthUser;
         if (esSesionVigente(user)) {
@@ -82,8 +86,9 @@ export class AuthService {
     }
   }
 
+  /** Hay usuario y su token no venció (una pestaña abierta puede sobrevivir al token). */
   get isLoggedIn(): boolean {
-    return !!this._user();
+    return !!this._user() && tokenVigente(this.getToken());
   }
 
   getToken(): string | null {
@@ -145,4 +150,9 @@ export class AuthService {
  */
 function esSesionVigente(user: AuthUser | null): boolean {
   return !!user?.email && !!user.nombre && !user.nombre.includes('undefined');
+}
+
+/** El JWT existe y no venció según su `exp`. */
+function tokenVigente(token: string | null): boolean {
+  return !!token && !isExpired(decodeJwt(token));
 }
