@@ -28,13 +28,6 @@ npx nx serve sat-ui                      # :4200 (Angular default)
 npx nx serve sigec-rtf --port=4300       # no port in project.json — without the flag it
                                          #   takes :4200 and collides with sat-ui
 npx nx serve sigec-cierre                # :4400 (port in project.json)
-npx nx build <project>              # production build → dist/apps/<app>/browser/
-npx nx lint <project>              # lint one project
-npx nx test <project>              # unit tests (Jest) for one project
-npx nx e2e <project>-e2e            # Playwright e2e
-npx nx run-many -t lint,test,build  # everything
-npx nx affected -t lint,test,build  # only what your changes touched
-npx nx graph                        # dependency graph
 ```
 
 No CI/CD is configured (no GitHub workflows, Jenkinsfile, husky, or lint-staged) — lint/test/build
@@ -119,22 +112,8 @@ Each app wires the theme two ways (see `apps/sat-ui` and `apps/kofix-ejecucion`)
    CSS variable, never add hex to the Tailwind config.
 
 ### Inside `apps/kofix-ejecucion` — Clean Architecture (3 layers)
-This app was lifted from the mature KOFIX UI and is the reference implementation. Understanding
-it requires reading across these layers:
-- `domain/` — pure TS: `models/`, abstract `repositories/` (interfaces), and `usecases/`
-  (`@Injectable({providedIn:'root'})` plain classes). **Pages talk only to usecases.**
-- `data/` — `repositories/` concrete impls (HttpClient + `environments/environment.ts`
-  endpoints) and `mappers/` (API DTO → domain model).
-- `presentation/` — `pages/` (routed, lazy via `loadComponent`) and `components/`.
-- `shared/services/` — now only app-specific state, not cross-cutting concerns: `file-storage`,
-  `convenio-state`, `export`. `AlertService`, `PermissionService`, the `has-permission`
-  directive, and the `jwt`/`currency`/`storage-keys`/`permissions` utils have all moved to
-  `@agroideas/feedback`, `@agroideas/security`, and `@agroideas/utils` respectively — don't
-  recreate them here.
-- `layout/` — `AppLayoutComponent` fills `UiAppShellComponent`'s slots (see above); `app.menu.component.ts` renders the nav from `MenuRepository`. Both have specs now
-  (`app.layout.component.spec.ts`, `app.menu.component.spec.ts`).
-- **Composition root:** `app.config.ts` binds each abstract repository to its impl with
-  `{ provide: XRepository, useExisting: XRepositoryImpl }`. Don't re-provide these elsewhere.
+`domain/` → `data/` → `presentation/`, pages talk only to usecases, and `app.config.ts` is the
+composition root. Details and app-specific gotchas: `apps/kofix-ejecucion/CLAUDE.md`.
 
 ### The other three apps — feature-based, not Clean Architecture
 Unlike kofix-ejecucion, `sat-ui`, `sigec-rtf`, and `sigec-cierre` use a flatter
@@ -143,20 +122,10 @@ Unlike kofix-ejecucion, `sat-ui`, `sigec-rtf`, and `sigec-cierre` use a flatter
 - **sat-ui** (`:4200`, `scope:sat`): its own backend (port 7081, fields `txtNombres`/
   `codUsuario`) — does **not** use `sel-usuario.mapper.ts`. Its `permissionGuard` provider is
   a stub (`of([])` in `app.config.ts`), not wired to a real backend yet.
-- **sigec-rtf** (`:4300`, `scope:sigec`): `features/` includes `oa-dashboard`,
-  `oa-registro`, `oa-observaciones`, `oa-enviar`, `bandeja-oa`, `un-dashboard`,
-  `un-gabinete`, `reportes`, `admin`, `login`. Has its own `core/error-handler.ts`
-  (`GlobalErrorHandler`). Session comes from `sel-api-seguridad` (port 7101) through the
-  shared `sel-usuario` mapper (see below).
-- **sigec-cierre** (`:4400`, `scope:sigec`): UI of `SIGEC/sigec-api-cierre` (`api/v1`), being built
-  under [ADR 0013](docs/adr/0013-ui-sigec-cierre-expediente-de-cierre.md) (phased plan there). Same
-  auth backend and mapper as sigec-rtf, but its **own role catalog**
-  (`core/models/rol-cierre.model.ts`): users keep *all* their roles (`AuthUser.roles: CierreRol[]`),
-  unknown roles are dropped (no fallback to OA), and guards redirect to `rutaInicio(roles)`, which only
-  returns routes the user can activate (`/bandeja`, `/mi-cierre`, `/sin-acceso`). Don't copy RTF's role
-  map: "Unidad de Monitoreo" is UN in RTF but USE in Cierre. **Every tunable value** (page sizes,
-  polling intervals, `deviceId`…) goes in the `environment*.ts` files, typed by
-  `environments/app-settings.model.ts` — never hardcoded in services/components (owner's rule).
+- **sigec-rtf** (`:4300`, `scope:sigec`): has its own `CLAUDE.md`. Session comes from
+  `sel-api-seguridad` (port 7101) through the shared `sel-usuario` mapper (see below).
+- **sigec-cierre** (`:4400`, `scope:sigec`): UI of `SIGEC/sigec-api-cierre`, built under ADR 0013;
+  its own role catalog and settings rules are in `apps/sigec-cierre/CLAUDE.md`.
 
 All four apps wire `provideHttpClient(withInterceptors([authInterceptor]))` from
 `@agroideas/auth` in their `app.config.ts` — kofix-ejecucion is not the only consumer of the
@@ -181,30 +150,13 @@ shared interceptor.
   duplicated names/paths (`theme-theme`, `libs/theme/theme`).
 - **No `postcss.config.js`** — Tailwind is wired through the Angular build; do not add one.
 - In Angular templates, a literal `@` (e.g. `@agroideas`) must be escaped as `&#64;` (NG5002).
-- **kofix-ejecucion has a transitional ESLint override** (`apps/kofix-ejecucion/eslint.config.js`):
-  it downgrades inherited style rules (`no-explicit-any`, `no-unused-vars`,
-  `no-non-null-assertion`, etc.) to `warn`. It does **not**
-  touch `no-restricted-imports` — direct PrimeNG/SweetAlert2/Leaflet imports are still an
-  `error` and kofix has none. kofix lint passes with 0 errors but 259 warnings (tracked debt,
-  to shrink as this code moves into `@agroideas/ui`/`@agroideas/utils`; mostly
-  `no-explicit-any`/`no-unused-vars` now — the a11y template rules (`label-has-associated-control`,
-  `interactive-supports-focus`, `click-events-have-key-events`) were fully resolved under
-  [ADR 0008](docs/adr/0008-remediacion-ui-kofix-ejecucion.md) Fase 2 and no longer occur).
+- **kofix-ejecucion has a transitional ESLint override** that relaxes style rules to `warn` but
+  never `no-restricted-imports` — see `apps/kofix-ejecucion/CLAUDE.md`.
 - KOFIX specs were converted Jasmine→Jest (`toBeTrue()`→`toBe(true)`, `jasmine.createSpy`→
   `jest.fn`, `jasmine.objectContaining`→`expect.objectContaining`). Keep new specs Jest-native.
-- All components are `standalone: true` (no NgModules). `kofix-ejecucion` needs the
-  `@angular/localize/init` polyfill (in its build `polyfills`) — do not remove it.
+- All components are `standalone: true` (no NgModules).
 
 ## State of the libs (Fase 3 in progress)
-`@agroideas/theme` is implemented and consumed by all four apps. `ui`, `auth`, `feedback`,
-`security`, and `utils` are populated with real code and consumed across `kofix-ejecucion`,
-`sat-ui`, `sigec-rtf`, and `sigec-cierre` (e.g. `authInterceptor`/`AUTH_TOKEN_KEY` from
-`auth`, `permissionGuard` from `security`, `AlertService` from `feedback`, and
-`ui-modal`/`ui-button`/`ui-select-search` from `ui` and `ui-map` from `ui/map` wrapping
-PrimeNG/Leaflet so apps never touch the provider directly). Not every app wires every lib the same way — e.g.
-`sat-ui`'s permission provider is a stub and it doesn't use the `sel-usuario` mapper (see
-"The other three apps" above).
-
 **Heavy `ui` components have their own entry points** — `@agroideas/ui/chart` (Chart.js),
 `@agroideas/ui/map` (Leaflet) and `@agroideas/ui/pdf-viewer` (pdf.js), mapped in
 `tsconfig.base.json` and **not** re-exported from the `@agroideas/ui` barrel. Every app imports
