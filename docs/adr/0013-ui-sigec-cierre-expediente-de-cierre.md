@@ -555,3 +555,10 @@ Indicación del owner: la contrapartida se obtiene del marco lógico del SEL, co
   el origen se muestra como "SEL + UN"; en sigec-rtf el "Financiamiento OA" del Anexo 20 se bloquea cuando viene del
   SEL.
 
+### Fase 3 (ajuste) — 2026-10-20: los indicadores se editan en un modal
+Pedido del owner: la tabla de indicadores es muy ancha para editar en línea. `TablaIndicadoresComponent` queda de
+solo lectura (con editar y quitar por fila) y `IndicadorModalComponent` concentra el alta y la edición: concepto,
+unidad, destino/objetivo/actividad según la sección, línea base, programado y ejecutado por año con la variación en
+vivo, resultado, medio de verificación y comentarios. El modal trabaja sobre una copia (cancelar no cambia la fila).
+En las filas del SEL de la sección VI solo habilita la actividad y los comentarios. 146/146 pruebas.
+

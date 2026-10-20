@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { ToastService } from '@agroideas/ui';
 import { InformeEvaluacionComponent } from './informe-evaluacion.component';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
-import { Anexo22Dto } from '../../../core/models/anexo22.model';
+import { Anexo22Dto, nuevoIndicador } from '../../../core/models/anexo22.model';
 import { PlazoDto } from '../../../core/models/plazo.model';
 
 function anexo(extra: Partial<Anexo22Dto> = {}): Anexo22Dto {
@@ -29,6 +29,13 @@ const plazo = (fecLimite: string): PlazoDto => ({
   idePlazo: 1, ideCierreConvenio: 5, tipPlazo: 'EVALUACION_UN', fecInicio: '2026-07-01T00:00:00', canDias: 90, fecLimite,
   codDepartamento: null, codProvincia: null, estPlazo: 'VIGENTE', fecCierre: null, txtContingencia: null, fecRegistro: '2026-07-01T00:00:00'
 });
+
+/** Fila abierta en el modal (falla la prueba si no hay). */
+function filaEnEdicion(c: InformeEvaluacionComponent) {
+  const edicion = c.edicion();
+  if (!edicion) throw new Error('No hay una fila en edición');
+  return edicion.fila;
+}
 
 describe('InformeEvaluacionComponent', () => {
   const api = {
@@ -63,14 +70,36 @@ describe('InformeEvaluacionComponent', () => {
     expect(el.textContent).toContain('VII. Logros');
   });
 
-  it('agrega filas manuales numeradas en las secciones sin fuente definida', () => {
+  it('agregar un indicador abre el modal y la fila se agrega solo al aceptar', () => {
     const { componentInstance: c } = crear();
     c.agregarFila('precios');
-    c.agregarFila('precios');
+    expect(c.edicion()?.indice).toBeNull();
+    expect(c.anexo()?.precios.length).toBe(0);
+
+    c.aceptarIndicador({ ...filaEnEdicion(c), txtConcepto: 'Precio en chacra' });
+    expect(c.edicion()).toBeNull();
+    expect(c.anexo()?.precios.map(p => [p.numOrden, p.txtConcepto, p.txtOrigen])).toEqual([[1, 'Precio en chacra', 'MANUAL']]);
+    expect(c.sucio()).toBe(true);
+  });
+
+  it('editar trabaja sobre una copia: cancelar no cambia la fila', () => {
+    api.obtenerAnexo22.mockReturnValue(of(anexo({ precios: [{ ...nuevoIndicador(1), txtConcepto: 'Original' }] })));
+    const { componentInstance: c } = crear();
+    c.editarFila('precios', 0);
+    filaEnEdicion(c).txtConcepto = 'Cambiado';
+    c.edicion.set(null);
+    expect(c.anexo()?.precios[0].txtConcepto).toBe('Original');
+
+    c.editarFila('precios', 0);
+    c.aceptarIndicador({ ...filaEnEdicion(c), txtConcepto: 'Corregido' });
+    expect(c.anexo()?.precios[0].txtConcepto).toBe('Corregido');
+  });
+
+  it('quitar renumera las filas manuales', () => {
+    api.obtenerAnexo22.mockReturnValue(of(anexo({ precios: [nuevoIndicador(1), nuevoIndicador(2)] })));
+    const { componentInstance: c } = crear();
     c.quitarFila('precios', 0);
     expect(c.anexo()?.precios.map(p => p.numOrden)).toEqual([1]);
-    expect(c.anexo()?.precios[0].txtOrigen).toBe('MANUAL');
-    expect(c.sucio()).toBe(true);
   });
 
   it('de la contrapartida solo se edita lo ejecutado; el aprobado viene del SEL', () => {

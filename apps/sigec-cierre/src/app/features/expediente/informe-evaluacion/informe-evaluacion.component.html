@@ -166,7 +166,8 @@
     <!-- VI. Práctica ambiental -->
     <section class="form-card-flat space-y-3">
       <h5 class="form-section-title">VI. Práctica ambiental</h5>
-      <app-tabla-indicadores [filas]="a.practicaAmbiental" columnaExtra="actividad" [soloLectura]="ro" vacio="El SEL no registra indicadores ambientales." (cambio)="marcarSucio()" />
+      <app-tabla-indicadores [filas]="a.practicaAmbiental" columnaExtra="actividad" [soloLectura]="ro" vacio="El SEL no registra indicadores ambientales."
+        (editar)="editarFila('practicaAmbiental', $event)" />
     </section>
 
     <!-- VII a XI y resultado -->
@@ -263,7 +264,7 @@
     <div class="space-y-2">
       @if (titulo) { <p class="form-label">{{ titulo }}</p> }
       <app-tabla-indicadores [filas]="filas" [columnaExtra]="extra" [soloLectura]="ro" [vacio]="vacio"
-        (cambio)="marcarSucio()" (quitar)="quitarFila(seccion, $event)" />
+        (editar)="editarFila(seccion, $event)" (quitar)="quitarFila(seccion, $event)" />
       @if (seccion && !ro) {
         <div class="flex justify-end"><ui-button size="sm" appearance="soft" icon="add" label="Agregar indicador" (onClick)="agregarFila(seccion)" /></div>
       }
@@ -304,6 +305,17 @@
       </table>
     </div>
   </ng-template>
+
+  @let ed = edicion();
+  <app-indicador-modal
+    [fila]="ed?.fila ?? null"
+    [nueva]="ed?.indice === null"
+    [seccion]="ed ? secciones[ed.seccion].titulo : ''"
+    [columnaExtra]="ed ? secciones[ed.seccion].extra : null"
+    [soloTextos]="!!ed && ed.fila.txtOrigen !== 'MANUAL'"
+    (guardar)="aceptarIndicador($event)"
+    (cerrar)="edicion.set(null)"
+  />
 
   <app-ui-modal [visible]="confirmarPresentar()" title="Presentar el Informe de Evaluación" subtitle="La versión firmada ya no podrá modificarse."
     icon="draw" maxWidth="460px" saveLabel="Presentar" saveIcon="draw" [isSubmitting]="presentando()"

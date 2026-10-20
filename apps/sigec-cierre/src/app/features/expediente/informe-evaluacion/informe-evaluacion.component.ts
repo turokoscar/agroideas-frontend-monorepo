@@ -8,6 +8,7 @@ import { CierreApiService } from '../../../core/services/cierre-api.service';
 import {
   Anexo22Dto,
   ETIQUETA_ORIGEN_DATO,
+  IndicadorEvaluacionDto,
   RESULTADOS,
   SeccionManual,
   VersionAnexo22Dto,
@@ -15,7 +16,26 @@ import {
   tieneDesviacionCritica
 } from '../../../core/models/anexo22.model';
 import { PlazoDto, diasRestantes } from '../../../core/models/plazo.model';
-import { TablaIndicadoresComponent } from './tabla-indicadores.component';
+import { ColumnaExtra, TablaIndicadoresComponent } from './tabla-indicadores.component';
+import { IndicadorModalComponent } from './indicador-modal.component';
+
+/** Secciones cuyas filas se editan en el modal: las manuales y la VI (actividad y comentarios). */
+type SeccionEditable = SeccionManual | 'practicaAmbiental';
+
+const SECCIONES: Readonly<Record<SeccionEditable, { titulo: string; extra: ColumnaExtra }>> = {
+  precios: { titulo: '2.2 Precios', extra: null },
+  comercializacion: { titulo: '2.3 Comercialización', extra: 'destino' },
+  ingresos: { titulo: '2.4 Ingresos', extra: null },
+  objetivosEspecificos: { titulo: 'III. Indicadores de objetivos específicos', extra: 'objetivo' },
+  practicaAmbiental: { titulo: 'VI. Práctica ambiental', extra: 'actividad' }
+};
+
+/** Fila abierta en el modal: una copia, que reemplaza a la original (o se agrega) al aceptar. */
+interface EdicionIndicador {
+  seccion: SeccionEditable;
+  indice: number | null;
+  fila: IndicadorEvaluacionDto;
+}
 
 /**
  * Informe de Evaluación de la Ejecución del PNT para Cierre (Anexo 22) y derivación a la DE, ADR 0013 Fase 3.
@@ -36,7 +56,8 @@ import { TablaIndicadoresComponent } from './tabla-indicadores.component';
     UIButtonComponent,
     UIModalComponent,
     UiFileChipComponent,
-    TablaIndicadoresComponent
+    TablaIndicadoresComponent,
+    IndicadorModalComponent
   ],
   templateUrl: './informe-evaluacion.component.html'
 })
@@ -66,6 +87,8 @@ export class InformeEvaluacionComponent {
   archivo = signal<File | null>(null);
   contingencia = '';
   anexo = signal<Anexo22Dto | null>(null);
+  edicion = signal<EdicionIndicador | null>(null);
+  readonly secciones = SECCIONES;
   versiones = signal<VersionAnexo22Dto[]>([]);
 
   firmado = computed(() => this.anexo()?.estAnexo22 === 'FIRMADO');
@@ -111,8 +134,27 @@ export class InformeEvaluacionComponent {
     this.sucio.set(true);
   }
 
+  /** Abre el modal con una fila nueva de la sección. */
   agregarFila(seccion: SeccionManual) {
-    this.mutar(a => a[seccion].push(nuevoIndicador(a[seccion].length + 1)));
+    const filas = this.anexo()?.[seccion] ?? [];
+    this.edicion.set({ seccion, indice: null, fila: nuevoIndicador(filas.length + 1) });
+  }
+
+  /** Abre el modal con una copia de la fila (en VI, de una fila del sistema solo se editan actividad y comentarios). */
+  editarFila(seccion: SeccionEditable, indice: number) {
+    const fila = this.anexo()?.[seccion][indice];
+    if (fila) this.edicion.set({ seccion, indice, fila: { ...fila } });
+  }
+
+  /** Aplica la fila del modal: la agrega o reemplaza a la original. */
+  aceptarIndicador(fila: IndicadorEvaluacionDto) {
+    const edicion = this.edicion();
+    if (!edicion) return;
+    this.mutar(a => {
+      if (edicion.indice === null) a[edicion.seccion].push(fila);
+      else a[edicion.seccion][edicion.indice] = fila;
+    });
+    this.edicion.set(null);
   }
 
   quitarFila(seccion: SeccionManual, indice: number) {
@@ -233,7 +275,8 @@ export class InformeEvaluacionComponent {
       precios: [...anexo.precios],
       comercializacion: [...anexo.comercializacion],
       ingresos: [...anexo.ingresos],
-      objetivosEspecificos: [...anexo.objetivosEspecificos]
+      objetivosEspecificos: [...anexo.objetivosEspecificos],
+      practicaAmbiental: [...anexo.practicaAmbiental]
     };
     cambio(copia);
     for (const lista of [copia.precios, copia.comercializacion, copia.ingresos, copia.objetivosEspecificos]) {
