@@ -23,6 +23,13 @@ export interface AppSettings {
     /** Tamaño máximo de un PDF que se sube (el mismo límite que valida sel-api-archivos: 10 MB). */
     tamanoMaximoPdfMb: number;
   };
+  evaluacion: {
+    /**
+     * Umbral de desviación crítica del Anexo 22, en %: una variación por debajo se resalta. Debe coincidir con
+     * `VariacionIndicador.UmbralDesviacionCritica` de sigec-api-cierre (−20).
+     */
+    umbralDesviacionCriticaPct: number;
+  };
   notificaciones: {
     /** Cada cuánto se refresca el contador de no leídas de la campana. */
     intervaloRefrescoMs: number;

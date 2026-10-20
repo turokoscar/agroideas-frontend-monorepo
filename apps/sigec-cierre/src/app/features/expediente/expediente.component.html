@@ -202,6 +202,9 @@
           @if (etapa.situacion === 'activa' && etapa.clave === 'VERIFICACION' && puede('RegistrarVerificacionCampo')) {
             <app-acta-cierre [ideCierre]="c.ideCierreConvenio" [nombreUsuario]="nombreUsuario()" (registrado)="cargar()" />
           }
+          @if (etapa.situacion === 'activa' && etapa.clave === 'EVALUACION_UN' && puede('DerivarDe')) {
+            <app-informe-evaluacion [ideCierre]="c.ideCierreConvenio" [plazoUn]="etapa.plazo" (cambio)="cargar()" />
+          }
         </article>
       }
     </section>

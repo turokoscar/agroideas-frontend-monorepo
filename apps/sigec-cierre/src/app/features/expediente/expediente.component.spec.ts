@@ -49,7 +49,10 @@ describe('ExpedienteComponent', () => {
     listarEnvios: jest.fn(),
     descargarDocumento: jest.fn(),
     // El acta (Fase 2) se prueba en su propio spec; aquí basta con que no responda.
-    obtenerAnexo21: jest.fn().mockReturnValue(NEVER)
+    obtenerAnexo21: jest.fn().mockReturnValue(NEVER),
+    // Lo mismo para el Anexo 22 (Fase 3).
+    obtenerAnexo22: jest.fn().mockReturnValue(NEVER),
+    listarVersionesAnexo22: jest.fn().mockReturnValue(NEVER)
   };
   const toast = { error: jest.fn() };
 
@@ -140,4 +143,11 @@ describe('ExpedienteComponent', () => {
     const de = crear(['DE']);
     expect(de.nativeElement.querySelector('app-acta-cierre')).toBeNull();
   });
+
+  it('en EN_EVALUACION_UN muestra el Informe de Evaluación a la UN, pero no a la UR', () => {
+    expect(crear(['UN']).nativeElement.querySelector('app-informe-evaluacion')).not.toBeNull();
+    TestBed.resetTestingModule();
+    expect(crear(['UR']).nativeElement.querySelector('app-informe-evaluacion')).toBeNull();
+  });
 });
+

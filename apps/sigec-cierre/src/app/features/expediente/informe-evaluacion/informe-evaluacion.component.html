@@ -1,0 +1,329 @@
+<!--
+  Anexo 22: Informe de Evaluación de la Ejecución del PNT para Cierre. Secciones I a XI del formato oficial, con los
+  estilos de formulario de @agroideas/theme (los mismos de kofix-ejecucion).
+-->
+@if (cargando()) {
+  <p class="py-4 text-center text-xs text-muted-foreground">Cargando el Informe de Evaluación…</p>
+} @else if (error()) {
+  <div class="flex flex-col items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
+    <p class="text-xs text-foreground">{{ error() }}</p>
+    <ui-button size="sm" label="Reintentar" icon="refresh" appearance="soft" severity="secondary" (onClick)="cargar()" />
+  </div>
+} @else if (anexo()) {
+  @let a = anexo()!;
+  @let ro = firmado();
+  <div class="space-y-4 border-t border-border pt-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h4 class="text-sm font-bold text-foreground">Anexo N° 22: Informe de Evaluación de la Ejecución del PNT para Cierre</h4>
+      <span class="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
+        [ngClass]="ro ? 'border-success/30 bg-success/10 text-success' : 'border-slate-200 bg-slate-50 text-slate-500'">
+        {{ ro ? 'Firmado' : 'Borrador' }} · versión {{ a.numVersion }}
+      </span>
+    </div>
+
+    @if (criticos() > 0) {
+      <div class="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-foreground">
+        <span class="material-symbols-outlined text-[18px] text-destructive">trending_down</span>
+        <span>{{ criticos() }} indicador(es) con desviación crítica (una caída de más de {{ -umbral }} % frente a lo programado en algún año). Se resaltan en las tablas.</span>
+      </div>
+    }
+    @if (!ro && a.faltantes.length > 0) {
+      <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+        <p class="font-semibold">Para generar y presentar el informe falta:</p>
+        <ul class="mt-1 list-disc pl-5">
+          @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
+        </ul>
+      </div>
+    }
+
+    <!-- I. Información general -->
+    <section class="form-card-flat space-y-4">
+      <h5 class="form-section-title">I. Información general</h5>
+      <dl class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+        <div><dt class="form-label">Organización</dt><dd class="font-semibold text-slate-800">{{ a.txtOrganizacion ?? '—' }}</dd></div>
+        <div><dt class="form-label">RUC</dt><dd class="text-slate-700">{{ a.codRuc ?? '—' }}</dd></div>
+        <div class="sm:col-span-2"><dt class="form-label">Plan de negocio</dt><dd class="text-slate-700">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
+        <div><dt class="form-label">Convenio N°</dt><dd class="text-slate-700">{{ a.txtNumeroConvenio ?? '—' }}</dd></div>
+        <div><dt class="form-label">Ubicación</dt><dd class="text-slate-700">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
+        <div><dt class="form-label">Vigencia</dt><dd class="text-slate-700">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
+        <div><dt class="form-label">Cadena productiva</dt><dd class="text-slate-700">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
+        <div><dt class="form-label">Socios (mujeres / hombres)</dt><dd class="text-slate-700">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
+        <div><dt class="form-label">Hectáreas</dt><dd class="text-slate-700">{{ a.numHectareas ?? '—' }}</dd></div>
+      </dl>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="form-field">
+          <label class="form-label" for="a22-centro-poblado">Centro poblado</label>
+          <input id="a22-centro-poblado" type="text" maxlength="150" class="form-input" [disabled]="ro" [(ngModel)]="a.txtCentroPoblado" (ngModelChange)="marcarSucio()" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="a22-adenda">Término con adenda</label>
+          <input id="a22-adenda" type="date" class="form-input" [disabled]="ro" [ngModel]="a.fecTerminoAdenda?.slice(0, 10)" (ngModelChange)="a.fecTerminoAdenda = $event || null; marcarSucio()" />
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div>
+          <p class="form-label">1.2 Problema identificado</p>
+          @if (a.problematica.length === 0) { <p class="text-xs text-slate-400">El SEL no registra el problema identificado.</p> }
+          <ol class="list-decimal space-y-1 pl-5 text-xs text-slate-700">
+            @for (p of a.problematica; track p.numOrden) { <li>{{ p.txtProblema }}@if (p.txtCausa) { <span class="text-slate-400"> · Causa: {{ p.txtCausa }}</span> }</li> }
+          </ol>
+        </div>
+        <div class="space-y-1 text-xs text-slate-700">
+          <p class="form-label">1.3 Objetivos</p>
+          <p><span class="font-semibold">General:</span> {{ a.txtObjetivoGeneral ?? '—' }}</p>
+          <p class="whitespace-pre-line"><span class="font-semibold">Específicos:</span> {{ a.txtObjetivosEspecificos ?? '—' }}</p>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-400">Datos del SEL: no se editan aquí.</p>
+    </section>
+
+    <!-- II. Indicadores de resultados -->
+    <section class="form-card-flat space-y-5">
+      <h5 class="form-section-title">II. Análisis de indicadores de resultados</h5>
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.1 Producción y productividad', filas: a.produccion, extra: null, seccion: null, analisis: 'txtAnalisisProduccion', vacio: 'El SEL no registra indicadores de producción.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.2 Precios', filas: a.precios, extra: null, seccion: 'precios', analisis: 'txtAnalisisPrecios', vacio: 'Agregue los indicadores de precios.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.3 Comercialización', filas: a.comercializacion, extra: 'destino', seccion: 'comercializacion', analisis: 'txtAnalisisComercializacion', vacio: 'Agregue los indicadores de comercialización.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.4 Ingresos', filas: a.ingresos, extra: null, seccion: 'ingresos', analisis: 'txtAnalisisIngresos', vacio: 'Agregue los indicadores de ingresos.' }" />
+    </section>
+
+    <!-- III. Objetivos específicos -->
+    <section class="form-card-flat space-y-4">
+      <h5 class="form-section-title">III. Indicadores de objetivos específicos</h5>
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: null, filas: a.objetivosEspecificos, extra: 'objetivo', seccion: 'objetivosEspecificos', analisis: 'txtAnalisisObjetivos', vacio: 'Agregue los indicadores por objetivo específico.' }" />
+    </section>
+
+    <!-- IV. Ejecución financiera -->
+    <section class="form-card-flat space-y-4">
+      <h5 class="form-section-title">IV. Ejecución financiera</h5>
+      <p class="form-label">4.1 Ejecución por fuente de financiamiento</p>
+      <div class="overflow-x-auto rounded-lg border border-slate-200">
+        <table class="w-full min-w-[560px] border-collapse text-left text-xs">
+          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+            <tr><th class="p-2.5">Fuente</th><th class="p-2.5 text-right">Aprobado (S/)</th><th class="p-2.5 text-right">Ejecutado (S/)</th><th class="p-2.5 text-right">Saldo (S/)</th><th class="p-2.5 text-right">% ejecución</th><th class="p-2.5">Origen</th></tr>
+          </thead>
+          <tbody>
+            @for (f of a.financiamiento; track f.tipFuente) {
+              @let manual = !ro && f.tipFuente === 'ORGANIZACION';
+              <tr class="border-b border-slate-100">
+                <td class="p-2.5 font-semibold text-slate-800">{{ f.tipFuente === 'AGROIDEAS' ? 'AGROIDEAS' : 'Organización (contrapartida)' }}</td>
+                <td class="p-2.5 text-right">
+                  @if (manual) { <input type="number" min="0" step="0.01" class="form-input w-32 text-right" aria-label="Aprobado de la organización" [(ngModel)]="f.impAprobado" (ngModelChange)="marcarSucio()" /> }
+                  @else { {{ f.impAprobado | number: '1.2-2' }} }
+                </td>
+                <td class="p-2.5 text-right">
+                  @if (manual) { <input type="number" min="0" step="0.01" class="form-input w-32 text-right" aria-label="Ejecutado de la organización" [(ngModel)]="f.impEjecutado" (ngModelChange)="marcarSucio()" /> }
+                  @else { {{ f.impEjecutado | number: '1.2-2' }} }
+                </td>
+                <td class="p-2.5 text-right">{{ (f.impAprobado - f.impEjecutado) | number: '1.2-2' }}</td>
+                <td class="p-2.5 text-right">{{ pctEjecucion(f.impAprobado, f.impEjecutado) !== null ? (pctEjecucion(f.impAprobado, f.impEjecutado) | number: '1.0-2') + ' %' : '—' }}</td>
+                <td class="p-2.5 text-[10px] text-slate-500">{{ f.txtOrigen === 'MANUAL' ? 'Manual' : 'SEL + KOFIX' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="p-4 text-center text-slate-400">KOFIX no devolvió la ejecución de AGROIDEAS.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (!ro && !contrapartida()) {
+        <div class="flex justify-end"><ui-button size="sm" appearance="soft" icon="add" label="Agregar contrapartida de la organización" (onClick)="agregarContrapartida()" /></div>
+      }
+      <div class="form-field">
+        <label class="form-label" for="a22-analisis-fin">Análisis de la ejecución por fuente <span class="form-label-required">*</span></label>
+        <textarea id="a22-analisis-fin" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisFinanciamiento" (ngModelChange)="marcarSucio()"></textarea>
+      </div>
+
+      <p class="form-label">4.2 Ejecución por bien y servicio (KOFIX)</p>
+      <ng-container *ngTemplateOutlet="items; context: { titulo: 'Bienes', filas: a.bienes }" />
+      <ng-container *ngTemplateOutlet="items; context: { titulo: 'Servicios', filas: a.servicios }" />
+      <div class="form-field">
+        <label class="form-label" for="a22-analisis-items">Análisis de la ejecución por bien y servicio <span class="form-label-required">*</span></label>
+        <textarea id="a22-analisis-items" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisItems" (ngModelChange)="marcarSucio()"></textarea>
+      </div>
+    </section>
+
+    <!-- V. Monitoreo -->
+    <section class="form-card-flat space-y-3">
+      <h5 class="form-section-title">V. Reporte final de monitoreo (RTF por paso crítico)</h5>
+      <div class="overflow-x-auto rounded-lg border border-slate-200">
+        <table class="w-full min-w-[520px] border-collapse text-left text-xs">
+          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+            <tr><th class="p-2.5">Año</th><th class="p-2.5">Paso crítico</th><th class="p-2.5">Periodo</th><th class="p-2.5">Presentación del RTF</th></tr>
+          </thead>
+          <tbody>
+            @for (m of a.monitoreo; track m.numPasoCritico) {
+              <tr class="border-b border-slate-100">
+                <td class="p-2.5">{{ m.numAnio }}</td>
+                <td class="p-2.5 font-semibold text-slate-800">{{ m.numPasoCritico }}</td>
+                <td class="p-2.5">{{ (m.fecInicio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (m.fecFin | date: 'dd/MM/yyyy') ?? '—' }}</td>
+                <td class="p-2.5">{{ (m.fecPresentacion | date: 'dd/MM/yyyy') ?? 'Sin presentar' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="p-4 text-center text-slate-400">Sin pasos críticos.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VI. Práctica ambiental -->
+    <section class="form-card-flat space-y-3">
+      <h5 class="form-section-title">VI. Práctica ambiental</h5>
+      <app-tabla-indicadores [filas]="a.practicaAmbiental" columnaExtra="actividad" [soloLectura]="ro" vacio="El SEL no registra indicadores ambientales." (cambio)="marcarSucio()" />
+    </section>
+
+    <!-- VII a XI y resultado -->
+    <section class="form-card-flat space-y-4">
+      <h5 class="form-section-title">VII a XI. Conclusiones de la evaluación</h5>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="form-field">
+          <label class="form-label" for="a22-logros">VII. Logros <span class="form-label-required">*</span></label>
+          <textarea id="a22-logros" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLogros" (ngModelChange)="marcarSucio()"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="a22-lecciones">VIII. Lecciones aprendidas <span class="form-label-required">*</span></label>
+          <textarea id="a22-lecciones" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLeccionesAprendidas" (ngModelChange)="marcarSucio()"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="a22-dificultades">IX. Dificultades</label>
+          <textarea id="a22-dificultades" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtDificultades" (ngModelChange)="marcarSucio()"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="a22-conclusiones">X. Conclusiones <span class="form-label-required">*</span></label>
+          <textarea id="a22-conclusiones" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtConclusiones" (ngModelChange)="marcarSucio()"></textarea>
+        </div>
+        <div class="form-field lg:col-span-2">
+          <label class="form-label" for="a22-recomendaciones">XI. Recomendaciones <span class="form-label-required">*</span></label>
+          <textarea id="a22-recomendaciones" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtRecomendaciones" (ngModelChange)="marcarSucio()"></textarea>
+        </div>
+      </div>
+      <fieldset class="space-y-2">
+        <legend class="form-label">Resultado de la evaluación <span class="form-label-required">*</span></legend>
+        <div class="flex flex-wrap gap-2">
+          @for (r of resultados; track r.valor) {
+            <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+              [ngClass]="a.tipResultado === r.valor ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600'">
+              <input type="radio" name="a22-resultado" [value]="r.valor" [disabled]="ro" [(ngModel)]="a.tipResultado" (ngModelChange)="marcarSucio()" />
+              {{ r.etiqueta }}
+            </label>
+          }
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- Acciones -->
+    @if (!ro) {
+      <div class="flex flex-wrap items-center gap-2">
+        <ui-button icon="save" label="Guardar informe" [loading]="guardando()" [disabled]="guardando()" (onClick)="guardar()" />
+        <ui-button icon="download" label="Descargar para firmar" appearance="soft" severity="secondary"
+          [loading]="descargando()" [disabled]="!completo() || descargando()" (onClick)="descargar()" />
+        @if (sucio()) { <span class="text-[11px] text-warning">Hay cambios sin guardar.</span> }
+      </div>
+
+      <section class="form-card-flat space-y-3">
+        <h5 class="form-section-title">Presentar el informe firmado</h5>
+        <input #archivoInforme type="file" accept="application/pdf" hidden (change)="seleccionarArchivo($event)" />
+        @if (archivo(); as f) {
+          <ui-file-chip [name]="f.name" [size]="f.size" (onRemove)="archivo.set(null)" />
+        } @else {
+          <div class="form-file-upload group min-h-[90px] flex-col items-center justify-center p-5 text-center"
+            role="button" tabindex="0" aria-label="Adjuntar el Informe de Evaluación firmado en PDF"
+            (click)="archivoInforme.click()" (keydown.enter)="archivoInforme.click()" (keydown.space)="$event.preventDefault(); archivoInforme.click()">
+            <span class="material-symbols-outlined mb-2 text-3xl text-slate-400 transition-transform group-hover:scale-105">upload_file</span>
+            <p class="text-[10px] font-semibold leading-normal text-slate-500">Informe firmado en PDF (máx. {{ tamanoMaximoMb }} MB).<br />Haz clic para seleccionarlo.</p>
+          </div>
+        }
+        <div class="flex flex-wrap items-center gap-2">
+          <ui-button icon="draw" label="Presentar informe firmado" [disabled]="!completo() || !archivo() || presentando()" (onClick)="confirmarPresentar.set(true)" />
+          @if (!completo()) { <span class="text-[11px] text-slate-400">Se habilita con el informe guardado, completo y sin cambios pendientes.</span> }
+        </div>
+      </section>
+    } @else {
+      <section class="form-card-flat space-y-3">
+        <h5 class="form-section-title">Elevar el Expediente Único a la Dirección Ejecutiva</h5>
+        <p class="text-xs text-slate-600">
+          El informe está firmado. Al elevarlo, la API verifica además que el último RTF esté aprobado.
+          @if (plazoVencido()) { <span class="font-semibold text-destructive"> El plazo de la evaluación venció: se exige registrar la contingencia.</span> }
+        </p>
+        <ui-button icon="send" label="Derivar a la Dirección Ejecutiva" (onClick)="abrirDerivar()" />
+      </section>
+    }
+
+    @if (versiones().length > 0) {
+      <section class="form-card-flat space-y-2">
+        <h5 class="form-section-title">Versiones firmadas</h5>
+        <ul class="space-y-1 text-xs text-slate-700">
+          @for (v of versiones(); track v.numVersion) {
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">history</span>Versión {{ v.numVersion }} · firmada el {{ v.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+
+  <!-- Bloque de una sección de indicadores con su análisis -->
+  <ng-template #bloque let-titulo="titulo" let-filas="filas" let-extra="extra" let-seccion="seccion" let-analisis="analisis" let-vacio="vacio">
+    <div class="space-y-2">
+      @if (titulo) { <p class="form-label">{{ titulo }}</p> }
+      <app-tabla-indicadores [filas]="filas" [columnaExtra]="extra" [soloLectura]="ro" [vacio]="vacio"
+        (cambio)="marcarSucio()" (quitar)="quitarFila(seccion, $event)" />
+      @if (seccion && !ro) {
+        <div class="flex justify-end"><ui-button size="sm" appearance="soft" icon="add" label="Agregar indicador" (onClick)="agregarFila(seccion)" /></div>
+      }
+      <div class="form-field">
+        <label class="form-label" [attr.for]="'a22-' + analisis">Análisis <span class="form-label-required">*</span></label>
+        <textarea [id]="'a22-' + analisis" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="$any(a)[analisis]" (ngModelChange)="marcarSucio()"></textarea>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Bienes o servicios de KOFIX (4.2) -->
+  <ng-template #items let-titulo="titulo" let-filas="filas">
+    <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <table class="w-full min-w-[760px] border-collapse text-left text-xs">
+        <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <tr>
+            <th class="p-2.5">{{ titulo }}</th><th class="p-2.5">Unidad</th>
+            <th class="p-2.5 text-right">Cant. prog.</th><th class="p-2.5 text-right">Cant. ejec.</th><th class="p-2.5 text-right">%</th>
+            <th class="p-2.5 text-right">Monto prog. (S/)</th><th class="p-2.5 text-right">Monto ejec. (S/)</th><th class="p-2.5 text-right">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of filas; track $index) {
+            <tr class="border-b border-slate-100">
+              <td class="p-2.5 font-semibold text-slate-800">{{ i.txtDescripcion }}</td>
+              <td class="p-2.5">{{ i.txtUnidadMedida ?? '—' }}</td>
+              <td class="p-2.5 text-right">{{ i.canProgramada | number: '1.0-2' }}</td>
+              <td class="p-2.5 text-right">{{ i.canEjecutada | number: '1.0-2' }}</td>
+              <td class="p-2.5 text-right">{{ pctEjecucion(i.canProgramada, i.canEjecutada) !== null ? (pctEjecucion(i.canProgramada, i.canEjecutada) | number: '1.0-2') + ' %' : '—' }}</td>
+              <td class="p-2.5 text-right">{{ i.impProgramado | number: '1.2-2' }}</td>
+              <td class="p-2.5 text-right">{{ i.impEjecutado | number: '1.2-2' }}</td>
+              <td class="p-2.5 text-right">{{ pctEjecucion(i.impProgramado, i.impEjecutado) !== null ? (pctEjecucion(i.impProgramado, i.impEjecutado) | number: '1.0-2') + ' %' : '—' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="p-4 text-center text-slate-400">Sin {{ titulo.toLowerCase() }} programados.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </ng-template>
+
+  <app-ui-modal [visible]="confirmarPresentar()" title="Presentar el Informe de Evaluación" subtitle="La versión firmada ya no podrá modificarse."
+    icon="draw" maxWidth="460px" saveLabel="Presentar" saveIcon="draw" [isSubmitting]="presentando()"
+    (onHide)="confirmarPresentar.set(false)" (onSave)="presentar()">
+    <p class="text-sm text-foreground">Se presentará <span class="font-semibold">{{ archivo()?.name }}</span> como la versión {{ a.numVersion }} firmada del Anexo 22.</p>
+  </app-ui-modal>
+
+  <app-ui-modal [visible]="modalDerivar()" title="Elevar a la Dirección Ejecutiva" subtitle="El Expediente Único pasa a la DE."
+    icon="send" maxWidth="520px" saveLabel="Derivar" saveIcon="send" [isSubmitting]="derivando()"
+    [saveDisabled]="plazoVencido() && !contingencia.trim()" (onHide)="modalDerivar.set(false)" (onSave)="derivar()">
+    @if (plazoVencido()) {
+      <div class="form-field">
+        <label class="form-label" for="a22-contingencia">Registro de contingencia <span class="form-label-required">*</span></label>
+        <textarea id="a22-contingencia" rows="4" class="form-textarea" [(ngModel)]="contingencia"
+          placeholder="Justifique por qué el expediente se eleva fuera del plazo de la evaluación."></textarea>
+      </div>
+    } @else {
+      <p class="text-sm text-foreground">El expediente se elevará a la Dirección Ejecutiva dentro del plazo de la evaluación.</p>
+    }
+  </app-ui-modal>
+}

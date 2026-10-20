@@ -14,6 +14,9 @@ export const environment: AppSettings = {
   archivos: {
     tamanoMaximoPdfMb: 10
   },
+  evaluacion: {
+    umbralDesviacionCriticaPct: -20
+  },
   notificaciones: {
     intervaloRefrescoMs: 60_000,
     cantidadEnCampana: 20

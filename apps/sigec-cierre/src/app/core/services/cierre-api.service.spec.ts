@@ -132,4 +132,19 @@ describe('CierreApiService', () => {
       .flush(new Blob([JSON.stringify(sobre)], { type: 'application/json' }), { status: 403, statusText: 'Forbidden' });
     expect(mensajeParaUsuario(await error, 'por defecto')).toBe('No tiene acceso al expediente.');
   });
+
+  it('presenta el Anexo 22 firmado en multipart y deriva con destino y contingencia', () => {
+    const pdf = new File(['%PDF-'], 'a22.pdf', { type: 'application/pdf' });
+    service.presentarAnexo22(5, pdf).subscribe();
+    const presentar = http.expectOne(`${API}/cierres/5/anexos22`);
+    expect(presentar.request.method).toBe('POST');
+    expect((presentar.request.body as FormData).get('archivo')).toBe(pdf);
+    presentar.flush({ respuesta: 'OK', mensaje: '', datos: {} });
+
+    service.derivar(5, 'DE', 'Contingencia').subscribe();
+    const derivar = http.expectOne(`${API}/cierres/5/derivaciones`);
+    expect(derivar.request.body).toEqual({ destino: 'DE', txtContingencia: 'Contingencia' });
+    derivar.flush({ respuesta: 'OK', mensaje: '', datos: {} });
+  });
 });
+

@@ -21,6 +21,7 @@ import { ROLES_PERSONAL, tieneAlgunRol } from '../../core/models/rol-cierre.mode
 import { EstadoCierrePillComponent } from '../../shared/estado-cierre-pill.component';
 import { AccionCierre, puedeEjecutar } from '../../core/models/acciones-cierre';
 import { ActaCierreComponent } from './acta-cierre/acta-cierre.component';
+import { InformeEvaluacionComponent } from './informe-evaluacion/informe-evaluacion.component';
 
 type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios';
 
@@ -33,7 +34,7 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios';
 @Component({
   selector: 'app-expediente',
   standalone: true,
-  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent, ActaCierreComponent],
+  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent, ActaCierreComponent, InformeEvaluacionComponent],
   templateUrl: './expediente.component.html'
 })
 export class ExpedienteComponent implements OnDestroy {

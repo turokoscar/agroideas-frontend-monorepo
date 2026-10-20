@@ -1,7 +1,7 @@
 # ADR 0013: UI de Cierre de Convenio (`apps/sigec-cierre`) y Anexo 20 en `apps/sigec-rtf` — análisis situacional y plan
 
 ## Estado
-Aceptado · **Fases 0, 1, A y 2 implementadas** (20/10/2026) · Fases 3–5 y D pendientes. Ver el
+Aceptado · **Fases 0, 1, A, 2 y 3 implementadas** (20/10/2026) · Fases 4, 5 y D pendientes. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -524,4 +524,22 @@ A partir del formato del Instructivo (páginas 107–108) que compartió el owne
   `form-field`, `form-label`, `form-input`/`form-select`/`form-textarea`, `form-file-upload` + `ui-file-chip`).
   La firma se captura como hora ("siendo las … horas del mismo día") sobre el día de inicio de la reunión.
   121/121 pruebas.
+
+### Fase 3 — 2026-10-20
+- **`InformeEvaluacionComponent`** (etapa de evaluación de la UN, solo UN/Jefe UN en `EN_EVALUACION_UN`): secciones I a
+  XI del Anexo 22 con los estilos de formulario de kofix. Lo que viene del SEL, RTF y KOFIX es de solo lectura
+  (información general, problema y objetivos, 2.1, ejecución de AGROIDEAS, bienes y servicios, monitoreo y las
+  filas de VI); la UN escribe los análisis, las filas manuales de 2.2–2.4 y III, la contrapartida de la OA, la
+  actividad y los comentarios de VI, VII a XI y el resultado.
+- **`TablaIndicadoresComponent`**: línea base, programado y ejecutado por año, resultado, variación frente a lo
+  programado (por año) y frente a la línea base, calculadas en vivo; la fila con desviación crítica se resalta e
+  indica su origen (SEL + RTF, SEL + KOFIX, Manual). El umbral (−20 %) está en `AppSettings.evaluacion`
+  (`umbralDesviacionCriticaPct`) y debe coincidir con `VariacionIndicador` de la API.
+- **Firma y derivación:** guardar, descargar el PDF (solo completo y guardado), presentar el firmado
+  (`POST …/anexos22`, con confirmación), historial de versiones firmadas y "Derivar a la Dirección Ejecutiva"
+  (`POST …/derivaciones`, `destino: "DE"`), que exige la contingencia si venció el plazo de la UN. La API valida
+  además que el último RTF esté aprobado.
+- La subsanación (`OBSERVADO_UAJ`) reutilizará este componente en la Fase 4.
+- **Pruebas:** 140/140 (nuevas: `anexo22.model`, `tabla-indicadores`, `informe-evaluacion` y casos de la API y del
+  expediente); lint sin advertencias; build. Falta la prueba manual con un expediente en `EN_EVALUACION_UN`.
 

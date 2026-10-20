@@ -15,6 +15,7 @@ import {
 import { PlazoDto } from '../models/plazo.model';
 import { EnvioNotificacionDto } from '../models/notificacion.model';
 import { Anexo21Datos, Anexo21Dto } from '../models/anexo21.model';
+import { Anexo22Datos, Anexo22Dto, VersionAnexo22Dto } from '../models/anexo22.model';
 
 /**
  * Desenvuelve el sobre MIDAGRI. La API responde los errores con su código HTTP (llegan como
@@ -120,6 +121,51 @@ export class CierreApiService {
     formulario.append('archivo', actaFirmada);
     return this.http
       .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/verificaciones`, formulario)
+      .pipe(desenvolver());
+  }
+
+  // --- Informe de Evaluación (Anexo 22) y derivación a la DE (Fase 3) ---
+
+  obtenerAnexo22(ideCierreConvenio: number): Observable<Anexo22Dto> {
+    return this.http.get<ApiResponse<Anexo22Dto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22`).pipe(desenvolver());
+  }
+
+  /** Guarda el borrador (puede ir incompleto). La API repone lo que viene del SEL, RTF y KOFIX. */
+  guardarAnexo22(ideCierreConvenio: number, datos: Anexo22Datos): Observable<Anexo22Dto> {
+    return this.http
+      .put<ApiResponse<Anexo22Dto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22`, datos)
+      .pipe(desenvolver());
+  }
+
+  /** PDF/A del Anexo 22 para firmarlo (exige el formulario completo). */
+  descargarAnexo22(ideCierreConvenio: number): Observable<Blob> {
+    return this.http
+      .get(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22/documento`, { responseType: 'blob' })
+      .pipe(catchError(leerErrorBlob));
+  }
+
+  /** Presenta el Anexo 22 firmado: queda FIRMADO y el expediente puede elevarse a la DE. */
+  presentarAnexo22(ideCierreConvenio: number, pdfFirmado: File): Observable<CierreDto> {
+    const formulario = new FormData();
+    formulario.append('archivo', pdfFirmado);
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22`, formulario)
+      .pipe(desenvolver());
+  }
+
+  listarVersionesAnexo22(ideCierreConvenio: number): Observable<VersionAnexo22Dto[]> {
+    return this.http
+      .get<ApiResponse<VersionAnexo22Dto[]>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/anexos22/versiones`)
+      .pipe(desenvolver());
+  }
+
+  /**
+   * Deriva el expediente: `DE` (la UN eleva; exige Anexo 22 firmado, último RTF aprobado y contingencia si
+   * venció el plazo de la UN) o `UAJ` (la DE traslada; Fase 4).
+   */
+  derivar(ideCierreConvenio: number, destino: 'DE' | 'UAJ', txtContingencia: string | null = null): Observable<CierreDto> {
+    return this.http
+      .post<ApiResponse<CierreDto>>(`${this.apiUrl}/cierres/${ideCierreConvenio}/derivaciones`, { destino, txtContingencia })
       .pipe(desenvolver());
   }
 
