@@ -64,7 +64,7 @@ export class AuthService {
 
   login(usuario: string, password: string): Observable<boolean> {
     return this.http.post<SelLoginResponse>(`${this.apiUrl}/login`, {
-      email: usuario,
+      username: usuario,
       password: password,
       deviceId: environment.deviceId
     }).pipe(

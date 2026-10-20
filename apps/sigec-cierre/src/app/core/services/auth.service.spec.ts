@@ -52,7 +52,10 @@ describe('AuthService', () => {
   function iniciarSesion(roles: string[]) {
     let resultado: boolean | undefined;
     service.login('rquispe', 'clave').subscribe(ok => (resultado = ok));
-    httpMock.expectOne(`${environment.apiAuth}/login`).flush(buildRespuesta(buildUsuario({ roles })));
+    const req = httpMock.expectOne(`${environment.apiAuth}/login`);
+    // Contrato de LoginRequest de sel-api-seguridad: `username`, no `email` (con `email` responde 400).
+    expect(req.request.body).toEqual({ username: 'rquispe', password: 'clave', deviceId: environment.deviceId });
+    req.flush(buildRespuesta(buildUsuario({ roles })));
     return resultado;
   }
 

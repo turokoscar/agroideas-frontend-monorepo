@@ -2,8 +2,22 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { UIButtonComponent } from '@agroideas/ui';
+import { mensajeParaUsuario } from '@agroideas/utils';
+
+/**
+ * Mensaje del fallo de login. sel-api-seguridad responde las credenciales inválidas con 400 y el
+ * sobre MIDAGRI, y los errores de validación con ProblemDetails (`errors`); "Error de conexión" se
+ * reserva para cuando no hubo respuesta (status 0).
+ */
+export function mensajeErrorLogin(err: HttpErrorResponse): string {
+  if (!err || err.status === 0) return 'Error de conexión con el servidor de seguridad.';
+  const validacion = err.error?.errors as Record<string, string[]> | undefined;
+  const primeraValidacion = validacion ? Object.values(validacion).flat()[0] : undefined;
+  return mensajeParaUsuario(err, primeraValidacion ?? err.error?.title ?? 'No se pudo iniciar sesión.');
+}
 
 @Component({
   selector: 'app-login',
@@ -195,9 +209,9 @@ export class LoginComponent {
           this.errorMessage.set('Usuario o contraseña incorrectos.');
         }
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.errorMessage.set('Error de conexión con el servidor de seguridad.');
+        this.errorMessage.set(mensajeErrorLogin(err));
       }
     });
   }
