@@ -98,7 +98,7 @@ export interface PlazoCierreDto {
 }
 
 /** Etiquetas de `EstadoCierre` para el hito de cierre del dashboard. */
-export const ETIQUETA_ESTADO_CIERRE: Readonly<Record<string, string>> = {
+export const ETIQUETA_ESTADO_CIERRE: Readonly<Partial<Record<string, string>>> = {
   ESPERA_ANEXO20: 'Espera del Anexo 20',
   EN_VERIFICACION: 'En verificación de campo',
   EN_EVALUACION_UN: 'En evaluación de la UN',

@@ -1150,58 +1150,60 @@
   </div>
 </div>
 
-<!-- Floating Action Dock -->
-<div class="sticky bottom-6 mt-10 z-40 max-w-5xl mx-auto px-6 py-4 bg-background/80 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-  @if (observacionesPendientes() > 0) {
-    <a
-      routerLink="/rtf/pasos-criticos/observaciones"
-      class="flex items-center gap-2 text-xs text-warning hover:underline text-left"
-    >
-      <span class="material-symbols-outlined text-[16px] text-warning">feedback</span>
-      <span>Responde las {{ observacionesPendientes() }} observación{{ observacionesPendientes() === 1 ? '' : 'es' }} pendiente{{ observacionesPendientes() === 1 ? '' : 's' }} antes de reenviar el reporte.</span>
-    </a>
-  } @else if (anexo17FirmadoPendiente()) {
-    <button
-      type="button"
-      class="flex items-center gap-2 text-xs text-amber-700 hover:underline text-left"
-      (click)="activeTab.set('ANEXO17')"
-    >
-      <span class="material-symbols-outlined text-[16px] text-amber-600">warning</span>
-      <span>Recuerda descargar, firmar y adjuntar el Anexo 17 antes de enviar el reporte.</span>
-    </button>
-  } @else {
-    <div class="flex items-center gap-2 text-xs text-muted-foreground">
-      <span class="material-symbols-outlined text-[16px] text-primary">info</span>
-      <span>Complete todos los campos requeridos para habilitar el envío del reporte.</span>
+<!-- Floating Action Dock: solo mientras el RTF admite cambios (en revisión o evaluado no aplica) -->
+@if (isEditable()) {
+  <div class="sticky bottom-6 mt-10 z-40 max-w-5xl mx-auto px-6 py-4 bg-background/80 backdrop-blur-md border border-border/60 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+    @if (observacionesPendientes() > 0) {
+      <a
+        routerLink="/rtf/pasos-criticos/observaciones"
+        class="flex items-center gap-2 text-xs text-warning hover:underline text-left"
+      >
+        <span class="material-symbols-outlined text-[16px] text-warning">feedback</span>
+        <span>Responde las {{ observacionesPendientes() }} observación{{ observacionesPendientes() === 1 ? '' : 'es' }} pendiente{{ observacionesPendientes() === 1 ? '' : 's' }} antes de reenviar el reporte.</span>
+      </a>
+    } @else if (anexo17FirmadoPendiente()) {
+      <button
+        type="button"
+        class="flex items-center gap-2 text-xs text-amber-700 hover:underline text-left"
+        (click)="activeTab.set('ANEXO17')"
+      >
+        <span class="material-symbols-outlined text-[16px] text-amber-600">warning</span>
+        <span>Recuerda descargar, firmar y adjuntar el Anexo 17 antes de enviar el reporte.</span>
+      </button>
+    } @else {
+      <div class="flex items-center gap-2 text-xs text-muted-foreground">
+        <span class="material-symbols-outlined text-[16px] text-primary">info</span>
+        <span>Complete todos los campos requeridos para habilitar el envío del reporte.</span>
+      </div>
+    }
+    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+      <button
+        class="w-full sm:w-auto rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+        [disabled]="isSaving() || !isEditable()"
+        (click)="guardarBorrador()"
+      >
+        @if (isSaving()) {
+          <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+        } @else {
+          <span class="material-symbols-outlined text-[18px]">save</span>
+        }
+        Guardar Borrador
+      </button>
+      <button
+        class="w-full sm:w-auto rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+        [disabled]="isSubmitting() || !canSubmit()"
+        (click)="enviarRtf()"
+      >
+        @if (isSubmitting()) {
+          <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+        } @else {
+          <span class="material-symbols-outlined text-[18px]">send</span>
+        }
+        Enviar RTF
+      </button>
     </div>
-  }
-  <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-    <button
-      class="w-full sm:w-auto rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
-      [disabled]="isSaving() || !isEditable()"
-      (click)="guardarBorrador()"
-    >
-      @if (isSaving()) {
-        <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-      } @else {
-        <span class="material-symbols-outlined text-[18px]">save</span>
-      }
-      Guardar Borrador
-    </button>
-    <button
-      class="w-full sm:w-auto rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
-      [disabled]="isSubmitting() || !canSubmit()"
-      (click)="enviarRtf()"
-    >
-      @if (isSubmitting()) {
-        <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-      } @else {
-        <span class="material-symbols-outlined text-[18px]">send</span>
-      }
-      Enviar RTF
-    </button>
   </div>
-</div>
+}
 <div class="h-8"></div>
 
 <!-- Avance Modal -->
