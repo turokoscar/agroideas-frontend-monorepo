@@ -23,10 +23,10 @@ consumes either yet (see "State of the libs" below).
 Use `npx nx` — there are no npm scripts.
 
 ```sh
-npx nx serve kofix-ejecucion        # dev server on :7100
-npx nx serve sat-ui                 # dev server on :4200 (default)
-npx nx serve sigec-rtf               # dev server on :4300
-npx nx serve sigec-cierre            # dev server on :4400
+npx nx serve kofix-ejecucion             # :7100 (port in project.json; default config `local`)
+npx nx serve sat-ui                      # :4200 (Angular default)
+npx nx serve sigec-rtf --port=4300       # no port in project.json — without the flag it
+npx nx serve sigec-cierre --port=4400    #   takes :4200 and collides with sat-ui
 npx nx build <project>              # production build → dist/apps/<app>/browser/
 npx nx lint <project>              # lint one project
 npx nx test <project>              # unit tests (Jest) for one project
@@ -46,6 +46,21 @@ npx nx test kofix-ejecucion -- -t "should grant admin"
 ```
 
 After changing versions, generators, or eslint config, clear the cache: `npx nx reset`.
+
+### Build configurations & deployment
+Environments are swapped via `fileReplacements` in each app's `project.json`:
+- `kofix-ejecucion`: `development`, `local` (→ `environment.local.ts`, the serve default),
+  `quality` (→ `environment.quality.ts`), `production`.
+- `sigec-rtf`: `development`, `quality` (→ `environment.quality.ts`), `production`.
+- `sat-ui`, `sigec-cierre`: only `development` / `production`.
+
+Deployment is via multi-stage Dockerfiles at the repo root (node:20 build → nginx SPA):
+`Dockerfile` (kofix-ejecucion, `quality`), `Dockerfile.sat-ui` (`production`),
+`Dockerfile.sigec-rtf-ui` (`quality`). sigec-rtf's `environment.quality.ts` uses **relative**
+URLs (`/api/v1`, `/api-seguridad/...`, `/api-general/...`) that the container's Nginx
+reverse-proxies to `sigec-rtf-api:8080` (Docker network) and `test.agroideas.gob.pe`, because
+the RTF API has no CORS outside Development — keep those paths and the Nginx `location`
+blocks in sync when adding an endpoint base.
 
 ## Architecture — the big picture
 

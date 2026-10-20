@@ -7,8 +7,8 @@
 ```sh
 npx nx serve kofix-ejecucion     # dev server on :7100
 npx nx serve sat-ui              # dev server on :4200 (default)
-npx nx serve sigec-rtf           # dev server on :4300
-npx nx serve sigec-cierre        # dev server on :4400
+npx nx serve sigec-rtf --port=4300    # no port in project.json (else :4200)
+npx nx serve sigec-cierre --port=4400 # no port in project.json (else :4200)
 npx nx test <project>            # Jest
 npx nx test <project> -- --testPathPattern=<pattern>
 npx nx test <project> -- -t "test name"
@@ -22,7 +22,7 @@ npx nx graph
 npx nx reset                     # clear cache (after version/generator/config changes)
 ```
 
-**Docker build:** `npx nx build kofix-ejecucion --configuration=quality` (see `Dockerfile`).
+**Docker builds:** `Dockerfile` (kofix-ejecucion, `--configuration=quality`), `Dockerfile.sat-ui` (`production`), `Dockerfile.sigec-rtf-ui` (`quality`; its Nginx proxies the relative API paths of `environment.quality.ts`).
 
 ## Module boundaries
 
