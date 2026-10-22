@@ -25,13 +25,15 @@ describe('UiStepperComponent', () => {
     expect(el.querySelector('button')).toBeNull();
   });
 
-  it('navegable: cada paso es un botón que emite su clave', () => {
+  it('navegable: los pasos completados y el actual son botones que emiten su clave; los pendientes no', () => {
     const fixture = crear(true);
     const claves: string[] = [];
     fixture.componentInstance.stepClick.subscribe(k => claves.push(k));
     const botones = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
-    botones[2].click();
-    expect(claves).toEqual(['c']);
+    expect(botones.length).toBe(2);
+    botones[0].click();
+    botones[1].click();
+    expect(claves).toEqual(['a', 'b']);
     expect(botones[1].getAttribute('aria-current')).toBe('step');
   });
 });

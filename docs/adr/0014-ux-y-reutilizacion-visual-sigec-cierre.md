@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 3 implementadas** (21–22/10/2026); las
-Fases 4 a 6 sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 4 implementadas** (21–22/10/2026); las
+Fases 5 y 6 sin implementar. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -432,3 +432,24 @@ sí.
   "Plazos", Fin activa "Correos enviados" y carga su panel) y pestañas de Administración.
 - **Fuera de alcance, anotado:** las fechas de la tabla de días inhábiles muestran el día en inglés ("Thu
   01/01/2026"): la app no registra la configuración regional `es` (`LOCALE_ID`).
+
+### Fase 4 — 2026-10-22: expediente centrado en la etapa activa
+- **Orden nuevo:** cabecera, stepper, **la etapa en curso** (abierta, con su formulario), el resumen plegable de
+  **etapas completadas** ("Etapas completadas (n de 6)": título y fecha; al abrirlas, responsable, plazo, notas y
+  documentos) y las pestañas. Las etapas pendientes solo están en el stepper. El detalle y la acción de cada etapa son
+  plantillas (`detalleEtapa`, `accionEtapa`) compartidas por la tarjeta activa y el resumen.
+- **Plazos en paralelo:** la tarjeta activa muestra "También corre: …" para los plazos vigentes de etapas pendientes (los
+  90 días de la UN corren durante la verificación de campo); antes se veían en la tarjeta pendiente.
+- **Acción en una etapa completada:** si la DE tiene pendiente el cargo de notificación de la RDE, esa etapa aparece
+  abierta (`abiertaPorDefecto`).
+- **`ui-stepper`:** los pasos pendientes ya no son botones (no tienen tarjeta); el clic en una completada la abre y lleva
+  a ella (`afterNextRender`).
+- **Espaciado (D6b):** el Acta y el Anexo 22 no tenían margen superior y su separador quedaba pegado al texto anterior;
+  la lista de requisitos faltantes pasa a columnas (`sm:columns-2 lg:columns-3`).
+- **Pruebas:** ui 61/61, sigec-cierre 206/206; lint y build sin avisos.
+- **En el navegador** (expedientes 10004 y 6): la tarjeta activa empieza a 433 px del borde superior de la ventana y el
+  título del Acta a 554 px; el primer campo termina a 818 px. **Criterio de aceptación cumplido en parte:** en una
+  laptop de 1366×768 (≈640 px de alto útil en Chrome) se ven sin scroll la etapa en curso, el título del formulario y
+  el inicio de los requisitos, pero el primer campo requiere bajar ≈180 px. Para cumplirlo del todo habría que compactar
+  la cabecera (p. ej. unir cabecera y stepper en una sola tarjeta); queda como mejora posible. No se pudo redimensionar
+  la ventana de Chrome (está maximizada): las cifras salen de las posiciones medidas.

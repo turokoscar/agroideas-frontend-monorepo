@@ -9,7 +9,7 @@
 } @else if (anexo()) {
   @let a = anexo()!;
   @let ro = firmado();
-  <div class="space-y-4 border-t border-border pt-4">
+  <div class="mt-4 space-y-4 border-t border-border pt-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h4 class="text-sm font-bold text-foreground">Anexo N° 22: Informe de Evaluación de la Ejecución del PNT para Cierre</h4>
       <app-ui-status-pill [tone]="ro ? 'success' : 'neutral'" [text]="(ro ? 'Firmado' : 'Borrador') + ' · versión ' + a.numVersion" />
@@ -30,7 +30,7 @@
     @if (!ro && a.faltantes.length > 0) {
       <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
         <p class="font-semibold">Para generar y presentar el informe falta:</p>
-        <ul class="mt-1 list-disc pl-5">
+        <ul class="mt-1 list-disc gap-x-8 pl-5 sm:columns-2 lg:columns-3">
           @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
         </ul>
       </div>

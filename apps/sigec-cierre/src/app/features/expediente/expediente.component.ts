@@ -1,5 +1,5 @@
-import { Component, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
+import { Component, Injector, OnDestroy, afterNextRender, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import {
@@ -58,7 +58,7 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones'
   selector: 'app-expediente',
   standalone: true,
   host: { class: 'block' },
-  imports: [DatePipe, NgClass, RouterLink, FormatConvenioPipe, UiStatusPillComponent, UiDataTableComponent, UiInfoTooltipComponent, UiStateComponent, UiStepperComponent, UiTabsComponent, UIButtonComponent, UiCountdownBannerComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
+  imports: [DatePipe, NgClass, NgTemplateOutlet, RouterLink, FormatConvenioPipe, UiStatusPillComponent, UiDataTableComponent, UiInfoTooltipComponent, UiStateComponent, UiStepperComponent, UiTabsComponent, UIButtonComponent, UiCountdownBannerComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
     ActaCierreComponent,
     InformeEvaluacionComponent,
     PresentacionAnexo20Component,
@@ -74,6 +74,7 @@ export class ExpedienteComponent implements OnDestroy {
   private api = inject(CierreApiService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private injector = inject(Injector);
 
   /** `ideCierreConvenio`; llega del parámetro `:id` de la ruta o del componente padre. */
   id = input.required<string | number>();
@@ -150,9 +151,14 @@ export class ExpedienteComponent implements OnDestroy {
     }))
   );
 
-  /** Lleva a la tarjeta de la etapa elegida en el stepper. */
+  /** Lleva a la etapa elegida en el stepper; si es una completada, la abre antes. */
   irAEtapa(clave: string) {
-    document.getElementById(`etapa-${clave}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (this.completadas().some(e => e.clave === clave)) {
+      this.plegado.update(m => new Map(m).set(clave, true));
+    }
+    afterNextRender(() => document.getElementById(`etapa-${clave}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), {
+      injector: this.injector
+    });
   }
   nombreUsuario = computed(() => this.auth.user()?.nombre ?? null);
 
@@ -260,13 +266,30 @@ export class ExpedienteComponent implements OnDestroy {
 
   /** La tarjeta tiene algo bajo el título (plazo, notas, documentos o un mensaje): si no, no deja un hueco vacío. */
   tieneDetalle(etapa: EtapaCierre): boolean {
-    return (
-      !!etapa.plazo ||
-      etapa.notas.length > 0 ||
-      etapa.documentos.length > 0 ||
-      etapa.situacion === 'pendiente' ||
-      (etapa.situacion === 'activa' && !this.esPersonal())
-    );
+    return !!etapa.plazo || etapa.notas.length > 0 || etapa.documentos.length > 0 || (etapa.situacion === 'activa' && !this.esPersonal());
+  }
+
+  /** La etapa en curso, que va primero y abierta (ADR 0014, D5); null si el expediente ya cerró. */
+  etapaActiva = computed(() => this.etapas().find(e => e.situacion === 'activa') ?? null);
+  completadas = computed(() => this.etapas().filter(e => e.situacion === 'completada'));
+  /** Etapas pendientes cuyo plazo ya corre (p. ej. los 90 días de la UN durante la verificación de campo). */
+  plazosParalelos = computed(() => this.etapas().filter(e => e.situacion === 'pendiente' && e.plazo?.estPlazo === 'VIGENTE'));
+
+  /** Lo que el usuario abrió o cerró en el resumen de completadas; lo demás sigue `abiertaPorDefecto`. */
+  private plegado = signal(new Map<string, boolean>());
+
+  /** Una etapa completada con una acción pendiente (el cargo de notificación de la RDE) se muestra abierta. */
+  private abiertaPorDefecto(clave: string): boolean {
+    return clave === 'RDE' && this.puede('RegistrarCargoNotificacion') && !this.tieneCargo();
+  }
+
+  abierta(clave: string): boolean {
+    return this.plegado().get(clave) ?? this.abiertaPorDefecto(clave);
+  }
+
+  alternar(clave: string) {
+    const abierta = this.abierta(clave);
+    this.plegado.update(m => new Map(m).set(clave, !abierta));
   }
 
   /** Días calendario hasta el vencimiento (negativo si venció). */

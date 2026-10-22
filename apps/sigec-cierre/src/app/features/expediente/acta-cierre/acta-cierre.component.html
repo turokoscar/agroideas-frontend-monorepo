@@ -9,7 +9,7 @@
   <ui-state kind="error" [message]="error() ?? ''" compact (retry)="cargar()" />
 } @else if (acta()) {
   @let a = acta()!;
-  <div class="space-y-4 border-t border-border pt-4">
+  <div class="mt-4 space-y-4 border-t border-border pt-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h4 class="text-sm font-bold text-foreground">Anexo N° 21: Acta de Cierre del PNT</h4>
       <span class="text-[11px] text-muted-foreground">Complete y guarde · imprima para la firma · registre el acta escaneada</span>
@@ -18,7 +18,7 @@
     @if (a.faltantes.length > 0) {
       <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
         <p class="font-semibold">Para registrar la verificación falta:</p>
-        <ul class="mt-1 list-disc pl-5">
+        <ul class="mt-1 list-disc gap-x-8 pl-5 sm:columns-2 lg:columns-3">
           @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
         </ul>
       </div>

@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NEVER, of, throwError } from 'rxjs';
@@ -112,15 +113,42 @@ describe('ExpedienteComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Volver a la bandeja');
   });
 
-  it('el stepper lleva a la tarjeta de la etapa elegida', () => {
+  it('muestra primero la etapa en curso; las completadas plegadas y las pendientes solo en el stepper', () => {
     const fixture = crear();
-    const tarjeta = fixture.nativeElement.querySelector('#etapa-EVALUACION_UN') as HTMLElement;
-    tarjeta.scrollIntoView = jest.fn();
-    const pasos = fixture.nativeElement.querySelectorAll('ui-stepper button') as NodeListOf<HTMLButtonElement>;
-    expect(pasos.length).toBe(6);
+    const el: HTMLElement = fixture.nativeElement;
+    const articulos = el.querySelectorAll('article');
+    expect(articulos.length).toBe(1);
+    expect(articulos[0].id).toBe('etapa-EVALUACION_UN');
+    expect(el.querySelector('#etapa-DIRECCION_EJECUTIVA')).toBeNull();
+    expect(el.textContent).toContain('Etapas completadas (2 de 6)');
+    expect(el.querySelector('#detalle-ANEXO20')).toBeNull();
+
+    const boton = el.querySelector('#etapa-ANEXO20 button') as HTMLButtonElement;
+    boton.click();
+    fixture.detectChanges();
+    expect(boton.getAttribute('aria-expanded')).toBe('true');
+    expect(el.querySelector('#detalle-ANEXO20')?.textContent).toContain('Informe de Cierre del PNT');
+
+    boton.click();
+    fixture.detectChanges();
+    expect(el.querySelector('#detalle-ANEXO20')).toBeNull();
+  });
+
+  it('el stepper lleva a la etapa en curso y abre la completada elegida', () => {
+    const fixture = crear();
+    const el: HTMLElement = fixture.nativeElement;
+    const pasos = el.querySelectorAll('ui-stepper button') as NodeListOf<HTMLButtonElement>;
+    expect(pasos.length).toBe(3);
+
+    const activa = el.querySelector('#etapa-EVALUACION_UN') as HTMLElement;
+    activa.scrollIntoView = jest.fn();
     pasos[2].click();
-    expect(tarjeta.scrollIntoView).toHaveBeenCalled();
-    expect(pasos[2].getAttribute('aria-current')).toBe('step');
+    TestBed.inject(ApplicationRef).tick();
+    expect(activa.scrollIntoView).toHaveBeenCalled();
+
+    pasos[0].click();
+    fixture.detectChanges();
+    expect(el.querySelector('#detalle-ANEXO20')).not.toBeNull();
   });
 
   it('muestra el mensaje de la API si no puede cargar el expediente', () => {

@@ -78,138 +78,73 @@
       <ui-stepper [steps]="pasos()" ariaLabel="Etapas del cierre" navigable (stepClick)="irAEtapa($event)" />
     </section>
 
-    <!-- Tarjetas por etapa -->
-    <section class="space-y-3">
-      @for (etapa of etapas(); track etapa.clave) {
-        <article
-          [id]="'etapa-' + etapa.clave"
-          class="scroll-mt-20 rounded-xl border bg-card p-5 shadow-sm transition-opacity"
-          [ngClass]="etapa.situacion === 'activa' ? 'border-primary/40 ring-1 ring-primary/20' : 'border-border'"
-          [class.opacity-60]="etapa.situacion === 'pendiente'"
-        >
-          <header class="flex flex-wrap items-center justify-between gap-2">
-            <h3 class="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              Etapa {{ etapa.numero }} · {{ etapa.titulo }}
-              <ui-info-tooltip [text]="ayudaEtapa[etapa.clave]" />
-            </h3>
-            @switch (etapa.situacion) {
-              @case ('completada') {
-                <app-ui-status-pill tone="success" [text]="etapa.fecha ? 'Completada el ' + (etapa.fecha | date: 'dd/MM/yyyy') : 'Completada'" />
-              }
-              @case ('activa') {
-                <app-ui-status-pill tone="primary" text="En curso" />
-              }
-              @default {
-                <app-ui-status-pill tone="neutral" [showIcon]="false" text="Pendiente" />
-              }
-            }
-          </header>
-          <p class="mt-1 text-xs text-muted-foreground">Responsable: {{ etapa.actor }}</p>
+    <!-- Etapa en curso (ADR 0014, Fase 4): primero y abierta, con su formulario -->
+    @if (etapaActiva(); as etapa) {
+      <article [id]="'etapa-' + etapa.clave" class="scroll-mt-20 rounded-xl border border-primary/40 bg-card p-5 shadow-sm ring-1 ring-primary/20">
+        <header class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            Etapa {{ etapa.numero }} · {{ etapa.titulo }}
+            <ui-info-tooltip [text]="ayudaEtapa[etapa.clave]" />
+          </h3>
+          <app-ui-status-pill tone="primary" text="En curso" />
+        </header>
+        <p class="mt-1 text-xs text-muted-foreground">Responsable: {{ etapa.actor }}</p>
 
-          @if (tieneDetalle(etapa)) {
-            <div class="mt-4 space-y-4">
-              @if (etapa.situacion === 'activa' && etapa.plazo; as plazo) {
-                @if (plazo.estPlazo === 'VIGENTE' && aunNoCorre(plazo)) {
-                  <p class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-foreground">
-                    <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">schedule</span>
-                    El plazo corre desde el {{ plazo.fecInicio | date: 'dd/MM/yyyy' }}.
+        @for (otra of plazosParalelos(); track otra.clave) {
+          @if (otra.plazo; as plazo) {
+            <p class="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span class="material-symbols-outlined text-[16px]" aria-hidden="true">schedule</span>
+              También corre: <span class="font-medium text-foreground">{{ etiquetaTipoPlazo(plazo.tipPlazo) }}</span>
+              · vence el {{ plazo.fecLimite | date: 'dd/MM/yyyy' }}
+            </p>
+          }
+        }
+
+        <ng-container [ngTemplateOutlet]="detalleEtapa" [ngTemplateOutletContext]="{ $implicit: etapa }" />
+        <ng-container [ngTemplateOutlet]="accionEtapa" [ngTemplateOutletContext]="{ $implicit: etapa, c: c }" />
+      </article>
+    }
+
+    <!-- Etapas completadas: resumen plegable. Las pendientes solo están en el stepper. -->
+    @if (completadas().length > 0) {
+      <section class="rounded-xl border border-border bg-card shadow-sm" aria-labelledby="titulo-completadas">
+        <h3 id="titulo-completadas" class="border-b border-border px-5 py-3 text-sm font-semibold text-foreground">
+          Etapas completadas ({{ completadas().length }} de {{ etapas().length }})
+        </h3>
+        <ul class="divide-y divide-border">
+          @for (etapa of completadas(); track etapa.clave) {
+            <li [id]="'etapa-' + etapa.clave" class="scroll-mt-20">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+                [attr.aria-expanded]="abierta(etapa.clave)"
+                [attr.aria-controls]="'detalle-' + etapa.clave"
+                (click)="alternar(etapa.clave)"
+              >
+                <span class="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
+                  <span class="material-symbols-outlined text-[18px] text-success" aria-hidden="true">check_circle</span>
+                  Etapa {{ etapa.numero }} · {{ etapa.titulo }}
+                </span>
+                <span class="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
+                  @if (etapa.fecha) { <span>Completada el {{ etapa.fecha | date: 'dd/MM/yyyy' }}</span> }
+                  <span class="material-symbols-outlined text-[20px] transition-transform" [class.rotate-180]="abierta(etapa.clave)" aria-hidden="true">expand_more</span>
+                </span>
+              </button>
+              @if (abierta(etapa.clave)) {
+                <div [id]="'detalle-' + etapa.clave" class="px-5 pb-5">
+                  <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    Responsable: {{ etapa.actor }}
+                    <ui-info-tooltip [text]="ayudaEtapa[etapa.clave]" />
                   </p>
-                } @else if (plazo.estPlazo === 'VIGENTE') {
-                  <ui-countdown-banner
-                    [hours]="horasRestantes().get(etapa.clave) ?? 0"
-                    [tone]="tonoPlazo(plazo)"
-                    [label]="etiquetaTipoPlazo(plazo.tipPlazo) + ' · vence el ' + (plazo.fecLimite | date: 'dd/MM/yyyy')"
-                  />
-                }
+                  <ng-container [ngTemplateOutlet]="detalleEtapa" [ngTemplateOutletContext]="{ $implicit: etapa }" />
+                  <ng-container [ngTemplateOutlet]="accionEtapa" [ngTemplateOutletContext]="{ $implicit: etapa, c: c }" />
+                </div>
               }
-
-              <div class="space-y-3">
-                @if (etapa.plazo; as plazo) {
-                  <p class="text-xs text-muted-foreground">
-                    Plazo: <span class="font-medium text-foreground">{{ plazo.canDias }} días calendario</span>
-                    ({{ etiquetaTipoPlazo(plazo.tipPlazo) }}) · vence el {{ plazo.fecLimite | date: 'dd/MM/yyyy' }} ·
-                    <span class="font-medium text-foreground">{{ etiquetaEstadoPlazo(plazo.estPlazo) }}</span>
-                    @if (plazo.estPlazo === 'VIGENTE' && restantes(plazo) < 0) {
-                      <span class="font-semibold text-destructive"> · vencido hace {{ -restantes(plazo) }} días</span>
-                    }
-                  </p>
-                }
-
-                @for (nota of etapa.notas; track nota) {
-                  <p class="flex items-start gap-1.5 text-xs text-foreground">
-                    <span class="material-symbols-outlined text-[16px] text-warning">info</span>{{ nota }}
-                  </p>
-                }
-
-                @if (etapa.documentos.length > 0) {
-                  <ul class="flex flex-wrap gap-2">
-                    @for (doc of etapa.documentos; track doc.ideDocumento) {
-                      <li>
-                        <button
-                          type="button"
-                          class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-                          (click)="verDocumento(doc)"
-                        >
-                          <span class="material-symbols-outlined text-[16px] text-primary">picture_as_pdf</span>
-                          {{ etiquetaDocumento(doc.tipDocumento) }}
-                        </button>
-                      </li>
-                    }
-                  </ul>
-                } @else if (etapa.situacion === 'pendiente') {
-                  <p class="text-xs text-muted-foreground">Esta etapa aún no inicia.</p>
-                }
-
-                @if (etapa.situacion === 'activa' && etapa.clave !== 'ANEXO20' && !esPersonal()) {
-                  <p class="text-xs text-muted-foreground">Esta etapa la realiza AGROIDEAS; aquí verá su avance.</p>
-                }
-
-                @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20' && !esPersonal()) {
-                  <p class="text-xs text-muted-foreground">
-                    El Anexo 20 se presenta junto con el RTF del último paso crítico, en el módulo de Reporte Técnico Financiero.
-                  </p>
-                }
-              </div>
-            </div>
+            </li>
           }
-
-          <!-- Acción de la etapa activa (ADR 0013, Fases 2 a 4) -->
-          @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20') {
-            @if (esPersonal() && puede('PresentarAnexo20')) {
-              <app-presentacion-anexo20 [ideCierre]="c.ideCierreConvenio" [ideConvenio]="c.ideConvenio" [plazo]="etapa.plazo"
-                (ver)="abrirVisor($event.nombre, $event.contenido)" (cambio)="cargar()" />
-            } @else if (!esPersonal()) {
-              <p class="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
-                Su último RTF se envió sin el Informe de Cierre (Anexo 20). Complételo en el módulo de Reporte Técnico Financiero
-                (pestaña "Anexo 20 · Cierre" de ese RTF), descárguelo, hágalo firmar por su representante legal y entregue el PDF
-                firmado a la Unidad de Negocios, que lo presentará en este expediente.
-              </p>
-            }
-          }
-          @if (etapa.situacion === 'activa' && etapa.clave === 'VERIFICACION' && puede('RegistrarVerificacionCampo')) {
-            <app-acta-cierre [ideCierre]="c.ideCierreConvenio" [nombreUsuario]="nombreUsuario()" (registrado)="cargar()" />
-          }
-          @if (etapa.situacion === 'activa' && etapa.clave === 'EVALUACION_UN' && puede('DerivarDe')) {
-            <app-informe-evaluacion [ideCierre]="c.ideCierreConvenio" [plazoUn]="etapa.plazo" (cambio)="cargar()" />
-          }
-          @if (etapa.situacion === 'activa' && etapa.clave === 'DIRECCION_EJECUTIVA' && puede('TrasladarUaj')) {
-            <app-traslado-uaj [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
-          }
-          @if (etapa.situacion === 'activa' && etapa.clave === 'REVISION_UAJ' && c.estCierre === 'EN_REVISION_UAJ' && puede('ObservarUaj')) {
-            <app-revision-uaj [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
-          }
-          @if (etapa.situacion === 'activa' && etapa.clave === 'REVISION_UAJ' && puede('SubsanarYElevarDe')) {
-            <app-subsanacion [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
-          }
-          @if (etapa.situacion === 'activa' && etapa.clave === 'RDE' && puede('SuscribirRde')) {
-            <app-suscripcion-rde [ideCierre]="c.ideCierreConvenio" [fecRemisionProyecto]="c.fecRemisionProyectoRde" (cambio)="cargar()" />
-          }
-          @if (etapa.clave === 'RDE' && etapa.situacion === 'completada' && puede('RegistrarCargoNotificacion')) {
-            <app-cargo-notificacion [ideCierre]="c.ideCierreConvenio" [registrado]="tieneCargo()" (cambio)="cargar()" />
-          }
-        </article>
-      }
-    </section>
+        </ul>
+      </section>
+    }
 
     <!-- Pestañas: tablas de la librería (ADR 0014, Fase 2) -->
     <section class="space-y-3" aria-label="Información del expediente">
@@ -338,6 +273,111 @@
     </section>
   }
 </div>
+
+<!-- Detalle de una etapa: plazo, notas, documentos y mensajes (tarjeta activa y resumen de completadas) -->
+<ng-template #detalleEtapa let-etapa>
+  @if (tieneDetalle(etapa)) {
+    <div class="mt-4 space-y-4">
+      @if (etapa.situacion === 'activa' && etapa.plazo; as plazo) {
+        @if (plazo.estPlazo === 'VIGENTE' && aunNoCorre(plazo)) {
+          <p class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-foreground">
+            <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">schedule</span>
+            El plazo corre desde el {{ plazo.fecInicio | date: 'dd/MM/yyyy' }}.
+          </p>
+        } @else if (plazo.estPlazo === 'VIGENTE') {
+          <ui-countdown-banner
+            [hours]="horasRestantes().get(etapa.clave) ?? 0"
+            [tone]="tonoPlazo(plazo)"
+            [label]="etiquetaTipoPlazo(plazo.tipPlazo) + ' · vence el ' + (plazo.fecLimite | date: 'dd/MM/yyyy')"
+          />
+        }
+      }
+
+      <div class="space-y-3">
+        @if (etapa.plazo; as plazo) {
+          <p class="text-xs text-muted-foreground">
+            Plazo: <span class="font-medium text-foreground">{{ plazo.canDias }} días calendario</span>
+            ({{ etiquetaTipoPlazo(plazo.tipPlazo) }}) · vence el {{ plazo.fecLimite | date: 'dd/MM/yyyy' }} ·
+            <span class="font-medium text-foreground">{{ etiquetaEstadoPlazo(plazo.estPlazo) }}</span>
+            @if (plazo.estPlazo === 'VIGENTE' && restantes(plazo) < 0) {
+              <span class="font-semibold text-destructive"> · vencido hace {{ -restantes(plazo) }} días</span>
+            }
+          </p>
+        }
+
+        @for (nota of etapa.notas; track nota) {
+          <p class="flex items-start gap-1.5 text-xs text-foreground">
+            <span class="material-symbols-outlined text-[16px] text-warning">info</span>{{ nota }}
+          </p>
+        }
+
+        @if (etapa.documentos.length > 0) {
+          <ul class="flex flex-wrap gap-2">
+            @for (doc of etapa.documentos; track doc.ideDocumento) {
+              <li>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                  (click)="verDocumento(doc)"
+                >
+                  <span class="material-symbols-outlined text-[16px] text-primary">picture_as_pdf</span>
+                  {{ etiquetaDocumento(doc.tipDocumento) }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (etapa.situacion === 'activa' && etapa.clave !== 'ANEXO20' && !esPersonal()) {
+          <p class="text-xs text-muted-foreground">Esta etapa la realiza AGROIDEAS; aquí verá su avance.</p>
+        }
+
+        @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20' && !esPersonal()) {
+          <p class="text-xs text-muted-foreground">
+            El Anexo 20 se presenta junto con el RTF del último paso crítico, en el módulo de Reporte Técnico Financiero.
+          </p>
+        }
+      </div>
+    </div>
+  }
+</ng-template>
+
+<!-- Acción de la etapa (ADR 0013, Fases 2 a 4) -->
+<ng-template #accionEtapa let-etapa let-c="c">
+  @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20') {
+    @if (esPersonal() && puede('PresentarAnexo20')) {
+      <app-presentacion-anexo20 [ideCierre]="c.ideCierreConvenio" [ideConvenio]="c.ideConvenio" [plazo]="etapa.plazo"
+        (ver)="abrirVisor($event.nombre, $event.contenido)" (cambio)="cargar()" />
+    } @else if (!esPersonal()) {
+      <p class="mt-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+        Su último RTF se envió sin el Informe de Cierre (Anexo 20). Complételo en el módulo de Reporte Técnico Financiero
+        (pestaña "Anexo 20 · Cierre" de ese RTF), descárguelo, hágalo firmar por su representante legal y entregue el PDF
+        firmado a la Unidad de Negocios, que lo presentará en este expediente.
+      </p>
+    }
+  }
+  @if (etapa.situacion === 'activa' && etapa.clave === 'VERIFICACION' && puede('RegistrarVerificacionCampo')) {
+    <app-acta-cierre [ideCierre]="c.ideCierreConvenio" [nombreUsuario]="nombreUsuario()" (registrado)="cargar()" />
+  }
+  @if (etapa.situacion === 'activa' && etapa.clave === 'EVALUACION_UN' && puede('DerivarDe')) {
+    <app-informe-evaluacion [ideCierre]="c.ideCierreConvenio" [plazoUn]="etapa.plazo" (cambio)="cargar()" />
+  }
+  @if (etapa.situacion === 'activa' && etapa.clave === 'DIRECCION_EJECUTIVA' && puede('TrasladarUaj')) {
+    <app-traslado-uaj [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
+  }
+  @if (etapa.situacion === 'activa' && etapa.clave === 'REVISION_UAJ' && c.estCierre === 'EN_REVISION_UAJ' && puede('ObservarUaj')) {
+    <app-revision-uaj [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
+  }
+  @if (etapa.situacion === 'activa' && etapa.clave === 'REVISION_UAJ' && puede('SubsanarYElevarDe')) {
+    <app-subsanacion [ideCierre]="c.ideCierreConvenio" (cambio)="cargar()" />
+  }
+  @if (etapa.situacion === 'activa' && etapa.clave === 'RDE' && puede('SuscribirRde')) {
+    <app-suscripcion-rde [ideCierre]="c.ideCierreConvenio" [fecRemisionProyecto]="c.fecRemisionProyectoRde" (cambio)="cargar()" />
+  }
+  @if (etapa.clave === 'RDE' && etapa.situacion === 'completada' && puede('RegistrarCargoNotificacion')) {
+    <app-cargo-notificacion [ideCierre]="c.ideCierreConvenio" [registrado]="tieneCargo()" (cambio)="cargar()" />
+  }
+</ng-template>
 
 <ui-pdf-viewer
   [open]="visor().abierto"

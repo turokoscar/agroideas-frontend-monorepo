@@ -13,7 +13,8 @@ export interface UiStep {
 
 /**
  * Etapas de un proceso: completadas (✓), la actual (resaltada, `aria-current="step"`) y pendientes. Con `navigable`,
- * cada paso es un botón que emite `stepClick` (p. ej. para llevar a la tarjeta de esa etapa).
+ * los pasos completados y el actual son botones que emiten `stepClick` (p. ej. para llevar a la tarjeta de esa etapa);
+ * los pendientes no, porque aún no tienen nada que mostrar.
  */
 @Component({
   selector: 'ui-stepper',
@@ -25,7 +26,7 @@ export interface UiStep {
       [attr.aria-label]="ariaLabel() || null">
       @for (step of steps(); track step.key; let i = $index) {
         <li>
-          @if (navigable()) {
+          @if (navigable() && step.status !== 'pending') {
             <button type="button"
               class="flex w-full items-start gap-2 rounded-lg p-1 text-left transition-colors hover:bg-muted/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
               [attr.aria-current]="step.status === 'current' ? 'step' : null"
