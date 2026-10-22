@@ -1,15 +1,21 @@
 import { AppSettings } from './app-settings.model';
 
-// Calidad (VPS): rutas relativas. El Nginx del contenedor sigec-cierre-ui las reenvía
-// a la API de Cierre y a test.agroideas.gob.pe, así el navegador no hace llamadas cross-origin.
+// Calidad (VPS): rutas relativas. El Nginx del contenedor sigec-cierre-ui las reenvía a la API de
+// Cierre y a test.agroideas.gob.pe (seguridad y general), así el navegador no hace llamadas cross-origin.
 export const environment: AppSettings = {
   production: true,
   apiAuth: '/api-seguridad/api/Auth',
   apiUrl: '/api/v1',
+  apiGeneral: '/api-general/api/v2',
   deviceId: 'web-admin',
   paginacion: {
     cantidadPorPagina: 20,
     cantidadMaxima: 100
+  },
+  busquedaConvenios: {
+    cantidadSugerencias: 10,
+    longitudMinima: 2,
+    esperaMs: 300
   },
   archivos: {
     tamanoMaximoPdfMb: 10

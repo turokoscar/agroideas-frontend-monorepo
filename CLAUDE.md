@@ -56,7 +56,7 @@ URLs (`/api/v1`, `/api-seguridad/...`, `/api-general/...`) that the container's 
 reverse-proxies to `sigec-rtf-api:8080` (Docker network) and `test.agroideas.gob.pe`, because
 the RTF API has no CORS outside Development — keep those paths and the Nginx `location`
 blocks in sync when adding an endpoint base. sigec-cierre follows the same pattern (`/api/v1` →
-`sigec-cierre-api:8080`, `/api-seguridad/`), and sigec-rtf also proxies `/api-cierre/` to it. The
+`sigec-cierre-api:8080`, `/api-seguridad/`, `/api-general/`), and sigec-rtf also proxies `/api-cierre/` to it. The
 API Dockerfiles, compose services and `deploy_sigec_*.sh` scripts live in `AGROIDEAS/despliegue`.
 
 ## Architecture — the big picture

@@ -4,10 +4,16 @@ export const environment: AppSettings = {
   production: true,
   apiAuth: 'https://localhost:7101/api/Auth',
   apiUrl: 'https://localhost:7400/api/v1',
+  apiGeneral: 'https://localhost:7080/api/v2',
   deviceId: 'web-admin',
   paginacion: {
     cantidadPorPagina: 20,
     cantidadMaxima: 100
+  },
+  busquedaConvenios: {
+    cantidadSugerencias: 10,
+    longitudMinima: 2,
+    esperaMs: 300
   },
   archivos: {
     tamanoMaximoPdfMb: 10

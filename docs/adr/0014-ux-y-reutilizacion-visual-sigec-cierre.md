@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fase 0 implementada** (21/10/2026); las Fases 1
-a 6 sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 y 1 implementadas** (21/10/2026); las Fases
+2 a 6 sin implementar. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -202,11 +202,13 @@ de `libs` tocados), se prueba en el navegador con los usuarios de prueba locales
 cabecera, el Acta, el Anexo 22 y en los tres PDFs, igual que RTF para el mismo convenio.
 
 ### Fase 1 — Buscador de convenio al iniciar el expediente (H-02) 🔴
-- El modal "Iniciar expediente" usa `lib-ui-select-search` sobre los convenios de `sel-api-general` (los asignados
-  al especialista o todos, según el rol), mostrando "0048-2023-ST · Organización".
+- El modal "Iniciar expediente" busca los convenios en `sel-api-general` (los asignados al especialista o todos, según
+  el rol), mostrando "0048-2023-ST · Organización" y el RUC.
 - Se envía el `postulanteId` elegido; el usuario no lo ve.
+- ✅ Implementada el 21/10/2026 con un componente nuevo, `ui-autocomplete`, en lugar de `lib-ui-select-search` (ver
+  Registro). Busca por RUC o razón social: el SEL no busca por número (punto abierto 3).
 
-**Criterio de aceptación:** un usuario de la UN inicia un expediente escribiendo parte del número o del nombre de la
+**Criterio de aceptación:** un usuario de la UN inicia un expediente escribiendo parte del RUC o del nombre de la
 organización, sin conocer el `postulanteId`.
 
 ### Fase 2 — Adopción de lo que ya existe en `@agroideas/ui` (H-03) 🟠
@@ -296,6 +298,10 @@ sí.
    pasar a la misma regla (D2). Fuera del alcance de este ADR; se registra para RTF.
 2. **`formatDocNumber` de KOFIX** (`no-objecion.page.ts`, `bandeja-aprobacion.page.ts`): duplica
    `formatSolicitudNumber` para los números de documento. No es el número de convenio; se registra como deuda.
+3. **Búsqueda de convenios por número en el SEL:** `GENERAL.SEL_SP_R_ListarConvenioCartera` (`convenios/todos`,
+   `asignados`, `cartera`) aplica `@Busqueda` solo al RUC y a la razón social, aunque la documentación de
+   `BusquedaRequest` dice que también al número; el filtro `NumeroConvenio` solo lo recibe `vigentes`. Ampliar el SP
+   afecta a KOFIX, RTF y SAT y requiere desplegarlo en BD_SEL: el owner decidió no tocarlo por ahora (21/10/2026).
 
 ### Resueltos
 - **Año del número de convenio** (21/10/2026, owner): el de la fecha de firma, en los tres módulos.
@@ -351,3 +357,20 @@ sí.
   mano desde BD_SEL_DEV, porque no tenían Anexo 20 ni 22). En Calidad no hay expedientes todavía.
 - **Pendiente:** verlo en el navegador (necesita `sel-api-seguridad`) y desplegar API y UI juntas: la UI nueva con la
   API anterior mostraría el año "XXXX".
+
+### Fase 1 — 2026-10-21: buscador de convenio al iniciar el expediente
+- **`libs/ui`: `ui-autocomplete`** (combobox de WAI-ARIA: ↓/↑, Enter, Escape; `aria-activedescendant`), sin PrimeNG y
+  con las clases del tema. Emite `search` tras una espera y con longitud mínima, y `optionSelected` (`null` si el
+  usuario vuelve a escribir). La lista va en el flujo, debajo del campo, para no quedar recortada en `app-ui-modal`.
+  No se usó `lib-ui-select-search`: es un Dropdown de PrimeNG que busca al presionar Enter y cuyo estilo
+  (`sat-dropdown-panel`, `primeng.min.css`) solo existe en sat-ui. 5 pruebas.
+- **`sigec-cierre`:** `ConvenioSelService` (`convenios/asignados` si el único rol del personal es la UN, como
+  `ICarteraDelUsuario` de la API; si no, `convenios/todos`), `apiGeneral` y `busquedaConvenios` (sugerencias, longitud
+  mínima, espera) en los `environment*.ts`, y `location /api-general/` en `Dockerfile.sigec-cierre-ui`. El modal
+  muestra número formateado, organización y RUC del elegido; un error del SEL se muestra en la lista. Solo cuenta la
+  última búsqueda (se cancela la anterior).
+- **Pruebas:** ui 49/49, sigec-cierre 202/202; lint y build.
+- **En el navegador** (con `opazos`, Jefe de UN y Administrador): "perfiles" → "0048-2026-ST · ASOCIACION DE
+  PRODUCTORES AGROPECUARIOS PERFILES COFFEE PERU", elegido con ↓ + Enter; un término sin coincidencias muestra
+  "Ningún convenio coincide." y una sola petición a `convenios/todos`. No se pulsó "Iniciar" para no alterar los
+  datos de prueba. También se vio la Fase 0 en vivo: "Convenio 0046-2024-ST" (OA) y "0266-2023-ST" (bandeja).

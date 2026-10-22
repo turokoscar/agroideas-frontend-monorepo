@@ -5,6 +5,7 @@ import { ToastService } from '@agroideas/ui';
 import { BandejaComponent, coincide, pestanaInicial } from './bandeja.component';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ConvenioSelDto, ConvenioSelService } from '../../core/services/convenio-sel.service';
 import { CierreRol } from '../../core/models/rol-cierre.model';
 import { ExpedientePendienteDto, SemaforoPlazo } from '../../core/models/cierre.model';
 
@@ -65,6 +66,7 @@ describe('BandejaComponent', () => {
       iniciar: jest.fn()
     };
     const toast = { error: jest.fn(), success: jest.fn() };
+    const convenios = { buscar: jest.fn() };
 
     function crear(roles: CierreRol[] = ['UN']) {
       TestBed.configureTestingModule({
@@ -73,6 +75,7 @@ describe('BandejaComponent', () => {
           provideRouter([]),
           { provide: CierreApiService, useValue: api },
           { provide: ToastService, useValue: toast },
+          { provide: ConvenioSelService, useValue: convenios },
           { provide: AuthService, useValue: { roles: () => roles } }
         ]
       });
@@ -138,12 +141,39 @@ describe('BandejaComponent', () => {
       const { componentInstance: c } = crear();
       const navegar = jest.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
-      c.ideConvenioNuevo = 43829;
+      c.convenioElegido.set({ id: 43829, numeroConvenio: '266', ruc: '20608243691', razonSocial: 'Valles Verdes', fechaFirma: '2023-04-03' });
       c.iniciar();
 
       expect(api.iniciar).toHaveBeenCalledWith(43829);
       expect(toast.success).toHaveBeenCalledWith('Expediente abierto', 'Abierto en EN_VERIFICACION.');
       expect(navegar).toHaveBeenCalledWith(['/expedientes', 12]);
+    });
+
+    it('busca el convenio en el SEL con los roles del usuario y lo muestra con el número oficial', () => {
+      api.listarTodosLosPendientes.mockReturnValue(of([]));
+      api.listar.mockReturnValue(of({ total: 0, items: [] }));
+      const encontrado: ConvenioSelDto = { id: 2242, numeroConvenio: '48', ruc: '20605569481', razonSocial: 'Perfiles Coffee', fechaFirma: '2026-06-23T00:00:00' };
+      convenios.buscar.mockReturnValue(of([encontrado]));
+      const { componentInstance: c } = crear(['UN']);
+
+      c.abrirModalIniciar();
+      c.buscarConvenios('perfiles');
+
+      expect(convenios.buscar).toHaveBeenCalledWith('perfiles', ['UN']);
+      expect(c.sugerencias()).toEqual([encontrado]);
+      expect(c.textoConvenio(encontrado)).toBe('0048-2026-ST · Perfiles Coffee');
+    });
+
+    it('si el SEL falla, lo dice en la lista de sugerencias', () => {
+      api.listarTodosLosPendientes.mockReturnValue(of([]));
+      api.listar.mockReturnValue(of({ total: 0, items: [] }));
+      convenios.buscar.mockReturnValue(throwError(() => ({ status: 503 })));
+      const { componentInstance: c } = crear();
+
+      c.buscarConvenios('perfiles');
+
+      expect(c.sugerencias()).toEqual([]);
+      expect(c.errorBusqueda()).toBeTruthy();
     });
   });
 });

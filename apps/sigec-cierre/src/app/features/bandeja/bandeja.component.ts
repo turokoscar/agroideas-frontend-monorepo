@@ -1,12 +1,14 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   TableColumn,
   ToastService,
   UIButtonComponent,
   UIModalComponent,
+  UiAutocompleteComponent,
   UiDataTableComponent,
   UiFilterBarComponent,
   UiPaginationComponent
@@ -15,6 +17,7 @@ import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@a
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ConvenioSelDto, ConvenioSelService, buscaEnCartera } from '../../core/services/convenio-sel.service';
 import { AvisoCalendarioComponent } from '../../shared/aviso-calendario.component';
 import {
   CierreDto,
@@ -67,6 +70,7 @@ export function coincide(
     FormsModule,
     UIButtonComponent,
     UIModalComponent,
+    UiAutocompleteComponent,
     UiDataTableComponent,
     UiFilterBarComponent,
     UiPaginationComponent,
@@ -77,10 +81,12 @@ export function coincide(
 export class BandejaComponent implements OnInit {
   private api = inject(CierreApiService);
   private auth = inject(AuthService);
+  private convenios = inject(ConvenioSelService);
   private router = inject(Router);
   private toast = inject(ToastService);
 
   readonly cantidadPorPagina = environment.paginacion.cantidadPorPagina;
+  readonly busquedaConvenios = environment.busquedaConvenios;
   readonly semaforos = SEMAFOROS;
   readonly estados = ESTADOS_CIERRE;
   readonly etiquetaSemaforo = ETIQUETA_SEMAFORO;
@@ -120,8 +126,19 @@ export class BandejaComponent implements OnInit {
   esAdmin = computed(() => this.auth.roles().includes('ADMIN'));
   puedeIniciar = computed(() => tieneAlgunRol(this.auth.roles(), ['UN', 'JEFE_UN']));
   modalIniciar = signal(false);
-  ideConvenioNuevo: number | null = null;
   iniciando = signal(false);
+
+  /** Búsqueda del convenio a cerrar en sel-api-general (ADR 0014, Fase 1): la UN no conoce el postulanteId. */
+  buscador = viewChild(UiAutocompleteComponent);
+  sugerencias = signal<ConvenioSelDto[]>([]);
+  buscandoConvenios = signal(false);
+  errorBusqueda = signal<string | null>(null);
+  convenioElegido = signal<ConvenioSelDto | null>(null);
+  soloCartera = computed(() => buscaEnCartera(this.auth.roles()));
+  private busquedaEnCurso?: Subscription;
+
+  readonly textoConvenio = (c: ConvenioSelDto) => `${formatConvenioNumber(c.numeroConvenio, c.fechaFirma)} · ${c.razonSocial}`;
+  readonly detalleConvenio = (c: ConvenioSelDto) => `RUC ${c.ruc}`;
 
   conteo = computed(() => {
     const conteo: Record<SemaforoPlazo, number> = { VENCIDO: 0, POR_VENCER: 0, EN_PLAZO: 0, SIN_PLAZO: 0 };
@@ -203,14 +220,41 @@ export class BandejaComponent implements OnInit {
   }
 
   abrirModalIniciar() {
-    this.ideConvenioNuevo = null;
+    this.convenioElegido.set(null);
+    this.sugerencias.set([]);
+    this.errorBusqueda.set(null);
+    this.buscador()?.clear();
     this.modalIniciar.set(true);
   }
 
+  cerrarModalIniciar() {
+    this.busquedaEnCurso?.unsubscribe();
+    this.modalIniciar.set(false);
+  }
+
+  buscarConvenios(texto: string) {
+    // Solo cuenta la última búsqueda: una respuesta lenta de un término anterior no pisa las sugerencias.
+    this.busquedaEnCurso?.unsubscribe();
+    this.buscandoConvenios.set(true);
+    this.errorBusqueda.set(null);
+    this.busquedaEnCurso = this.convenios.buscar(texto, this.auth.roles()).subscribe({
+      next: items => {
+        this.sugerencias.set(items);
+        this.buscandoConvenios.set(false);
+      },
+      error: err => {
+        this.sugerencias.set([]);
+        this.buscandoConvenios.set(false);
+        this.errorBusqueda.set(mensajeParaUsuario(err, 'No se pudo consultar el SEL. Intente nuevamente.'));
+      }
+    });
+  }
+
   iniciar() {
-    if (!this.ideConvenioNuevo) return;
+    const convenio = this.convenioElegido();
+    if (!convenio) return;
     this.iniciando.set(true);
-    this.api.iniciar(this.ideConvenioNuevo).subscribe({
+    this.api.iniciar(convenio.id).subscribe({
       next: resultado => {
         this.iniciando.set(false);
         this.modalIniciar.set(false);

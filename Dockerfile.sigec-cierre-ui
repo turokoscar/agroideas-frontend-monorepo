@@ -41,6 +41,13 @@ server {
         proxy_set_header Host test.agroideas.gob.pe;
     }
 
+    # Búsqueda de convenios al iniciar un expediente (ADR 0014, Fase 1)
+    location /api-general/ {
+        proxy_pass https://test.agroideas.gob.pe/api-general/;
+        proxy_ssl_server_name on;
+        proxy_set_header Host test.agroideas.gob.pe;
+    }
+
     location / {
         root /usr/share/nginx/html;
         index index.html index.htm;

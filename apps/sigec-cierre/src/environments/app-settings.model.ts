@@ -8,6 +8,8 @@ export interface AppSettings {
   apiAuth: string;
   /** Base de sigec-api-cierre, con su prefijo `api/v1`. */
   apiUrl: string;
+  /** Base de sel-api-general (`api/v2`): búsqueda de convenios para iniciar un expediente. */
+  apiGeneral: string;
   /** `deviceId` que se envía al iniciar sesión en sel-api-seguridad. */
   deviceId: string;
   paginacion: {
@@ -18,6 +20,14 @@ export interface AppSettings {
      * pide en páginas de este tamaño; debe coincidir con la API o responderá 400.
      */
     cantidadMaxima: number;
+  };
+  busquedaConvenios: {
+    /** Sugerencias que se piden a sel-api-general por búsqueda. */
+    cantidadSugerencias: number;
+    /** Caracteres mínimos antes de buscar. */
+    longitudMinima: number;
+    /** Espera desde la última tecla hasta consultar, en ms. */
+    esperaMs: number;
   };
   archivos: {
     /** Tamaño máximo de un PDF que se sube (el mismo límite que valida sel-api-archivos: 10 MB). */
