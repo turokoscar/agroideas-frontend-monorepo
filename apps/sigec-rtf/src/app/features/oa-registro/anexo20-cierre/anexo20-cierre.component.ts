@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent } from '@agroideas/ui';
-import { mensajeParaUsuario } from '@agroideas/utils';
+import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CierreService } from '../../../core/services/cierre.service';
@@ -22,7 +22,7 @@ import { Anexo20Dto, EvidenceDto, TIPO_INFORME_CIERRE } from '../../../core/mode
 @Component({
   selector: 'app-anexo20-cierre',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent],
+  imports: [CommonModule, FormsModule, UIButtonComponent, FormatConvenioPipe],
   templateUrl: './anexo20-cierre.component.html'
 })
 export class Anexo20CierreComponent {
@@ -185,7 +185,8 @@ export class Anexo20CierreComponent {
         const url = URL.createObjectURL(blob);
         const enlace = document.createElement('a');
         enlace.href = url;
-        enlace.download = `Anexo20_${this.anexo()?.txtNumeroConvenio ?? ideConvenio}.pdf`;
+        const a = this.anexo();
+        enlace.download = `Anexo20_${a?.txtNumeroConvenio ? formatConvenioNumber(a.txtNumeroConvenio, a.fecInicioConvenio) : ideConvenio}.pdf`;
         enlace.click();
         URL.revokeObjectURL(url);
       },

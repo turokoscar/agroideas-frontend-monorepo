@@ -15,6 +15,7 @@ function pendiente(ideCierreConvenio: number): ExpedientePendienteDto {
     estCierre: 'EN_VERIFICACION',
     fecInicio: '2026-10-01T00:00:00',
     txtNumeroConvenio: null,
+    fecFirmaConvenio: null,
     txtOrganizacion: null,
     flgDeOficio: false,
     flgSelSincronizado: null,

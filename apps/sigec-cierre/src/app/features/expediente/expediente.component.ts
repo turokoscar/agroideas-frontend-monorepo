@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import { UIButtonComponent, UiCountdownRingComponent, ToastService } from '@agroideas/ui';
 import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
-import { mensajeParaUsuario } from '@agroideas/utils';
+import { FormatConvenioPipe, mensajeParaUsuario } from '@agroideas/utils';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -41,7 +41,7 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones'
 @Component({
   selector: 'app-expediente',
   standalone: true,
-  imports: [DatePipe, NgClass, RouterLink, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
+  imports: [DatePipe, NgClass, RouterLink, FormatConvenioPipe, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
     ActaCierreComponent,
     InformeEvaluacionComponent,
     PresentacionAnexo20Component,

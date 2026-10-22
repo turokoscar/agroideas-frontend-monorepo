@@ -80,7 +80,7 @@
       <dl class="grid grid-cols-1 gap-x-6 gap-y-2 rounded-lg bg-muted/30 p-4 text-xs sm:grid-cols-2 lg:grid-cols-3">
         <div><dt class="text-muted-foreground">Organización</dt><dd class="font-medium text-foreground">{{ a.txtOrganizacion ?? '—' }}</dd></div>
         <div><dt class="text-muted-foreground">Plan de negocio</dt><dd class="font-medium text-foreground">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
-        <div><dt class="text-muted-foreground">Convenio N°</dt><dd class="font-medium text-foreground">{{ a.txtNumeroConvenio ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Convenio N°</dt><dd class="font-medium text-foreground">{{ a.txtNumeroConvenio | formatConvenio: a.fecInicioConvenio }}</dd></div>
         <div><dt class="text-muted-foreground">Ubicación</dt><dd class="font-medium text-foreground">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
         <div><dt class="text-muted-foreground">Vigencia</dt><dd class="font-medium text-foreground">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
         <div><dt class="text-muted-foreground">Financiamiento AGROIDEAS</dt><dd class="font-medium text-foreground">{{ a.impFinanciamientoAgroideas !== null ? ('S/ ' + (a.impFinanciamientoAgroideas | number: '1.2-2')) : '—' }}</dd></div>

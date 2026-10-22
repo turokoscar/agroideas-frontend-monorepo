@@ -20,6 +20,8 @@ export interface EvaluacionImpactoDto {
   ideCierreConvenio: number;
   ideConvenio: number;
   txtNumeroConvenio: string | null;
+  /** Fecha de firma del convenio (no confundir con `fecFirma`, la del Anexo 22). */
+  fecFirmaConvenio: string | null;
   txtOrganizacion: string | null;
   txtCadenaProductiva: string | null;
   txtRegion: string | null;
@@ -30,6 +32,7 @@ export interface EvaluacionImpactoDto {
   numSocios: number | null;
   numHectareas: number | null;
   tipResultado: string | null;
+  /** Momento en que se presentó firmado el Anexo 22. */
   fecFirma: string;
   indicadores: IndicadorImpactoDto[];
 }

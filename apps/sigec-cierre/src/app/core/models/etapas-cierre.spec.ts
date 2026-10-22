@@ -13,6 +13,7 @@ function cierre(estCierre: EstadoCierre, extra: Partial<CierreDetalleDto> = {}):
     fecDerivacionUAJ: null,
     fecCierreFormal: null,
     txtNumeroConvenio: '0051-2026',
+    fecFirmaConvenio: null,
     txtOrganizacion: 'Asociación Wishlaj Marca',
     codUbigeo: '020101',
     fecFinVigencia: '2026-09-30T00:00:00',

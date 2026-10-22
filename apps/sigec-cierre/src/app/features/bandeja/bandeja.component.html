@@ -95,7 +95,7 @@
       <ng-template #filaPendiente let-row let-col="col">
         @switch (col.field) {
           @case ('txtNumeroConvenio') {
-            <span class="font-medium text-foreground">{{ row.txtNumeroConvenio ?? row.ideConvenio }}</span>
+            <span class="font-medium text-foreground">{{ row.txtNumeroConvenio | formatConvenio: row.fecFirmaConvenio }}</span>
             @if (row.flgDeOficio) {
               <span class="ml-1 text-[10px] font-semibold text-warning">· de oficio</span>
             }
@@ -132,7 +132,7 @@
       <ng-template #filaTodos let-row let-col="col">
         @switch (col.field) {
           @case ('txtNumeroConvenio') {
-            <span class="font-medium text-foreground">{{ row.txtNumeroConvenio ?? row.ideConvenio }}</span>
+            <span class="font-medium text-foreground">{{ row.txtNumeroConvenio | formatConvenio: row.fecFirmaConvenio }}</span>
           }
           @case ('estCierre') {
             <app-estado-cierre-pill [estado]="row.estCierre" />

@@ -11,7 +11,7 @@ const indicador = (flgDesviacionCritica: boolean): IndicadorImpactoDto => ({
   pctVariacionLineaBase: -10, flgDesviacionCritica
 });
 const evaluacion: EvaluacionImpactoDto = {
-  ideCierreConvenio: 6, ideConvenio: 13348, txtNumeroConvenio: '0012-2023', txtOrganizacion: 'Cooperativa Café Sur',
+  ideCierreConvenio: 6, ideConvenio: 13348, txtNumeroConvenio: '12', fecFirmaConvenio: '2023-04-03T00:00:00', txtOrganizacion: 'Cooperativa Café Sur',
   txtCadenaProductiva: 'Café', txtRegion: 'Junín', txtProvincia: null, txtDistrito: null, canSociasMujeres: 10,
   canSociosHombres: 20, numSocios: 30, numHectareas: 45.5, tipResultado: 'CON_OBSERVACIONES', fecFirma: '2026-10-15T10:00:00',
   indicadores: [indicador(true), indicador(false)]
@@ -37,7 +37,8 @@ describe('EvaluacionesImpactoComponent', () => {
 
   it('lista los Anexos 22 firmados con resultado y desviaciones críticas', () => {
     const texto = crear().nativeElement.textContent as string;
-    expect(texto).toContain('0012-2023');
+    // Año de la firma del convenio (2023), no el de la firma del Anexo 22 (fecFirma, 2026).
+    expect(texto).toContain('0012-2023-ST');
     expect(texto).toContain('Convenio Ejecutado con Observaciones');
     expect(api.listarEvaluacionesImpacto).toHaveBeenCalledWith(expect.objectContaining({ pagina: 1 }));
   });

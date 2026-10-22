@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
-import { mensajeParaUsuario } from '@agroideas/utils';
+import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
 import { Anexo21Dto, ItemVerificadoDto, PATRON_DOCUMENTO, dnisRepetidos, errorHorario } from '../../../core/models/anexo21.model';
@@ -18,7 +18,7 @@ type ListaItems = 'bienes' | 'servicios';
 @Component({
   selector: 'app-acta-cierre',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, UiFileChipComponent],
+  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, UiFileChipComponent, FormatConvenioPipe],
   templateUrl: './acta-cierre.component.html'
 })
 export class ActaCierreComponent {
@@ -186,7 +186,8 @@ export class ActaCierreComponent {
         const url = URL.createObjectURL(blob);
         const enlace = document.createElement('a');
         enlace.href = url;
-        enlace.download = `Anexo21_${this.acta()?.txtNumeroConvenio ?? this.ideCierre()}.pdf`;
+        const a = this.acta();
+        enlace.download = `Anexo21_${a?.txtNumeroConvenio ? formatConvenioNumber(a.txtNumeroConvenio, a.fecFirmaConvenio) : this.ideCierre()}.pdf`;
         enlace.click();
         URL.revokeObjectURL(url);
       },

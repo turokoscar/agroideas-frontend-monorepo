@@ -34,6 +34,7 @@ function acta(extra: Partial<Anexo21Dto> = {}): Anexo21Dto {
     logros: [{ numOrden: 1, txtObjetivoEspecifico: 'Renovar cafetales', txtLogroAlcanzado: '' }],
     txtDificultades: null,
     txtNumeroConvenio: '319',
+    fecFirmaConvenio: '2023-04-03T00:00:00',
     asistentes: [],
     representantesLegalesSel: [],
     objetivosEspecificosSel: [],

@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **función de formato del convenio estandarizada**
-(parte de la Fase 0); el resto de fases sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fase 0 implementada** (21/10/2026); las Fases 1
+a 6 sin implementar. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -196,8 +196,7 @@ de `libs` tocados), se prueba en el navegador con los usuarios de prueba locales
   Anexo 22, evaluaciones de impacto y nombres de archivo descargados. Se quita el respaldo a `ideConvenio`.
 - **PDFs:** `FormatoConvenio.Formatear` en la API de cierre (D2), usado por los generadores de los Anexos 20, 21 y
   22.
-- ✅ Hecho el 21/10/2026: la función estándar en `@agroideas/utils` y su adopción en KOFIX, RTF y en las dos vistas de
-  Cierre que ya reciben la fecha de firma (ver Registro).
+- ✅ Implementada el 21/10/2026 (ver Registro).
 
 **Criterio de aceptación:** el expediente 10004 muestra "Convenio 0048-AAAA-ST" (año de su firma) en la bandeja, la
 cabecera, el Acta, el Anexo 22 y en los tres PDFs, igual que RTF para el mismo convenio.
@@ -314,7 +313,7 @@ sí.
 
 ## Registro de implementación
 
-### Fase 0 (parcial) — 2026-10-21: función de formato estandarizada
+### Fase 0 (primera parte) — 2026-10-21: función de formato estandarizada (commit `5c4bcc6`)
 - **`@agroideas/utils`:** `formatConvenioNumber(numero, fechaFirma)` corregida (año leído del texto ISO, sin desfase
   UTC; `0001-01-01` y fechas inválidas → `XXXX`; números no numéricos se devuelven tal cual; acepta `number` y
   `Date`). Nuevo pipe `FormatConvenioPipe` (`formatConvenio`) exportado desde el barrel. Pruebas en
@@ -328,3 +327,27 @@ sí.
   cabecera del expediente y el Acta esperan a que la API exponga la fecha de firma (resto de la Fase 0).
 - **Pruebas:** utils 37/37, kofix-ejecucion 541/541, sigec-cierre 196/196, sigec-rtf 206/206; lint sin errores
   (advertencias previas: 238 en kofix, 104 en RTF); build de las tres apps.
+
+### Fase 0 (segunda parte) — 2026-10-21: fecha de firma en la API de cierre y número formateado en todo Cierre
+- **Corrección de la primera parte:** en Evaluaciones de impacto se había usado `fecFirma`, que es la fecha en que se
+  firmó el Anexo 22, no el convenio: el número salía con el año 2026. Ahora usa `fecFirmaConvenio`.
+- **`sigec-api-cierre`** (rama `opazos`):
+  - `fec_firmaConvenio` en `SCC_TMC_CIERRE` (`schema.sql` y `migracion_21102026_fecha_firma_convenio.sql`, que la
+    completa desde el Anexo 22 o el Anexo 20 de cada expediente). La apertura la copia del SEL; si el SEL envía la
+    fecha mínima de .NET, se guarda NULL.
+  - Expuesta en `CierreDto` (y el detalle), `ExpedientePendienteDto`, `PlazoPorAlertarDto`, `EvaluacionImpactoDto`
+    (`FecFirmaConvenio`, distinta de `FecFirma`) y `Anexo21Dto` (desde el SEL, sin guardarse con el acta). SP
+    actualizados: `SCC_SP_R_CIERRES`, `SCC_SP_P_APLICARCAMBIO`, `SCC_SP_R_BANDEJA`, `SCC_SP_R_PLAZOSPORALERTAR` y
+    `SCC_SP_R_EVALUACIONESIMPACTO`.
+  - `FormatoConvenio` (`SIGEC_CIERRE.Utils/Convenios`), equivalente a `formatConvenioNumber` con los mismos casos de
+    prueba. Lo usan los PDFs de los Anexos 20, 21 y 22, los nombres de sus archivos, las notificaciones de los cambios
+    de estado y las alertas de plazos.
+  - **Pruebas:** 381/381 (11 nuevas). Verificado: los tres PDFs generados muestran "0048-2026-ST" (`pdftotext`).
+- **`sigec-cierre`:** número formateado en la bandeja (también se busca por él), la cabecera del expediente, el Acta y
+  el nombre de su PDF. **Pruebas:** 197/197; lint y build.
+- **`sigec-rtf`:** el bloque del Anexo 20 y el nombre de su PDF. **Pruebas:** 206/206; lint (104 advertencias previas)
+  y build.
+- **BD local:** migración y SP aplicados; los cuatro expedientes tienen la fecha de firma del SEL (dos se completaron a
+  mano desde BD_SEL_DEV, porque no tenían Anexo 20 ni 22). En Calidad no hay expedientes todavía.
+- **Pendiente:** verlo en el navegador (necesita `sel-api-seguridad`) y desplegar API y UI juntas: la UI nueva con la
+  API anterior mostraría el año "XXXX".

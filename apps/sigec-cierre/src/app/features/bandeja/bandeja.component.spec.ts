@@ -15,6 +15,7 @@ function pendiente(ideCierreConvenio: number, tipSemaforo: SemaforoPlazo, extra:
     estCierre: 'EN_EVALUACION_UN',
     fecInicio: '2026-10-01T00:00:00',
     txtNumeroConvenio: `00${ideCierreConvenio}-2026`,
+    fecFirmaConvenio: null,
     txtOrganizacion: `Cooperativa ${ideCierreConvenio}`,
     flgDeOficio: false,
     flgSelSincronizado: null,
@@ -48,6 +49,12 @@ describe('BandejaComponent', () => {
       expect(coincide(exp, '40007')).toBe(true);
       expect(coincide(exp, '  ')).toBe(true);
       expect(coincide(exp, 'otra')).toBe(false);
+    });
+
+    it('busca por el número de convenio tal como se muestra', () => {
+      const delSel = pendiente(8, 'EN_PLAZO', { txtNumeroConvenio: '48', fecFirmaConvenio: '2026-06-23T00:00:00' });
+      expect(coincide(delSel, '0048-2026-st')).toBe(true);
+      expect(coincide(delSel, '0048-2025')).toBe(false);
     });
   });
 

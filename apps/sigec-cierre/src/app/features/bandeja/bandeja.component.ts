@@ -11,7 +11,7 @@ import {
   UiFilterBarComponent,
   UiPaginationComponent
 } from '@agroideas/ui';
-import { mensajeParaUsuario } from '@agroideas/utils';
+import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -39,11 +39,15 @@ export function pestanaInicial(conteo: Readonly<Record<SemaforoPlazo, number>>):
   return SEMAFOROS.find(s => conteo[s] > 0) ?? 'TODOS';
 }
 
-/** Busca por número de convenio, organización o ID, sin distinguir mayúsculas. */
-export function coincide(expediente: Pick<ExpedientePendienteDto, 'txtNumeroConvenio' | 'txtOrganizacion' | 'ideConvenio' | 'ideCierreConvenio'>, texto: string): boolean {
+/** Busca por número de convenio (tal como se muestra, "0048-2023-ST"), organización o ID, sin distinguir mayúsculas. */
+export function coincide(
+  expediente: Pick<ExpedientePendienteDto, 'txtNumeroConvenio' | 'fecFirmaConvenio' | 'txtOrganizacion' | 'ideConvenio' | 'ideCierreConvenio'>,
+  texto: string
+): boolean {
   const termino = texto.trim().toLowerCase();
   if (!termino) return true;
-  return [expediente.txtNumeroConvenio, expediente.txtOrganizacion, String(expediente.ideConvenio), String(expediente.ideCierreConvenio)]
+  const numero = expediente.txtNumeroConvenio ? formatConvenioNumber(expediente.txtNumeroConvenio, expediente.fecFirmaConvenio) : null;
+  return [numero, expediente.txtOrganizacion, String(expediente.ideConvenio), String(expediente.ideCierreConvenio)]
     .some(valor => valor?.toLowerCase().includes(termino));
 }
 
@@ -58,6 +62,7 @@ export function coincide(expediente: Pick<ExpedientePendienteDto, 'txtNumeroConv
   imports: [
     AvisoCalendarioComponent,
     DatePipe,
+    FormatConvenioPipe,
     NgClass,
     FormsModule,
     UIButtonComponent,

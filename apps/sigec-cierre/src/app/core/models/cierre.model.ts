@@ -99,6 +99,8 @@ export interface CierreDto {
   txtOrganizacion: string | null;
   codUbigeo: string | null;
   fecFinVigencia: string | null;
+  /** Fecha de firma del convenio: su año forma el número "NNNN-AAAA-ST". */
+  fecFirmaConvenio: string | null;
   idePasoCriticoUltimo: number | null;
   ideRtfUltimo: number | null;
   fecPresentacionUltimoRtf: string | null;
@@ -172,6 +174,7 @@ export interface ExpedientePendienteDto {
   estCierre: EstadoCierre;
   fecInicio: string;
   txtNumeroConvenio: string | null;
+  fecFirmaConvenio: string | null;
   txtOrganizacion: string | null;
   flgDeOficio: boolean;
   flgSelSincronizado: boolean | null;

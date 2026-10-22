@@ -66,6 +66,8 @@ export interface Anexo21Dto extends Anexo21Datos {
   ideUsuario: number;
   fecRegistro: string;
   fecModificacion: string;
+  /** Fecha de firma del convenio en el SEL, para el número "NNNN-AAAA-ST". No se guarda con el acta. */
+  fecFirmaConvenio: string | null;
   /** Lo que falta para registrar la verificación (vacío = completo). */
   faltantes: string[];
   /** Representantes legales del SEL para elegir al presidente (opciones; no se guardan). Vacío: se escribe. */

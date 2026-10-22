@@ -175,7 +175,7 @@
       <h5 class="form-section-title">Cierre del acta y firmas</h5>
       <p class="text-xs text-slate-600">
         Estando los presentes de acuerdo con la información arriba indicada, … se da por <span class="font-semibold">FINALIZADO</span>
-        la ejecución del PNT en el marco del Convenio N° <span class="font-semibold text-slate-800">{{ a.txtNumeroConvenio ?? '—' }}</span>.
+        la ejecución del PNT en el marco del Convenio N° <span class="font-semibold text-slate-800">{{ a.txtNumeroConvenio | formatConvenio: a.fecFirmaConvenio }}</span>.
       </p>
       <div class="form-field sm:w-72">
         <label class="form-label" for="acta-hora-firma">Firma del acta: siendo las … horas del mismo día <span class="form-label-required">*</span></label>
