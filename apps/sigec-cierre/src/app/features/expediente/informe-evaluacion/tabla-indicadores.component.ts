@@ -25,9 +25,9 @@ export type ColumnaExtra = 'destino' | 'objetivo' | 'actividad' | null;
   host: { class: 'block' },
   imports: [DecimalPipe, NgClass, UIButtonComponent, UiStatusPillComponent],
   template: `
-    <div class="overflow-x-auto rounded-lg border border-slate-200">
+    <div class="overflow-x-auto rounded-lg border border-border/60">
       <table class="w-full min-w-[980px] border-collapse text-left text-xs">
-        <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+        <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
           <tr>
             <th rowspan="2" class="w-8 p-2">N°</th>
             <th rowspan="2" class="p-2">Concepto</th>
@@ -35,16 +35,16 @@ export type ColumnaExtra = 'destino' | 'objetivo' | 'actividad' | null;
             @if (columnaExtra()) { <th rowspan="2" class="p-2">{{ tituloExtra() }}</th> }
             <th rowspan="2" class="p-2 text-right">Línea base</th>
             @for (anio of anios; track anio.n) {
-              <th colspan="2" class="border-l border-slate-200 p-2 text-center">Año {{ anio.n }}</th>
+              <th colspan="2" class="border-l border-border/60 p-2 text-center">Año {{ anio.n }}</th>
             }
-            <th rowspan="2" class="border-l border-slate-200 p-2 text-right">Resultado</th>
+            <th rowspan="2" class="border-l border-border/60 p-2 text-right">Resultado</th>
             <th rowspan="2" class="p-2 text-right" title="Ejecutado al cierre frente a la línea base">Var. vs LB</th>
             <th rowspan="2" class="p-2">Origen</th>
             <th rowspan="2" class="w-20 p-2"></th>
           </tr>
           <tr>
             @for (anio of anios; track anio.n) {
-              <th class="border-l border-slate-200 p-2 text-right">Prog.</th>
+              <th class="border-l border-border/60 p-2 text-right">Prog.</th>
               <th class="p-2 text-right">Ejec.</th>
             }
           </tr>
@@ -52,31 +52,31 @@ export type ColumnaExtra = 'destino' | 'objetivo' | 'actividad' | null;
         <tbody>
           @for (f of filas(); track $index) {
             @let manual = f.txtOrigen === 'MANUAL';
-            <tr class="border-b border-slate-100 align-top" [ngClass]="{ 'bg-destructive/5': critica(f) }">
-              <td class="p-2 font-semibold text-slate-500">{{ f.numOrden }}</td>
+            <tr class="border-b border-border/40 align-top" [ngClass]="{ 'bg-destructive/5': critica(f) }">
+              <td class="p-2 font-semibold text-muted-foreground">{{ f.numOrden }}</td>
               <td class="p-2">
-                <span class="font-semibold text-slate-800">{{ f.txtConcepto || '(sin concepto)' }}</span>
-                @if (f.txtComentarios) { <span class="block text-[10px] text-slate-400">{{ f.txtComentarios }}</span> }
+                <span class="font-semibold text-foreground">{{ f.txtConcepto || '(sin concepto)' }}</span>
+                @if (f.txtComentarios) { <span class="block text-[11px] text-muted-foreground/70">{{ f.txtComentarios }}</span> }
               </td>
               <td class="p-2">{{ f.txtUnidadMedida ?? '—' }}</td>
               @if (columnaExtra()) { <td class="p-2">{{ extra(f) ?? '—' }}</td> }
               <td class="p-2 text-right">{{ numero(f.numLineaBase) }}</td>
               @for (anio of anios; track anio.n) {
-                <td class="border-l border-slate-100 p-2 text-right">{{ numero(f[anio.prog]) }}</td>
+                <td class="border-l border-border/40 p-2 text-right">{{ numero(f[anio.prog]) }}</td>
                 <td class="p-2 text-right">
                   {{ numero(f[anio.ejec]) }}
                   @if (pct(f[anio.prog], f[anio.ejec]) !== null) {
-                    <span class="block text-[10px]" [ngClass]="esCritica(pct(f[anio.prog], f[anio.ejec])) ? 'font-semibold text-destructive' : 'text-slate-400'">
+                    <span class="block text-[11px]" [ngClass]="esCritica(pct(f[anio.prog], f[anio.ejec])) ? 'font-semibold text-destructive' : 'text-muted-foreground/70'">
                       {{ pct(f[anio.prog], f[anio.ejec]) | number: '1.0-2' }} %
                     </span>
                   }
                 </td>
               }
-              <td class="border-l border-slate-100 p-2 text-right">{{ numero(f.numResultado) }}</td>
+              <td class="border-l border-border/40 p-2 text-right">{{ numero(f.numResultado) }}</td>
               <td class="p-2 text-right">
                 @if (pctLineaBase(f) !== null) {
                   <span [ngClass]="(pctLineaBase(f) ?? 0) < 0 ? 'text-warning' : 'text-success'">{{ pctLineaBase(f) | number: '1.0-2' }} %</span>
-                } @else { <span class="text-slate-400">—</span> }
+                } @else { <span class="text-muted-foreground/70">—</span> }
               </td>
               <td class="p-2">
                 <app-ui-status-pill [tone]="manual ? 'neutral' : 'primary'" [showIcon]="false" [text]="origen(f.txtOrigen)" />
@@ -93,7 +93,7 @@ export type ColumnaExtra = 'destino' | 'objetivo' | 'actividad' | null;
               </td>
             </tr>
           } @empty {
-            <tr><td [attr.colspan]="columnaExtra() ? 15 : 14" class="p-4 text-center text-slate-400">{{ vacio() }}</td></tr>
+            <tr><td [attr.colspan]="columnaExtra() ? 15 : 14" class="p-4 text-center text-muted-foreground/70">{{ vacio() }}</td></tr>
           }
         </tbody>
       </table>

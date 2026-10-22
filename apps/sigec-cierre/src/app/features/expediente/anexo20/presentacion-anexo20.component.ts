@@ -22,7 +22,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
     <section class="form-card-flat mt-4 space-y-4">
       <div>
         <h5 class="form-section-title">Presentar el Anexo 20 en nombre de la organización</h5>
-        <p class="text-xs text-slate-600">
+        <p class="text-xs text-muted-foreground">
           El último RTF se envió sin el Informe de Cierre. La organización completa el formulario en el módulo de RTF, lo firma
           y le entrega el PDF; cárguelo aquí para continuar con la verificación de campo.
         </p>
@@ -33,9 +33,9 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
           El plazo venció el {{ plazo()?.fecLimite | date: 'dd/MM/yyyy' }}: el procedimiento continúa de oficio y ya no se presenta el Anexo 20.
         </p>
       } @else {
-        <div class="rounded-lg border border-slate-200 p-3 text-xs">
+        <div class="rounded-lg border border-border/60 p-3 text-xs">
           @if (cargando()) {
-            <p class="text-slate-400">Consultando el formulario de la organización…</p>
+            <p class="text-muted-foreground/70">Consultando el formulario de la organización…</p>
           } @else if (errorFormulario()) {
             <p class="text-destructive">{{ errorFormulario() }}</p>
           } @else if (formularioCompleto()) {
@@ -48,7 +48,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
           } @else {
             <p class="font-semibold text-warning">La organización aún no completa el formulario en el módulo de RTF.</p>
             @if ((anexo()?.faltantes ?? []).length) {
-              <p class="mt-1 text-slate-600">Falta: {{ anexo()?.faltantes?.join('; ') }}.</p>
+              <p class="mt-1 text-muted-foreground">Falta: {{ anexo()?.faltantes?.join('; ') }}.</p>
             }
           }
         </div>

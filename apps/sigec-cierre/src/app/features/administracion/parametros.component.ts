@@ -32,13 +32,13 @@ const GRUPOS: readonly { clave: GrupoParametro; titulo: string; ayuda: string }[
           <section class="form-card-flat space-y-3">
             <div>
               <h5 class="form-section-title">{{ g.titulo }}</h5>
-              @if (g.ayuda) { <p class="text-xs text-slate-500">{{ g.ayuda }}</p> }
+              @if (g.ayuda) { <p class="text-xs text-muted-foreground">{{ g.ayuda }}</p> }
             </div>
             @for (p of g.parametros; track p.codParametro) {
-              <div class="grid grid-cols-1 items-start gap-2 border-t border-slate-100 pt-3 sm:grid-cols-[1fr_minmax(0,320px)_auto]">
+              <div class="grid grid-cols-1 items-start gap-2 border-t border-border/40 pt-3 sm:grid-cols-[1fr_minmax(0,320px)_auto]">
                 <div>
                   <label class="form-label" [for]="'par-' + p.codParametro">{{ p.txtDescripcion }}</label>
-                  <span class="block text-[10px] text-slate-400">{{ p.codParametro }} · modificado el {{ p.fecModificacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="block text-[11px] text-muted-foreground/70">{{ p.codParametro }} · modificado el {{ p.fecModificacion | date: 'dd/MM/yyyy HH:mm' }}</span>
                 </div>
                 <div class="form-field">
                   <input class="form-input" [id]="'par-' + p.codParametro" [maxlength]="longitudValor"

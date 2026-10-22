@@ -73,19 +73,19 @@
           <input id="acta-pnt" type="text" class="form-input" [value]="a.txtPlanNegocio ?? ''" disabled />
         </div>
       </div>
-      <p class="text-[11px] text-slate-400">La organización y el plan de negocio vienen del SEL y no se editan aquí.</p>
+      <p class="text-[11px] text-muted-foreground/70">La organización y el plan de negocio vienen del SEL y no se editan aquí.</p>
     </section>
 
     <!-- PRIMERO -->
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">Primero</h5>
-      <p class="text-xs text-slate-600">
+      <p class="text-xs text-muted-foreground">
         Se corroboró sobre los bienes adquiridos durante la ejecución del PNT, según cuadro adjunto. La cantidad propuesta es la
         ejecutada según KOFIX: corríjala con lo verificado en campo. Programado, ejecutado y pagado son referencias y no salen en
         el acta impresa.
       </p>
       <ng-container *ngTemplateOutlet="tablaItems; context: { $implicit: a.bienes, lista: 'bienes', titulo: 'Bienes e insumos adquiridos' }" />
-      <p class="text-xs text-slate-600">Asimismo, se corroboró sobre los servicios recibidos durante la ejecución del PNT, según cuadro adjunto.</p>
+      <p class="text-xs text-muted-foreground">Asimismo, se corroboró sobre los servicios recibidos durante la ejecución del PNT, según cuadro adjunto.</p>
       <ng-container *ngTemplateOutlet="tablaItems; context: { $implicit: a.servicios, lista: 'servicios', titulo: 'Servicios contratados' }" />
     </section>
 
@@ -101,20 +101,20 @@
               <option [ngValue]="r.txtNombres">{{ r.txtNombres }}{{ r.txtCargo ? ' — ' + r.txtCargo : '' }}</option>
             }
           </select>
-          <span class="text-[11px] text-slate-400">Representantes legales registrados en el SEL.</span>
+          <span class="text-[11px] text-muted-foreground/70">Representantes legales registrados en el SEL.</span>
         } @else {
           <input id="acta-presidente" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()" />
-          <span class="text-[11px] text-slate-400">El SEL no registra representantes legales de esta organización.</span>
+          <span class="text-[11px] text-muted-foreground/70">El SEL no registra representantes legales de esta organización.</span>
         }
       </div>
-      <p class="text-xs text-slate-600">
+      <p class="text-xs text-muted-foreground">
         … manifestó que se culminó con las actividades de ejecución, habiéndose obtenido los siguientes logros en función a los
         objetivos:
       </p>
 
-      <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <div class="overflow-x-auto rounded-lg border border-border/60">
         <table class="w-full min-w-[640px] border-collapse text-left text-xs">
-          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr>
               <th class="w-10 p-2.5">N°</th>
               <th class="p-2.5">Objetivos específicos <span class="form-label-required">*</span></th>
@@ -124,8 +124,8 @@
           </thead>
           <tbody>
             @for (l of a.logros; track $index) {
-              <tr class="border-b border-slate-100 align-top">
-                <td class="p-2.5 font-semibold text-slate-500">{{ l.numOrden }}</td>
+              <tr class="border-b border-border/40 align-top">
+                <td class="p-2.5 font-semibold text-muted-foreground">{{ l.numOrden }}</td>
                 <td class="p-2.5">
                   @if (a.objetivosEspecificosSel.length > 0) {
                     <select class="form-select" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()">
@@ -150,7 +150,7 @@
         </table>
       </div>
       <div class="flex items-center justify-between">
-        <span class="text-[11px] text-slate-400">
+        <span class="text-[11px] text-muted-foreground/70">
           @if (a.objetivosEspecificosSel.length > 0) { Objetivos del marco lógico registrados en el SEL. }
         </span>
         <ui-button size="sm" appearance="soft" icon="add" label="Agregar logro" (onClick)="agregarLogro()" />
@@ -163,31 +163,31 @@
       <div class="form-field">
         <label class="form-label" for="acta-dificultades">Dificultades (opcional)</label>
         <textarea id="acta-dificultades" rows="4" class="form-textarea" [(ngModel)]="a.txtDificultades" (ngModelChange)="marcarSucio()"></textarea>
-        <span class="text-[11px] text-slate-400">Escriba una por línea: en el acta impresa cada una ocupa un renglón.</span>
+        <span class="text-[11px] text-muted-foreground/70">Escriba una por línea: en el acta impresa cada una ocupa un renglón.</span>
       </div>
     </section>
 
     <!-- Cierre y firmas -->
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">Cierre del acta y firmas</h5>
-      <p class="text-xs text-slate-600">
+      <p class="text-xs text-muted-foreground">
         Estando los presentes de acuerdo con la información arriba indicada, … se da por <span class="font-semibold">FINALIZADO</span>
-        la ejecución del PNT en el marco del Convenio N° <span class="font-semibold text-slate-800">{{ a.txtNumeroConvenio | formatConvenio: a.fecFirmaConvenio }}</span>.
+        la ejecución del PNT en el marco del Convenio N° <span class="font-semibold text-foreground">{{ a.txtNumeroConvenio | formatConvenio: a.fecFirmaConvenio }}</span>.
       </p>
       <div class="form-field sm:w-72">
         <label class="form-label" for="acta-hora-firma">Firma del acta: siendo las … horas del mismo día <span class="form-label-required">*</span></label>
         <input id="acta-hora-firma" type="time" class="form-input" [disabled]="!a.fecInicioReunion" [ngModel]="horaFirma()" (ngModelChange)="cambiarHoraFirma($event)" />
         @if (!a.fecInicioReunion) {
-          <span class="text-[11px] text-slate-400">Indique primero el día y la hora de inicio de la reunión.</span>
+          <span class="text-[11px] text-muted-foreground/70">Indique primero el día y la hora de inicio de la reunión.</span>
         }
       </div>
       @if (horario()) {
         <p class="text-xs text-destructive">{{ horario() }}</p>
       }
 
-      <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <div class="overflow-x-auto rounded-lg border border-border/60">
         <table class="w-full min-w-[640px] border-collapse text-left text-xs">
-          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr>
               <th class="w-10 p-2.5">N°</th>
               <th class="p-2.5">Nombres y apellidos <span class="form-label-required">*</span></th>
@@ -198,8 +198,8 @@
           </thead>
           <tbody>
             @for (p of a.asistentes; track $index) {
-              <tr class="border-b border-slate-100">
-                <td class="p-2.5 font-semibold text-slate-500">{{ p.numOrden }}</td>
+              <tr class="border-b border-border/40">
+                <td class="p-2.5 font-semibold text-muted-foreground">{{ p.numOrden }}</td>
                 <td class="p-2.5"><input type="text" maxlength="200" class="form-input" [attr.aria-label]="'Nombres y apellidos ' + p.numOrden" [(ngModel)]="p.txtNombres" (ngModelChange)="marcarSucio()" /></td>
                 <td class="p-2.5"><input type="text" maxlength="100" class="form-input" [attr.aria-label]="'Cargo ' + p.numOrden" [(ngModel)]="p.txtCargo" (ngModelChange)="marcarSucio()" /></td>
                 <td class="p-2.5"><input type="text" maxlength="12" [pattern]="patronDocumento" class="form-input" [attr.aria-label]="'DNI ' + p.numOrden" [(ngModel)]="p.codDni" (ngModelChange)="marcarSucio()" /></td>
@@ -208,13 +208,13 @@
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="5" class="p-4 text-center text-slate-400">Agregue a los socios asistentes y al profesional de AGROIDEAS que firmarán.</td></tr>
+              <tr><td colspan="5" class="p-4 text-center text-muted-foreground/70">Agregue a los socios asistentes y al profesional de AGROIDEAS que firmarán.</td></tr>
             }
           </tbody>
         </table>
       </div>
       <div class="flex items-center justify-between">
-        <span class="text-[11px] text-slate-400">El acta impresa deja filas en blanco para quien firme sin estar registrado.</span>
+        <span class="text-[11px] text-muted-foreground/70">El acta impresa deja filas en blanco para quien firme sin estar registrado.</span>
         <ui-button size="sm" appearance="soft" icon="person_add" label="Agregar asistente" (onClick)="agregarAsistente()" />
       </div>
       @if (repetidos().length) {
@@ -239,7 +239,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <ui-button icon="task_alt" label="Registrar verificación" [disabled]="!puedeRegistrar()" (onClick)="confirmar.set(true)" />
         @if (!completa()) {
-          <span class="text-[11px] text-slate-400">Se habilita con el acta guardada, completa y sin cambios pendientes.</span>
+          <span class="text-[11px] text-muted-foreground/70">Se habilita con el acta guardada, completa y sin cambios pendientes.</span>
         }
       </div>
     </section>
@@ -248,10 +248,10 @@
   <!-- Tabla de bienes o servicios, con las columnas del formato oficial y las referencias de KOFIX -->
   <ng-template #tablaItems let-items let-lista="lista" let-titulo="titulo">
     <div class="space-y-2">
-      <p class="text-center text-xs font-bold uppercase tracking-wide text-slate-600">{{ titulo }}</p>
-      <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <p class="text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ titulo }}</p>
+      <div class="overflow-x-auto rounded-lg border border-border/60">
         <table class="w-full min-w-[820px] border-collapse text-left text-xs">
-          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr>
               <th class="w-10 p-2.5">N°</th>
               <th class="p-2.5">Descripción</th>
@@ -266,23 +266,23 @@
           </thead>
           <tbody>
             @for (item of items; track $index) {
-              <tr class="border-b border-slate-100 align-top">
-                <td class="p-2.5 font-semibold text-slate-500">{{ item.numOrden }}</td>
+              <tr class="border-b border-border/40 align-top">
+                <td class="p-2.5 font-semibold text-muted-foreground">{{ item.numOrden }}</td>
                 <td class="p-2.5">
-                  @if (item.ideItemSel !== null) { <span class="font-semibold text-slate-800">{{ item.txtDescripcion }}</span> }
+                  @if (item.ideItemSel !== null) { <span class="font-semibold text-foreground">{{ item.txtDescripcion }}</span> }
                   @else { <input type="text" maxlength="500" class="form-input" aria-label="Descripción" [(ngModel)]="item.txtDescripcion" (ngModelChange)="marcarSucio()" /> }
                 </td>
                 <td class="p-2.5">
                   @if (item.ideItemSel !== null) { {{ item.txtUnidadMedida }} }
                   @else { <input type="text" maxlength="50" class="form-input" aria-label="Unidad de medida" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()" /> }
                 </td>
-                <td class="p-2.5 text-right text-slate-500">{{ item.canProgramada ?? '—' }}</td>
-                <td class="p-2.5 text-right text-slate-500">{{ item.canEjecutada ?? '—' }}</td>
-                <td class="p-2.5 text-right text-slate-500">{{ item.impEjecutado !== null ? (item.impEjecutado | number: '1.2-2') : '—' }}</td>
+                <td class="p-2.5 text-right text-muted-foreground">{{ item.canProgramada ?? '—' }}</td>
+                <td class="p-2.5 text-right text-muted-foreground">{{ item.canEjecutada ?? '—' }}</td>
+                <td class="p-2.5 text-right text-muted-foreground">{{ item.impEjecutado !== null ? (item.impEjecutado | number: '1.2-2') : '—' }}</td>
                 <td class="p-2.5">
                   <input type="number" min="0" class="form-input text-right" aria-label="Cantidad verificada"
                     [ngClass]="{ '!border-warning': difiere(item) }" [(ngModel)]="item.canCantidad" (ngModelChange)="marcarSucio()" />
-                  @if (difiere(item)) { <span class="mt-1 block text-[10px] text-warning">Difiere de lo ejecutado</span> }
+                  @if (difiere(item)) { <span class="mt-1 block text-[11px] text-warning">Difiere de lo ejecutado</span> }
                 </td>
                 <td class="p-2.5">
                   <input type="text" maxlength="500" class="form-input" aria-label="Observaciones" [(ngModel)]="item.txtObservaciones" (ngModelChange)="marcarSucio()" />
@@ -294,7 +294,7 @@
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="9" class="p-4 text-center text-slate-400">Sin ítems programados.</td></tr>
+              <tr><td colspan="9" class="p-4 text-center text-muted-foreground/70">Sin ítems programados.</td></tr>
             }
           </tbody>
         </table>

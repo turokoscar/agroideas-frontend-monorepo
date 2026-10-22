@@ -15,7 +15,7 @@ import { CierreApiService } from '../../../core/services/cierre-api.service';
   template: `
     <section class="form-card-flat mt-4 space-y-3">
       <h5 class="form-section-title">Trasladar a la Unidad de Asesoría Jurídica</h5>
-      <p class="text-xs text-slate-600">
+      <p class="text-xs text-muted-foreground">
         Revise el Expediente Único (Informe de Evaluación firmado y documentos de las etapas anteriores) y trasládelo a la UAJ
         para su revisión legal. La UAJ tendrá su plazo para observarlo o remitir el Informe Legal y el Proyecto de RDE.
       </p>

@@ -28,7 +28,7 @@ import { InformeEvaluacionComponent } from '../informe-evaluacion/informe-evalua
         } @else {
           @for (o of pendientes(); track o.ideObservacion) {
             <div class="form-field">
-              <p class="text-xs text-slate-700"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
+              <p class="text-xs text-foreground"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
               <label class="form-label" [attr.for]="'resp-' + o.ideObservacion">Respuesta <span class="form-label-required">*</span></label>
               <textarea [id]="'resp-' + o.ideObservacion" rows="2" class="form-textarea" [maxlength]="longitud"
                 [ngModel]="respuestas()[o.ideObservacion] || ''" (ngModelChange)="responder(o.ideObservacion, $event)"></textarea>
@@ -40,17 +40,17 @@ import { InformeEvaluacionComponent } from '../informe-evaluacion/informe-evalua
       </section>
 
       <div>
-        <p class="mb-1 text-xs text-slate-600">Corrija el Informe de Evaluación según las observaciones y preséntelo firmado (versión nueva):</p>
+        <p class="mb-1 text-xs text-muted-foreground">Corrija el Informe de Evaluación según las observaciones y preséntelo firmado (versión nueva):</p>
         <app-informe-evaluacion [ideCierre]="ideCierre()" modo="subsanacion" (firmadoCambio)="informeFirmado.set($event)" />
       </div>
 
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Elevar de nuevo a la Dirección Ejecutiva</h5>
         <ul class="space-y-1 text-xs">
-          <li [class.text-success]="todasRespondidas()" [class.text-slate-500]="!todasRespondidas()">
+          <li [class.text-success]="todasRespondidas()" [class.text-muted-foreground]="!todasRespondidas()">
             {{ todasRespondidas() ? '✔' : '✖' }} Todas las observaciones de la ronda {{ ronda() }} respondidas
           </li>
-          <li [class.text-success]="informeFirmado()" [class.text-slate-500]="!informeFirmado()">
+          <li [class.text-success]="informeFirmado()" [class.text-muted-foreground]="!informeFirmado()">
             {{ informeFirmado() ? '✔' : '✖' }} Versión nueva del Informe de Evaluación presentada firmada
           </li>
         </ul>

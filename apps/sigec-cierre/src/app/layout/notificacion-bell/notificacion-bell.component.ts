@@ -60,7 +60,7 @@ import { NotificacionDto } from '../../core/models/notificacion.model';
                 <span class="text-xs font-semibold text-foreground">{{ n.txtTitulo }}</span>
               </span>
               <span class="text-[11px] text-muted-foreground">{{ n.txtMensaje }}</span>
-              <span class="text-[10px] text-muted-foreground/70">{{ n.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <span class="text-[11px] text-muted-foreground/70">{{ n.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</span>
             </button>
           }
         </div>

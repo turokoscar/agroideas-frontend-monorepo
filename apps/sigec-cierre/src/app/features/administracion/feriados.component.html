@@ -14,9 +14,9 @@
     </div>
   </div>
 
-  <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+  <div class="overflow-x-auto rounded-xl border border-border/60 bg-card">
     <table class="w-full min-w-[720px] border-collapse text-left text-xs">
-      <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+      <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
         <tr>
           <th class="p-2.5">Fecha</th><th class="p-2.5">Tipo</th><th class="p-2.5">Alcance</th>
           <th class="p-2.5">Descripción</th><th class="p-2.5">Origen</th><th class="w-24 p-2.5 text-right">Acciones</th>
@@ -27,26 +27,26 @@
           <tr><td colspan="6"><ui-state kind="loading" message="Cargando los días inhábiles…" compact /></td></tr>
         } @else {
           @for (f of feriados(); track f.ideFeriado) {
-            <tr class="border-b border-slate-100 hover:bg-slate-50">
-              <td class="whitespace-nowrap p-2.5 font-semibold text-slate-800">{{ f.fecDia | date: 'EEE dd/MM/yyyy' }}</td>
+            <tr class="border-b border-border/40 hover:bg-muted/40">
+              <td class="whitespace-nowrap p-2.5 font-semibold text-foreground">{{ f.fecDia | date: 'EEE dd/MM/yyyy' }}</td>
               <td class="p-2.5">{{ etiquetaTipoDia(f.tipDia) }}</td>
               <td class="p-2.5">
                 @if (f.codDepartamento) { {{ nombreDepartamento(f.codDepartamento) }}@if (f.codProvincia) { · prov. {{ f.codProvincia }} } }
-                @else { <span class="text-slate-400">Nacional</span> }
+                @else { <span class="text-muted-foreground/70">Nacional</span> }
               </td>
               <td class="p-2.5">
                 {{ f.txtDescripcion }}
-                @if (f.txtSustento) { <span class="block text-[10px] text-slate-400">{{ f.txtSustento }}</span> }
+                @if (f.txtSustento) { <span class="block text-[11px] text-muted-foreground/70">{{ f.txtSustento }}</span> }
               </td>
               <td class="p-2.5">
                 <app-ui-status-pill [tone]="f.tipOrigen === 'GOB_PE' ? 'primary' : 'neutral'" [showIcon]="false" [text]="f.tipOrigen === 'GOB_PE' ? 'gob.pe' : 'Manual'" />
               </td>
               <td class="p-2.5 text-right">
                 <div class="row-actions justify-end">
-                  <button type="button" class="text-slate-500 hover:text-primary" [attr.aria-label]="'Editar ' + f.txtDescripcion" (click)="editar(f)">
+                  <button type="button" class="text-muted-foreground hover:text-primary" [attr.aria-label]="'Editar ' + f.txtDescripcion" (click)="editar(f)">
                     <span class="material-symbols-outlined text-[18px]">edit</span>
                   </button>
-                  <button type="button" class="text-slate-500 hover:text-destructive" [attr.aria-label]="'Dar de baja ' + f.txtDescripcion" (click)="aBorrar.set(f)">
+                  <button type="button" class="text-muted-foreground hover:text-destructive" [attr.aria-label]="'Dar de baja ' + f.txtDescripcion" (click)="aBorrar.set(f)">
                     <span class="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>
@@ -120,29 +120,29 @@
   maxWidth="820px" [saveLabel]="'Registrar ' + seleccionadas().length" saveIcon="save" [isSubmitting]="guardando()"
   [saveDisabled]="seleccionadas().length === 0" (onHide)="propuestas.set(null)" (onSave)="registrarPropuestas()">
   @if (lista) {
-    <div class="overflow-x-auto rounded-lg border border-slate-200">
+    <div class="overflow-x-auto rounded-lg border border-border/60">
       <table class="w-full min-w-[640px] border-collapse text-left text-xs">
-        <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+        <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
           <tr><th class="w-10 p-2.5"></th><th class="p-2.5">Fecha</th><th class="p-2.5">Tipo</th><th class="p-2.5">Alcance</th><th class="p-2.5">Descripción</th></tr>
         </thead>
         <tbody>
           @for (p of lista; track $index) {
-            <tr class="border-b border-slate-100" [ngClass]="{ 'opacity-50': p.yaRegistrado, 'bg-warning/5': p.revisarAlcance && !p.yaRegistrado }">
+            <tr class="border-b border-border/40" [ngClass]="{ 'opacity-50': p.yaRegistrado, 'bg-warning/5': p.revisarAlcance && !p.yaRegistrado }">
               <td class="p-2.5">
                 <input type="checkbox" class="h-4 w-4 accent-primary" [checked]="p.seleccionado && !p.yaRegistrado" [disabled]="p.yaRegistrado"
                   [attr.aria-label]="'Registrar ' + p.txtDescripcion" (change)="alternarPropuesta($index)" />
               </td>
-              <td class="whitespace-nowrap p-2.5 font-semibold text-slate-800">{{ p.fecDia | date: 'EEE dd/MM/yyyy' }}</td>
+              <td class="whitespace-nowrap p-2.5 font-semibold text-foreground">{{ p.fecDia | date: 'EEE dd/MM/yyyy' }}</td>
               <td class="p-2.5">{{ etiquetaTipoDia(p.tipDia) }}</td>
               <td class="p-2.5">{{ p.nombreDepartamento ?? nombreDepartamento(p.codDepartamento) ?? 'Nacional' }}</td>
               <td class="p-2.5">
                 {{ p.txtDescripcion }}
-                @if (p.yaRegistrado) { <span class="block text-[10px] text-slate-400">Ya registrado</span> }
-                @else if (p.revisarAlcance) { <span class="block text-[10px] font-semibold text-warning">Revisar el alcance antes de registrar</span> }
+                @if (p.yaRegistrado) { <span class="block text-[11px] text-muted-foreground/70">Ya registrado</span> }
+                @else if (p.revisarAlcance) { <span class="block text-[11px] font-semibold text-warning">Revisar el alcance antes de registrar</span> }
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="5" class="p-6 text-center text-slate-400">gob.pe no publica días inhábiles para {{ anio() }}.</td></tr>
+            <tr><td colspan="5" class="p-6 text-center text-muted-foreground/70">gob.pe no publica días inhábiles para {{ anio() }}.</td></tr>
           }
         </tbody>
       </table>

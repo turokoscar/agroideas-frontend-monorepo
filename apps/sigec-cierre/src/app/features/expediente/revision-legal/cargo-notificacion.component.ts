@@ -16,7 +16,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
   template: `
     <section class="form-card-flat mt-4 space-y-3">
       <h5 class="form-section-title">Cargo de notificación de la RDE</h5>
-      <p class="text-xs text-slate-600">
+      <p class="text-xs text-muted-foreground">
         @if (registrado()) { Ya hay un cargo registrado; si carga otro, reemplazará al anterior. }
         @else { Registre el cargo de la entrega de la RDE en el domicilio legal de la organización. }
       </p>

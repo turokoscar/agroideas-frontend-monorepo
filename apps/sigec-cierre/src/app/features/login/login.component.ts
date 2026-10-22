@@ -55,7 +55,7 @@ export function mensajeErrorLogin(err: HttpErrorResponse): string {
         <div class="flex items-center justify-between max-w-sm w-full mx-auto mt-4">
           <div>
             <p class="text-xs font-bold text-foreground tracking-wide">MIDAGRI</p>
-            <p class="text-[9px] text-muted-foreground uppercase tracking-wider">Unidad de Negocios</p>
+            <p class="text-[11px] text-muted-foreground uppercase tracking-wider">Unidad de Negocios</p>
           </div>
           <div>
             <span class="text-sm font-bold text-primary">AGROIDEAS</span>
@@ -171,9 +171,9 @@ export function mensajeErrorLogin(err: HttpErrorResponse): string {
         </div>
 
         <!-- Footer -->
-        <div class="flex items-center justify-between text-[10px] text-muted-foreground border-t border-border pt-4 max-w-sm w-full mx-auto mb-4">
+        <div class="flex items-center justify-between text-[11px] text-muted-foreground border-t border-border pt-4 max-w-sm w-full mx-auto mb-4">
           <span>© 2026 MIDAGRI · AGROIDEAS</span>
-          <span class="font-semibold uppercase tracking-wider text-[8px]">Version 2.0.0</span>
+          <span class="font-semibold uppercase tracking-wider text-[11px]">Version 2.0.0</span>
         </div>
       </div>
     </div>

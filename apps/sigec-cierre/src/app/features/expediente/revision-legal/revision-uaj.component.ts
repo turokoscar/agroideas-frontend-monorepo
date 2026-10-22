@@ -19,7 +19,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Observar el expediente</h5>
-        <p class="text-xs text-slate-600">
+        <p class="text-xs text-muted-foreground">
           El expediente vuelve a la Unidad de Negocios, que deberá responder cada observación y presentar una versión nueva del
           Informe de Evaluación firmada.
         </p>
@@ -41,7 +41,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
       <div class="space-y-3">
         @for (o of observaciones(); track $index) {
           <div class="flex items-start gap-2">
-            <span class="mt-2 w-5 text-xs font-semibold text-slate-500">{{ $index + 1 }}.</span>
+            <span class="mt-2 w-5 text-xs font-semibold text-muted-foreground">{{ $index + 1 }}.</span>
             <textarea rows="2" class="form-textarea" [maxlength]="longitud" [attr.aria-label]="'Observación ' + ($index + 1)"
               [ngModel]="o" (ngModelChange)="editarObservacion($index, $event)"></textarea>
             @if (observaciones().length > 1) {

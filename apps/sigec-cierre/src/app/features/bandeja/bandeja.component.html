@@ -79,7 +79,7 @@
           @case ('txtNumeroConvenio') {
             <span class="font-medium text-foreground">{{ row.txtNumeroConvenio | formatConvenio: row.fecFirmaConvenio }}</span>
             @if (row.flgDeOficio) {
-              <span class="ml-1 text-[10px] font-semibold text-warning">· de oficio</span>
+              <span class="ml-1 text-[11px] font-semibold text-warning">· de oficio</span>
             }
           }
           @case ('estCierre') {
@@ -88,7 +88,7 @@
           @case ('plazo') {
             <span class="text-xs font-semibold" [class]="claseSemaforo(row.tipSemaforo)">{{ textoPlazo(row) }}</span>
             @if (row.tipPlazo) {
-              <span class="block text-[10px] text-muted-foreground">{{ etiquetaTipoPlazo(row.tipPlazo) }}</span>
+              <span class="block text-[11px] text-muted-foreground">{{ etiquetaTipoPlazo(row.tipPlazo) }}</span>
             }
           }
           @case ('acciones') {

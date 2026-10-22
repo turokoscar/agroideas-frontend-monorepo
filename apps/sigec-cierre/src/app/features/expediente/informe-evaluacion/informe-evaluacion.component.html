@@ -40,15 +40,15 @@
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">I. Información general</h5>
       <dl class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
-        <div><dt class="form-label">Organización</dt><dd class="font-semibold text-slate-800">{{ a.txtOrganizacion ?? '—' }}</dd></div>
-        <div><dt class="form-label">RUC</dt><dd class="text-slate-700">{{ a.codRuc ?? '—' }}</dd></div>
-        <div class="sm:col-span-2"><dt class="form-label">Plan de negocio</dt><dd class="text-slate-700">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
-        <div><dt class="form-label">Convenio N°</dt><dd class="text-slate-700">{{ a.txtNumeroConvenio | formatConvenio: a.fecInicioConvenio }}</dd></div>
-        <div><dt class="form-label">Ubicación</dt><dd class="text-slate-700">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
-        <div><dt class="form-label">Vigencia</dt><dd class="text-slate-700">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
-        <div><dt class="form-label">Cadena productiva</dt><dd class="text-slate-700">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
-        <div><dt class="form-label">Socios (mujeres / hombres)</dt><dd class="text-slate-700">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
-        <div><dt class="form-label">Hectáreas</dt><dd class="text-slate-700">{{ a.numHectareas ?? '—' }}</dd></div>
+        <div><dt class="form-label">Organización</dt><dd class="font-semibold text-foreground">{{ a.txtOrganizacion ?? '—' }}</dd></div>
+        <div><dt class="form-label">RUC</dt><dd class="text-foreground">{{ a.codRuc ?? '—' }}</dd></div>
+        <div class="sm:col-span-2"><dt class="form-label">Plan de negocio</dt><dd class="text-foreground">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
+        <div><dt class="form-label">Convenio N°</dt><dd class="text-foreground">{{ a.txtNumeroConvenio | formatConvenio: a.fecInicioConvenio }}</dd></div>
+        <div><dt class="form-label">Ubicación</dt><dd class="text-foreground">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
+        <div><dt class="form-label">Vigencia</dt><dd class="text-foreground">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
+        <div><dt class="form-label">Cadena productiva</dt><dd class="text-foreground">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
+        <div><dt class="form-label">Socios (mujeres / hombres)</dt><dd class="text-foreground">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
+        <div><dt class="form-label">Hectáreas</dt><dd class="text-foreground">{{ a.numHectareas ?? '—' }}</dd></div>
       </dl>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="form-field">
@@ -63,18 +63,18 @@
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div>
           <p class="form-label">1.2 Problema identificado</p>
-          @if (a.problematica.length === 0) { <p class="text-xs text-slate-400">El SEL no registra el problema identificado.</p> }
-          <ol class="list-decimal space-y-1 pl-5 text-xs text-slate-700">
-            @for (p of a.problematica; track p.numOrden) { <li>{{ p.txtProblema }}@if (p.txtCausa) { <span class="text-slate-400"> · Causa: {{ p.txtCausa }}</span> }</li> }
+          @if (a.problematica.length === 0) { <p class="text-xs text-muted-foreground/70">El SEL no registra el problema identificado.</p> }
+          <ol class="list-decimal space-y-1 pl-5 text-xs text-foreground">
+            @for (p of a.problematica; track p.numOrden) { <li>{{ p.txtProblema }}@if (p.txtCausa) { <span class="text-muted-foreground/70"> · Causa: {{ p.txtCausa }}</span> }</li> }
           </ol>
         </div>
-        <div class="space-y-1 text-xs text-slate-700">
+        <div class="space-y-1 text-xs text-foreground">
           <p class="form-label">1.3 Objetivos</p>
           <p><span class="font-semibold">General:</span> {{ a.txtObjetivoGeneral ?? '—' }}</p>
           <p class="whitespace-pre-line"><span class="font-semibold">Específicos:</span> {{ a.txtObjetivosEspecificos ?? '—' }}</p>
         </div>
       </div>
-      <p class="text-[11px] text-slate-400">Datos del SEL: no se editan aquí.</p>
+      <p class="text-[11px] text-muted-foreground/70">Datos del SEL: no se editan aquí.</p>
     </section>
 
     <!-- II. Indicadores de resultados -->
@@ -96,16 +96,16 @@
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">IV. Ejecución financiera</h5>
       <p class="form-label">4.1 Ejecución por fuente de financiamiento</p>
-      <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <div class="overflow-x-auto rounded-lg border border-border/60">
         <table class="w-full min-w-[560px] border-collapse text-left text-xs">
-          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr><th class="p-2.5">Fuente</th><th class="p-2.5 text-right">Aprobado (S/)</th><th class="p-2.5 text-right">Ejecutado (S/)</th><th class="p-2.5 text-right">Saldo (S/)</th><th class="p-2.5 text-right">% ejecución</th><th class="p-2.5">Origen</th></tr>
           </thead>
           <tbody>
             @for (f of a.financiamiento; track f.tipFuente) {
               @let manual = !ro && f.tipFuente === 'ORGANIZACION';
-              <tr class="border-b border-slate-100">
-                <td class="p-2.5 font-semibold text-slate-800">{{ f.tipFuente === 'AGROIDEAS' ? 'AGROIDEAS' : 'Organización (contrapartida)' }}</td>
+              <tr class="border-b border-border/40">
+                <td class="p-2.5 font-semibold text-foreground">{{ f.tipFuente === 'AGROIDEAS' ? 'AGROIDEAS' : 'Organización (contrapartida)' }}</td>
                 <td class="p-2.5 text-right">{{ f.impAprobado | number: '1.2-2' }}</td>
                 <td class="p-2.5 text-right">
                   @if (manual) { <input type="number" min="0" step="0.01" class="form-input w-32 text-right" aria-label="Ejecutado de la organización" [(ngModel)]="f.impEjecutado" (ngModelChange)="marcarSucio()" /> }
@@ -113,15 +113,15 @@
                 </td>
                 <td class="p-2.5 text-right">{{ (f.impAprobado - f.impEjecutado) | number: '1.2-2' }}</td>
                 <td class="p-2.5 text-right">{{ pctEjecucion(f.impAprobado, f.impEjecutado) !== null ? (pctEjecucion(f.impAprobado, f.impEjecutado) | number: '1.0-2') + ' %' : '—' }}</td>
-                <td class="p-2.5 text-[10px] text-slate-500">{{ etiquetaOrigen(f.txtOrigen) }}</td>
+                <td class="p-2.5 text-[11px] text-muted-foreground">{{ etiquetaOrigen(f.txtOrigen) }}</td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="p-4 text-center text-slate-400">KOFIX no devolvió la ejecución de AGROIDEAS.</td></tr>
+              <tr><td colspan="6" class="p-4 text-center text-muted-foreground/70">KOFIX no devolvió la ejecución de AGROIDEAS.</td></tr>
             }
           </tbody>
         </table>
       </div>
-      <p class="text-[11px] text-slate-400">
+      <p class="text-[11px] text-muted-foreground/70">
         Los aprobados vienen del marco lógico del SEL (aporte de AGROIDEAS y de la organización). Lo ejecutado por AGROIDEAS viene de
         KOFIX; lo ejecutado por la organización lo registra la UN.
       </p>
@@ -142,21 +142,21 @@
     <!-- V. Monitoreo -->
     <section class="form-card-flat space-y-3">
       <h5 class="form-section-title">V. Reporte final de monitoreo (RTF por paso crítico)</h5>
-      <div class="overflow-x-auto rounded-lg border border-slate-200">
+      <div class="overflow-x-auto rounded-lg border border-border/60">
         <table class="w-full min-w-[520px] border-collapse text-left text-xs">
-          <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr><th class="p-2.5">Año</th><th class="p-2.5">Paso crítico</th><th class="p-2.5">Periodo</th><th class="p-2.5">Presentación del RTF</th></tr>
           </thead>
           <tbody>
             @for (m of a.monitoreo; track m.numPasoCritico) {
-              <tr class="border-b border-slate-100">
+              <tr class="border-b border-border/40">
                 <td class="p-2.5">{{ m.numAnio }}</td>
-                <td class="p-2.5 font-semibold text-slate-800">{{ m.numPasoCritico }}</td>
+                <td class="p-2.5 font-semibold text-foreground">{{ m.numPasoCritico }}</td>
                 <td class="p-2.5">{{ (m.fecInicio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (m.fecFin | date: 'dd/MM/yyyy') ?? '—' }}</td>
                 <td class="p-2.5">{{ (m.fecPresentacion | date: 'dd/MM/yyyy') ?? 'Sin presentar' }}</td>
               </tr>
             } @empty {
-              <tr><td colspan="4" class="p-4 text-center text-slate-400">Sin pasos críticos.</td></tr>
+              <tr><td colspan="4" class="p-4 text-center text-muted-foreground/70">Sin pasos críticos.</td></tr>
             }
           </tbody>
         </table>
@@ -200,7 +200,7 @@
         <div class="flex flex-wrap gap-2">
           @for (r of resultados; track r.valor) {
             <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs"
-              [ngClass]="a.tipResultado === r.valor ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 text-slate-600'">
+              [ngClass]="a.tipResultado === r.valor ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground'">
               <input type="radio" name="a22-resultado" [value]="r.valor" [disabled]="ro" [(ngModel)]="a.tipResultado" (ngModelChange)="marcarSucio()" />
               {{ r.etiqueta }}
             </label>
@@ -223,7 +223,7 @@
         <app-selector-pdf etiqueta="Informe de Evaluación firmado" ayuda="Firmado por el especialista, en PDF" [(archivo)]="archivo" />
         <div class="flex flex-wrap items-center gap-2">
           <ui-button icon="draw" label="Presentar informe firmado" [disabled]="!completo() || !archivo() || presentando()" (onClick)="confirmarPresentar.set(true)" />
-          @if (!completo()) { <span class="text-[11px] text-slate-400">Se habilita con el informe guardado, completo y sin cambios pendientes.</span> }
+          @if (!completo()) { <span class="text-[11px] text-muted-foreground/70">Se habilita con el informe guardado, completo y sin cambios pendientes.</span> }
         </div>
       </section>
     } @else if (modo() === 'evaluacion') {
@@ -237,9 +237,9 @@
                   {{ r.flgCumple ? 'check_circle' : 'cancel' }}
                 </span>
                 <span>
-                  <span class="font-semibold text-slate-700">{{ r.txtDescripcion }}</span>
+                  <span class="font-semibold text-foreground">{{ r.txtDescripcion }}</span>
                   @if (r.txtCodigo === 'ULTIMO_RTF_APROBADO' && req.ideRtfUltimo) {
-                    <span class="text-slate-400"> · RTF {{ req.ideRtfUltimo }} ({{ req.estRtfUltimo }})</span>
+                    <span class="text-muted-foreground/70"> · RTF {{ req.ideRtfUltimo }} ({{ req.estRtfUltimo }})</span>
                   }
                   @if (!r.flgCumple && r.txtDetalle) { <span class="block text-destructive">{{ r.txtDetalle }}</span> }
                 </span>
@@ -247,7 +247,7 @@
             }
           </ul>
         } @else {
-          <p class="text-xs text-slate-400">No se pudieron consultar los requisitos; la API los verificará al derivar.</p>
+          <p class="text-xs text-muted-foreground/70">No se pudieron consultar los requisitos; la API los verificará al derivar.</p>
         }
         @if (plazoVencido()) {
           <p class="text-xs font-semibold text-destructive">El plazo de la evaluación venció: al derivar se exigirá registrar la contingencia.</p>
@@ -259,7 +259,7 @@
     @if (versiones().length > 0) {
       <section class="form-card-flat space-y-2">
         <h5 class="form-section-title">Versiones firmadas</h5>
-        <ul class="space-y-1 text-xs text-slate-700">
+        <ul class="space-y-1 text-xs text-foreground">
           @for (v of versiones(); track v.numVersion) {
             <li class="flex items-center gap-2">
               <span class="material-symbols-outlined text-[16px] text-primary">history</span>
@@ -292,9 +292,9 @@
 
   <!-- Bienes o servicios de KOFIX (4.2) -->
   <ng-template #items let-titulo="titulo" let-filas="filas">
-    <div class="overflow-x-auto rounded-lg border border-slate-200">
+    <div class="overflow-x-auto rounded-lg border border-border/60">
       <table class="w-full min-w-[760px] border-collapse text-left text-xs">
-        <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+        <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
           <tr>
             <th class="p-2.5">{{ titulo }}</th><th class="p-2.5">Unidad</th>
             <th class="p-2.5 text-right">Cant. prog.</th><th class="p-2.5 text-right">Cant. ejec.</th><th class="p-2.5 text-right">%</th>
@@ -303,8 +303,8 @@
         </thead>
         <tbody>
           @for (i of filas; track $index) {
-            <tr class="border-b border-slate-100">
-              <td class="p-2.5 font-semibold text-slate-800">{{ i.txtDescripcion }}</td>
+            <tr class="border-b border-border/40">
+              <td class="p-2.5 font-semibold text-foreground">{{ i.txtDescripcion }}</td>
               <td class="p-2.5">{{ i.txtUnidadMedida ?? '—' }}</td>
               <td class="p-2.5 text-right">{{ i.canProgramada | number: '1.0-2' }}</td>
               <td class="p-2.5 text-right">{{ i.canEjecutada | number: '1.0-2' }}</td>
@@ -314,7 +314,7 @@
               <td class="p-2.5 text-right">{{ pctEjecucion(i.impProgramado, i.impEjecutado) !== null ? (pctEjecucion(i.impProgramado, i.impEjecutado) | number: '1.0-2') + ' %' : '—' }}</td>
             </tr>
           } @empty {
-            <tr><td colspan="8" class="p-4 text-center text-slate-400">Sin {{ titulo.toLowerCase() }} programados.</td></tr>
+            <tr><td colspan="8" class="p-4 text-center text-muted-foreground/70">Sin {{ titulo.toLowerCase() }} programados.</td></tr>
           }
         </tbody>
       </table>

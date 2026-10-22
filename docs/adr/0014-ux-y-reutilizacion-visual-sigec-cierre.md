@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 4 implementadas** (21–22/10/2026); las
-Fases 5 y 6 sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 4 y 6 implementadas** (21–22/10/2026); la
+Fase 5 sin implementar. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -453,3 +453,28 @@ sí.
   el inicio de los requisitos, pero el primer campo requiere bajar ≈180 px. Para cumplirlo del todo habría que compactar
   la cabecera (p. ej. unir cabecera y stepper en una sola tarjeta); queda como mejora posible. No se pudo redimensionar
   la ventana de Chrome (está maximizada): las cifras salen de las posiciones medidas.
+
+### Fase 6 — 2026-10-22: tokens en lugar de colores fijos
+- **`libs/theme` (D4):** las clases `form-label`, `form-input`/`form-select`/`form-textarea`, `form-card-flat`,
+  `form-section-title` y `form-file-upload` usan solo tokens. Equivalencias (las mismas en Cierre):
+
+  | Antes | Ahora | Color antes → ahora (sobre blanco) | Contraste antes → ahora |
+  |---|---|---|---|
+  | `border-slate-200` | `border-border/60` | #e2e8f0 → #d7d9d2 | 1,23 → 1,42 |
+  | `border-slate-100` | `border-border/40` | #f1f5f9 → #e4e6e1 | 1,10 → 1,26 |
+  | `bg-slate-50` | `bg-muted/40` | #f8fafc → #f8f8f8 | 1,05 → 1,06 |
+  | `text-slate-700`/`800` | `text-foreground` | #334155 → #161718 | 10,35 → 17,91 |
+  | `text-slate-500`/`600` | `text-muted-foreground` | #64748b → #4c554a | 4,76 → 7,81 |
+  | `text-slate-400` | `text-muted-foreground/70` | #94a3b8 → #828880 | 2,56 → 3,65 |
+  | `text-slate-300` (placeholder) | `text-muted-foreground/50` | #cbd5e1 → #a5aaa4 | 1,48 → 2,36 |
+  | `bg-white` | `bg-card` | igual | igual |
+
+  El aspecto se mantiene, con grises apenas más oscuros y del matiz de la marca, y más contraste en todos los casos.
+- **`sigec-cierre`:** 183 reemplazos; `grep` de `(bg|text|border)-slate-` en `apps/sigec-cierre` da **0**. Textos de 8–10 px
+  a 11 px (barra lateral, login, campana, tablas), salvo el contador de la campana (9 px dentro de un círculo de 16 px).
+  Las etapas pendientes al 60 % de opacidad ya no existen desde la Fase 4.
+- **Pruebas:** ui 61/61, sigec-cierre 206/206, sigec-rtf 206/206, kofix-ejecucion 541/541, sat-ui 2/2; lint y build sin
+  avisos. **En el navegador:** Acta y evaluaciones de impacto en Cierre.
+- **Pendiente:** el criterio de "KOFIX se ve igual" se verificó por cálculo (tabla), no con capturas: kofix-ejecucion no
+  estaba levantada. `form-section-title` del tema sigue en 10 px (lo comparten KOFIX y Cierre); el texto secundario
+  (`muted-foreground/70`, 3,65:1) no llega al 4,5:1 de WCAG AA para texto pequeño.

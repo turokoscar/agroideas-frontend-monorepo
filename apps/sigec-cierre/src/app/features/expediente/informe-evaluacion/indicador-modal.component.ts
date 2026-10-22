@@ -73,23 +73,23 @@ import { ColumnaExtra } from './tabla-indicadores.component';
                 <input id="ind-resultado" type="number" class="form-input text-right" [disabled]="soloTextos()" [(ngModel)]="f.numResultado" />
               </div>
             </div>
-            <div class="overflow-x-auto rounded-lg border border-slate-200">
+            <div class="overflow-x-auto rounded-lg border border-border/60">
               <table class="w-full min-w-[420px] border-collapse text-left text-xs">
-                <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+                <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
                   <tr><th class="p-2.5">Año</th><th class="p-2.5">Programado</th><th class="p-2.5">Ejecutado</th><th class="p-2.5 text-right">Variación</th></tr>
                 </thead>
                 <tbody>
                   @for (anio of anios; track anio.n) {
-                    <tr class="border-b border-slate-100">
-                      <td class="p-2.5 font-semibold text-slate-600">Año {{ anio.n }}</td>
+                    <tr class="border-b border-border/40">
+                      <td class="p-2.5 font-semibold text-muted-foreground">Año {{ anio.n }}</td>
                       <td class="p-2.5"><input type="number" class="form-input text-right" [attr.aria-label]="'Programado año ' + anio.n" [disabled]="soloTextos()" [(ngModel)]="f[anio.prog]" /></td>
                       <td class="p-2.5"><input type="number" class="form-input text-right" [attr.aria-label]="'Ejecutado año ' + anio.n" [disabled]="soloTextos()" [(ngModel)]="f[anio.ejec]" /></td>
                       <td class="p-2.5 text-right">
                         @if (pct(f[anio.prog], f[anio.ejec]) !== null) {
-                          <span [ngClass]="critica(pct(f[anio.prog], f[anio.ejec])) ? 'font-semibold text-destructive' : 'text-slate-500'">
+                          <span [ngClass]="critica(pct(f[anio.prog], f[anio.ejec])) ? 'font-semibold text-destructive' : 'text-muted-foreground'">
                             {{ pct(f[anio.prog], f[anio.ejec]) | number: '1.0-2' }} %
                           </span>
-                        } @else { <span class="text-slate-300">—</span> }
+                        } @else { <span class="text-muted-foreground/50">—</span> }
                       </td>
                     </tr>
                   }
@@ -97,7 +97,7 @@ import { ColumnaExtra } from './tabla-indicadores.component';
               </table>
             </div>
             @if (pctLineaBase() !== null) {
-              <p class="text-[11px] text-slate-500">Ejecutado al cierre frente a la línea base: {{ pctLineaBase() | number: '1.0-2' }} %</p>
+              <p class="text-[11px] text-muted-foreground">Ejecutado al cierre frente a la línea base: {{ pctLineaBase() | number: '1.0-2' }} %</p>
             }
           </div>
 

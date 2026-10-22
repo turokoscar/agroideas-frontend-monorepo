@@ -21,9 +21,9 @@
     </form>
   </section>
 
-  <section class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+  <section class="overflow-x-auto rounded-xl border border-border/60 bg-card">
     <table class="w-full min-w-[860px] border-collapse text-left text-xs">
-      <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+      <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
         <tr>
           <th class="w-8 p-2.5"></th>
           <th class="p-2.5">Convenio</th>
@@ -41,16 +41,16 @@
           <tr><td colspan="9"><ui-state kind="loading" message="Cargando las evaluaciones…" compact /></td></tr>
         } @else {
           @for (e of evaluaciones(); track e.ideCierreConvenio) {
-            <tr class="border-b border-slate-100 hover:bg-slate-50">
+            <tr class="border-b border-border/40 hover:bg-muted/40">
               <td class="p-2.5">
-                <button type="button" class="text-slate-400" [attr.aria-label]="(abierta() === e.ideCierreConvenio ? 'Ocultar' : 'Ver') + ' indicadores de ' + (e.txtNumeroConvenio | formatConvenio: e.fecFirmaConvenio)"
+                <button type="button" class="text-muted-foreground/70" [attr.aria-label]="(abierta() === e.ideCierreConvenio ? 'Ocultar' : 'Ver') + ' indicadores de ' + (e.txtNumeroConvenio | formatConvenio: e.fecFirmaConvenio)"
                   [attr.aria-expanded]="abierta() === e.ideCierreConvenio" (click)="alternar(e.ideCierreConvenio)">
                   <span class="material-symbols-outlined text-[18px]">{{ abierta() === e.ideCierreConvenio ? 'expand_less' : 'expand_more' }}</span>
                 </button>
               </td>
               <td class="p-2.5">
-                <span class="font-semibold text-slate-800">{{ e.txtNumeroConvenio | formatConvenio: e.fecFirmaConvenio }}</span>
-                <span class="block text-[10px] text-slate-400">{{ e.txtOrganizacion }}</span>
+                <span class="font-semibold text-foreground">{{ e.txtNumeroConvenio | formatConvenio: e.fecFirmaConvenio }}</span>
+                <span class="block text-[11px] text-muted-foreground/70">{{ e.txtOrganizacion }}</span>
               </td>
               <td class="p-2.5">{{ e.txtCadenaProductiva ?? '—' }}</td>
               <td class="p-2.5">{{ e.txtRegion ?? '—' }}</td>
@@ -65,11 +65,11 @@
               <td class="p-2.5">{{ e.fecFirma | date: 'dd/MM/yyyy' }}</td>
             </tr>
             @if (abierta() === e.ideCierreConvenio) {
-              <tr class="border-b border-slate-100 bg-slate-50/50">
+              <tr class="border-b border-border/40 bg-muted/20">
                 <td colspan="9" class="p-3">
-                  <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                  <div class="overflow-x-auto rounded-lg border border-border/60 bg-card">
                     <table class="w-full min-w-[820px] border-collapse text-left text-[11px]">
-                      <thead class="border-b border-slate-200 bg-slate-50 text-slate-500">
+                      <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
                         <tr>
                           <th class="p-2">Sección</th><th class="p-2">Indicador</th><th class="p-2 text-right">Línea base</th>
                           @for (n of [1, 2, 3]; track n) { <th class="p-2 text-right">Año {{ n }} (prog. / ejec.)</th> }
@@ -78,15 +78,15 @@
                       </thead>
                       <tbody>
                         @for (i of e.indicadores; track $index) {
-                          <tr class="border-b border-slate-100" [ngClass]="{ 'bg-destructive/5': i.flgDesviacionCritica }">
-                            <td class="p-2 text-slate-500">{{ etiquetaSeccion(i.tipSeccion) }}</td>
-                            <td class="p-2 font-semibold text-slate-800">{{ i.txtConcepto }} <span class="font-normal text-slate-400">{{ i.txtUnidadMedida }}</span></td>
+                          <tr class="border-b border-border/40" [ngClass]="{ 'bg-destructive/5': i.flgDesviacionCritica }">
+                            <td class="p-2 text-muted-foreground">{{ etiquetaSeccion(i.tipSeccion) }}</td>
+                            <td class="p-2 font-semibold text-foreground">{{ i.txtConcepto }} <span class="font-normal text-muted-foreground/70">{{ i.txtUnidadMedida }}</span></td>
                             <td class="p-2 text-right">{{ numero(i.numLineaBase) }}</td>
                             @for (n of [0, 1, 2]; track n) {
                               <td class="p-2 text-right">
                                 {{ numero(i.programado[n]) }} / {{ numero(i.ejecutado[n]) }}
                                 @if (i.variacionAnual[n] !== null && i.variacionAnual[n] !== undefined) {
-                                  <span class="block text-[10px]" [ngClass]="(i.variacionAnual[n] || 0) < 0 ? 'text-warning' : 'text-slate-400'">{{ i.variacionAnual[n] | number: '1.0-2' }} %</span>
+                                  <span class="block text-[11px]" [ngClass]="(i.variacionAnual[n] || 0) < 0 ? 'text-warning' : 'text-muted-foreground/70'">{{ i.variacionAnual[n] | number: '1.0-2' }} %</span>
                                 }
                               </td>
                             }
@@ -94,7 +94,7 @@
                             <td class="p-2 text-right">{{ i.pctVariacionLineaBase !== null ? (i.pctVariacionLineaBase | number: '1.0-2') + ' %' : '—' }}</td>
                           </tr>
                         } @empty {
-                          <tr><td colspan="8" class="p-3 text-center text-slate-400">El informe no tiene indicadores.</td></tr>
+                          <tr><td colspan="8" class="p-3 text-center text-muted-foreground/70">El informe no tiene indicadores.</td></tr>
                         }
                       </tbody>
                     </table>

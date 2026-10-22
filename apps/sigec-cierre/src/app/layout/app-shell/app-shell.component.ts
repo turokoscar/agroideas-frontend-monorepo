@@ -35,7 +35,7 @@ const MENU: readonly ItemMenu[] = [
         </div>
         <div>
           <span class="font-bold tracking-wider text-sm block uppercase">SIGEC</span>
-          <span class="text-[9px] text-sidebar-foreground/70 uppercase tracking-widest font-semibold">Cierre de Convenios</span>
+          <span class="text-[11px] text-sidebar-foreground/70 uppercase tracking-widest font-semibold">Cierre de Convenios</span>
         </div>
       </div>
 
@@ -61,9 +61,9 @@ const MENU: readonly ItemMenu[] = [
           </div>
           <div class="min-w-0 flex-1">
             <span class="font-semibold text-xs block truncate text-sidebar-foreground">{{ user()?.nombre }}</span>
-            <span class="text-[10px] block truncate text-sidebar-foreground/60">{{ user()?.email }}</span>
+            <span class="text-[11px] block truncate text-sidebar-foreground/60">{{ user()?.email }}</span>
             <span
-              class="text-[8px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest max-w-full truncate"
+              class="text-[11px] font-bold text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full inline-block mt-0.5 uppercase tracking-widest max-w-full truncate"
               [title]="todosLosRoles()"
             >{{ etiquetaRol() }}</span>
           </div>
