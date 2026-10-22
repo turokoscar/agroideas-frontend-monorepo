@@ -7,16 +7,9 @@
   }
 
   @if (cargando()) {
-    <div class="flex items-center justify-center gap-2 rounded-xl border border-border bg-card p-12 text-sm text-muted-foreground">
-      <span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
-      Cargando el expediente…
-    </div>
+    <ui-state kind="loading" message="Cargando el expediente…" framed />
   } @else if (error()) {
-    <div class="flex flex-col items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-10 text-center">
-      <span class="material-symbols-outlined text-[36px] text-destructive">error</span>
-      <p class="text-sm font-medium text-foreground">{{ error() }}</p>
-      <ui-button label="Reintentar" icon="refresh" appearance="soft" severity="secondary" (onClick)="cargar()" />
-    </div>
+    <ui-state kind="error" [message]="error() ?? ''" framed (retry)="cargar()" />
   } @else if (cierre()) {
     @let c = cierre()!;
     <!-- Cabecera -->
@@ -80,44 +73,17 @@
       }
     </section>
 
-    <!-- Stepper -->
-    <section class="rounded-xl border border-border bg-card p-5 shadow-sm" aria-label="Etapas del cierre">
-      <ol class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        @for (etapa of etapas(); track etapa.clave) {
-          <li class="flex items-start gap-2">
-            <span
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-              [class.bg-success]="etapa.situacion === 'completada'"
-              [class.text-success-foreground]="etapa.situacion === 'completada'"
-              [class.bg-primary]="etapa.situacion === 'activa'"
-              [class.text-primary-foreground]="etapa.situacion === 'activa'"
-              [ngClass]="{ 'ring-4 ring-primary/20': etapa.situacion === 'activa' }"
-              [class.bg-muted]="etapa.situacion === 'pendiente'"
-              [class.text-muted-foreground]="etapa.situacion === 'pendiente'"
-              [attr.aria-current]="etapa.situacion === 'activa' ? 'step' : null"
-            >
-              @if (etapa.situacion === 'completada') {
-                <span class="material-symbols-outlined text-[16px]">check</span>
-              } @else {
-                {{ etapa.numero }}
-              }
-            </span>
-            <span class="min-w-0 text-[11px] leading-tight">
-              <span class="block font-semibold" [class.text-foreground]="etapa.situacion !== 'pendiente'" [class.text-muted-foreground]="etapa.situacion === 'pendiente'">
-                {{ etapa.titulo }}
-              </span>
-              <span class="text-muted-foreground">{{ etapa.actor }}</span>
-            </span>
-          </li>
-        }
-      </ol>
+    <!-- Stepper: cada etapa lleva a su tarjeta -->
+    <section class="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <ui-stepper [steps]="pasos()" ariaLabel="Etapas del cierre" navigable (stepClick)="irAEtapa($event)" />
     </section>
 
     <!-- Tarjetas por etapa -->
     <section class="space-y-3">
       @for (etapa of etapas(); track etapa.clave) {
         <article
-          class="rounded-xl border bg-card p-5 shadow-sm transition-opacity"
+          [id]="'etapa-' + etapa.clave"
+          class="scroll-mt-20 rounded-xl border bg-card p-5 shadow-sm transition-opacity"
           [ngClass]="etapa.situacion === 'activa' ? 'border-primary/40 ring-1 ring-primary/20' : 'border-border'"
           [class.opacity-60]="etapa.situacion === 'pendiente'"
         >
@@ -247,144 +213,128 @@
 
     <!-- Pestañas: tablas de la librería (ADR 0014, Fase 2) -->
     <section class="space-y-3" aria-label="Información del expediente">
-      <div class="flex flex-wrap gap-2" role="tablist">
-        @for (p of pestanas(); track p.clave) {
-          <button
-            type="button"
-            role="tab"
-            class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all"
-            [attr.aria-selected]="pestana() === p.clave"
-            [class.bg-primary]="pestana() === p.clave"
-            [class.text-primary-foreground]="pestana() === p.clave"
-            [class.bg-surface-container]="pestana() !== p.clave"
-            [class.text-muted-foreground]="pestana() !== p.clave"
-            (click)="cambiarPestana(p.clave)"
-          >
-            {{ p.etiqueta }}
-            @if (p.total !== undefined) {
-              <span class="min-w-[20px] rounded-full px-1.5 py-0.5 text-[10px]" [ngClass]="pestana() === p.clave ? 'bg-primary-foreground/20' : 'bg-muted'">{{ p.total }}</span>
-            }
-          </button>
+      <ui-tabs [tabs]="pestanas()" [active]="pestana()" ariaLabel="Información del expediente" panelId="expediente-panel"
+        (activeChange)="cambiarPestana($any($event))" />
+
+      <div id="expediente-panel" role="tabpanel">
+        @switch (pestana()) {
+          @case ('documentos') {
+            <app-ui-data-table
+              [columns]="columnasDocumentos"
+              [data]="c.documentos"
+              [paginator]="false"
+              [showIndex]="false"
+              [hasActions]="true"
+              [rowTemplate]="filaDocumento"
+              [actionsTemplate]="accionDocumento"
+              emptyIcon="description"
+              emptyMessage="El expediente aún no tiene documentos."
+              emptySubMessage="Aparecen aquí a medida que avanza cada etapa."
+            >
+              <ng-template #filaDocumento let-row let-col="col">
+                @switch (col.field) {
+                  @case ('tipDocumento') { <span class="font-medium text-foreground">{{ etiquetaDocumento(row.tipDocumento) }}</span> }
+                  @case ('fecRegistro') { <span class="text-xs text-muted-foreground">{{ row.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</span> }
+                }
+              </ng-template>
+              <ng-template #accionDocumento let-row>
+                <div class="flex justify-end">
+                  <ui-button iconOnly size="sm" appearance="soft" severity="secondary" icon="visibility"
+                    [ariaLabel]="'Ver ' + etiquetaDocumento(row.tipDocumento)" (onClick)="verDocumento(row)" />
+                </div>
+              </ng-template>
+            </app-ui-data-table>
+          }
+          @case ('plazos') {
+            <app-ui-data-table
+              [columns]="columnasPlazos"
+              [data]="plazos()"
+              [loading]="cargandoPestana()"
+              [paginator]="false"
+              [showIndex]="false"
+              [rowTemplate]="filaPlazo"
+              emptyIcon="schedule"
+              emptyMessage="Sin plazos registrados."
+              emptySubMessage="Los plazos se abren al iniciar cada etapa con plazo."
+            >
+              <ng-template #filaPlazo let-row let-col="col">
+                @switch (col.field) {
+                  @case ('tipPlazo') { <span class="font-medium text-foreground">{{ etiquetaTipoPlazo(row.tipPlazo) }}</span> }
+                  @case ('estPlazo') { <app-ui-status-pill [tone]="tonoEstadoPlazo(row.estPlazo)" [text]="etiquetaEstadoPlazo(row.estPlazo)" /> }
+                  @case ('txtContingencia') { <span class="text-xs text-muted-foreground">{{ row.txtContingencia ?? '—' }}</span> }
+                }
+              </ng-template>
+            </app-ui-data-table>
+          }
+          @case ('envios') {
+            <app-ui-data-table
+              [columns]="columnasEnvios"
+              [data]="envios() ?? []"
+              [loading]="cargandoPestana()"
+              [paginator]="false"
+              [showIndex]="false"
+              [rowTemplate]="filaEnvio"
+              emptyIcon="mail"
+              emptyMessage="No se enviaron correos para este expediente."
+              emptySubMessage="Los correos salen con cada notificación del flujo."
+            >
+              <ng-template #filaEnvio let-row let-col="col">
+                @switch (col.field) {
+                  @case ('txtDestinatario') { <span class="text-xs text-muted-foreground">{{ row.txtDestinatario ?? row.tipDestinatario }}</span> }
+                  @case ('estEnvio') {
+                    <app-ui-status-pill [tone]="estadoEnvio[row.estEnvio]?.tono ?? 'neutral'" [text]="estadoEnvio[row.estEnvio]?.etiqueta ?? row.estEnvio"
+                      [attr.title]="row.txtError ?? null" />
+                  }
+                  @case ('fecEnvio') { <span class="text-xs text-muted-foreground">{{ (row.fecEnvio | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</span> }
+                }
+              </ng-template>
+            </app-ui-data-table>
+          }
+          @case ('bitacora') {
+            <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
+              @if (cargandoPestana()) {
+                <ui-state kind="loading" compact />
+              } @else if ((auditorias() ?? []).length === 0) {
+                <ui-state kind="empty" icon="history" message="Sin movimientos registrados." compact />
+              } @else {
+                <ol class="space-y-4">
+                  @for (a of auditorias(); track a.ideAuditoria) {
+                    <li class="flex gap-3 text-xs">
+                      <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"></span>
+                      <div class="space-y-0.5">
+                        <p class="font-semibold text-foreground">{{ a.txtAccion }}</p>
+                        <p class="text-muted-foreground">{{ a.txtDetalle }}</p>
+                        <p class="text-[11px] text-muted-foreground/80">{{ a.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
+                      </div>
+                    </li>
+                  }
+                </ol>
+              }
+            </div>
+          }
+          @case ('observaciones') {
+            <div class="space-y-5 rounded-xl border border-border bg-card p-5 shadow-sm">
+              @for (r of rondas(); track r.numRonda) {
+                <div class="space-y-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ronda {{ r.numRonda }}</p>
+                  @for (o of r.observaciones; track o.ideObservacion) {
+                    <div class="space-y-1 rounded-lg border border-border p-3 text-xs">
+                      <p class="text-foreground"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
+                      <p class="text-[11px] text-muted-foreground">Observado el {{ o.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
+                      @if (o.txtRespuesta) {
+                        <p class="mt-2 border-l-2 border-success/50 pl-2 text-foreground">{{ o.txtRespuesta }}</p>
+                        <p class="pl-2 text-[11px] text-muted-foreground">Respondido por la UN el {{ o.fecRespuesta | date: 'dd/MM/yyyy HH:mm' }}</p>
+                      } @else {
+                        <app-ui-status-pill class="mt-1" tone="warning" text="Pendiente de respuesta" />
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
         }
       </div>
-
-      @switch (pestana()) {
-        @case ('documentos') {
-          <app-ui-data-table
-            [columns]="columnasDocumentos"
-            [data]="c.documentos"
-            [paginator]="false"
-            [showIndex]="false"
-            [hasActions]="true"
-            [rowTemplate]="filaDocumento"
-            [actionsTemplate]="accionDocumento"
-            emptyIcon="description"
-            emptyMessage="El expediente aún no tiene documentos."
-            emptySubMessage="Aparecen aquí a medida que avanza cada etapa."
-          >
-            <ng-template #filaDocumento let-row let-col="col">
-              @switch (col.field) {
-                @case ('tipDocumento') { <span class="font-medium text-foreground">{{ etiquetaDocumento(row.tipDocumento) }}</span> }
-                @case ('fecRegistro') { <span class="text-xs text-muted-foreground">{{ row.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</span> }
-              }
-            </ng-template>
-            <ng-template #accionDocumento let-row>
-              <div class="flex justify-end">
-                <ui-button iconOnly size="sm" appearance="soft" severity="secondary" icon="visibility"
-                  [ariaLabel]="'Ver ' + etiquetaDocumento(row.tipDocumento)" (onClick)="verDocumento(row)" />
-              </div>
-            </ng-template>
-          </app-ui-data-table>
-        }
-        @case ('plazos') {
-          <app-ui-data-table
-            [columns]="columnasPlazos"
-            [data]="plazos()"
-            [loading]="cargandoPestana()"
-            [paginator]="false"
-            [showIndex]="false"
-            [rowTemplate]="filaPlazo"
-            emptyIcon="schedule"
-            emptyMessage="Sin plazos registrados."
-            emptySubMessage="Los plazos se abren al iniciar cada etapa con plazo."
-          >
-            <ng-template #filaPlazo let-row let-col="col">
-              @switch (col.field) {
-                @case ('tipPlazo') { <span class="font-medium text-foreground">{{ etiquetaTipoPlazo(row.tipPlazo) }}</span> }
-                @case ('estPlazo') { <app-ui-status-pill [tone]="tonoEstadoPlazo(row.estPlazo)" [text]="etiquetaEstadoPlazo(row.estPlazo)" /> }
-                @case ('txtContingencia') { <span class="text-xs text-muted-foreground">{{ row.txtContingencia ?? '—' }}</span> }
-              }
-            </ng-template>
-          </app-ui-data-table>
-        }
-        @case ('envios') {
-          <app-ui-data-table
-            [columns]="columnasEnvios"
-            [data]="envios() ?? []"
-            [loading]="cargandoPestana()"
-            [paginator]="false"
-            [showIndex]="false"
-            [rowTemplate]="filaEnvio"
-            emptyIcon="mail"
-            emptyMessage="No se enviaron correos para este expediente."
-            emptySubMessage="Los correos salen con cada notificación del flujo."
-          >
-            <ng-template #filaEnvio let-row let-col="col">
-              @switch (col.field) {
-                @case ('txtDestinatario') { <span class="text-xs text-muted-foreground">{{ row.txtDestinatario ?? row.tipDestinatario }}</span> }
-                @case ('estEnvio') {
-                  <app-ui-status-pill [tone]="estadoEnvio[row.estEnvio]?.tono ?? 'neutral'" [text]="estadoEnvio[row.estEnvio]?.etiqueta ?? row.estEnvio"
-                    [attr.title]="row.txtError ?? null" />
-                }
-                @case ('fecEnvio') { <span class="text-xs text-muted-foreground">{{ (row.fecEnvio | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</span> }
-              }
-            </ng-template>
-          </app-ui-data-table>
-        }
-        @case ('bitacora') {
-          <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
-            @if (cargandoPestana()) {
-              <p class="py-6 text-center text-xs text-muted-foreground">Cargando…</p>
-            } @else if ((auditorias() ?? []).length === 0) {
-              <p class="py-6 text-center text-xs text-muted-foreground">Sin movimientos registrados.</p>
-            } @else {
-              <ol class="space-y-4">
-                @for (a of auditorias(); track a.ideAuditoria) {
-                  <li class="flex gap-3 text-xs">
-                    <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"></span>
-                    <div class="space-y-0.5">
-                      <p class="font-semibold text-foreground">{{ a.txtAccion }}</p>
-                      <p class="text-muted-foreground">{{ a.txtDetalle }}</p>
-                      <p class="text-[11px] text-muted-foreground/80">{{ a.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
-                    </div>
-                  </li>
-                }
-              </ol>
-            }
-          </div>
-        }
-        @case ('observaciones') {
-          <div class="space-y-5 rounded-xl border border-border bg-card p-5 shadow-sm">
-            @for (r of rondas(); track r.numRonda) {
-              <div class="space-y-3">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ronda {{ r.numRonda }}</p>
-                @for (o of r.observaciones; track o.ideObservacion) {
-                  <div class="space-y-1 rounded-lg border border-border p-3 text-xs">
-                    <p class="text-foreground"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
-                    <p class="text-[11px] text-muted-foreground">Observado el {{ o.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
-                    @if (o.txtRespuesta) {
-                      <p class="mt-2 border-l-2 border-success/50 pl-2 text-foreground">{{ o.txtRespuesta }}</p>
-                      <p class="pl-2 text-[11px] text-muted-foreground">Respondido por la UN el {{ o.fecRespuesta | date: 'dd/MM/yyyy HH:mm' }}</p>
-                    } @else {
-                      <app-ui-status-pill class="mt-1" tone="warning" text="Pendiente de respuesta" />
-                    }
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        }
-      }
     </section>
   }
 </div>

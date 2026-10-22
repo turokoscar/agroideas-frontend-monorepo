@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
 import { Anexo21Dto, ItemVerificadoDto, PATRON_DOCUMENTO, dnisRepetidos, errorHorario } from '../../../core/models/anexo21.model';
@@ -19,7 +19,7 @@ type ListaItems = 'bienes' | 'servicios';
   selector: 'app-acta-cierre',
   standalone: true,
   host: { class: 'block' },
-  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, FormatConvenioPipe, SelectorPdfComponent],
+  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, FormatConvenioPipe, SelectorPdfComponent, UiStateComponent],
   templateUrl: './acta-cierre.component.html'
 })
 export class ActaCierreComponent {

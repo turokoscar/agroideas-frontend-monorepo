@@ -3,12 +3,9 @@
   estilos de formulario de @agroideas/theme (los mismos de kofix-ejecucion).
 -->
 @if (cargando()) {
-  <p class="py-4 text-center text-xs text-muted-foreground">Cargando el Informe de Evaluación…</p>
+  <ui-state kind="loading" message="Cargando el Informe de Evaluación…" compact />
 } @else if (error()) {
-  <div class="flex flex-col items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
-    <p class="text-xs text-foreground">{{ error() }}</p>
-    <ui-button size="sm" label="Reintentar" icon="refresh" appearance="soft" severity="secondary" (onClick)="cargar()" />
-  </div>
+  <ui-state kind="error" [message]="error() ?? ''" compact (retry)="cargar()" />
 } @else if (anexo()) {
   @let a = anexo()!;
   @let ro = firmado();

@@ -24,7 +24,7 @@
       </thead>
       <tbody>
         @if (cargando()) {
-          <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando…</td></tr>
+          <tr><td colspan="6"><ui-state kind="loading" message="Cargando los días inhábiles…" compact /></td></tr>
         } @else {
           @for (f of feriados(); track f.ideFeriado) {
             <tr class="border-b border-slate-100 hover:bg-slate-50">
@@ -53,7 +53,7 @@
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="6" class="p-6 text-center text-slate-400">No hay días inhábiles registrados para {{ anio() }}. Impórtelos desde gob.pe o agréguelos.</td></tr>
+            <tr><td colspan="6"><ui-state kind="empty" icon="event_busy" [message]="'No hay días inhábiles registrados para ' + anio() + '.'" detail="Impórtelos desde gob.pe o agréguelos." compact /></td></tr>
           }
         }
       </tbody>

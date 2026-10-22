@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent } from '@agroideas/ui';
 import { mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
@@ -16,15 +16,15 @@ import { InformeEvaluacionComponent } from '../informe-evaluacion/informe-evalua
   selector: 'app-subsanacion',
   standalone: true,
   host: { class: 'block' },
-  imports: [FormsModule, UIButtonComponent, UIModalComponent, InformeEvaluacionComponent],
+  imports: [FormsModule, UIButtonComponent, UIModalComponent, InformeEvaluacionComponent, UiStateComponent],
   template: `
     <div class="mt-4 space-y-4">
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Observaciones de la UAJ · ronda {{ ronda() }}</h5>
         @if (cargando()) {
-          <p class="text-xs text-slate-400">Cargando las observaciones…</p>
+          <ui-state kind="loading" message="Cargando las observaciones…" compact />
         } @else if (error()) {
-          <p class="text-xs text-destructive">{{ error() }}</p>
+          <ui-state kind="error" [message]="error() ?? ''" [retryLabel]="''" compact />
         } @else {
           @for (o of pendientes(); track o.ideObservacion) {
             <div class="form-field">
@@ -34,7 +34,7 @@ import { InformeEvaluacionComponent } from '../informe-evaluacion/informe-evalua
                 [ngModel]="respuestas()[o.ideObservacion] || ''" (ngModelChange)="responder(o.ideObservacion, $event)"></textarea>
             </div>
           } @empty {
-            <p class="text-xs text-slate-400">No hay observaciones pendientes de responder.</p>
+            <ui-state kind="empty" icon="task_alt" message="No hay observaciones pendientes de responder." compact />
           }
         }
       </section>

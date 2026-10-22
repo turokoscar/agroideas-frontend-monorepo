@@ -11,7 +11,12 @@ import {
   UiDataTableComponent,
   UiInfoTooltipComponent,
   StatusTone,
-  UiStatusPillComponent
+  UiTab,
+  UiStateComponent,
+  UiStatusPillComponent,
+  UiStep,
+  UiStepperComponent,
+  UiTabsComponent
 } from '@agroideas/ui';
 import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { FormatConvenioPipe, mensajeParaUsuario } from '@agroideas/utils';
@@ -53,7 +58,7 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones'
   selector: 'app-expediente',
   standalone: true,
   host: { class: 'block' },
-  imports: [DatePipe, NgClass, RouterLink, FormatConvenioPipe, UiStatusPillComponent, UiDataTableComponent, UiInfoTooltipComponent, UIButtonComponent, UiCountdownBannerComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
+  imports: [DatePipe, NgClass, RouterLink, FormatConvenioPipe, UiStatusPillComponent, UiDataTableComponent, UiInfoTooltipComponent, UiStateComponent, UiStepperComponent, UiTabsComponent, UIButtonComponent, UiCountdownBannerComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
     ActaCierreComponent,
     InformeEvaluacionComponent,
     PresentacionAnexo20Component,
@@ -121,19 +126,34 @@ export class ExpedienteComponent implements OnDestroy {
 
   /** Pestañas visibles para el usuario, con su contador cuando aplica. */
   pestanas = computed(() => {
-    const lista: { clave: Pestana; etiqueta: string; total?: number }[] = [
-      { clave: 'documentos', etiqueta: 'Documentos', total: this.cierre()?.documentos.length ?? 0 },
-      { clave: 'plazos', etiqueta: 'Plazos', total: this.plazos().length },
-      { clave: 'bitacora', etiqueta: 'Bitácora' }
+    const lista: UiTab[] = [
+      { key: 'documentos', label: 'Documentos', count: this.cierre()?.documentos.length ?? 0 },
+      { key: 'plazos', label: 'Plazos', count: this.plazos().length },
+      { key: 'bitacora', label: 'Bitácora' }
     ];
     if (this.esPersonal()) {
-      lista.push({ clave: 'envios', etiqueta: 'Correos enviados' });
+      lista.push({ key: 'envios', label: 'Correos enviados' });
       if (this.observaciones().length > 0) {
-        lista.push({ clave: 'observaciones', etiqueta: 'Observaciones UAJ', total: this.observaciones().length });
+        lista.push({ key: 'observaciones', label: 'Observaciones UAJ', count: this.observaciones().length });
       }
     }
     return lista;
   });
+
+  /** Etapas para `ui-stepper`. */
+  pasos = computed<UiStep[]>(() =>
+    this.etapas().map(e => ({
+      key: e.clave,
+      title: e.titulo,
+      subtitle: e.actor,
+      status: e.situacion === 'completada' ? 'done' : e.situacion === 'activa' ? 'current' : 'pending'
+    }))
+  );
+
+  /** Lleva a la tarjeta de la etapa elegida en el stepper. */
+  irAEtapa(clave: string) {
+    document.getElementById(`etapa-${clave}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   nombreUsuario = computed(() => this.auth.user()?.nombre ?? null);
 
   /** El usuario puede ejecutar esa acción en el estado actual (espejo de la máquina de estados). */

@@ -112,6 +112,17 @@ describe('ExpedienteComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Volver a la bandeja');
   });
 
+  it('el stepper lleva a la tarjeta de la etapa elegida', () => {
+    const fixture = crear();
+    const tarjeta = fixture.nativeElement.querySelector('#etapa-EVALUACION_UN') as HTMLElement;
+    tarjeta.scrollIntoView = jest.fn();
+    const pasos = fixture.nativeElement.querySelectorAll('ui-stepper button') as NodeListOf<HTMLButtonElement>;
+    expect(pasos.length).toBe(6);
+    pasos[2].click();
+    expect(tarjeta.scrollIntoView).toHaveBeenCalled();
+    expect(pasos[2].getAttribute('aria-current')).toBe('step');
+  });
+
   it('muestra el mensaje de la API si no puede cargar el expediente', () => {
     api.obtener.mockReturnValue(throwError(() => ({ error: { mensaje: 'CIE_3001:No tiene acceso a este expediente.' } })));
     const fixture = crear(['OA']);

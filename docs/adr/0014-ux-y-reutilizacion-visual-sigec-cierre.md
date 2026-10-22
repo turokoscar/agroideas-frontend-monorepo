@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0, 1 y 2 implementadas** (21–22/10/2026); las
-Fases 3 a 6 sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 3 implementadas** (21–22/10/2026); las
+Fases 4 a 6 sin implementar. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -410,3 +410,25 @@ sí.
 - **En el navegador** (con `opazos`): bandeja con KPIs, expedientes 6 y 10004 (insignias, ayudas, tablas, selector del
   Acta). No hubo un expediente local con plazo vigente en su etapa activa para ver el banner en vivo; lo cubre la prueba
   del componente.
+
+### Fase 3 — 2026-10-22: pestañas, stepper y estados en `libs/ui`
+- **`libs/ui`** (con pruebas; 61/61):
+  - `ui-tabs`: píldoras con contador (también el 0), patrón de WAI-ARIA con foco itinerante y ←/→, Inicio y Fin
+    (activación automática, salta las deshabilitadas), `aria-controls` hacia el panel del host y variante
+    `contained` (fondo gris ajustado al contenido).
+  - `ui-stepper`: completada (✓ y "Completada:" para lectores de pantalla), actual (`aria-current="step"`) y
+    pendiente; con `navigable` cada paso es un botón que emite `stepClick`. Las columnas se adaptan al número de pasos.
+  - `ui-state`: carga (`role="status"`), error (`role="alert"`, con "Reintentar") y vacío (ícono, mensaje y detalle);
+    `framed` como tarjeta y `compact` para tarjetas y celdas.
+- **`sigec-cierre`:**
+  - Expediente: `ui-stepper` navegable (lleva a la tarjeta de la etapa: adelanta parte de la Fase 4) y `ui-tabs` con
+    el panel `expediente-panel`.
+  - Administración: `ui-tabs contained`.
+  - `ui-state` en lugar de los "Cargando…" y errores escritos a mano: expediente, mi cierre (también su estado
+    vacío), Acta, Anexo 22, subsanación, parámetros, y las tablas de días inhábiles y evaluaciones de impacto.
+  - La bandeja conserva los KPIs como pestañas (Fase 2): `ui-tabs` es para pestañas de texto.
+- **Pruebas:** sigec-cierre 205/205; lint y build sin avisos.
+- **En el navegador:** stepper (clic en la etapa 3 lleva a su tarjeta), pestañas del expediente con teclado (→ activa
+  "Plazos", Fin activa "Correos enviados" y carga su panel) y pestañas de Administración.
+- **Fuera de alcance, anotado:** las fechas de la tabla de días inhábiles muestran el día en inglés ("Thu
+  01/01/2026"): la app no registra la configuración regional `es` (`LOCALE_ID`).

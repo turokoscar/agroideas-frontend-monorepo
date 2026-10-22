@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UiStateComponent } from '@agroideas/ui';
 import { mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
@@ -22,10 +22,10 @@ const GRUPOS: readonly { clave: GrupoParametro; titulo: string; ayuda: string }[
   selector: 'app-parametros',
   standalone: true,
   host: { class: 'block' },
-  imports: [DatePipe, FormsModule, UIButtonComponent],
+  imports: [DatePipe, FormsModule, UIButtonComponent, UiStateComponent],
   template: `
     @if (cargando()) {
-      <p class="py-6 text-center text-xs text-slate-400">Cargando…</p>
+      <ui-state kind="loading" message="Cargando los parámetros…" compact />
     } @else {
       <div class="space-y-4">
         @for (g of grupos(); track g.clave) {

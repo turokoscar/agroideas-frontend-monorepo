@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
@@ -60,6 +60,7 @@ interface EdicionIndicador {
     UIModalComponent,
     SelectorPdfComponent,
     UiStatusPillComponent,
+    UiStateComponent,
     FormatConvenioPipe,
     TablaIndicadoresComponent,
     IndicadorModalComponent
