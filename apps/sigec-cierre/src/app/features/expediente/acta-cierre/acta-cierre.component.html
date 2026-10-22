@@ -15,11 +15,21 @@
       <span class="text-[11px] text-muted-foreground">Complete y guarde · imprima para la firma · registre el acta escaneada</span>
     </div>
 
-    @if (a.faltantes.length > 0) {
+    @if (validacion.faltantes().length > 0) {
       <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
-        <p class="font-semibold">Para registrar la verificación falta:</p>
+        <p class="font-semibold">Para registrar la verificación falta (elija uno para ir al campo):</p>
         <ul class="mt-1 list-disc gap-x-8 pl-5 sm:columns-2 lg:columns-3">
-          @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
+          @for (f of validacion.faltantes(); track f.mensaje) {
+            <li>
+              @if (f.id) {
+                <button type="button" class="text-left underline decoration-warning/50 underline-offset-2 hover:decoration-foreground" (click)="validacion.mostrar.set(true); validacion.enfocar(f.id)">
+                  {{ f.mensaje }}
+                </button>
+              } @else {
+                {{ f.mensaje }}
+              }
+            </li>
+          }
         </ul>
       </div>
     }
@@ -30,31 +40,38 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="form-field">
           <label class="form-label" for="acta-localidad">En la localidad de <span class="form-label-required">*</span></label>
-          <input id="acta-localidad" type="text" maxlength="150" class="form-input" [(ngModel)]="a.txtLocalidad" (ngModelChange)="marcarSucio()" />
+          <input id="acta-localidad" [appInvalido]="errorDe('acta-localidad')" type="text" maxlength="150" class="form-input" [(ngModel)]="a.txtLocalidad" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-localidad" [mensaje]="errorDe('acta-localidad')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-distrito">Distrito <span class="form-label-required">*</span></label>
-          <input id="acta-distrito" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtDistrito" (ngModelChange)="marcarSucio()" />
+          <input id="acta-distrito" [appInvalido]="errorDe('acta-distrito')" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtDistrito" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-distrito" [mensaje]="errorDe('acta-distrito')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-provincia">Provincia <span class="form-label-required">*</span></label>
-          <input id="acta-provincia" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtProvincia" (ngModelChange)="marcarSucio()" />
+          <input id="acta-provincia" [appInvalido]="errorDe('acta-provincia')" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtProvincia" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-provincia" [mensaje]="errorDe('acta-provincia')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-region">Región <span class="form-label-required">*</span></label>
-          <input id="acta-region" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtRegion" (ngModelChange)="marcarSucio()" />
+          <input id="acta-region" [appInvalido]="errorDe('acta-region')" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtRegion" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-region" [mensaje]="errorDe('acta-region')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-inicio">Siendo las … horas del día <span class="form-label-required">*</span></label>
-          <input id="acta-inicio" type="datetime-local" class="form-input" [ngModel]="a.fecInicioReunion" (ngModelChange)="cambiarInicio($event)" />
+          <input id="acta-inicio" [appInvalido]="errorDe('acta-inicio')" type="datetime-local" class="form-input" [ngModel]="a.fecInicioReunion" (ngModelChange)="cambiarInicio($event)" />
+          <app-error-campo para="acta-inicio" [mensaje]="errorDe('acta-inicio')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-local">En el local de <span class="form-label-required">*</span></label>
-          <input id="acta-local" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtLocal" (ngModelChange)="marcarSucio()" />
+          <input id="acta-local" [appInvalido]="errorDe('acta-local')" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtLocal" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-local" [mensaje]="errorDe('acta-local')" />
         </div>
         <div class="form-field sm:col-span-2">
           <label class="form-label" for="acta-direccion">Sito en <span class="form-label-required">*</span></label>
-          <input id="acta-direccion" type="text" maxlength="250" class="form-input" [(ngModel)]="a.txtDireccionLocal" (ngModelChange)="marcarSucio()" />
+          <input id="acta-direccion" [appInvalido]="errorDe('acta-direccion')" type="text" maxlength="250" class="form-input" [(ngModel)]="a.txtDireccionLocal" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-direccion" [mensaje]="errorDe('acta-direccion')" />
         </div>
         <div class="form-field sm:col-span-2">
           <label class="form-label" for="acta-organizacion">Por parte de la Organización Agraria</label>
@@ -62,11 +79,13 @@
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-profesional">Por AGROIDEAS, el Sr(a). <span class="form-label-required">*</span></label>
-          <input id="acta-profesional" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtProfesionalAgroideas" (ngModelChange)="marcarSucio()" />
+          <input id="acta-profesional" [appInvalido]="errorDe('acta-profesional')" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtProfesionalAgroideas" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-profesional" [mensaje]="errorDe('acta-profesional')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-dni-profesional">Con DNI N° <span class="form-label-required">*</span></label>
-          <input id="acta-dni-profesional" type="text" maxlength="12" [pattern]="patronDocumento" class="form-input" [(ngModel)]="a.codDniProfesional" (ngModelChange)="marcarSucio()" />
+          <input id="acta-dni-profesional" [appInvalido]="errorDe('acta-dni-profesional')" type="text" maxlength="12" [pattern]="patronDocumento" class="form-input" [(ngModel)]="a.codDniProfesional" (ngModelChange)="marcarSucio()" />
+          <app-error-campo para="acta-dni-profesional" [mensaje]="errorDe('acta-dni-profesional')" />
         </div>
         <div class="form-field sm:col-span-2 lg:col-span-4">
           <label class="form-label" for="acta-pnt">Plan de negocio (PNT) denominado</label>
@@ -78,7 +97,8 @@
 
     <!-- PRIMERO -->
     <section class="form-card-flat space-y-4">
-      <h5 class="form-section-title">Primero</h5>
+      <h5 id="acta-primero" tabindex="-1" class="form-section-title focus:outline-none">Primero</h5>
+      <app-error-campo para="acta-primero" [mensaje]="errorDe('acta-primero')" />
       <p class="text-xs text-muted-foreground">
         Se corroboró sobre los bienes adquiridos durante la ejecución del PNT, según cuadro adjunto. La cantidad propuesta es la
         ejecutada según KOFIX: corríjala con lo verificado en campo. Programado, ejecutado y pagado son referencias y no salen en
@@ -95,7 +115,7 @@
       <div class="form-field sm:w-1/2">
         <label class="form-label" for="acta-presidente">El Presidente Sr(a). <span class="form-label-required">*</span></label>
         @if (a.representantesLegalesSel.length > 0) {
-          <select id="acta-presidente" class="form-select" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()">
+          <select id="acta-presidente" [appInvalido]="errorDe('acta-presidente')" class="form-select" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()">
             <option [ngValue]="null">Seleccione un representante legal…</option>
             @for (r of a.representantesLegalesSel; track r.txtNombres) {
               <option [ngValue]="r.txtNombres">{{ r.txtNombres }}{{ r.txtCargo ? ' — ' + r.txtCargo : '' }}</option>
@@ -103,16 +123,17 @@
           </select>
           <span class="text-[11px] text-muted-foreground/70">Representantes legales registrados en el SEL.</span>
         } @else {
-          <input id="acta-presidente" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()" />
+          <input id="acta-presidente" [appInvalido]="errorDe('acta-presidente')" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtPresidente" (ngModelChange)="marcarSucio()" />
           <span class="text-[11px] text-muted-foreground/70">El SEL no registra representantes legales de esta organización.</span>
         }
+        <app-error-campo para="acta-presidente" [mensaje]="errorDe('acta-presidente')" />
       </div>
       <p class="text-xs text-muted-foreground">
         … manifestó que se culminó con las actividades de ejecución, habiéndose obtenido los siguientes logros en función a los
         objetivos:
       </p>
 
-      <div class="overflow-x-auto rounded-lg border border-border/60">
+      <div id="acta-logros" tabindex="-1" class="overflow-x-auto rounded-lg border border-border/60 focus:outline-none">
         <table class="w-full min-w-[640px] border-collapse text-left text-xs">
           <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr>
@@ -128,18 +149,20 @@
                 <td class="p-2.5 font-semibold text-muted-foreground">{{ l.numOrden }}</td>
                 <td class="p-2.5">
                   @if (a.objetivosEspecificosSel.length > 0) {
-                    <select class="form-select" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()">
+                    <select class="form-select" [id]="'logro-objetivo-' + $index" [appInvalido]="errorDe('logro-objetivo-' + $index)" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()">
                       <option value="">Seleccione un objetivo específico…</option>
                       @for (o of a.objetivosEspecificosSel; track o) {
                         <option [value]="o">{{ o }}</option>
                       }
                     </select>
                   } @else {
-                    <input type="text" maxlength="500" class="form-input" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
+                    <input type="text" maxlength="500" class="form-input" [id]="'logro-objetivo-' + $index" [appInvalido]="errorDe('logro-objetivo-' + $index)" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
                   }
+                  <app-error-campo [para]="'logro-objetivo-' + $index" [mensaje]="errorDe('logro-objetivo-' + $index)" />
                 </td>
                 <td class="p-2.5">
-                  <textarea rows="2" maxlength="4000" class="form-textarea" [attr.aria-label]="'Logro alcanzado ' + l.numOrden" [(ngModel)]="l.txtLogroAlcanzado" (ngModelChange)="marcarSucio()"></textarea>
+                  <textarea rows="2" maxlength="4000" class="form-textarea" [id]="'logro-texto-' + $index" [appInvalido]="errorDe('logro-texto-' + $index)" [attr.aria-label]="'Logro alcanzado ' + l.numOrden" [(ngModel)]="l.txtLogroAlcanzado" (ngModelChange)="marcarSucio()"></textarea>
+                  <app-error-campo [para]="'logro-texto-' + $index" [mensaje]="errorDe('logro-texto-' + $index)" />
                 </td>
                 <td class="p-2.5 text-right">
                   <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar el logro ' + l.numOrden" (onClick)="quitarLogro($index)" />
@@ -155,6 +178,7 @@
         </span>
         <ui-button size="sm" appearance="soft" icon="add" label="Agregar logro" (onClick)="agregarLogro()" />
       </div>
+      <app-error-campo para="acta-logros" [mensaje]="errorDe('acta-logros')" />
     </section>
 
     <!-- DIFICULTADES -->
@@ -176,16 +200,14 @@
       </p>
       <div class="form-field sm:w-72">
         <label class="form-label" for="acta-hora-firma">Firma del acta: siendo las … horas del mismo día <span class="form-label-required">*</span></label>
-        <input id="acta-hora-firma" type="time" class="form-input" [disabled]="!a.fecInicioReunion" [ngModel]="horaFirma()" (ngModelChange)="cambiarHoraFirma($event)" />
+        <input id="acta-hora-firma" [appInvalido]="errorDe('acta-hora-firma')" type="time" class="form-input" [disabled]="!a.fecInicioReunion" [ngModel]="horaFirma()" (ngModelChange)="cambiarHoraFirma($event)" />
+        <app-error-campo para="acta-hora-firma" [mensaje]="errorDe('acta-hora-firma')" />
         @if (!a.fecInicioReunion) {
           <span class="text-[11px] text-muted-foreground/70">Indique primero el día y la hora de inicio de la reunión.</span>
         }
       </div>
-      @if (horario()) {
-        <p class="text-xs text-destructive">{{ horario() }}</p>
-      }
 
-      <div class="overflow-x-auto rounded-lg border border-border/60">
+      <div id="acta-asistentes" tabindex="-1" class="overflow-x-auto rounded-lg border border-border/60 focus:outline-none">
         <table class="w-full min-w-[640px] border-collapse text-left text-xs">
           <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
             <tr>
@@ -200,9 +222,18 @@
             @for (p of a.asistentes; track $index) {
               <tr class="border-b border-border/40">
                 <td class="p-2.5 font-semibold text-muted-foreground">{{ p.numOrden }}</td>
-                <td class="p-2.5"><input type="text" maxlength="200" class="form-input" [attr.aria-label]="'Nombres y apellidos ' + p.numOrden" [(ngModel)]="p.txtNombres" (ngModelChange)="marcarSucio()" /></td>
-                <td class="p-2.5"><input type="text" maxlength="100" class="form-input" [attr.aria-label]="'Cargo ' + p.numOrden" [(ngModel)]="p.txtCargo" (ngModelChange)="marcarSucio()" /></td>
-                <td class="p-2.5"><input type="text" maxlength="12" [pattern]="patronDocumento" class="form-input" [attr.aria-label]="'DNI ' + p.numOrden" [(ngModel)]="p.codDni" (ngModelChange)="marcarSucio()" /></td>
+                <td class="p-2.5">
+                  <input type="text" maxlength="200" class="form-input" [id]="'asistente-nombres-' + $index" [appInvalido]="errorDe('asistente-nombres-' + $index)" [attr.aria-label]="'Nombres y apellidos ' + p.numOrden" [(ngModel)]="p.txtNombres" (ngModelChange)="marcarSucio()" />
+                  <app-error-campo [para]="'asistente-nombres-' + $index" [mensaje]="errorDe('asistente-nombres-' + $index)" />
+                </td>
+                <td class="p-2.5">
+                  <input type="text" maxlength="100" class="form-input" [id]="'asistente-cargo-' + $index" [appInvalido]="errorDe('asistente-cargo-' + $index)" [attr.aria-label]="'Cargo ' + p.numOrden" [(ngModel)]="p.txtCargo" (ngModelChange)="marcarSucio()" />
+                  <app-error-campo [para]="'asistente-cargo-' + $index" [mensaje]="errorDe('asistente-cargo-' + $index)" />
+                </td>
+                <td class="p-2.5">
+                  <input type="text" maxlength="12" [pattern]="patronDocumento" class="form-input" [id]="'asistente-dni-' + $index" [appInvalido]="errorDe('asistente-dni-' + $index)" [attr.aria-label]="'DNI ' + p.numOrden" [(ngModel)]="p.codDni" (ngModelChange)="marcarSucio()" />
+                  <app-error-campo [para]="'asistente-dni-' + $index" [mensaje]="errorDe('asistente-dni-' + $index)" />
+                </td>
                 <td class="p-2.5 text-right">
                   <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar al asistente ' + p.numOrden" (onClick)="quitarAsistente($index)" />
                 </td>
@@ -217,9 +248,7 @@
         <span class="text-[11px] text-muted-foreground/70">El acta impresa deja filas en blanco para quien firme sin estar registrado.</span>
         <ui-button size="sm" appearance="soft" icon="person_add" label="Agregar asistente" (onClick)="agregarAsistente()" />
       </div>
-      @if (repetidos().length) {
-        <p class="text-xs text-destructive">DNI repetido: {{ repetidos().join(', ') }}.</p>
-      }
+      <app-error-campo para="acta-asistentes" [mensaje]="errorDe('acta-asistentes')" />
     </section>
 
     <!-- Acciones del borrador -->
@@ -240,6 +269,9 @@
         <ui-button icon="task_alt" label="Registrar verificación" [disabled]="!puedeRegistrar()" (onClick)="confirmar.set(true)" />
         @if (!completa()) {
           <span class="text-[11px] text-muted-foreground/70">Se habilita con el acta guardada, completa y sin cambios pendientes.</span>
+          @if (validacion.faltantes().length > 0 || validacion.bloqueantes().length > 0) {
+            <ui-button size="sm" appearance="soft" severity="warning" icon="checklist" label="Revisar lo que falta" (onClick)="validacion.revisar()" />
+          }
         }
       </div>
     </section>
@@ -270,18 +302,25 @@
                 <td class="p-2.5 font-semibold text-muted-foreground">{{ item.numOrden }}</td>
                 <td class="p-2.5">
                   @if (item.ideItemSel !== null) { <span class="font-semibold text-foreground">{{ item.txtDescripcion }}</span> }
-                  @else { <input type="text" maxlength="500" class="form-input" aria-label="Descripción" [(ngModel)]="item.txtDescripcion" (ngModelChange)="marcarSucio()" /> }
+                  @else {
+                    <input type="text" maxlength="500" class="form-input" aria-label="Descripción" [id]="lista + '-descripcion-' + $index" [appInvalido]="errorDe(lista + '-descripcion-' + $index)" [(ngModel)]="item.txtDescripcion" (ngModelChange)="marcarSucio()" />
+                    <app-error-campo [para]="lista + '-descripcion-' + $index" [mensaje]="errorDe(lista + '-descripcion-' + $index)" />
+                  }
                 </td>
                 <td class="p-2.5">
                   @if (item.ideItemSel !== null) { {{ item.txtUnidadMedida }} }
-                  @else { <input type="text" maxlength="50" class="form-input" aria-label="Unidad de medida" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()" /> }
+                  @else {
+                    <input type="text" maxlength="50" class="form-input" aria-label="Unidad de medida" [id]="lista + '-unidad-' + $index" [appInvalido]="errorDe(lista + '-unidad-' + $index)" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()" />
+                    <app-error-campo [para]="lista + '-unidad-' + $index" [mensaje]="errorDe(lista + '-unidad-' + $index)" />
+                  }
                 </td>
                 <td class="p-2.5 text-right text-muted-foreground">{{ item.canProgramada ?? '—' }}</td>
                 <td class="p-2.5 text-right text-muted-foreground">{{ item.canEjecutada ?? '—' }}</td>
                 <td class="p-2.5 text-right text-muted-foreground">{{ item.impEjecutado !== null ? (item.impEjecutado | number: '1.2-2') : '—' }}</td>
                 <td class="p-2.5">
-                  <input type="number" min="0" class="form-input text-right" aria-label="Cantidad verificada"
-                    [ngClass]="{ '!border-warning': difiere(item) }" [(ngModel)]="item.canCantidad" (ngModelChange)="marcarSucio()" />
+                  <input type="number" min="0" class="form-input text-right" aria-label="Cantidad verificada" [id]="lista + '-cantidad-' + $index"
+                    [appInvalido]="errorDe(lista + '-cantidad-' + $index)" [ngClass]="{ '!border-warning': difiere(item) }" [(ngModel)]="item.canCantidad" (ngModelChange)="marcarSucio()" />
+                  <app-error-campo [para]="lista + '-cantidad-' + $index" [mensaje]="errorDe(lista + '-cantidad-' + $index)" />
                   @if (difiere(item)) { <span class="mt-1 block text-[11px] text-warning">Difiere de lo ejecutado</span> }
                 </td>
                 <td class="p-2.5">

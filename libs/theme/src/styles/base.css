@@ -126,6 +126,11 @@
     @apply cursor-pointer pr-8 bg-no-repeat bg-right;
   }
 
+  /* Campo con error (aria-invalid): va después de form-input/select/textarea para reemplazar su borde. */
+  .form-invalid {
+    @apply border-destructive focus:border-destructive focus:ring-destructive/20;
+  }
+
   .form-textarea {
     @apply resize-none;
   }

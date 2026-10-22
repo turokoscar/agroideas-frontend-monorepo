@@ -27,11 +27,21 @@
         <span>Para elevar el expediente a la DE, además del informe firmado: {{ r.txtDetalle }}</span>
       </div>
     }
-    @if (!ro && a.faltantes.length > 0) {
+    @if (!ro && validacion.faltantes().length > 0) {
       <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
-        <p class="font-semibold">Para generar y presentar el informe falta:</p>
+        <p class="font-semibold">Para generar y presentar el informe falta (elija uno para ir al campo):</p>
         <ul class="mt-1 list-disc gap-x-8 pl-5 sm:columns-2 lg:columns-3">
-          @for (f of a.faltantes; track f) { <li>{{ f }}</li> }
+          @for (f of validacion.faltantes(); track f.mensaje) {
+            <li>
+              @if (f.id) {
+                <button type="button" class="text-left underline decoration-warning/50 underline-offset-2 hover:decoration-foreground" (click)="validacion.mostrar.set(true); validacion.enfocar(f.id)">
+                  {{ f.mensaje }}
+                </button>
+              } @else {
+                {{ f.mensaje }}
+              }
+            </li>
+          }
         </ul>
       </div>
     }
@@ -127,7 +137,8 @@
       </p>
       <div class="form-field">
         <label class="form-label" for="a22-analisis-fin">Análisis de la ejecución por fuente <span class="form-label-required">*</span></label>
-        <textarea id="a22-analisis-fin" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisFinanciamiento" (ngModelChange)="marcarSucio()"></textarea>
+        <textarea id="a22-analisis-fin" [appInvalido]="errorDe('a22-analisis-fin')" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisFinanciamiento" (ngModelChange)="marcarSucio()"></textarea>
+        <app-error-campo para="a22-analisis-fin" [mensaje]="errorDe('a22-analisis-fin')" />
       </div>
 
       <p class="form-label">4.2 Ejecución por bien y servicio (KOFIX)</p>
@@ -135,7 +146,8 @@
       <ng-container *ngTemplateOutlet="items; context: { titulo: 'Servicios', filas: a.servicios }" />
       <div class="form-field">
         <label class="form-label" for="a22-analisis-items">Análisis de la ejecución por bien y servicio <span class="form-label-required">*</span></label>
-        <textarea id="a22-analisis-items" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisItems" (ngModelChange)="marcarSucio()"></textarea>
+        <textarea id="a22-analisis-items" [appInvalido]="errorDe('a22-analisis-items')" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisItems" (ngModelChange)="marcarSucio()"></textarea>
+        <app-error-campo para="a22-analisis-items" [mensaje]="errorDe('a22-analisis-items')" />
       </div>
     </section>
 
@@ -176,11 +188,13 @@
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div class="form-field">
           <label class="form-label" for="a22-logros">VII. Logros <span class="form-label-required">*</span></label>
-          <textarea id="a22-logros" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLogros" (ngModelChange)="marcarSucio()"></textarea>
+          <textarea id="a22-logros" [appInvalido]="errorDe('a22-logros')" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLogros" (ngModelChange)="marcarSucio()"></textarea>
+          <app-error-campo para="a22-logros" [mensaje]="errorDe('a22-logros')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="a22-lecciones">VIII. Lecciones aprendidas <span class="form-label-required">*</span></label>
-          <textarea id="a22-lecciones" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLeccionesAprendidas" (ngModelChange)="marcarSucio()"></textarea>
+          <textarea id="a22-lecciones" [appInvalido]="errorDe('a22-lecciones')" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLeccionesAprendidas" (ngModelChange)="marcarSucio()"></textarea>
+          <app-error-campo para="a22-lecciones" [mensaje]="errorDe('a22-lecciones')" />
         </div>
         <div class="form-field">
           <label class="form-label" for="a22-dificultades">IX. Dificultades</label>
@@ -188,14 +202,17 @@
         </div>
         <div class="form-field">
           <label class="form-label" for="a22-conclusiones">X. Conclusiones <span class="form-label-required">*</span></label>
-          <textarea id="a22-conclusiones" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtConclusiones" (ngModelChange)="marcarSucio()"></textarea>
+          <textarea id="a22-conclusiones" [appInvalido]="errorDe('a22-conclusiones')" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtConclusiones" (ngModelChange)="marcarSucio()"></textarea>
+          <app-error-campo para="a22-conclusiones" [mensaje]="errorDe('a22-conclusiones')" />
         </div>
         <div class="form-field lg:col-span-2">
           <label class="form-label" for="a22-recomendaciones">XI. Recomendaciones <span class="form-label-required">*</span></label>
-          <textarea id="a22-recomendaciones" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtRecomendaciones" (ngModelChange)="marcarSucio()"></textarea>
+          <textarea id="a22-recomendaciones" [appInvalido]="errorDe('a22-recomendaciones')" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtRecomendaciones" (ngModelChange)="marcarSucio()"></textarea>
+          <app-error-campo para="a22-recomendaciones" [mensaje]="errorDe('a22-recomendaciones')" />
         </div>
       </div>
-      <fieldset class="space-y-2">
+      <fieldset id="a22-resultado" tabindex="-1" class="space-y-2 focus:outline-none" [attr.aria-invalid]="errorDe('a22-resultado') ? true : null"
+        [attr.aria-describedby]="errorDe('a22-resultado') ? 'a22-resultado-error' : null">
         <legend class="form-label">Resultado de la evaluación <span class="form-label-required">*</span></legend>
         <div class="flex flex-wrap gap-2">
           @for (r of resultados; track r.valor) {
@@ -206,6 +223,7 @@
             </label>
           }
         </div>
+        <app-error-campo para="a22-resultado" [mensaje]="errorDe('a22-resultado')" />
       </fieldset>
     </section>
 
@@ -223,7 +241,12 @@
         <app-selector-pdf etiqueta="Informe de Evaluación firmado" ayuda="Firmado por el especialista, en PDF" [(archivo)]="archivo" />
         <div class="flex flex-wrap items-center gap-2">
           <ui-button icon="draw" label="Presentar informe firmado" [disabled]="!completo() || !archivo() || presentando()" (onClick)="confirmarPresentar.set(true)" />
-          @if (!completo()) { <span class="text-[11px] text-muted-foreground/70">Se habilita con el informe guardado, completo y sin cambios pendientes.</span> }
+          @if (!completo()) {
+            <span class="text-[11px] text-muted-foreground/70">Se habilita con el informe guardado, completo y sin cambios pendientes.</span>
+            @if (validacion.faltantes().length > 0) {
+              <ui-button size="sm" appearance="soft" severity="warning" icon="checklist" label="Revisar lo que falta" (onClick)="validacion.revisar()" />
+            }
+          }
         </div>
       </section>
     } @else if (modo() === 'evaluacion') {
@@ -285,7 +308,8 @@
       }
       <div class="form-field">
         <label class="form-label" [attr.for]="'a22-' + analisis">Análisis <span class="form-label-required">*</span></label>
-        <textarea [id]="'a22-' + analisis" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="$any(a)[analisis]" (ngModelChange)="marcarSucio()"></textarea>
+        <textarea [id]="'a22-' + analisis" [appInvalido]="errorDe('a22-' + analisis)" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="$any(a)[analisis]" (ngModelChange)="marcarSucio()"></textarea>
+        <app-error-campo [para]="'a22-' + analisis" [mensaje]="errorDe('a22-' + analisis)" />
       </div>
     </div>
   </ng-template>

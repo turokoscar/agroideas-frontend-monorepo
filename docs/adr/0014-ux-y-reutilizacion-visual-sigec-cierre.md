@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 4 y 6 implementadas** (21–22/10/2026); la
-Fase 5 sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 a 6 implementadas** (21–22/10/2026). Ver las
+pendientes de verificación en el registro de la Fase 5. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -478,3 +478,27 @@ sí.
 - **Pendiente:** el criterio de "KOFIX se ve igual" se verificó por cálculo (tabla), no con capturas: kofix-ejecucion no
   estaba levantada. `form-section-title` del tema sigue en 10 px (lo comparten KOFIX y Cierre); el texto secundario
   (`muted-foreground/70`, 3,65:1) no llega al 4,5:1 de WCAG AA para texto pequeño.
+
+### Fase 5 — 2026-10-22: validación por campo en el Acta y el Anexo 22
+- **Piezas compartidas (`sigec-cierre/shared`):** `ValidacionFormulario` (bloqueantes y faltantes, recalculados en cada
+  edición con `tocar()` porque ngModel edita el objeto sin avisar a las señales; muestra los errores desde el primer
+  intento de guardar o con "Revisar lo que falta"; lleva foco y vista al primero), la directiva `appInvalido`
+  (`aria-invalid`, `aria-describedby` y la clase nueva `form-invalid` del tema) y `app-error-campo` (mensaje bajo el
+  campo con su `id`).
+- **Acta (`validacion-acta.ts`):**
+  - Bloqueantes, que la API rechazaría al guardar (`Anexo21DatosValidator`): celdas vacías de logros, asistentes e
+    ítems agregados a mano, cantidad negativa, DNI con formato inválido o repetido y horario incoherente. Impiden
+    guardar: el foco va al primero y un toast dice cuántos son. Reemplazan a los avisos sueltos de "horario" y "DNI
+    repetido".
+  - Faltantes, las mismas reglas que `CompletitudAnexo21`: no impiden guardar el borrador, pero quedan marcados; la lista
+    de arriba se actualiza mientras se escribe y cada ítem lleva a su campo. "Revisar lo que falta" junto a "Registrar
+    verificación".
+- **Anexo 22 (`validacion-anexo22.ts`):** faltantes con las reglas de `CompletitudAnexo22` (análisis de II–IV, VII, VIII,
+  X, XI y el resultado), la misma lista con enlaces y "Revisar lo que falta" junto a "Presentar informe firmado". Las
+  filas de indicadores ya se validaban en su modal; ahora el modal explica por qué no deja guardar sin concepto.
+- **Tablas editables:** las del Acta (ítems 820 px, logros y asistentes 640 px) caben en el área de contenido de una
+  pantalla de 1366 px (≈950 px); por debajo de ese ancho siguen con scroll horizontal.
+- **Pruebas:** sigec-cierre 215/215 (modelos de validación del Acta y del Anexo 22, marcas `aria-invalid`, foco al
+  primer error, enlaces de la lista, la marca que se va al completar el campo); lint y build sin avisos.
+- **Pendiente:** verlo en el navegador con un usuario de la UN o la UR (la sesión de Chrome era de la DE, que no edita
+  el Acta).

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, Injector, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent, UiStatusPillComponent } from '@agroideas/ui';
@@ -20,6 +20,10 @@ import { PlazoDto, diasRestantes } from '../../../core/models/plazo.model';
 import { ColumnaExtra, TablaIndicadoresComponent } from './tabla-indicadores.component';
 import { IndicadorModalComponent } from './indicador-modal.component';
 import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
+import { CampoInvalidoDirective } from '../../../shared/campo-invalido.directive';
+import { ErrorCampoComponent } from '../../../shared/error-campo.component';
+import { ValidacionFormulario } from '../../../shared/validacion-formulario';
+import { faltantesAnexo22 } from '../../../core/models/validacion-anexo22';
 
 /** Secciones cuyas filas se editan en el modal: las manuales y la VI (actividad y comentarios). */
 type SeccionEditable = SeccionManual | 'practicaAmbiental';
@@ -63,7 +67,9 @@ interface EdicionIndicador {
     UiStateComponent,
     FormatConvenioPipe,
     TablaIndicadoresComponent,
-    IndicadorModalComponent
+    IndicadorModalComponent,
+    CampoInvalidoDirective,
+    ErrorCampoComponent
   ],
   templateUrl: './informe-evaluacion.component.html'
 })
@@ -99,6 +105,20 @@ export class InformeEvaluacionComponent {
   archivo = signal<File | null>(null);
   contingencia = '';
   anexo = signal<Anexo22Dto | null>(null);
+
+  /** Validación por campo (ADR 0014, Fase 5): las filas de indicadores se validan en su modal; aquí, lo que falta. */
+  readonly validacion = new ValidacionFormulario(inject(Injector), {
+    bloqueantes: () => [],
+    faltantes: () => {
+      const a = this.anexo();
+      return a ? faltantesAnexo22(a) : [];
+    }
+  });
+
+  /** Mensaje de error del control `id`, o null (para la plantilla). */
+  errorDe(id: string): string | null {
+    return this.validacion.error(id);
+  }
   edicion = signal<EdicionIndicador | null>(null);
   readonly secciones = SECCIONES;
   versiones = signal<VersionAnexo22Dto[]>([]);
@@ -159,6 +179,7 @@ export class InformeEvaluacionComponent {
 
   marcarSucio() {
     this.sucio.set(true);
+    this.validacion.tocar();
   }
 
   /** Abre el modal con una fila nueva de la sección. */
@@ -206,7 +227,8 @@ export class InformeEvaluacionComponent {
         if (guardado.faltantes.length === 0) {
           this.toast.success('Informe guardado', 'Descárguelo para firmarlo y preséntelo firmado.');
         } else {
-          this.toast.info('Borrador guardado', `Aún falta: ${guardado.faltantes.join('; ')}.`);
+          this.validacion.mostrar.set(true);
+          this.toast.info('Borrador guardado', 'Los campos marcados en rojo faltan para presentar el informe.');
         }
       },
       error: err => {

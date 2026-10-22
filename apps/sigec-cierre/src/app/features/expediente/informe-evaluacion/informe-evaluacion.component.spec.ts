@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ToastService } from '@agroideas/ui';
@@ -73,6 +74,8 @@ describe('InformeEvaluacionComponent', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // jsdom no implementa scrollIntoView, que acompaña al foco del campo.
+    Element.prototype.scrollIntoView = jest.fn();
     api.obtenerAnexo22.mockReturnValue(of(anexo()));
     api.listarVersionesAnexo22.mockReturnValue(of([]));
     api.obtenerRequisitosDerivacion.mockReturnValue(of(requisitos(true)));
@@ -101,7 +104,28 @@ describe('InformeEvaluacionComponent', () => {
     const el: HTMLElement = crear().nativeElement;
     expect(api.obtenerAnexo22).toHaveBeenCalledWith(5);
     expect(el.textContent).toContain('Cooperativa Bio Coffee Perú');
-    expect(el.textContent).toContain('VII. Logros');
+    expect(el.textContent).toContain('Escriba los logros (VII).');
+  });
+
+  it('cada faltante lleva a su campo y lo marca; la marca se va al completarlo', () => {
+    const fixture = crear();
+    const el: HTMLElement = fixture.nativeElement;
+    const enlace = Array.from(el.querySelectorAll('button')).find(b => b.textContent?.includes('Escriba las conclusiones (X).')) as HTMLButtonElement;
+    enlace.click();
+    fixture.detectChanges();
+    TestBed.inject(ApplicationRef).tick();
+
+    const conclusiones = el.querySelector('#a22-conclusiones') as HTMLElement;
+    expect(document.activeElement).toBe(conclusiones);
+    expect(conclusiones.getAttribute('aria-invalid')).toBe('true');
+    expect(el.querySelector('#a22-conclusiones-error')?.textContent).toContain('Escriba las conclusiones (X).');
+    expect(el.querySelector('#a22-resultado')?.getAttribute('aria-invalid')).toBe('true');
+
+    const informe = fixture.componentInstance.anexo();
+    if (informe) informe.txtConclusiones = 'El PNT cumplió sus metas.';
+    fixture.componentInstance.marcarSucio();
+    fixture.detectChanges();
+    expect(conclusiones.getAttribute('aria-invalid')).toBeNull();
   });
 
   it('agregar un indicador abre el modal y la fila se agrega solo al aceptar', () => {

@@ -82,6 +82,8 @@ describe('ExpedienteComponent', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // jsdom no implementa scrollIntoView, que usa el stepper para llevar a la etapa.
+    Element.prototype.scrollIntoView = jest.fn();
     api.obtener.mockReturnValue(of(detalle));
     api.listarPlazos.mockReturnValue(
       of([{ idePlazo: 1, ideCierreConvenio: 12, tipPlazo: 'EVALUACION_UN', fecInicio: '2026-10-01T00:00:00', canDias: 90, fecLimite: '2026-12-30T23:59:59', codDepartamento: null, codProvincia: null, estPlazo: 'VIGENTE', fecCierre: null, txtContingencia: null, fecRegistro: '2026-10-01T00:00:00' }])

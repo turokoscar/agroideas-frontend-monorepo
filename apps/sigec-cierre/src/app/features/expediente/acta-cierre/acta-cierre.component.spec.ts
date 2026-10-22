@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { ToastService } from '@agroideas/ui';
@@ -71,6 +72,8 @@ describe('ActaCierreComponent', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // jsdom no implementa scrollIntoView, que acompaña al foco del primer error.
+    Element.prototype.scrollIntoView = jest.fn();
     api.obtenerAnexo21.mockReturnValue(of(acta()));
   });
 
@@ -80,7 +83,7 @@ describe('ActaCierreComponent', () => {
     expect(api.obtenerAnexo21).toHaveBeenCalledWith(5);
     expect(c.acta()?.txtProfesionalAgroideas).toBe('Rosa Quispe');
     expect(fixture.nativeElement.textContent).toContain('Despulpadora');
-    expect(fixture.nativeElement.textContent).toContain('Local de la reunión');
+    expect(fixture.nativeElement.textContent).toContain('Indique el local de la reunión.');
   });
 
   it('resalta los ítems cuya cantidad verificada difiere de lo ejecutado en KOFIX', () => {
@@ -108,7 +111,8 @@ describe('ActaCierreComponent', () => {
     actual(c).asistentes.forEach(a => (a.codDni = '12345678'));
     c.guardar();
     expect(api.guardarAnexo21).not.toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith('DNI repetido', expect.stringContaining('12345678'));
+    expect(toast.error).toHaveBeenCalledWith('Corrija los campos marcados', expect.stringContaining('impiden guardar'));
+    expect(c.errorDe('asistente-dni-1')).toBe('DNI repetido.');
 
     actual(c).asistentes[1].codDni = '87654321';
     actual(c).fecInicioReunion = '2026-10-20T10:00';
@@ -118,10 +122,63 @@ describe('ActaCierreComponent', () => {
     expect(api.guardarAnexo21).not.toHaveBeenCalled();
   });
 
+  it('al guardar con errores marca cada campo (aria-invalid y mensaje) y lleva el foco al primero', () => {
+    const fixture = crear();
+    const c = fixture.componentInstance;
+    c.agregarAsistente();
+    fixture.detectChanges();
+    c.guardar();
+    fixture.detectChanges();
+    TestBed.inject(ApplicationRef).tick();
+
+    const el: HTMLElement = fixture.nativeElement;
+    // El logro de la propuesta tiene objetivo pero no texto: es el primer campo que impide guardar.
+    const logro = el.querySelector('#logro-texto-0') as HTMLElement;
+    expect(logro.getAttribute('aria-invalid')).toBe('true');
+    expect(logro.classList).toContain('form-invalid');
+    expect(logro.getAttribute('aria-describedby')).toBe('logro-texto-0-error');
+    expect(el.querySelector('#logro-texto-0-error')?.textContent).toContain('Describa el logro alcanzado.');
+    expect(el.querySelector('#logro-objetivo-0')?.getAttribute('aria-invalid')).toBeNull();
+    expect(el.querySelector('#asistente-nombres-0')?.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(logro);
+    expect(api.guardarAnexo21).not.toHaveBeenCalled();
+  });
+
+  it('los faltantes no impiden guardar el borrador, pero quedan marcados; la marca se va al completar el campo', () => {
+    api.guardarAnexo21.mockImplementation((_: number, datos: object) => of({ ...acta(), ...datos, ideAnexo21: 3 }));
+    const fixture = crear();
+    const c = fixture.componentInstance;
+    actual(c).logros.forEach(l => ((l.txtObjetivoEspecifico = 'Mejorar la calidad'), (l.txtLogroAlcanzado = 'Se mejoró')));
+    c.marcarSucio();
+    c.guardar();
+    fixture.detectChanges();
+    expect(api.guardarAnexo21).toHaveBeenCalled();
+    expect(c.errorDe('acta-local')).toBe('Indique el local de la reunión.');
+
+    actual(c).txtLocal = 'Local comunal';
+    c.marcarSucio();
+    fixture.detectChanges();
+    expect(c.errorDe('acta-local')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('#acta-local')?.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('cada faltante de la lista lleva a su campo', () => {
+    const fixture = crear();
+    const enlace = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b =>
+      b.textContent?.includes('Indique el local de la reunión.')
+    ) as HTMLButtonElement;
+    enlace.click();
+    fixture.detectChanges();
+    TestBed.inject(ApplicationRef).tick();
+    expect(document.activeElement?.id).toBe('acta-local');
+    expect(fixture.componentInstance.errorDe('acta-local')).not.toBeNull();
+  });
+
   it('registrar se habilita con el acta guardada, completa y el PDF elegido', () => {
     api.guardarAnexo21.mockReturnValue(of(acta({ ideAnexo21: 3, faltantes: [] })));
     const { componentInstance: c } = crear();
     expect(c.puedeRegistrar()).toBe(false);
+    actual(c).logros.forEach(l => ((l.txtObjetivoEspecifico = 'Mejorar la calidad'), (l.txtLogroAlcanzado = 'Se mejoró')));
 
     c.marcarSucio();
     c.guardar();
@@ -198,7 +255,7 @@ describe('ActaCierreComponent', () => {
 
     c.cambiarInicio('2026-10-22T08:00');
     expect(actual(c).fecFinReunion).toBe('2026-10-22T12:30');
-    expect(c.horario()).toBeNull();
+    expect(c.validacion.bloqueantes().some(e => e.id === 'acta-hora-firma')).toBe(false);
   });
 
   it('sigue el orden del formato oficial: reunión, PRIMERO, SEGUNDO, dificultades, cierre y firmas', () => {

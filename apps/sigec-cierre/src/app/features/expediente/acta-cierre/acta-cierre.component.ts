@@ -1,11 +1,15 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, Injector, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
-import { Anexo21Dto, ItemVerificadoDto, PATRON_DOCUMENTO, dnisRepetidos, errorHorario } from '../../../core/models/anexo21.model';
+import { Anexo21Dto, ItemVerificadoDto, PATRON_DOCUMENTO } from '../../../core/models/anexo21.model';
 import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
+import { CampoInvalidoDirective } from '../../../shared/campo-invalido.directive';
+import { ErrorCampoComponent } from '../../../shared/error-campo.component';
+import { erroresBloqueantesActa, faltantesActa } from '../../../core/models/validacion-acta';
+import { ValidacionFormulario } from '../../../shared/validacion-formulario';
 
 type ListaItems = 'bienes' | 'servicios';
 
@@ -19,7 +23,17 @@ type ListaItems = 'bienes' | 'servicios';
   selector: 'app-acta-cierre',
   standalone: true,
   host: { class: 'block' },
-  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, FormatConvenioPipe, SelectorPdfComponent, UiStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UIButtonComponent,
+    UIModalComponent,
+    FormatConvenioPipe,
+    SelectorPdfComponent,
+    UiStateComponent,
+    CampoInvalidoDirective,
+    ErrorCampoComponent
+  ],
   templateUrl: './acta-cierre.component.html'
 })
 export class ActaCierreComponent {
@@ -46,9 +60,24 @@ export class ActaCierreComponent {
 
   guardada = computed(() => (this.acta()?.ideAnexo21 ?? 0) > 0);
   completa = computed(() => this.guardada() && (this.acta()?.faltantes.length ?? 1) === 0 && !this.sucio());
-  repetidos = computed(() => dnisRepetidos(this.acta()?.asistentes ?? []));
-  horario = computed(() => errorHorario(this.acta()?.fecInicioReunion ?? null, this.acta()?.fecFinReunion ?? null));
   puedeRegistrar = computed(() => this.completa() && !!this.archivo() && !this.registrando());
+
+  /** Validación por campo (ADR 0014, Fase 5): reglas en `validacion-acta.ts`. */
+  readonly validacion = new ValidacionFormulario(inject(Injector), {
+    bloqueantes: () => {
+      const a = this.acta();
+      return a ? erroresBloqueantesActa(a) : [];
+    },
+    faltantes: () => {
+      const a = this.acta();
+      return a ? faltantesActa(a) : [];
+    }
+  });
+
+  /** Mensaje de error del control `id`, o null (para la plantilla). */
+  errorDe(id: string): string | null {
+    return this.validacion.error(id);
+  }
 
   constructor() {
     effect(() => {
@@ -78,6 +107,7 @@ export class ActaCierreComponent {
 
   marcarSucio() {
     this.sucio.set(true);
+    this.validacion.tocar();
   }
 
   /** Hora de firma (HH:mm): el acta dice "siendo las … horas del mismo día", así que la fecha es la del inicio. */
@@ -147,12 +177,11 @@ export class ActaCierreComponent {
   guardar() {
     const acta = this.acta();
     if (!acta) return;
-    if (this.horario()) {
-      this.toast.error('Revise el horario de la reunión', this.horario() ?? '');
-      return;
-    }
-    if (this.repetidos().length) {
-      this.toast.error('DNI repetido', `Figura más de una vez entre los asistentes: ${this.repetidos().join(', ')}.`);
+    this.validacion.mostrar.set(true);
+    const bloqueantes = this.validacion.bloqueantes();
+    if (bloqueantes.length) {
+      this.toast.error('Corrija los campos marcados', `${bloqueantes.length === 1 ? 'Un campo impide' : `${bloqueantes.length} campos impiden`} guardar el acta.`);
+      this.validacion.enfocar(bloqueantes[0].id);
       return;
     }
     this.guardando.set(true);
@@ -164,7 +193,7 @@ export class ActaCierreComponent {
         if (guardada.faltantes.length === 0) {
           this.toast.success('Acta guardada', 'Imprímala para la firma y registre luego el acta escaneada.');
         } else {
-          this.toast.info('Borrador guardado', `Aún falta: ${guardada.faltantes.join('; ')}.`);
+          this.toast.info('Borrador guardado', 'Los campos marcados en rojo faltan para registrar la verificación.');
         }
       },
       error: err => {

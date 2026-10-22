@@ -33,7 +33,10 @@ import { ColumnaExtra } from './tabla-indicadores.component';
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="form-field sm:col-span-2">
               <label class="form-label" for="ind-concepto">Indicador / concepto <span class="form-label-required">*</span></label>
-              <input id="ind-concepto" type="text" maxlength="500" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtConcepto" />
+              <input id="ind-concepto" [attr.aria-describedby]="valido() ? null : 'ind-concepto-ayuda'" type="text" maxlength="500" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtConcepto" />
+              @if (!valido()) {
+                <span id="ind-concepto-ayuda" class="text-[11px] text-muted-foreground">Obligatorio: sin él no se puede guardar el indicador.</span>
+              }
             </div>
             <div class="form-field">
               <label class="form-label" for="ind-unidad">Unidad de medida</label>
