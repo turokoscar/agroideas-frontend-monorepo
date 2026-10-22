@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent, UiPaginationComponent } from '@agroideas/ui';
-import { mensajeParaUsuario } from '@agroideas/utils';
+import { FormatConvenioPipe, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
 import { ETIQUETA_SECCION, EvaluacionImpactoDto, criticos } from '../../core/models/evaluacion-impacto.model';
@@ -16,7 +16,7 @@ import { RESULTADOS } from '../../core/models/anexo22.model';
 @Component({
   selector: 'app-evaluaciones-impacto',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, NgClass, FormsModule, UIButtonComponent, UiPaginationComponent],
+  imports: [DatePipe, DecimalPipe, NgClass, FormsModule, UIButtonComponent, UiPaginationComponent, FormatConvenioPipe],
   templateUrl: './evaluaciones-impacto.component.html'
 })
 export class EvaluacionesImpactoComponent implements OnInit {

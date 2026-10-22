@@ -8,4 +8,5 @@ export * from './lib/response.dto';
 export * from './lib/error-message';
 export * from './lib/date-formatter';
 export * from './lib/pipes/format-date.pipe';
+export * from './lib/pipes/format-convenio.pipe';
 export * from './lib/roles';

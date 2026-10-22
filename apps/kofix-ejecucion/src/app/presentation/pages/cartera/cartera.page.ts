@@ -1,6 +1,6 @@
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { HasPermissionDirective } from '@agroideas/security';
-import { PERMISSIONS } from '@agroideas/utils';
+import { PERMISSIONS, formatConvenioNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -159,9 +159,8 @@ export class CarteraPageComponent implements OnInit {
     }
 
     formatConvenioNumber(item: CarteraItem): string {
-        if (!item.numeroConvenio) return '-';
-        const padded = item.numeroConvenio.toString().padStart(4, '0');
-        return `${padded}-${item.periodo}-ST`;
+        // El año es el de la fecha de firma, no `periodo` (que sel-api-general envía en 0 para convenios reales).
+        return formatConvenioNumber(item.numeroConvenio, item.fechaFirma);
     }
 
     getSaldoColor(item: CarteraItem): string {

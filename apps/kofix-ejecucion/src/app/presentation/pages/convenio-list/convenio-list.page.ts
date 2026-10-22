@@ -1,5 +1,5 @@
 import { PermissionService } from '@agroideas/security';
-import { PERMISSIONS } from '@agroideas/utils';
+import { PERMISSIONS, formatConvenioNumber } from '@agroideas/utils';
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -143,13 +143,8 @@ export class ConvenioListPageComponent implements OnInit {
     }
 
     formatConvenioNumber(convenio: Convenio): string {
-        if (!convenio.numeroConvenio) return '-';
-        if (convenio.numeroConvenio.includes('-ST')) {
-            return convenio.numeroConvenio;
-        }
-        const padded = convenio.numeroConvenio.toString().padStart(4, '0');
-        const year = convenio.fechaInicio ? new Date(convenio.fechaInicio).getFullYear() : '----';
-        return `${padded}-${year}-ST`;
+        // fechaInicio es la fecha de firma (mc-api-ejecucion la mapea desde FechaFirma).
+        return formatConvenioNumber(convenio.numeroConvenio, convenio.fechaInicio);
     }
 
     getSaldo(convenio: Convenio): number {

@@ -4,7 +4,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
-import { FormatConvenioPipe } from '../../core/pipes/format-convenio.pipe';
+import { FormatConvenioPipe } from '@agroideas/utils';
 import { KpiVariant, UiCountdownBannerComponent, UiKpiComponent } from '@agroideas/ui';
 import { environment } from '../../../environments/environment';
 import { CierreService } from '../../core/services/cierre.service';

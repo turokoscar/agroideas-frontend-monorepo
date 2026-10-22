@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, output, signal, untracked }
 import { DatePipe, DecimalPipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService, UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
-import { mensajeParaUsuario } from '@agroideas/utils';
+import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
 import {
@@ -57,6 +57,7 @@ interface EdicionIndicador {
     UIButtonComponent,
     UIModalComponent,
     UiFileChipComponent,
+    FormatConvenioPipe,
     TablaIndicadoresComponent,
     IndicadorModalComponent
   ],
@@ -212,12 +213,18 @@ export class InformeEvaluacionComponent {
     });
   }
 
+  /** Convenio en el nombre del PDF descargado: el número oficial ("0048-2023-ST") o, si falta, el expediente. */
+  private convenioArchivo(): string {
+    const a = this.anexo();
+    return a?.txtNumeroConvenio ? formatConvenioNumber(a.txtNumeroConvenio, a.fecInicioConvenio) : String(this.ideCierre());
+  }
+
   descargar() {
     this.descargando.set(true);
     this.api.descargarAnexo22(this.ideCierre()).subscribe({
       next: blob => {
         this.descargando.set(false);
-        this.guardarArchivo(blob, `Anexo22_${this.anexo()?.txtNumeroConvenio ?? this.ideCierre()}_v${this.anexo()?.numVersion ?? 1}.pdf`);
+        this.guardarArchivo(blob, `Anexo22_${this.convenioArchivo()}_v${this.anexo()?.numVersion ?? 1}.pdf`);
       },
       error: err => {
         this.descargando.set(false);
@@ -231,7 +238,7 @@ export class InformeEvaluacionComponent {
     this.api.descargarVersionAnexo22(this.ideCierre(), numVersion).subscribe({
       next: blob => {
         this.descargandoVersion.set(null);
-        this.guardarArchivo(blob, `Anexo22_${this.anexo()?.txtNumeroConvenio ?? this.ideCierre()}_v${numVersion}_firmado.pdf`);
+        this.guardarArchivo(blob, `Anexo22_${this.convenioArchivo()}_v${numVersion}_firmado.pdf`);
       },
       error: err => {
         this.descargandoVersion.set(null);

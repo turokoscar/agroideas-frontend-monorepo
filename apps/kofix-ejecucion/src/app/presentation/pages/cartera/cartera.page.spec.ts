@@ -128,8 +128,8 @@ describe('CarteraPageComponent', () => {
         expect(mockAlert.show).toHaveBeenCalledWith('Error', 'Especialista inactivo', 'error');
     });
 
-    it('should format the convenio number padded with periodo and -ST suffix', () => {
-        expect(component.formatConvenioNumber(buildItem({ numeroConvenio: '12', periodo: 2026 }))).toBe('0012-2026-ST');
+    it('should format the convenio number with the signing year and -ST suffix, ignoring periodo', () => {
+        expect(component.formatConvenioNumber(buildItem({ numeroConvenio: '12', periodo: 0, fechaFirma: '2024-01-01' }))).toBe('0012-2024-ST');
         expect(component.formatConvenioNumber(buildItem({ numeroConvenio: '' }))).toBe('-');
     });
 
