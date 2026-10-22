@@ -1,11 +1,11 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
-import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
 import { Anexo21Dto, ItemVerificadoDto, PATRON_DOCUMENTO, dnisRepetidos, errorHorario } from '../../../core/models/anexo21.model';
+import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
 
 type ListaItems = 'bienes' | 'servicios';
 
@@ -18,7 +18,8 @@ type ListaItems = 'bienes' | 'servicios';
 @Component({
   selector: 'app-acta-cierre',
   standalone: true,
-  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, UiFileChipComponent, FormatConvenioPipe],
+  host: { class: 'block' },
+  imports: [CommonModule, FormsModule, UIButtonComponent, UIModalComponent, FormatConvenioPipe, SelectorPdfComponent],
   templateUrl: './acta-cierre.component.html'
 })
 export class ActaCierreComponent {
@@ -31,7 +32,6 @@ export class ActaCierreComponent {
   /** Se emite al registrar la verificación: el expediente cambió de estado. */
   registrado = output<void>();
 
-  readonly tamanoMaximoMb = environment.archivos.tamanoMaximoPdfMb;
   readonly patronDocumento = PATRON_DOCUMENTO.source;
 
   cargando = signal(false);
@@ -101,10 +101,6 @@ export class ActaCierreComponent {
     const hora = this.horaFirma();
     acta.fecFinReunion = hora && acta.fecInicioReunion ? `${acta.fecInicioReunion.slice(0, 10)}T${hora}` : acta.fecFinReunion;
     this.marcarSucio();
-  }
-
-  quitarArchivo() {
-    this.archivo.set(null);
   }
 
   /** La cantidad verificada difiere de lo ejecutado según KOFIX: se resalta para que se observe. */
@@ -196,22 +192,6 @@ export class ActaCierreComponent {
         this.toast.error('No se pudo generar el acta', mensajeParaUsuario(err, 'Intente nuevamente.'));
       }
     });
-  }
-
-  seleccionarArchivo(event: Event) {
-    const entrada = event.target as HTMLInputElement;
-    const archivo = entrada.files?.[0];
-    entrada.value = '';
-    if (!archivo) return;
-    if (archivo.type !== 'application/pdf') {
-      this.toast.error('Formato no permitido', 'Adjunte el acta firmada y escaneada en PDF.');
-      return;
-    }
-    if (archivo.size > this.tamanoMaximoMb * 1024 * 1024) {
-      this.toast.error('Archivo muy grande', `El PDF no debe superar los ${this.tamanoMaximoMb} MB.`);
-      return;
-    }
-    this.archivo.set(archivo);
   }
 
   registrar() {

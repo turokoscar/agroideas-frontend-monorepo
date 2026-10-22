@@ -10,6 +10,9 @@ export const environment: AppSettings = {
     cantidadPorPagina: 20,
     cantidadMaxima: 100
   },
+  plazos: {
+    diasAvisoPrevio: 5
+  },
   busquedaConvenios: {
     cantidadSugerencias: 10,
     longitudMinima: 2,

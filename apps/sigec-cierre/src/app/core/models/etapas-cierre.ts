@@ -69,6 +69,20 @@ export function plazoDeTipo(plazos: readonly PlazoDto[], tipo: TipoPlazo): Plazo
   );
 }
 
+/** Qué es cada etapa, en una frase, para la ayuda contextual (`ui-info-tooltip`) de su título. */
+export const AYUDA_ETAPA: Readonly<Record<ClaveEtapa, string>> = {
+  ANEXO20:
+    'Informe de Cierre del PNT que la Organización Agraria completa con el RTF del último paso crítico y entrega firmado; tiene 30 días calendario.',
+  VERIFICACION:
+    'Reunión de cierre en campo: la Unidad Regional o la UN corrobora los bienes y servicios, y los asistentes firman el Acta de Cierre (Anexo 21).',
+  EVALUACION_UN:
+    'La Unidad de Negocios evalúa la ejecución del PNT en el Anexo 22, lo firma y eleva el Expediente Único a la Dirección Ejecutiva; tiene 90 días calendario.',
+  DIRECCION_EJECUTIVA: 'La Dirección Ejecutiva (DE) recibe el expediente y lo traslada a la Unidad de Asesoría Jurídica.',
+  REVISION_UAJ:
+    'La Unidad de Asesoría Jurídica (UAJ) revisa el expediente: lo observa para que la UN lo subsane, o remite el Informe Legal y el Proyecto de RDE.',
+  RDE: 'La Dirección Ejecutiva suscribe la Resolución de Dirección Ejecutiva (RDE) que cierra el convenio; luego se registra su notificación.'
+};
+
 function fechaDeEtapa(clave: ClaveEtapa, c: CierreDetalleDto): string | null {
   switch (clave) {
     case 'ANEXO20':

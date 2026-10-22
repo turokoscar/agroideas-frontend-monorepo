@@ -1,8 +1,8 @@
 # ADR 0014: UX y reutilización visual en `apps/sigec-cierre` — análisis situacional y plan
 
 ## Estado
-Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0 y 1 implementadas** (21/10/2026); las Fases
-2 a 6 sin implementar. Ver el
+Aceptado · puntos abiertos resueltos por el owner (21/10/2026) · **Fases 0, 1 y 2 implementadas** (21–22/10/2026); las
+Fases 3 a 6 sin implementar. Ver el
 [Plan de implementación por fases](#plan-de-implementación-por-fases) y el
 [Registro de implementación](#registro-de-implementación).
 
@@ -178,6 +178,12 @@ Acta (Anexo 21) e Informe de Evaluación (Anexo 22): validación en el cliente d
 `aria-invalid`, mensaje bajo el campo y, al intentar guardar o registrar, foco y scroll al primer error. La lista
 `faltantes` de la API se mantiene como resumen. Migrar a formularios reactivos solo si la validación lo pide: no es
 un objetivo en sí.
+
+### D6b — Espacio entre elementos (pedido del owner, 22/10/2026)
+Ningún bloque queda pegado a otro: se separan con el espaciado del contenedor (`space-y-*`, `gap-*`), no con márgenes
+sueltos. Todo componente de bloque de la app declara `host: { class: 'block' }` (un elemento personalizado es en línea
+y no recibe el margen de `space-y-*`), y un bloque que puede quedar vacío no se dibuja (`empty:hidden` o `@if`) para no
+dejar huecos. Se revisa en el navegador en cada fase.
 
 ### D7 — Sin cambios de flujo ni de reglas
 El ADR es de presentación. Las reglas siguen en la API (`MaquinaEstadosCierre`, `faltantes`, plazos), y fuera de
@@ -374,3 +380,33 @@ sí.
   PRODUCTORES AGROPECUARIOS PERFILES COFFEE PERU", elegido con ↓ + Enter; un término sin coincidencias muestra
   "Ningún convenio coincide." y una sola petición a `convenios/todos`. No se pulsó "Iniciar" para no alterar los
   datos de prueba. También se vio la Fase 0 en vivo: "Convenio 0046-2024-ST" (OA) y "0266-2023-ST" (bandeja).
+
+### Fase 2 — 2026-10-22: adopción de `@agroideas/ui`
+- **`libs/ui`:**
+  - `app-ui-status-pill`: entrada `tone` (`primary | success | warning | danger | info | neutral`), con los tokens del
+    tema; el vocabulario de `status` no cambia.
+  - `ui-dropzone`: `role="button"`, foco y teclado (Enter/Espacio), `ariaLabel`, `hint`, `compact` y la salida
+    `onReject` (`type` | `size`); antes descartaba en silencio los archivos inválidos y no se podía usar con teclado.
+  - 4 pruebas nuevas.
+- **`sigec-cierre`:**
+  - Estados: `EstadoCierrePillComponent` sobre `app-ui-status-pill` (`tonoEstado`); también las insignias de etapa
+    (completada/en curso/pendiente), "Continuó de oficio", el Anexo 22 firmado/borrador, el origen de indicadores y
+    feriados, el resultado de las evaluaciones de impacto y los estados de plazos y correos.
+  - PDF: `SelectorPdfComponent` es una envoltura de `ui-dropzone` + `ui-file-chip`, y la usan también el Acta y el
+    Anexo 22, que tenían su propia copia.
+  - Plazos: la etapa activa muestra `ui-countdown-banner`, como RTF, con tono rojo si venció y ámbar dentro de
+    `AppSettings.plazos.diasAvisoPrevio` (5, el valor por defecto de `ALERTA_DIAS_PREVIOS`). Las horas se calculan una
+    vez por carga (`horasRestantes`), porque el banner descuenta los segundos por su cuenta.
+  - Ayudas: `ui-info-tooltip` junto al título de cada etapa (`AYUDA_ETAPA`) y junto a "Continuó de oficio".
+  - Tablas: Documentos, Plazos y Correos enviados usan `app-ui-data-table`; las pestañas pasan a una fila propia
+    sobre la tabla (sin tarjeta dentro de otra), con el mismo estilo que las de la bandeja.
+  - Bandeja: las tarjetas `app-ui-kpi` (vencidos, por vencer, en plazo, sin plazo y todos) son las pestañas que
+    filtran, en lugar de repetir los contadores.
+  - Espaciado (D6b): `host: { class: 'block' }` en los 22 componentes de bloque (el aviso del calendario quedaba
+    pegado al encabezado), y una etapa sin detalle ya no deja un hueco vacío.
+- **Error previo corregido:** "Volver a la bandeja" no aparecía nunca: `withComponentInputBinding` pone en `undefined`
+  las entradas que no vienen en la ruta; `mostrarVolver` lo toma como `true`.
+- **Pruebas:** ui 53/53, sigec-cierre 204/204; lint y build sin avisos.
+- **En el navegador** (con `opazos`): bandeja con KPIs, expedientes 6 y 10004 (insignias, ayudas, tablas, selector del
+  Acta). No hubo un expediente local con plazo vigente en su etapa activa para ver el banner en vivo; lo cubre la prueba
+  del componente.

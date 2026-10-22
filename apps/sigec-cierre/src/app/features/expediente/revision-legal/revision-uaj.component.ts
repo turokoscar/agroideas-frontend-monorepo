@@ -13,6 +13,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
 @Component({
   selector: 'app-revision-uaj',
   standalone: true,
+  host: { class: 'block' },
   imports: [FormsModule, UIButtonComponent, UIModalComponent, SelectorPdfComponent],
   template: `
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">

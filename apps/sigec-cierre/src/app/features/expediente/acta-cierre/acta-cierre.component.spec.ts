@@ -129,7 +129,7 @@ describe('ActaCierreComponent', () => {
     expect(c.puedeRegistrar()).toBe(false);
 
     const pdf = new File(['%PDF-'], 'acta.pdf', { type: 'application/pdf' });
-    c.seleccionarArchivo({ target: { files: [pdf], value: 'x' } } as unknown as Event);
+    c.archivo.set(pdf);
     expect(c.puedeRegistrar()).toBe(true);
   });
 
@@ -141,7 +141,7 @@ describe('ActaCierreComponent', () => {
     c.registrado.subscribe(emitido);
 
     const pdf = new File(['%PDF-'], 'acta.pdf', { type: 'application/pdf' });
-    c.seleccionarArchivo({ target: { files: [pdf], value: 'x' } } as unknown as Event);
+    c.archivo.set(pdf);
     c.registrar();
 
     expect(api.registrarVerificacion).toHaveBeenCalledWith(5, pdf);
@@ -154,7 +154,7 @@ describe('ActaCierreComponent', () => {
       throwError(() => ({ error: { mensaje: 'CIE_2005:La reunión de cierre figura el 25/10/2026 10:00: la verificación se registra después de realizarla.' } }))
     );
     const { componentInstance: c } = crear();
-    c.seleccionarArchivo({ target: { files: [new File(['%PDF-'], 'a.pdf', { type: 'application/pdf' })], value: 'x' } } as unknown as Event);
+    c.archivo.set(new File(['%PDF-'], 'a.pdf', { type: 'application/pdf' }));
     c.registrar();
     expect(toast.error).toHaveBeenCalledWith('No se pudo registrar la verificación', expect.stringMatching(/^La reunión de cierre/));
   });

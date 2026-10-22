@@ -23,6 +23,7 @@ const MENU: readonly ItemMenu[] = [
 @Component({
   selector: 'app-shell',
   standalone: true,
+  host: { class: 'block' },
   imports: [CommonModule, RouterModule, UiAppShellComponent, UiToastContainerComponent, NotificacionBellComponent],
   template: `
     <!-- El comportamiento responsive del menú vive en @agroideas/ui -->

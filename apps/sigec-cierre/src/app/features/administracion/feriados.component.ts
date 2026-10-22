@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
@@ -42,7 +42,8 @@ interface PropuestaSeleccionable extends FeriadoPropuestoDto {
 @Component({
   selector: 'app-feriados',
   standalone: true,
-  imports: [DatePipe, NgClass, FormsModule, UIButtonComponent, UIModalComponent, AvisoCalendarioComponent],
+  host: { class: 'block' },
+  imports: [DatePipe, NgClass, FormsModule, UIButtonComponent, UIModalComponent, UiStatusPillComponent, AvisoCalendarioComponent],
   templateUrl: './feriados.component.html'
 })
 export class FeriadosComponent implements OnInit {

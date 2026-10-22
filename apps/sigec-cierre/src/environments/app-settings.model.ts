@@ -21,6 +21,13 @@ export interface AppSettings {
      */
     cantidadMaxima: number;
   };
+  plazos: {
+    /**
+     * Días antes del vencimiento en que un plazo se muestra "por vencer" (ámbar). Mismo valor por defecto que el
+     * parámetro `ALERTA_DIAS_PREVIOS` de sigec-api-cierre, que decide el semáforo de la bandeja.
+     */
+    diasAvisoPrevio: number;
+  };
   busquedaConvenios: {
     /** Sugerencias que se piden a sel-api-general por búsqueda. */
     cantidadSugerencias: number;

@@ -164,7 +164,7 @@ describe('InformeEvaluacionComponent', () => {
     expect(c.completo()).toBe(true);
 
     const pdf = new File(['%PDF-'], 'anexo22.pdf', { type: 'application/pdf' });
-    c.seleccionarArchivo({ target: { files: [pdf], value: 'x' } } as unknown as Event);
+    c.archivo.set(pdf);
     c.presentar();
 
     expect(api.presentarAnexo22).toHaveBeenCalledWith(5, pdf);

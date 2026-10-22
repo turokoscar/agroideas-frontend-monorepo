@@ -16,6 +16,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
 @Component({
   selector: 'app-presentacion-anexo20',
   standalone: true,
+  host: { class: 'block' },
   imports: [DatePipe, UIButtonComponent, UIModalComponent, SelectorPdfComponent],
   template: `
     <section class="form-card-flat mt-4 space-y-4">

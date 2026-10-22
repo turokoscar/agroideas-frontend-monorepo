@@ -52,10 +52,10 @@
       </dl>
 
       @if (c.flgDeOficio) {
-        <p class="mt-4 inline-flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-[11px] font-semibold text-warning">
-          <span class="material-symbols-outlined text-[14px]">gavel</span>
-          Continuó de oficio
-        </p>
+        <div class="mt-4 flex items-center gap-1.5">
+          <app-ui-status-pill tone="warning" text="Continuó de oficio" />
+          <ui-info-tooltip text="Venció el plazo del Anexo 20 sin que se presentara: el cierre siguió sin él, como prevé el Instructivo." />
+        </div>
       }
 
       @if (c.estCierre === 'CERRADO') {
@@ -122,90 +122,90 @@
           [class.opacity-60]="etapa.situacion === 'pendiente'"
         >
           <header class="flex flex-wrap items-center justify-between gap-2">
-            <h3 class="text-sm font-semibold text-foreground">Etapa {{ etapa.numero }} · {{ etapa.titulo }}</h3>
+            <h3 class="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              Etapa {{ etapa.numero }} · {{ etapa.titulo }}
+              <ui-info-tooltip [text]="ayudaEtapa[etapa.clave]" />
+            </h3>
             @switch (etapa.situacion) {
               @case ('completada') {
-                <span class="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-                  <span class="material-symbols-outlined text-[14px]">check_circle</span> Completada
-                  @if (etapa.fecha) { el {{ etapa.fecha | date: 'dd/MM/yyyy' }} }
-                </span>
+                <app-ui-status-pill tone="success" [text]="etapa.fecha ? 'Completada el ' + (etapa.fecha | date: 'dd/MM/yyyy') : 'Completada'" />
               }
               @case ('activa') {
-                <span class="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">En curso</span>
+                <app-ui-status-pill tone="primary" text="En curso" />
               }
               @default {
-                <span class="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">Pendiente</span>
+                <app-ui-status-pill tone="neutral" [showIcon]="false" text="Pendiente" />
               }
             }
           </header>
           <p class="mt-1 text-xs text-muted-foreground">Responsable: {{ etapa.actor }}</p>
 
-          <div class="mt-4 grid items-center gap-5" [ngClass]="{ 'md:grid-cols-[auto_1fr]': etapa.situacion === 'activa' && etapa.plazo?.estPlazo === 'VIGENTE' }">
-            @if (etapa.situacion === 'activa' && etapa.plazo; as plazo) {
-              @if (plazo.estPlazo === 'VIGENTE' && aunNoCorre(plazo)) {
-                <div class="flex h-[140px] w-[140px] flex-col items-center justify-center rounded-full border-4 border-border text-center">
-                  <span class="material-symbols-outlined text-[22px] text-muted-foreground">schedule</span>
-                  <span class="px-3 text-[11px] font-semibold leading-tight text-foreground">Corre desde el {{ plazo.fecInicio | date: 'dd/MM/yyyy' }}</span>
-                </div>
-              } @else if (plazo.estPlazo === 'VIGENTE') {
-                <ui-countdown-ring
-                  [totalDays]="plazo.canDias"
-                  [elapsedDays]="transcurridos(plazo)"
-                  [forceExpire]="restantes(plazo) < 0"
-                  [size]="140"
-                  [label]="'Vence el ' + (plazo.fecLimite | date: 'dd/MM/yyyy')"
-                />
-              }
-            }
-
-            <div class="space-y-3">
-              @if (etapa.plazo; as plazo) {
-                <p class="text-xs text-muted-foreground">
-                  Plazo: <span class="font-medium text-foreground">{{ plazo.canDias }} días calendario</span>
-                  ({{ etiquetaTipoPlazo(plazo.tipPlazo) }}) · vence el {{ plazo.fecLimite | date: 'dd/MM/yyyy' }} ·
-                  <span class="font-medium text-foreground">{{ etiquetaEstadoPlazo(plazo.estPlazo) }}</span>
-                  @if (plazo.estPlazo === 'VIGENTE' && restantes(plazo) < 0) {
-                    <span class="font-semibold text-destructive"> · vencido hace {{ -restantes(plazo) }} días</span>
-                  }
-                </p>
+          @if (tieneDetalle(etapa)) {
+            <div class="mt-4 space-y-4">
+              @if (etapa.situacion === 'activa' && etapa.plazo; as plazo) {
+                @if (plazo.estPlazo === 'VIGENTE' && aunNoCorre(plazo)) {
+                  <p class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-foreground">
+                    <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">schedule</span>
+                    El plazo corre desde el {{ plazo.fecInicio | date: 'dd/MM/yyyy' }}.
+                  </p>
+                } @else if (plazo.estPlazo === 'VIGENTE') {
+                  <ui-countdown-banner
+                    [hours]="horasRestantes().get(etapa.clave) ?? 0"
+                    [tone]="tonoPlazo(plazo)"
+                    [label]="etiquetaTipoPlazo(plazo.tipPlazo) + ' · vence el ' + (plazo.fecLimite | date: 'dd/MM/yyyy')"
+                  />
+                }
               }
 
-              @for (nota of etapa.notas; track nota) {
-                <p class="flex items-start gap-1.5 text-xs text-foreground">
-                  <span class="material-symbols-outlined text-[16px] text-warning">info</span>{{ nota }}
-                </p>
-              }
+              <div class="space-y-3">
+                @if (etapa.plazo; as plazo) {
+                  <p class="text-xs text-muted-foreground">
+                    Plazo: <span class="font-medium text-foreground">{{ plazo.canDias }} días calendario</span>
+                    ({{ etiquetaTipoPlazo(plazo.tipPlazo) }}) · vence el {{ plazo.fecLimite | date: 'dd/MM/yyyy' }} ·
+                    <span class="font-medium text-foreground">{{ etiquetaEstadoPlazo(plazo.estPlazo) }}</span>
+                    @if (plazo.estPlazo === 'VIGENTE' && restantes(plazo) < 0) {
+                      <span class="font-semibold text-destructive"> · vencido hace {{ -restantes(plazo) }} días</span>
+                    }
+                  </p>
+                }
 
-              @if (etapa.documentos.length > 0) {
-                <ul class="flex flex-wrap gap-2">
-                  @for (doc of etapa.documentos; track doc.ideDocumento) {
-                    <li>
-                      <button
-                        type="button"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-                        (click)="verDocumento(doc)"
-                      >
-                        <span class="material-symbols-outlined text-[16px] text-primary">picture_as_pdf</span>
-                        {{ etiquetaDocumento(doc.tipDocumento) }}
-                      </button>
-                    </li>
-                  }
-                </ul>
-              } @else if (etapa.situacion === 'pendiente') {
-                <p class="text-xs text-muted-foreground">Esta etapa aún no inicia.</p>
-              }
+                @for (nota of etapa.notas; track nota) {
+                  <p class="flex items-start gap-1.5 text-xs text-foreground">
+                    <span class="material-symbols-outlined text-[16px] text-warning">info</span>{{ nota }}
+                  </p>
+                }
 
-              @if (etapa.situacion === 'activa' && etapa.clave !== 'ANEXO20' && !esPersonal()) {
-                <p class="text-xs text-muted-foreground">Esta etapa la realiza AGROIDEAS; aquí verá su avance.</p>
-              }
+                @if (etapa.documentos.length > 0) {
+                  <ul class="flex flex-wrap gap-2">
+                    @for (doc of etapa.documentos; track doc.ideDocumento) {
+                      <li>
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                          (click)="verDocumento(doc)"
+                        >
+                          <span class="material-symbols-outlined text-[16px] text-primary">picture_as_pdf</span>
+                          {{ etiquetaDocumento(doc.tipDocumento) }}
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                } @else if (etapa.situacion === 'pendiente') {
+                  <p class="text-xs text-muted-foreground">Esta etapa aún no inicia.</p>
+                }
 
-              @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20' && !esPersonal()) {
-                <p class="text-xs text-muted-foreground">
-                  El Anexo 20 se presenta junto con el RTF del último paso crítico, en el módulo de Reporte Técnico Financiero.
-                </p>
-              }
+                @if (etapa.situacion === 'activa' && etapa.clave !== 'ANEXO20' && !esPersonal()) {
+                  <p class="text-xs text-muted-foreground">Esta etapa la realiza AGROIDEAS; aquí verá su avance.</p>
+                }
+
+                @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20' && !esPersonal()) {
+                  <p class="text-xs text-muted-foreground">
+                    El Anexo 20 se presenta junto con el RTF del último paso crítico, en el módulo de Reporte Técnico Financiero.
+                  </p>
+                }
+              </div>
             </div>
-          </div>
+          }
 
           <!-- Acción de la etapa activa (ADR 0013, Fases 2 a 4) -->
           @if (etapa.situacion === 'activa' && etapa.clave === 'ANEXO20') {
@@ -245,148 +245,146 @@
       }
     </section>
 
-    <!-- Pestañas -->
-    <section class="rounded-xl border border-border bg-card shadow-sm">
-      <div class="flex flex-wrap gap-1 border-b border-border p-2" role="tablist">
-        <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'documentos'"
-          [class.bg-primary]="pestana() === 'documentos'" [class.text-primary-foreground]="pestana() === 'documentos'"
-          [class.text-muted-foreground]="pestana() !== 'documentos'" (click)="cambiarPestana('documentos')">Documentos ({{ c.documentos.length }})</button>
-        <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'plazos'"
-          [class.bg-primary]="pestana() === 'plazos'" [class.text-primary-foreground]="pestana() === 'plazos'"
-          [class.text-muted-foreground]="pestana() !== 'plazos'" (click)="cambiarPestana('plazos')">Plazos ({{ plazos().length }})</button>
-        <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'bitacora'"
-          [class.bg-primary]="pestana() === 'bitacora'" [class.text-primary-foreground]="pestana() === 'bitacora'"
-          [class.text-muted-foreground]="pestana() !== 'bitacora'" (click)="cambiarPestana('bitacora')">Bitácora</button>
-        @if (esPersonal()) {
-          <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'envios'"
-            [class.bg-primary]="pestana() === 'envios'" [class.text-primary-foreground]="pestana() === 'envios'"
-            [class.text-muted-foreground]="pestana() !== 'envios'" (click)="cambiarPestana('envios')">Correos enviados</button>
-        }
-        @if (esPersonal() && observaciones().length > 0) {
-          <button type="button" role="tab" class="rounded-lg px-3 py-1.5 text-xs font-semibold" [attr.aria-selected]="pestana() === 'observaciones'"
-            [class.bg-primary]="pestana() === 'observaciones'" [class.text-primary-foreground]="pestana() === 'observaciones'"
-            [class.text-muted-foreground]="pestana() !== 'observaciones'" (click)="cambiarPestana('observaciones')">Observaciones UAJ ({{ observaciones().length }})</button>
+    <!-- Pestañas: tablas de la librería (ADR 0014, Fase 2) -->
+    <section class="space-y-3" aria-label="Información del expediente">
+      <div class="flex flex-wrap gap-2" role="tablist">
+        @for (p of pestanas(); track p.clave) {
+          <button
+            type="button"
+            role="tab"
+            class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all"
+            [attr.aria-selected]="pestana() === p.clave"
+            [class.bg-primary]="pestana() === p.clave"
+            [class.text-primary-foreground]="pestana() === p.clave"
+            [class.bg-surface-container]="pestana() !== p.clave"
+            [class.text-muted-foreground]="pestana() !== p.clave"
+            (click)="cambiarPestana(p.clave)"
+          >
+            {{ p.etiqueta }}
+            @if (p.total !== undefined) {
+              <span class="min-w-[20px] rounded-full px-1.5 py-0.5 text-[10px]" [ngClass]="pestana() === p.clave ? 'bg-primary-foreground/20' : 'bg-muted'">{{ p.total }}</span>
+            }
+          </button>
         }
       </div>
 
-      <div class="overflow-x-auto p-4">
-        @if (cargandoPestana()) {
-          <p class="py-6 text-center text-xs text-muted-foreground">Cargando…</p>
-        } @else {
-          @switch (pestana()) {
-            @case ('documentos') {
-              @if (c.documentos.length === 0) {
-                <p class="py-6 text-center text-xs text-muted-foreground">El expediente aún no tiene documentos.</p>
-              } @else {
-                <table class="w-full text-left text-xs">
-                  <thead class="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <tr><th class="pb-2 pr-3">Documento</th><th class="pb-2 pr-3">Archivo</th><th class="pb-2 pr-3">Registrado</th><th class="pb-2"></th></tr>
-                  </thead>
-                  <tbody>
-                    @for (doc of c.documentos; track doc.ideDocumento) {
-                      <tr class="border-t border-border/60">
-                        <td class="py-2 pr-3 font-medium text-foreground">{{ etiquetaDocumento(doc.tipDocumento) }}</td>
-                        <td class="py-2 pr-3 text-muted-foreground">{{ doc.txtNombreArchivo }}</td>
-                        <td class="py-2 pr-3 text-muted-foreground">{{ doc.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
-                        <td class="py-2 text-right">
-                          <ui-button iconOnly size="sm" appearance="soft" severity="secondary" icon="visibility"
-                            [ariaLabel]="'Ver ' + etiquetaDocumento(doc.tipDocumento)" (onClick)="verDocumento(doc)" />
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+      @switch (pestana()) {
+        @case ('documentos') {
+          <app-ui-data-table
+            [columns]="columnasDocumentos"
+            [data]="c.documentos"
+            [paginator]="false"
+            [showIndex]="false"
+            [hasActions]="true"
+            [rowTemplate]="filaDocumento"
+            [actionsTemplate]="accionDocumento"
+            emptyIcon="description"
+            emptyMessage="El expediente aún no tiene documentos."
+            emptySubMessage="Aparecen aquí a medida que avanza cada etapa."
+          >
+            <ng-template #filaDocumento let-row let-col="col">
+              @switch (col.field) {
+                @case ('tipDocumento') { <span class="font-medium text-foreground">{{ etiquetaDocumento(row.tipDocumento) }}</span> }
+                @case ('fecRegistro') { <span class="text-xs text-muted-foreground">{{ row.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</span> }
               }
-            }
-            @case ('plazos') {
-              @if (plazos().length === 0) {
-                <p class="py-6 text-center text-xs text-muted-foreground">Sin plazos registrados.</p>
-              } @else {
-                <table class="w-full text-left text-xs">
-                  <thead class="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <tr><th class="pb-2 pr-3">Plazo</th><th class="pb-2 pr-3">Inicio</th><th class="pb-2 pr-3">Días</th><th class="pb-2 pr-3">Vence</th><th class="pb-2 pr-3">Estado</th><th class="pb-2">Contingencia</th></tr>
-                  </thead>
-                  <tbody>
-                    @for (p of plazos(); track p.idePlazo) {
-                      <tr class="border-t border-border/60">
-                        <td class="py-2 pr-3 font-medium text-foreground">{{ etiquetaTipoPlazo(p.tipPlazo) }}</td>
-                        <td class="py-2 pr-3 text-muted-foreground">{{ p.fecInicio | date: 'dd/MM/yyyy' }}</td>
-                        <td class="py-2 pr-3 text-muted-foreground">{{ p.canDias }}</td>
-                        <td class="py-2 pr-3 text-muted-foreground">{{ p.fecLimite | date: 'dd/MM/yyyy' }}</td>
-                        <td class="py-2 pr-3" [class.text-destructive]="p.estPlazo === 'VENCIDO'" [class.text-success]="p.estPlazo === 'CUMPLIDO'">
-                          {{ etiquetaEstadoPlazo(p.estPlazo) }}
-                        </td>
-                        <td class="py-2 text-muted-foreground">{{ p.txtContingencia ?? '—' }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+            </ng-template>
+            <ng-template #accionDocumento let-row>
+              <div class="flex justify-end">
+                <ui-button iconOnly size="sm" appearance="soft" severity="secondary" icon="visibility"
+                  [ariaLabel]="'Ver ' + etiquetaDocumento(row.tipDocumento)" (onClick)="verDocumento(row)" />
+              </div>
+            </ng-template>
+          </app-ui-data-table>
+        }
+        @case ('plazos') {
+          <app-ui-data-table
+            [columns]="columnasPlazos"
+            [data]="plazos()"
+            [loading]="cargandoPestana()"
+            [paginator]="false"
+            [showIndex]="false"
+            [rowTemplate]="filaPlazo"
+            emptyIcon="schedule"
+            emptyMessage="Sin plazos registrados."
+            emptySubMessage="Los plazos se abren al iniciar cada etapa con plazo."
+          >
+            <ng-template #filaPlazo let-row let-col="col">
+              @switch (col.field) {
+                @case ('tipPlazo') { <span class="font-medium text-foreground">{{ etiquetaTipoPlazo(row.tipPlazo) }}</span> }
+                @case ('estPlazo') { <app-ui-status-pill [tone]="tonoEstadoPlazo(row.estPlazo)" [text]="etiquetaEstadoPlazo(row.estPlazo)" /> }
+                @case ('txtContingencia') { <span class="text-xs text-muted-foreground">{{ row.txtContingencia ?? '—' }}</span> }
               }
-            }
-            @case ('bitacora') {
-              @if ((auditorias() ?? []).length === 0) {
-                <p class="py-6 text-center text-xs text-muted-foreground">Sin movimientos registrados.</p>
-              } @else {
-                <ol class="space-y-3">
-                  @for (a of auditorias(); track a.ideAuditoria) {
-                    <li class="flex gap-3 text-xs">
-                      <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"></span>
-                      <div>
-                        <p class="font-semibold text-foreground">{{ a.txtAccion }}</p>
-                        <p class="text-muted-foreground">{{ a.txtDetalle }}</p>
-                        <p class="text-[10px] text-muted-foreground/80">{{ a.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
-                      </div>
-                    </li>
-                  }
-                </ol>
+            </ng-template>
+          </app-ui-data-table>
+        }
+        @case ('envios') {
+          <app-ui-data-table
+            [columns]="columnasEnvios"
+            [data]="envios() ?? []"
+            [loading]="cargandoPestana()"
+            [paginator]="false"
+            [showIndex]="false"
+            [rowTemplate]="filaEnvio"
+            emptyIcon="mail"
+            emptyMessage="No se enviaron correos para este expediente."
+            emptySubMessage="Los correos salen con cada notificación del flujo."
+          >
+            <ng-template #filaEnvio let-row let-col="col">
+              @switch (col.field) {
+                @case ('txtDestinatario') { <span class="text-xs text-muted-foreground">{{ row.txtDestinatario ?? row.tipDestinatario }}</span> }
+                @case ('estEnvio') {
+                  <app-ui-status-pill [tone]="estadoEnvio[row.estEnvio]?.tono ?? 'neutral'" [text]="estadoEnvio[row.estEnvio]?.etiqueta ?? row.estEnvio"
+                    [attr.title]="row.txtError ?? null" />
+                }
+                @case ('fecEnvio') { <span class="text-xs text-muted-foreground">{{ (row.fecEnvio | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</span> }
               }
+            </ng-template>
+          </app-ui-data-table>
+        }
+        @case ('bitacora') {
+          <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
+            @if (cargandoPestana()) {
+              <p class="py-6 text-center text-xs text-muted-foreground">Cargando…</p>
+            } @else if ((auditorias() ?? []).length === 0) {
+              <p class="py-6 text-center text-xs text-muted-foreground">Sin movimientos registrados.</p>
+            } @else {
+              <ol class="space-y-4">
+                @for (a of auditorias(); track a.ideAuditoria) {
+                  <li class="flex gap-3 text-xs">
+                    <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"></span>
+                    <div class="space-y-0.5">
+                      <p class="font-semibold text-foreground">{{ a.txtAccion }}</p>
+                      <p class="text-muted-foreground">{{ a.txtDetalle }}</p>
+                      <p class="text-[11px] text-muted-foreground/80">{{ a.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
+                    </div>
+                  </li>
+                }
+              </ol>
             }
-            @case ('observaciones') {
-              <div class="space-y-4">
-                @for (r of rondas(); track r.numRonda) {
-                  <div class="space-y-2">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ronda {{ r.numRonda }}</p>
-                    @for (o of r.observaciones; track o.ideObservacion) {
-                      <div class="rounded-lg border border-border p-3 text-xs">
-                        <p class="text-foreground"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
-                        <p class="text-[10px] text-muted-foreground">Observado el {{ o.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
-                        @if (o.txtRespuesta) {
-                          <p class="mt-2 border-l-2 border-success/50 pl-2 text-foreground">{{ o.txtRespuesta }}</p>
-                          <p class="pl-2 text-[10px] text-muted-foreground">Respondido por la UN el {{ o.fecRespuesta | date: 'dd/MM/yyyy HH:mm' }}</p>
-                        } @else {
-                          <p class="mt-2 text-[11px] font-semibold text-warning">Pendiente de respuesta</p>
-                        }
-                      </div>
+          </div>
+        }
+        @case ('observaciones') {
+          <div class="space-y-5 rounded-xl border border-border bg-card p-5 shadow-sm">
+            @for (r of rondas(); track r.numRonda) {
+              <div class="space-y-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ronda {{ r.numRonda }}</p>
+                @for (o of r.observaciones; track o.ideObservacion) {
+                  <div class="space-y-1 rounded-lg border border-border p-3 text-xs">
+                    <p class="text-foreground"><span class="font-semibold">{{ o.numOrden }}.</span> {{ o.txtObservacion }}</p>
+                    <p class="text-[11px] text-muted-foreground">Observado el {{ o.fecRegistro | date: 'dd/MM/yyyy HH:mm' }}</p>
+                    @if (o.txtRespuesta) {
+                      <p class="mt-2 border-l-2 border-success/50 pl-2 text-foreground">{{ o.txtRespuesta }}</p>
+                      <p class="pl-2 text-[11px] text-muted-foreground">Respondido por la UN el {{ o.fecRespuesta | date: 'dd/MM/yyyy HH:mm' }}</p>
+                    } @else {
+                      <app-ui-status-pill class="mt-1" tone="warning" text="Pendiente de respuesta" />
                     }
                   </div>
                 }
               </div>
             }
-            @case ('envios') {
-              @if ((envios() ?? []).length === 0) {
-                <p class="py-6 text-center text-xs text-muted-foreground">No se enviaron correos para este expediente.</p>
-              } @else {
-                <table class="w-full text-left text-xs">
-                  <thead class="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <tr><th class="pb-2 pr-3">Asunto</th><th class="pb-2 pr-3">Para</th><th class="pb-2 pr-3">Estado</th><th class="pb-2">Enviado</th></tr>
-                  </thead>
-                  <tbody>
-                    @for (e of envios(); track e.ideEnvio) {
-                      <tr class="border-t border-border/60">
-                        <td class="py-2 pr-3 font-medium text-foreground">{{ e.txtAsunto }}</td>
-                        <td class="py-2 pr-3 text-muted-foreground">{{ e.txtDestinatario ?? e.tipDestinatario }}</td>
-                        <td class="py-2 pr-3" [class.text-destructive]="e.estEnvio === 'FALLIDO'" [class.text-success]="e.estEnvio === 'ENVIADO'"
-                          [title]="e.txtError ?? ''">{{ e.estEnvio }}</td>
-                        <td class="py-2 text-muted-foreground">{{ (e.fecEnvio | date: 'dd/MM/yyyy HH:mm') ?? '—' }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              }
-            }
-          }
+          </div>
         }
-      </div>
+      }
     </section>
   }
 </div>

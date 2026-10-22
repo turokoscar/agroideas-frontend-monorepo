@@ -101,6 +101,17 @@ describe('ExpedienteComponent', () => {
     expect(texto).toContain('Informe de Cierre del PNT (Anexo 20)');
   });
 
+  it('como página muestra "Volver a la bandeja" aunque el router pase la entrada en undefined', () => {
+    const fixture = crear();
+    fixture.componentRef.setInput('mostrarVolver', undefined);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Volver a la bandeja');
+
+    fixture.componentRef.setInput('mostrarVolver', false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Volver a la bandeja');
+  });
+
   it('muestra el mensaje de la API si no puede cargar el expediente', () => {
     api.obtener.mockReturnValue(throwError(() => ({ error: { mensaje: 'CIE_3001:No tiene acceso a este expediente.' } })));
     const fixture = crear(['OA']);
@@ -183,7 +194,8 @@ describe('ExpedienteComponent', () => {
         fecRegistro: '2026-10-20T10:00:00', txtRespuesta: 'Se adjuntó', ideUsuarioRespuesta: 2, fecRespuesta: '2026-10-21T10:00:00' }
     ]));
     const fixture = crear(['UN']);
-    expect(fixture.nativeElement.textContent).toContain('Observaciones UAJ (1)');
+    const pestana = [...fixture.nativeElement.querySelectorAll('[role="tab"]')].find((t: HTMLElement) => t.textContent?.includes('Observaciones UAJ'));
+    expect(pestana?.textContent).toContain('1');
     fixture.componentInstance.cambiarPestana('observaciones');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Se adjuntó');

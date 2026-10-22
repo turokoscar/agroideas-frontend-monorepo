@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
-import { UIButtonComponent } from '@agroideas/ui';
+import { UIButtonComponent, UiStatusPillComponent } from '@agroideas/ui';
 import {
   ETIQUETA_ORIGEN_DATO,
   IndicadorEvaluacionDto,
@@ -22,7 +22,8 @@ export type ColumnaExtra = 'destino' | 'objetivo' | 'actividad' | null;
 @Component({
   selector: 'app-tabla-indicadores',
   standalone: true,
-  imports: [DecimalPipe, NgClass, UIButtonComponent],
+  host: { class: 'block' },
+  imports: [DecimalPipe, NgClass, UIButtonComponent, UiStatusPillComponent],
   template: `
     <div class="overflow-x-auto rounded-lg border border-slate-200">
       <table class="w-full min-w-[980px] border-collapse text-left text-xs">
@@ -78,10 +79,7 @@ export type ColumnaExtra = 'destino' | 'objetivo' | 'actividad' | null;
                 } @else { <span class="text-slate-400">—</span> }
               </td>
               <td class="p-2">
-                <span class="whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                  [ngClass]="manual ? 'border-slate-200 bg-slate-50 text-slate-500' : 'border-primary/30 bg-primary/10 text-primary'">
-                  {{ origen(f.txtOrigen) }}
-                </span>
+                <app-ui-status-pill [tone]="manual ? 'neutral' : 'primary'" [showIcon]="false" [text]="origen(f.txtOrigen)" />
               </td>
               <td class="p-2">
                 <div class="flex justify-end gap-1">

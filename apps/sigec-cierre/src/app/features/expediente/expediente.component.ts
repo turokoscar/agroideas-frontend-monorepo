@@ -2,7 +2,17 @@ import { Component, OnDestroy, computed, effect, inject, input, signal, untracke
 import { DatePipe, NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
-import { UIButtonComponent, UiCountdownRingComponent, ToastService } from '@agroideas/ui';
+import {
+  CountdownTone,
+  TableColumn,
+  ToastService,
+  UIButtonComponent,
+  UiCountdownBannerComponent,
+  UiDataTableComponent,
+  UiInfoTooltipComponent,
+  StatusTone,
+  UiStatusPillComponent
+} from '@agroideas/ui';
 import { UiPdfViewerComponent } from '@agroideas/ui/pdf-viewer';
 import { FormatConvenioPipe, mensajeParaUsuario } from '@agroideas/utils';
 import { CierreApiService } from '../../core/services/cierre-api.service';
@@ -14,9 +24,9 @@ import {
   ETIQUETA_ORIGEN,
   etiquetaDocumento
 } from '../../core/models/cierre.model';
-import { ETIQUETA_ESTADO_PLAZO, PlazoDto, diasRestantes, etiquetaTipoPlazo } from '../../core/models/plazo.model';
-import { EnvioNotificacionDto } from '../../core/models/notificacion.model';
-import { EtapaCierre, construirEtapas } from '../../core/models/etapas-cierre';
+import { ETIQUETA_ESTADO_PLAZO, EstadoPlazo, PlazoDto, TONO_ESTADO_PLAZO, diasRestantes, etiquetaTipoPlazo } from '../../core/models/plazo.model';
+import { ESTADO_ENVIO, EnvioNotificacionDto } from '../../core/models/notificacion.model';
+import { AYUDA_ETAPA, EtapaCierre, construirEtapas } from '../../core/models/etapas-cierre';
 import { ROLES_PERSONAL, tieneAlgunRol } from '../../core/models/rol-cierre.model';
 import { EstadoCierrePillComponent } from '../../shared/estado-cierre-pill.component';
 import { AccionCierre, puedeEjecutar } from '../../core/models/acciones-cierre';
@@ -29,6 +39,7 @@ import { SubsanacionComponent } from './revision-legal/subsanacion.component';
 import { SuscripcionRdeComponent } from './revision-legal/suscripcion-rde.component';
 import { CargoNotificacionComponent } from './revision-legal/cargo-notificacion.component';
 import { ObservacionUajDto, agruparPorRonda, ultimaRonda } from '../../core/models/revision-legal.model';
+import { environment } from '../../../environments/environment';
 
 type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones';
 
@@ -41,7 +52,8 @@ type Pestana = 'documentos' | 'plazos' | 'bitacora' | 'envios' | 'observaciones'
 @Component({
   selector: 'app-expediente',
   standalone: true,
-  imports: [DatePipe, NgClass, RouterLink, FormatConvenioPipe, UIButtonComponent, UiCountdownRingComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
+  host: { class: 'block' },
+  imports: [DatePipe, NgClass, RouterLink, FormatConvenioPipe, UiStatusPillComponent, UiDataTableComponent, UiInfoTooltipComponent, UIButtonComponent, UiCountdownBannerComponent, UiPdfViewerComponent, EstadoCierrePillComponent,
     ActaCierreComponent,
     InformeEvaluacionComponent,
     PresentacionAnexo20Component,
@@ -60,14 +72,40 @@ export class ExpedienteComponent implements OnDestroy {
 
   /** `ideCierreConvenio`; llega del parámetro `:id` de la ruta o del componente padre. */
   id = input.required<string | number>();
-  /** Muestra el enlace "Volver a la bandeja" (no aplica dentro de `mi-cierre`). */
-  mostrarVolver = input(true);
+  /**
+   * Muestra el enlace "Volver a la bandeja" (no aplica dentro de `mi-cierre`). Como página, `withComponentInputBinding`
+   * pone en `undefined` las entradas que no vienen en la ruta: se toma como el valor por defecto.
+   */
+  mostrarVolver = input(true, { transform: (valor: boolean | undefined) => valor ?? true });
 
   cargando = signal(true);
   error = signal<string | null>(null);
   cierre = signal<CierreDetalleDto | null>(null);
   plazos = signal<PlazoDto[]>([]);
   pestana = signal<Pestana>('documentos');
+
+  readonly ayudaEtapa = AYUDA_ETAPA;
+  readonly tonoEstadoPlazo = (estado: string): StatusTone => TONO_ESTADO_PLAZO[estado as EstadoPlazo] ?? 'neutral';
+  readonly estadoEnvio = ESTADO_ENVIO;
+  readonly columnasDocumentos: TableColumn[] = [
+    { field: 'tipDocumento', header: 'Documento', type: 'custom' },
+    { field: 'txtNombreArchivo', header: 'Archivo' },
+    { field: 'fecRegistro', header: 'Registrado', type: 'custom' }
+  ];
+  readonly columnasPlazos: TableColumn[] = [
+    { field: 'tipPlazo', header: 'Plazo', type: 'custom' },
+    { field: 'fecInicio', header: 'Inicio', type: 'date' },
+    { field: 'canDias', header: 'Días', align: 'right' },
+    { field: 'fecLimite', header: 'Vence', type: 'date' },
+    { field: 'estPlazo', header: 'Estado', type: 'custom' },
+    { field: 'txtContingencia', header: 'Contingencia', type: 'custom' }
+  ];
+  readonly columnasEnvios: TableColumn[] = [
+    { field: 'txtAsunto', header: 'Asunto' },
+    { field: 'txtDestinatario', header: 'Para', type: 'custom' },
+    { field: 'estEnvio', header: 'Estado', type: 'custom' },
+    { field: 'fecEnvio', header: 'Enviado', type: 'custom' }
+  ];
 
   auditorias = signal<AuditoriaCierreDto[] | null>(null);
   envios = signal<EnvioNotificacionDto[] | null>(null);
@@ -80,6 +118,22 @@ export class ExpedienteComponent implements OnDestroy {
   visor = signal<{ abierto: boolean; nombre: string | null; url: string | null }>({ abierto: false, nombre: null, url: null });
 
   esPersonal = computed(() => tieneAlgunRol(this.auth.roles(), ROLES_PERSONAL));
+
+  /** Pestañas visibles para el usuario, con su contador cuando aplica. */
+  pestanas = computed(() => {
+    const lista: { clave: Pestana; etiqueta: string; total?: number }[] = [
+      { clave: 'documentos', etiqueta: 'Documentos', total: this.cierre()?.documentos.length ?? 0 },
+      { clave: 'plazos', etiqueta: 'Plazos', total: this.plazos().length },
+      { clave: 'bitacora', etiqueta: 'Bitácora' }
+    ];
+    if (this.esPersonal()) {
+      lista.push({ clave: 'envios', etiqueta: 'Correos enviados' });
+      if (this.observaciones().length > 0) {
+        lista.push({ clave: 'observaciones', etiqueta: 'Observaciones UAJ', total: this.observaciones().length });
+      }
+    }
+    return lista;
+  });
   nombreUsuario = computed(() => this.auth.user()?.nombre ?? null);
 
   /** El usuario puede ejecutar esa acción en el estado actual (espejo de la máquina de estados). */
@@ -184,18 +238,43 @@ export class ExpedienteComponent implements OnDestroy {
     });
   }
 
-  /** Días del anillo: transcurridos sobre el total del plazo (negativo si venció). */
+  /** La tarjeta tiene algo bajo el título (plazo, notas, documentos o un mensaje): si no, no deja un hueco vacío. */
+  tieneDetalle(etapa: EtapaCierre): boolean {
+    return (
+      !!etapa.plazo ||
+      etapa.notas.length > 0 ||
+      etapa.documentos.length > 0 ||
+      etapa.situacion === 'pendiente' ||
+      (etapa.situacion === 'activa' && !this.esPersonal())
+    );
+  }
+
+  /** Días calendario hasta el vencimiento (negativo si venció). */
   restantes(plazo: PlazoDto): number {
     return diasRestantes(plazo.fecLimite);
+  }
+
+  /**
+   * Horas que le quedan al plazo de cada etapa, calculadas una vez por carga: `ui-countdown-banner` descuenta los
+   * segundos por su cuenta, así que no se le pasa un valor que cambie en cada detección de cambios.
+   */
+  horasRestantes = computed(() => {
+    const ahora = Date.now();
+    return new Map(
+      this.etapas().flatMap(e => (e.plazo ? [[e.clave, Math.max(0, (new Date(e.plazo.fecLimite).getTime() - ahora) / 3_600_000)] as const] : []))
+    );
+  });
+
+  /** Rojo si venció, ámbar si vence dentro del aviso previo, el primario si no. */
+  tonoPlazo(plazo: PlazoDto): CountdownTone {
+    const dias = this.restantes(plazo);
+    if (dias < 0) return 'destructive';
+    return dias <= environment.plazos.diasAvisoPrevio ? 'warning' : 'primary';
   }
 
   /** El plazo aún no empieza (p. ej. el del Anexo 20 corre desde el fin de la vigencia del convenio). */
   aunNoCorre(plazo: PlazoDto): boolean {
     return this.restantes(plazo) > plazo.canDias;
-  }
-
-  transcurridos(plazo: PlazoDto): number {
-    return Math.max(0, plazo.canDias - Math.max(0, this.restantes(plazo)));
   }
 
   verDocumento(documento: DocumentoCierreDto) {

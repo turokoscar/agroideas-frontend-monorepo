@@ -12,6 +12,7 @@ import { ExpedienteComponent } from '../expediente/expediente.component';
 @Component({
   selector: 'app-mi-cierre',
   standalone: true,
+  host: { class: 'block' },
   imports: [UIButtonComponent, ExpedienteComponent],
   template: `
     <div class="space-y-6">

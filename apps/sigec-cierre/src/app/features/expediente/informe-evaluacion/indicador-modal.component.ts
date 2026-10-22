@@ -13,6 +13,7 @@ import { ColumnaExtra } from './tabla-indicadores.component';
 @Component({
   selector: 'app-indicador-modal',
   standalone: true,
+  host: { class: 'block' },
   imports: [DecimalPipe, NgClass, FormsModule, UIModalComponent],
   template: `
     <app-ui-modal

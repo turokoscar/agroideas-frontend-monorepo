@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-sin-acceso',
   standalone: true,
+  host: { class: 'block' },
   imports: [UIButtonComponent],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-background p-6">

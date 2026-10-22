@@ -15,6 +15,7 @@ import { InformeEvaluacionComponent } from '../informe-evaluacion/informe-evalua
 @Component({
   selector: 'app-subsanacion',
   standalone: true,
+  host: { class: 'block' },
   imports: [FormsModule, UIButtonComponent, UIModalComponent, InformeEvaluacionComponent],
   template: `
     <div class="mt-4 space-y-4">

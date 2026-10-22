@@ -22,6 +22,7 @@ export function fechaLocal(fecha: Date = new Date()): string {
 @Component({
   selector: 'app-suscripcion-rde',
   standalone: true,
+  host: { class: 'block' },
   imports: [DatePipe, FormsModule, UIButtonComponent, UIModalComponent, SelectorPdfComponent],
   template: `
     <section class="form-card-flat mt-4 space-y-4">

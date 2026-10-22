@@ -15,10 +15,7 @@
   <div class="space-y-4 border-t border-border pt-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h4 class="text-sm font-bold text-foreground">Anexo N° 22: Informe de Evaluación de la Ejecución del PNT para Cierre</h4>
-      <span class="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold"
-        [ngClass]="ro ? 'border-success/30 bg-success/10 text-success' : 'border-slate-200 bg-slate-50 text-slate-500'">
-        {{ ro ? 'Firmado' : 'Borrador' }} · versión {{ a.numVersion }}
-      </span>
+      <app-ui-status-pill [tone]="ro ? 'success' : 'neutral'" [text]="(ro ? 'Firmado' : 'Borrador') + ' · versión ' + a.numVersion" />
     </div>
 
     @if (criticos() > 0) {
@@ -226,17 +223,7 @@
 
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Presentar el informe firmado</h5>
-        <input #archivoInforme type="file" accept="application/pdf" hidden (change)="seleccionarArchivo($event)" />
-        @if (archivo(); as f) {
-          <ui-file-chip [name]="f.name" [size]="f.size" (onRemove)="archivo.set(null)" />
-        } @else {
-          <div class="form-file-upload group min-h-[90px] flex-col items-center justify-center p-5 text-center"
-            role="button" tabindex="0" aria-label="Adjuntar el Informe de Evaluación firmado en PDF"
-            (click)="archivoInforme.click()" (keydown.enter)="archivoInforme.click()" (keydown.space)="$event.preventDefault(); archivoInforme.click()">
-            <span class="material-symbols-outlined mb-2 text-3xl text-slate-400 transition-transform group-hover:scale-105">upload_file</span>
-            <p class="text-[10px] font-semibold leading-normal text-slate-500">Informe firmado en PDF (máx. {{ tamanoMaximoMb }} MB).<br />Haz clic para seleccionarlo.</p>
-          </div>
-        }
+        <app-selector-pdf etiqueta="Informe de Evaluación firmado" ayuda="Firmado por el especialista, en PDF" [(archivo)]="archivo" />
         <div class="flex flex-wrap items-center gap-2">
           <ui-button icon="draw" label="Presentar informe firmado" [disabled]="!completo() || !archivo() || presentando()" (onClick)="confirmarPresentar.set(true)" />
           @if (!completo()) { <span class="text-[11px] text-slate-400">Se habilita con el informe guardado, completo y sin cambios pendientes.</span> }

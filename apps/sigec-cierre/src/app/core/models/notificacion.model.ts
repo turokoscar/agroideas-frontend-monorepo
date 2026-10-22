@@ -1,3 +1,5 @@
+import type { StatusTone } from '@agroideas/ui';
+
 /** Espejo de `SIGEC_CIERRE.Entidad/Notificaciones/NotificacionDtos.cs`. */
 
 export interface NotificacionDto {
@@ -31,3 +33,10 @@ export interface EnvioNotificacionDto {
   fecRegistro: string;
   fecEnvio: string | null;
 }
+
+/** Etiqueta y tono de cada estado de un correo (`EstadoEnvio` de la API). */
+export const ESTADO_ENVIO: Readonly<Partial<Record<string, { etiqueta: string; tono: StatusTone }>>> = {
+  PENDIENTE: { etiqueta: 'Pendiente', tono: 'warning' },
+  ENVIADO: { etiqueta: 'Enviado', tono: 'success' },
+  FALLIDO: { etiqueta: 'Fallido', tono: 'danger' }
+};

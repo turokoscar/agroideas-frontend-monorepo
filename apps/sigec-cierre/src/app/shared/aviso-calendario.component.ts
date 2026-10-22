@@ -13,6 +13,8 @@ import { aniosACubrir } from '../core/models/calendario.model';
 @Component({
   selector: 'app-aviso-calendario',
   standalone: true,
+  // Bloque, para respetar el espacio que le da el contenedor; oculto si no hay nada que avisar (no deja hueco).
+  host: { class: 'block empty:hidden' },
   imports: [RouterLink],
   template: `
     @if (aniosSinCalendario().length > 0) {

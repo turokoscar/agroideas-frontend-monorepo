@@ -13,40 +13,22 @@
     <app-aviso-calendario [enlace]="true" />
   }
 
-  <!-- Pestañas -->
-  <div class="flex flex-wrap gap-2" role="tablist">
-    @for (s of semaforos; track s) {
+  <!-- Semáforo: cada KPI es una pestaña que filtra la bandeja (ADR 0014, Fase 2) -->
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-5" role="tablist" aria-label="Expedientes por plazo">
+    @for (k of kpis; track k.clave) {
       <button
         type="button"
         role="tab"
-        class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all"
-        [attr.aria-selected]="pestana() === s"
-        [class.bg-primary]="pestana() === s"
-        [class.text-primary-foreground]="pestana() === s"
-        [class.bg-surface-container]="pestana() !== s"
-        [class.text-muted-foreground]="pestana() !== s"
-        (click)="cambiarPestana(s)"
+        class="rounded-xl text-left transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        [class.ring-2]="pestana() === k.clave"
+        [class.ring-primary]="pestana() === k.clave"
+        [class.ring-offset-2]="pestana() === k.clave"
+        [attr.aria-selected]="pestana() === k.clave"
+        (click)="cambiarPestana(k.clave)"
       >
-        {{ etiquetaSemaforo[s] }}
-        <span
-          class="min-w-[20px] rounded-full px-1.5 py-0.5 text-[10px]"
-          [ngClass]="pestana() === s ? 'bg-primary-foreground/20' : 'bg-muted'"
-        >{{ cargandoPendientes() ? '…' : conteo()[s] }}</span>
+        <app-ui-kpi [label]="k.etiqueta" [value]="valorKpi(k.clave)" [subtitle]="k.detalle" [variant]="k.variante" [icon]="k.icono" />
       </button>
     }
-    <button
-      type="button"
-      role="tab"
-      class="rounded-xl px-4 py-2 text-xs font-semibold transition-all"
-      [attr.aria-selected]="pestana() === 'TODOS'"
-      [class.bg-primary]="pestana() === 'TODOS'"
-      [class.text-primary-foreground]="pestana() === 'TODOS'"
-      [class.bg-surface-container]="pestana() !== 'TODOS'"
-      [class.text-muted-foreground]="pestana() !== 'TODOS'"
-      (click)="cambiarPestana('TODOS')"
-    >
-      Todos los expedientes
-    </button>
   </div>
 
   <!-- Filtros -->

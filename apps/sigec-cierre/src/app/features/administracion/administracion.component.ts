@@ -8,6 +8,7 @@ type PestanaAdmin = 'feriados' | 'parametros';
 @Component({
   selector: 'app-administracion',
   standalone: true,
+  host: { class: 'block' },
   imports: [FeriadosComponent, ParametrosComponent],
   template: `
     <div class="space-y-6">

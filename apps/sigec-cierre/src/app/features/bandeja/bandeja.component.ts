@@ -10,7 +10,9 @@ import {
   UIModalComponent,
   UiAutocompleteComponent,
   UiDataTableComponent,
+  KpiVariant,
   UiFilterBarComponent,
+  UiKpiComponent,
   UiPaginationComponent
 } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
@@ -62,6 +64,7 @@ export function coincide(
 @Component({
   selector: 'app-bandeja',
   standalone: true,
+  host: { class: 'block' },
   imports: [
     AvisoCalendarioComponent,
     DatePipe,
@@ -73,6 +76,7 @@ export function coincide(
     UiAutocompleteComponent,
     UiDataTableComponent,
     UiFilterBarComponent,
+    UiKpiComponent,
     UiPaginationComponent,
     EstadoCierrePillComponent
   ],
@@ -94,6 +98,15 @@ export class BandejaComponent implements OnInit {
   readonly etiquetaAccion = etiquetaAccion;
   readonly etiquetaTipoPlazo = etiquetaTipoPlazo;
   readonly claseSemaforo = claseSemaforo;
+
+  /** Tarjetas del semáforo (y "Todos"), que hacen de pestañas. */
+  readonly kpis: readonly { clave: PestanaBandeja; etiqueta: string; detalle: string; variante: KpiVariant; icono: string }[] = [
+    { clave: 'VENCIDO', etiqueta: 'Vencidos', detalle: 'Requieren acción inmediata', variante: 'danger', icono: 'alarm' },
+    { clave: 'POR_VENCER', etiqueta: 'Por vencer', detalle: 'Vencen en los próximos días', variante: 'warning', icono: 'hourglass_bottom' },
+    { clave: 'EN_PLAZO', etiqueta: 'En plazo', detalle: 'Dentro del plazo legal', variante: 'success', icono: 'event_available' },
+    { clave: 'SIN_PLAZO', etiqueta: 'Sin plazo', detalle: 'Etapas sin plazo legal', variante: 'default', icono: 'schedule' },
+    { clave: 'TODOS', etiqueta: 'Todos', detalle: 'Expedientes del módulo', variante: 'default', icono: 'folder_open' }
+  ];
 
   readonly columnasPendientes: TableColumn[] = [
     { field: 'txtNumeroConvenio', header: 'Convenio', type: 'custom' },
@@ -121,6 +134,7 @@ export class BandejaComponent implements OnInit {
   paginaTodos = signal(1);
   filtroEstado = signal<EstadoCierre | ''>('');
   cargandoTodos = signal(false);
+  todosCargados = signal(false);
 
   /** Solo el administrador puede completar el calendario de días inhábiles. */
   esAdmin = computed(() => this.auth.roles().includes('ADMIN'));
@@ -194,6 +208,7 @@ export class BandejaComponent implements OnInit {
         next: datos => {
           this.todos.set(datos.items);
           this.totalTodos.set(datos.total);
+          this.todosCargados.set(true);
           this.cargandoTodos.set(false);
         },
         error: err => {
@@ -210,6 +225,12 @@ export class BandejaComponent implements OnInit {
 
   abrir(expediente: { ideCierreConvenio: number }) {
     this.router.navigate(['/expedientes', expediente.ideCierreConvenio]);
+  }
+
+  /** Valor de cada KPI: el conteo de la bandeja, o el total de "Todos" una vez consultado. */
+  valorKpi(clave: PestanaBandeja): string {
+    if (clave === 'TODOS') return this.todosCargados() ? String(this.totalTodos()) : '—';
+    return this.cargandoPendientes() ? '…' : String(this.conteo()[clave]);
   }
 
   textoPlazo(p: ExpedientePendienteDto): string {

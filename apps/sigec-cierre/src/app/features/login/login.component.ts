@@ -22,6 +22,7 @@ export function mensajeErrorLogin(err: HttpErrorResponse): string {
 @Component({
   selector: 'app-login',
   standalone: true,
+  host: { class: 'block' },
   imports: [CommonModule, FormsModule, UIButtonComponent],
   template: `
     <div class="min-h-screen flex font-sans">

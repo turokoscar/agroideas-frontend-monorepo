@@ -1,3 +1,5 @@
+import type { StatusTone } from '@agroideas/ui';
+
 /** Espejo de `SIGEC_CIERRE.Entidad/Plazos/PlazoDtos.cs`. */
 
 export type TipoPlazo = 'ANEXO20' | 'EVALUACION_UN' | 'REVISION_UAJ';
@@ -15,6 +17,14 @@ export const ETIQUETA_ESTADO_PLAZO: Readonly<Record<EstadoPlazo, string>> = {
   CUMPLIDO: 'Cumplido',
   VENCIDO: 'Vencido',
   CANCELADO: 'Cancelado'
+};
+
+/** Tono de la insignia de cada estado de plazo. */
+export const TONO_ESTADO_PLAZO: Readonly<Record<EstadoPlazo, StatusTone>> = {
+  VIGENTE: 'primary',
+  CUMPLIDO: 'success',
+  VENCIDO: 'danger',
+  CANCELADO: 'neutral'
 };
 
 export function etiquetaTipoPlazo(tipo: string | null | undefined): string {

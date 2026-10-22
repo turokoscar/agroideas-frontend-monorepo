@@ -3,6 +3,12 @@ import { Component, Input } from '@angular/core';
 export type StatusType = 'Activo' | 'Suspendido' | 'Finalizado' | 'Abierto' | 'Cerrado' |
                         'Pendiente' | 'Aprobado' | 'Rechazado' | 'Crítica' | 'Alta' | 'Media' | 'Baja';
 
+/**
+ * Tono de la insignia cuando el estado no es uno de `StatusType` (p. ej. los estados del expediente de cierre):
+ * el host mapea su estado a un tono y pasa el texto. Usa los tokens del tema.
+ */
+export type StatusTone = 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+
 @Component({
     selector: 'app-ui-status-pill',
     standalone: true,
@@ -13,6 +19,8 @@ export type StatusType = 'Activo' | 'Suspendido' | 'Finalizado' | 'Abierto' | 'C
 export class UiStatusPillComponent {
     @Input() text = '';
     @Input() status: StatusType = 'Activo';
+    /** Si se indica, manda sobre `status` para el color (el texto sale de `text`). */
+    @Input() tone?: StatusTone;
     @Input() showIcon = true;
 
     private labelMap: Record<StatusType, string> = {

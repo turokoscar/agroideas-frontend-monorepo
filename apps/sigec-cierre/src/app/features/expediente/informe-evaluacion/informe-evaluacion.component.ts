@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
@@ -19,6 +19,7 @@ import {
 import { PlazoDto, diasRestantes } from '../../../core/models/plazo.model';
 import { ColumnaExtra, TablaIndicadoresComponent } from './tabla-indicadores.component';
 import { IndicadorModalComponent } from './indicador-modal.component';
+import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
 
 /** Secciones cuyas filas se editan en el modal: las manuales y la VI (actividad y comentarios). */
 type SeccionEditable = SeccionManual | 'practicaAmbiental';
@@ -48,6 +49,7 @@ interface EdicionIndicador {
 @Component({
   selector: 'app-informe-evaluacion',
   standalone: true,
+  host: { class: 'block' },
   imports: [
     DatePipe,
     DecimalPipe,
@@ -56,7 +58,8 @@ interface EdicionIndicador {
     FormsModule,
     UIButtonComponent,
     UIModalComponent,
-    UiFileChipComponent,
+    SelectorPdfComponent,
+    UiStatusPillComponent,
     FormatConvenioPipe,
     TablaIndicadoresComponent,
     IndicadorModalComponent
@@ -81,7 +84,6 @@ export class InformeEvaluacionComponent {
   firmadoCambio = output<boolean>();
 
   readonly resultados = RESULTADOS;
-  readonly tamanoMaximoMb = environment.archivos.tamanoMaximoPdfMb;
   readonly umbral = environment.evaluacion.umbralDesviacionCriticaPct;
 
   cargando = signal(false);
@@ -254,22 +256,6 @@ export class InformeEvaluacionComponent {
     enlace.download = nombre;
     enlace.click();
     URL.revokeObjectURL(url);
-  }
-
-  seleccionarArchivo(event: Event) {
-    const entrada = event.target as HTMLInputElement;
-    const archivo = entrada.files?.[0];
-    entrada.value = '';
-    if (!archivo) return;
-    if (archivo.type !== 'application/pdf') {
-      this.toast.error('Formato no permitido', 'Adjunte el Informe de Evaluación firmado en PDF.');
-      return;
-    }
-    if (archivo.size > this.tamanoMaximoMb * 1024 * 1024) {
-      this.toast.error('Archivo muy grande', `El PDF no debe superar los ${this.tamanoMaximoMb} MB.`);
-      return;
-    }
-    this.archivo.set(archivo);
   }
 
   presentar() {

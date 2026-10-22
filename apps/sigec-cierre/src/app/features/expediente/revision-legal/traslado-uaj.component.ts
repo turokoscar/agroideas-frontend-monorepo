@@ -10,6 +10,7 @@ import { CierreApiService } from '../../../core/services/cierre-api.service';
 @Component({
   selector: 'app-traslado-uaj',
   standalone: true,
+  host: { class: 'block' },
   imports: [UIButtonComponent, UIModalComponent],
   template: `
     <section class="form-card-flat mt-4 space-y-3">

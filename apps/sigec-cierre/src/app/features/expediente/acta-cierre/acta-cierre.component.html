@@ -238,19 +238,7 @@
     <!-- Registro de la verificación -->
     <section class="form-card-flat space-y-3">
       <h5 class="form-section-title">Registrar la verificación de campo</h5>
-      <input #archivoActa type="file" accept="application/pdf" hidden (change)="seleccionarArchivo($event)" />
-      @if (archivo(); as f) {
-        <ui-file-chip [name]="f.name" [size]="f.size" (onRemove)="quitarArchivo()" />
-      } @else {
-        <div class="form-file-upload group min-h-[90px] flex-col items-center justify-center p-5 text-center"
-          role="button" tabindex="0" aria-label="Adjuntar el acta firmada y escaneada en PDF"
-          (click)="archivoActa.click()" (keydown.enter)="archivoActa.click()" (keydown.space)="$event.preventDefault(); archivoActa.click()">
-          <span class="material-symbols-outlined mb-2 text-3xl text-slate-400 transition-transform group-hover:scale-105">upload_file</span>
-          <p class="text-[10px] font-semibold leading-normal text-slate-500">
-            Acta firmada por los asistentes, escaneada en PDF (máx. {{ tamanoMaximoMb }} MB).<br />Haz clic para seleccionarla.
-          </p>
-        </div>
-      }
+      <app-selector-pdf etiqueta="Acta firmada y escaneada" ayuda="Firmada por los asistentes, escaneada en PDF" [(archivo)]="archivo" />
       <div class="flex flex-wrap items-center gap-2">
         <ui-button icon="task_alt" label="Registrar verificación" [disabled]="!puedeRegistrar()" (onClick)="confirmar.set(true)" />
         @if (!completa()) {

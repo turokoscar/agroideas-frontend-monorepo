@@ -21,6 +21,7 @@ const GRUPOS: readonly { clave: GrupoParametro; titulo: string; ayuda: string }[
 @Component({
   selector: 'app-parametros',
   standalone: true,
+  host: { class: 'block' },
   imports: [DatePipe, FormsModule, UIButtonComponent],
   template: `
     @if (cargando()) {

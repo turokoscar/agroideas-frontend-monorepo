@@ -1,3 +1,4 @@
+import type { StatusTone } from '@agroideas/ui';
 /**
  * Espejo de los DTO de `SIGEC_CIERRE.Entidad/Cierre` (JSON en camelCase). Las fechas llegan como
  * texto ISO sin zona: son hora de Perú (`IReloj.Ahora` de la API).
@@ -37,16 +38,17 @@ export const ETIQUETA_ESTADO: Readonly<Record<EstadoCierre, string>> = {
 };
 
 /** Tono visual del estado: clases de los tokens de `@agroideas/theme`. */
-export function claseEstado(estado: string): string {
+/** Tono de la insignia de `app-ui-status-pill` para cada estado del expediente. */
+export function tonoEstado(estado: string): StatusTone {
   switch (estado as EstadoCierre) {
     case 'CERRADO':
-      return 'bg-success/10 text-success border-success/30';
+      return 'success';
     case 'OBSERVADO_UAJ':
-      return 'bg-warning/10 text-warning border-warning/30';
+      return 'warning';
     case 'ESPERA_ANEXO20':
-      return 'bg-muted text-muted-foreground border-border';
+      return 'neutral';
     default:
-      return 'bg-primary/10 text-primary border-primary/30';
+      return 'primary';
   }
 }
 

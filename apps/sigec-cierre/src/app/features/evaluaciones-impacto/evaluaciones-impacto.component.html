@@ -56,7 +56,7 @@
               <td class="p-2.5">{{ e.txtRegion ?? '—' }}</td>
               <td class="p-2.5 text-right">{{ e.numSocios ?? '—' }}</td>
               <td class="p-2.5 text-right">{{ numero(e.numHectareas) }}</td>
-              <td class="p-2.5"><span class="whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold" [ngClass]="claseResultado(e.tipResultado)">{{ resultado(e.tipResultado) }}</span></td>
+              <td class="p-2.5"><app-ui-status-pill [tone]="tonoResultado(e.tipResultado)" [text]="resultado(e.tipResultado)" /></td>
               <td class="p-2.5 text-center">
                 @if (criticos(e) > 0) {
                   <span class="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-bold text-destructive">{{ criticos(e) }}</span>

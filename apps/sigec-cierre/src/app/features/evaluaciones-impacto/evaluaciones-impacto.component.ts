@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UiPaginationComponent } from '@agroideas/ui';
+import { StatusTone, ToastService, UIButtonComponent, UiPaginationComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../environments/environment';
 import { CierreApiService } from '../../core/services/cierre-api.service';
@@ -16,7 +16,8 @@ import { RESULTADOS } from '../../core/models/anexo22.model';
 @Component({
   selector: 'app-evaluaciones-impacto',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, NgClass, FormsModule, UIButtonComponent, UiPaginationComponent, FormatConvenioPipe],
+  host: { class: 'block' },
+  imports: [DatePipe, DecimalPipe, NgClass, FormsModule, UIButtonComponent, UiPaginationComponent, UiStatusPillComponent, FormatConvenioPipe],
   templateUrl: './evaluaciones-impacto.component.html'
 })
 export class EvaluacionesImpactoComponent implements OnInit {
@@ -71,14 +72,15 @@ export class EvaluacionesImpactoComponent implements OnInit {
     return RESULTADOS.find(r => r.valor === tip)?.etiqueta ?? '—';
   }
 
-  claseResultado(tip: string | null): string {
+  tonoResultado(tip: string | null): StatusTone {
     switch (tip) {
-      case 'CONFORME': return 'border-success/30 bg-success/10 text-success';
-      case 'CON_OBSERVACIONES': return 'border-warning/30 bg-warning/10 text-warning';
-      case 'NO_EJECUTADO': return 'border-destructive/30 bg-destructive/10 text-destructive';
-      default: return 'border-slate-200 bg-slate-50 text-slate-500';
+      case 'CONFORME': return 'success';
+      case 'CON_OBSERVACIONES': return 'warning';
+      case 'NO_EJECUTADO': return 'danger';
+      default: return 'neutral';
     }
   }
+
 
   numero(v: number | null | undefined): string {
     return v == null ? '—' : v.toLocaleString('es-PE', { maximumFractionDigits: 2 });

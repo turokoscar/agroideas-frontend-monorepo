@@ -7,6 +7,12 @@ export interface FileInfo {
   file: File;
 }
 
+/** Archivo descartado: el host decide cómo avisarlo (antes se descartaba en silencio). */
+export interface FileRejection {
+  name: string;
+  reason: 'type' | 'size';
+}
+
 @Component({
   selector: 'ui-dropzone',
   standalone: true,
@@ -15,16 +21,22 @@ export interface FileInfo {
   template: `
     <div
       #dropzone
-      class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-8 text-center transition-all"
-      [ngClass]="dropzoneClasses()"
+      role="button"
+      class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-center transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      [ngClass]="[dropzoneClasses(), compact() ? 'p-4' : 'p-8']"
+      [attr.tabindex]="disabled() ? -1 : 0"
+      [attr.aria-disabled]="disabled()"
+      [attr.aria-label]="ariaLabel() || label()"
       (click)="onClick()"
+      (keydown.enter)="onClick()"
+      (keydown.space)="$event.preventDefault(); onClick()"
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave()"
       (drop)="onDrop($event)"
     >
-      <span class="material-symbols-outlined text-[32px] text-primary">cloud_upload</span>
+      <span class="material-symbols-outlined text-primary" [ngClass]="compact() ? 'text-[24px]' : 'text-[32px]'" aria-hidden="true">cloud_upload</span>
       <div class="text-sm font-medium">{{ label() }}</div>
-      <div class="text-xs text-muted-foreground">PDF, máx {{ maxMB() }}MB</div>
+      <div class="text-xs text-muted-foreground">{{ hint() || 'PDF, máx ' + maxMB() + ' MB' }}</div>
       <input
         #fileInput
         type="file"
@@ -42,8 +54,16 @@ export class UiDropzoneComponent {
   label = input<string>('Arrastre y suelte sus PDFs aquí');
   multiple = input<boolean>(true);
   disabled = input<boolean>(false);
+  /** Texto bajo la etiqueta; por defecto, "PDF, máx N MB". */
+  hint = input<string>('');
+  /** Nombre accesible si la etiqueta visible no basta (p. ej. "Adjuntar la RDE suscrita en PDF"). */
+  ariaLabel = input<string>('');
+  /** Menos relleno, para formularios. */
+  compact = input<boolean>(false);
 
   onFile = output<FileInfo>();
+  /** Archivos descartados por tipo o tamaño. */
+  onReject = output<FileRejection>();
 
   dragging = signal(false);
 
@@ -95,9 +115,11 @@ export class UiDropzoneComponent {
   private processFiles(files: FileList): void {
     Array.from(files).forEach(f => {
       if (this.accept() === 'application/pdf' && f.type !== 'application/pdf') {
+        this.onReject.emit({ name: f.name, reason: 'type' });
         return;
       }
       if (f.size > this.maxMB() * 1024 * 1024) {
+        this.onReject.emit({ name: f.name, reason: 'size' });
         return;
       }
       this.onFile.emit({ name: f.name, size: f.size, file: f });

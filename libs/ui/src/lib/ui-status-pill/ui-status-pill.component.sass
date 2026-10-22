@@ -82,6 +82,31 @@
   .status-pill__dot
     background: #0ea5e9
 
+// ── Por tono (tokens del tema) ───────────────────
+@mixin tono($token)
+  background: hsl(var(--#{$token}) / 0.08)
+  color: hsl(var(--#{$token}))
+  border-color: hsl(var(--#{$token}) / 0.25)
+  .status-pill__dot
+    background: hsl(var(--#{$token}))
+
+[data-tone='primary']
+  +tono(primary)
+[data-tone='success']
+  +tono(success)
+[data-tone='warning']
+  +tono(warning)
+[data-tone='danger']
+  +tono(destructive)
+[data-tone='info']
+  +tono(info)
+[data-tone='neutral']
+  background: hsl(var(--muted))
+  color: hsl(var(--muted-foreground))
+  border-color: hsl(var(--border))
+  .status-pill__dot
+    background: hsl(var(--muted-foreground))
+
 // ── Animaciones ──────────────────────────────────
 @keyframes pulse-green
   0%, 100%
