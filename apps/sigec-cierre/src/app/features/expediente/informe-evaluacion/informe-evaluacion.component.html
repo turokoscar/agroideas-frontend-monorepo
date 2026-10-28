@@ -352,6 +352,7 @@
     [seccion]="ed ? secciones[ed.seccion].titulo : ''"
     [columnaExtra]="ed ? secciones[ed.seccion].extra : null"
     [soloTextos]="!!ed && ed.fila.txtOrigen !== 'MANUAL'"
+    [unidadesMedida]="anexo()?.unidadesMedidaSel ?? []"
     (guardar)="aceptarIndicador($event)"
     (cerrar)="edicion.set(null)"
   />

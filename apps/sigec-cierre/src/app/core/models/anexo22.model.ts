@@ -138,6 +138,8 @@ export interface Anexo22Dto extends Anexo22Datos {
   fecRegistro: string;
   fecModificacion: string;
   faltantes: string[];
+  /** Unidades de medida del catálogo del SEL para los indicadores agregados a mano (opciones; no se guardan). */
+  unidadesMedidaSel: string[];
 }
 
 /** Versión firmada del Anexo 22 (`GET …/anexos22/versiones`). */

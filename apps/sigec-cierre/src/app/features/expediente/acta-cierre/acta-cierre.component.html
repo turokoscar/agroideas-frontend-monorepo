@@ -127,32 +127,31 @@
               <th class="w-10 p-2.5">N°</th>
               <th class="p-2.5">Objetivos específicos <span class="form-label-required">*</span></th>
               <th class="p-2.5">Logros alcanzados <span class="form-label-required">*</span></th>
-              <th class="w-12 p-2.5"></th>
+              <th class="w-24 p-2.5"></th>
             </tr>
           </thead>
           <tbody>
             @for (l of a.logros; track $index) {
               <tr class="border-b border-border/40 align-top">
                 <td class="p-2.5 font-semibold text-muted-foreground">{{ l.numOrden }}</td>
+                <!-- Se editan en el modal; las celdas conservan su id para que la validación las marque y enfoque. -->
                 <td class="p-2.5">
-                  @if (a.objetivosEspecificosSel.length > 0) {
-                    <select class="form-select" [id]="'logro-objetivo-' + $index" [appInvalido]="errorDe('logro-objetivo-' + $index)" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()">
-                      <option value="">Seleccione un objetivo específico…</option>
-                      @for (o of a.objetivosEspecificosSel; track o) {
-                        <option [value]="o">{{ o }}</option>
-                      }
-                    </select>
-                  } @else {
-                    <input type="text" maxlength="500" class="form-input" [id]="'logro-objetivo-' + $index" [appInvalido]="errorDe('logro-objetivo-' + $index)" [attr.aria-label]="'Objetivo específico ' + l.numOrden" [(ngModel)]="l.txtObjetivoEspecifico" (ngModelChange)="marcarSucio()" />
-                  }
+                  <p tabindex="-1" class="focus:outline-none" [id]="'logro-objetivo-' + $index" [appInvalido]="errorDe('logro-objetivo-' + $index)">
+                    @if (l.txtObjetivoEspecifico) { {{ l.txtObjetivoEspecifico }} } @else { <span class="text-muted-foreground/70">Sin objetivo</span> }
+                  </p>
                   <app-error-campo [para]="'logro-objetivo-' + $index" [mensaje]="errorDe('logro-objetivo-' + $index)" />
                 </td>
                 <td class="p-2.5">
-                  <textarea rows="2" maxlength="4000" class="form-textarea" [id]="'logro-texto-' + $index" [appInvalido]="errorDe('logro-texto-' + $index)" [attr.aria-label]="'Logro alcanzado ' + l.numOrden" [(ngModel)]="l.txtLogroAlcanzado" (ngModelChange)="marcarSucio()"></textarea>
+                  <p tabindex="-1" class="whitespace-pre-line focus:outline-none" [id]="'logro-texto-' + $index" [appInvalido]="errorDe('logro-texto-' + $index)">
+                    @if (l.txtLogroAlcanzado) { {{ l.txtLogroAlcanzado }} } @else { <span class="text-muted-foreground/70">Sin describir</span> }
+                  </p>
                   <app-error-campo [para]="'logro-texto-' + $index" [mensaje]="errorDe('logro-texto-' + $index)" />
                 </td>
-                <td class="p-2.5 text-right">
-                  <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar el logro ' + l.numOrden" (onClick)="quitarLogro($index)" />
+                <td class="p-2.5">
+                  <div class="flex justify-end gap-1">
+                    <ui-button iconOnly size="sm" appearance="soft" icon="edit" [ariaLabel]="'Editar el logro ' + l.numOrden" (onClick)="abrirLogro($index)" />
+                    <ui-button iconOnly size="sm" appearance="soft" severity="danger" icon="delete" [ariaLabel]="'Quitar el logro ' + l.numOrden" (onClick)="quitarLogro($index)" />
+                  </div>
                 </td>
               </tr>
             }
@@ -163,7 +162,7 @@
         <span class="text-[11px] text-muted-foreground/70">
           @if (a.objetivosEspecificosSel.length > 0) { Objetivos del marco lógico registrados en el SEL. }
         </span>
-        <ui-button size="sm" appearance="soft" icon="add" label="Agregar logro" (onClick)="agregarLogro()" />
+        <ui-button size="sm" appearance="soft" icon="add" label="Agregar logro" (onClick)="abrirLogro(null)" />
       </div>
       <app-error-campo para="acta-logros" [mensaje]="errorDe('acta-logros')" />
     </section>
@@ -337,6 +336,45 @@
       </div>
     </div>
   </ng-template>
+
+  @let lg = logroEditado();
+  <app-ui-modal
+    [visible]="!!lg"
+    [title]="lg?.indice === null ? 'Agregar logro' : 'Editar logro ' + ((lg?.indice ?? 0) + 1)"
+    subtitle="Logro alcanzado en función de un objetivo específico del PNT."
+    icon="emoji_events"
+    maxWidth="760px"
+    saveLabel="Aceptar"
+    saveIcon="check"
+    (onHide)="logroEditado.set(null)"
+    (onSave)="aceptarLogro()"
+  >
+    @if (lg) {
+      <div class="space-y-4">
+        <div class="form-field">
+          <label class="form-label" for="logro-modal-objetivo">Objetivo específico <span class="form-label-required">*</span></label>
+          @if (acta()?.objetivosEspecificosSel?.length) {
+            <select id="logro-modal-objetivo" [appInvalido]="errorLogro('logro-modal-objetivo')" class="form-select" [(ngModel)]="lg.txtObjetivoEspecifico">
+              <option value="">Seleccione un objetivo específico…</option>
+              @for (o of acta()?.objetivosEspecificosSel ?? []; track o) { <option [value]="o">{{ o }}</option> }
+            </select>
+            <span class="text-[11px] text-muted-foreground/70">Objetivos del marco lógico registrados en el SEL.</span>
+          } @else {
+            <input id="logro-modal-objetivo" [appInvalido]="errorLogro('logro-modal-objetivo')" type="text" maxlength="500" class="form-input" [(ngModel)]="lg.txtObjetivoEspecifico" />
+          }
+          <app-error-campo para="logro-modal-objetivo" [mensaje]="errorLogro('logro-modal-objetivo')" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="logro-modal-texto">Logro alcanzado <span class="form-label-required">*</span></label>
+          <textarea id="logro-modal-texto" [appInvalido]="errorLogro('logro-modal-texto')" rows="10" maxlength="4000" class="form-textarea" [(ngModel)]="lg.txtLogroAlcanzado"></textarea>
+          <div class="flex justify-between gap-2">
+            <app-error-campo para="logro-modal-texto" [mensaje]="errorLogro('logro-modal-texto')" />
+            <span class="ml-auto text-[11px] text-muted-foreground/70">{{ lg.txtLogroAlcanzado.length }} / 4000</span>
+          </div>
+        </div>
+      </div>
+    }
+  </app-ui-modal>
 
   @let n = nuevoItem();
   <app-ui-modal

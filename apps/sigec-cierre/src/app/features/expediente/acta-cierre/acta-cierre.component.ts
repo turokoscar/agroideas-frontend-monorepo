@@ -13,6 +13,15 @@ import { ValidacionFormulario } from '../../../shared/validacion-formulario';
 
 type ListaItems = 'bienes' | 'servicios';
 
+/** Logro que se agrega (`indice` null) o edita en el modal. */
+interface LogroEditado {
+  indice: number | null;
+  txtObjetivoEspecifico: string;
+  txtLogroAlcanzado: string;
+}
+
+type CampoLogro = 'logro-modal-objetivo' | 'logro-modal-texto';
+
 /** Bien o servicio no programado que se agrega desde el modal (el resto de la fila son referencias de KOFIX). */
 interface NuevoItem {
   lista: ListaItems;
@@ -70,6 +79,9 @@ export class ActaCierreComponent {
   nuevoItem = signal<NuevoItem | null>(null);
   /** Los errores del modal se muestran recién al intentar agregar, como en el resto del acta. */
   intentoItem = signal(false);
+  /** Logro que se está escribiendo en el modal (el texto es largo: no cabe en la tabla); null si está cerrado. */
+  logroEditado = signal<LogroEditado | null>(null);
+  intentoLogro = signal(false);
 
   guardada = computed(() => (this.acta()?.ideAnexo21 ?? 0) > 0);
   /** Catálogo de unidades de medida del SEL; vacío si el SEL no lo tiene (entonces la unidad se escribe). */
@@ -204,8 +216,42 @@ export class ActaCierreComponent {
     this.mutar(a => a[lista].splice(indice, 1));
   }
 
-  agregarLogro() {
-    this.mutar(a => a.logros.push({ numOrden: a.logros.length + 1, txtObjetivoEspecifico: '', txtLogroAlcanzado: '' }));
+  abrirLogro(indice: number | null) {
+    const logro = indice === null ? null : this.acta()?.logros[indice];
+    this.intentoLogro.set(false);
+    this.logroEditado.set({
+      indice,
+      txtObjetivoEspecifico: logro?.txtObjetivoEspecifico ?? '',
+      txtLogroAlcanzado: logro?.txtLogroAlcanzado ?? ''
+    });
+  }
+
+  /** Errores del modal de logro por control (método: el formulario se edita mutando la copia). */
+  erroresLogro(): Partial<Record<CampoLogro, string>> {
+    const l = this.logroEditado();
+    if (!l) return {};
+    const errores: Partial<Record<CampoLogro, string>> = {};
+    if (!l.txtObjetivoEspecifico.trim()) errores['logro-modal-objetivo'] = 'Elija el objetivo específico.';
+    if (!l.txtLogroAlcanzado.trim()) errores['logro-modal-texto'] = 'Describa el logro alcanzado.';
+    return errores;
+  }
+
+  errorLogro(id: CampoLogro): string | null {
+    return this.intentoLogro() ? (this.erroresLogro()[id] ?? null) : null;
+  }
+
+  aceptarLogro() {
+    const l = this.logroEditado();
+    if (!l) return;
+    const primero = Object.keys(this.erroresLogro())[0];
+    if (primero) {
+      this.intentoLogro.set(true);
+      document.getElementById(primero)?.focus();
+      return;
+    }
+    const logro = { numOrden: 0, txtObjetivoEspecifico: l.txtObjetivoEspecifico.trim(), txtLogroAlcanzado: l.txtLogroAlcanzado.trim() };
+    this.mutar(a => (l.indice === null ? a.logros.push(logro) : a.logros.splice(l.indice, 1, logro)));
+    this.logroEditado.set(null);
   }
 
   quitarLogro(indice: number) {

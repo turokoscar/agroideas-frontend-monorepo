@@ -1,9 +1,11 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UIModalComponent } from '@agroideas/ui';
 import { IndicadorEvaluacionDto, ejecutadoCierre, esCritica, variacion } from '../../../core/models/anexo22.model';
 import { ColumnaExtra } from './tabla-indicadores.component';
+import { CampoInvalidoDirective } from '../../../shared/campo-invalido.directive';
+import { ErrorCampoComponent } from '../../../shared/error-campo.component';
 
 /**
  * Alta y edición de un indicador del Anexo 22 en un modal, en lugar de editarlo en la tabla (que no cabe en
@@ -14,7 +16,7 @@ import { ColumnaExtra } from './tabla-indicadores.component';
   selector: 'app-indicador-modal',
   standalone: true,
   host: { class: 'block' },
-  imports: [DecimalPipe, NgClass, FormsModule, UIModalComponent],
+  imports: [DecimalPipe, NgClass, FormsModule, UIModalComponent, CampoInvalidoDirective, ErrorCampoComponent],
   template: `
     <app-ui-modal
       [visible]="!!fila()"
@@ -24,23 +26,28 @@ import { ColumnaExtra } from './tabla-indicadores.component';
       maxWidth="760px"
       saveLabel="Aceptar"
       saveIcon="check"
-      [saveDisabled]="!valido()"
       (onHide)="cerrar.emit()"
-      (onSave)="guardar.emit(fila()!)"
+      (onSave)="aceptar()"
     >
       @if (fila(); as f) {
         <div class="space-y-5">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="form-field sm:col-span-2">
               <label class="form-label" for="ind-concepto">Indicador / concepto <span class="form-label-required">*</span></label>
-              <input id="ind-concepto" [attr.aria-describedby]="valido() ? null : 'ind-concepto-ayuda'" type="text" maxlength="500" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtConcepto" />
-              @if (!valido()) {
-                <span id="ind-concepto-ayuda" class="text-[11px] text-muted-foreground">Obligatorio: sin él no se puede guardar el indicador.</span>
-              }
+              <input id="ind-concepto" [appInvalido]="errorConcepto()" type="text" maxlength="500" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtConcepto" />
+              <app-error-campo para="ind-concepto" [mensaje]="errorConcepto()" />
             </div>
             <div class="form-field">
               <label class="form-label" for="ind-unidad">Unidad de medida</label>
-              <input id="ind-unidad" type="text" maxlength="50" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtUnidadMedida" />
+              @if (unidadesMedida().length > 0 && !soloTextos()) {
+                <select id="ind-unidad" class="form-select" [(ngModel)]="f.txtUnidadMedida">
+                  <option [ngValue]="null">Seleccione una unidad…</option>
+                  @for (u of unidadesMedida(); track u) { <option [ngValue]="u">{{ u }}</option> }
+                </select>
+                <span class="text-[11px] text-muted-foreground/70">Catálogo de unidades de medida del SEL.</span>
+              } @else {
+                <input id="ind-unidad" type="text" maxlength="50" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtUnidadMedida" />
+              }
             </div>
             @switch (columnaExtra()) {
               @case ('destino') {
@@ -56,9 +63,9 @@ import { ColumnaExtra } from './tabla-indicadores.component';
                 </div>
               }
               @case ('actividad') {
-                <div class="form-field">
+                <div class="form-field sm:col-span-2">
                   <label class="form-label" for="ind-actividad">Actividad desarrollada</label>
-                  <input id="ind-actividad" type="text" maxlength="500" class="form-input" [(ngModel)]="f.txtActividad" />
+                  <textarea id="ind-actividad" rows="3" maxlength="500" class="form-textarea" [(ngModel)]="f.txtActividad"></textarea>
                 </div>
               }
             }
@@ -107,11 +114,11 @@ import { ColumnaExtra } from './tabla-indicadores.component';
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="form-field">
               <label class="form-label" for="ind-medio">Medio de verificación</label>
-              <input id="ind-medio" type="text" maxlength="500" class="form-input" [disabled]="soloTextos()" [(ngModel)]="f.txtMedioVerificacion" />
+              <textarea id="ind-medio" rows="3" maxlength="500" class="form-textarea" [disabled]="soloTextos()" [(ngModel)]="f.txtMedioVerificacion"></textarea>
             </div>
             <div class="form-field">
               <label class="form-label" for="ind-comentarios">Comentarios</label>
-              <input id="ind-comentarios" type="text" maxlength="500" class="form-input" [(ngModel)]="f.txtComentarios" />
+              <textarea id="ind-comentarios" rows="3" maxlength="500" class="form-textarea" [(ngModel)]="f.txtComentarios"></textarea>
             </div>
           </div>
         </div>
@@ -127,6 +134,8 @@ export class IndicadorModalComponent {
   soloTextos = input(false);
   /** Es una fila nueva (cambia el título). */
   nueva = input(false);
+  /** Catálogo de unidades de medida del SEL; vacío: la unidad se escribe. */
+  unidadesMedida = input<string[]>([]);
   guardar = output<IndicadorEvaluacionDto>();
   cerrar = output<void>();
 
@@ -140,6 +149,31 @@ export class IndicadorModalComponent {
   readonly critica = (v: number | null) => esCritica(v);
 
   titulo = computed(() => (this.nueva() ? 'Agregar indicador' : 'Editar indicador'));
+
+  /** Los errores se marcan recién al intentar aceptar, como en el resto del formulario. */
+  intento = signal(false);
+
+  constructor() {
+    effect(() => {
+      this.fila();
+      this.intento.set(false);
+    });
+  }
+
+  errorConcepto(): string | null {
+    return this.intento() && !this.valido() ? 'Indique el indicador o concepto.' : null;
+  }
+
+  aceptar() {
+    const fila = this.fila();
+    if (!fila) return;
+    if (!this.valido()) {
+      this.intento.set(true);
+      document.getElementById('ind-concepto')?.focus();
+      return;
+    }
+    this.guardar.emit(fila);
+  }
 
   /** Método (no computed): el concepto se edita mutando la copia, que no es una señal. */
   valido(): boolean {

@@ -258,11 +258,43 @@ describe('ActaCierreComponent', () => {
       )
     );
     const fixture = crear();
+    fixture.componentInstance.abrirLogro(0);
+    fixture.detectChanges();
     const selects = fixture.nativeElement.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
     const textos = Array.from(selects).map(s => Array.from(s.options).map(o => o.textContent?.trim()));
 
     expect(textos).toContainEqual(['Seleccione un representante legal…', 'ANA ROJAS — TESORERA', 'JUAN PEREZ — PRESIDENTE']);
     expect(textos).toContainEqual(['Seleccione un objetivo específico…', 'Renovar cafetales', 'Mejorar la calidad']);
+  });
+
+  it('los logros se escriben en un modal con textarea amplio; editar reemplaza la fila', () => {
+    const fixture = crear();
+    const c = fixture.componentInstance;
+    c.abrirLogro(0);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const texto = el.querySelector('#logro-modal-texto') as HTMLTextAreaElement;
+    expect(texto.tagName).toBe('TEXTAREA');
+    expect(texto.rows).toBe(10);
+
+    c.aceptarLogro();
+    fixture.detectChanges();
+    expect(c.errorLogro('logro-modal-texto')).toBe('Describa el logro alcanzado.');
+    expect(c.errorLogro('logro-modal-objetivo')).toBeNull();
+    expect(c.logroEditado()).not.toBeNull();
+
+    c.logroEditado.update(l => l && { ...l, txtLogroAlcanzado: '  Se renovaron 40 ha de cafetales.\nSe capacitó a 60 socios. ' });
+    c.aceptarLogro();
+    expect(c.logroEditado()).toBeNull();
+    expect(actual(c).logros).toEqual([
+      { numOrden: 1, txtObjetivoEspecifico: 'Renovar cafetales', txtLogroAlcanzado: 'Se renovaron 40 ha de cafetales.\nSe capacitó a 60 socios.' }
+    ]);
+
+    c.abrirLogro(null);
+    c.logroEditado.update(l => l && { ...l, txtObjetivoEspecifico: 'Mejorar la calidad', txtLogroAlcanzado: 'Taza de 84 puntos' });
+    c.aceptarLogro();
+    expect(actual(c).logros.map(l => l.numOrden)).toEqual([1, 2]);
+    expect(c.sucio()).toBe(true);
   });
 
   it('con el catálogo del SEL, la unidad del ítem se elige y las observaciones van en un textarea', () => {

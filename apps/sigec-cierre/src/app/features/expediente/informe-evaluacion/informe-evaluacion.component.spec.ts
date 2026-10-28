@@ -10,7 +10,7 @@ import { PlazoDto } from '../../../core/models/plazo.model';
 function anexo(extra: Partial<Anexo22Dto> = {}): Anexo22Dto {
   return {
     ideAnexo22: 0, ideCierreConvenio: 5, estAnexo22: 'BORRADOR', numVersion: 1, ideUsuario: 0,
-    fecRegistro: '2026-10-20T00:00:00', fecModificacion: '2026-10-20T00:00:00', faltantes: ['VII. Logros'],
+    fecRegistro: '2026-10-20T00:00:00', fecModificacion: '2026-10-20T00:00:00', faltantes: ['VII. Logros'], unidadesMedidaSel: [],
     txtOrganizacion: 'Cooperativa Bio Coffee Perú', txtPlanNegocio: 'Mejora del café', txtRegion: 'Junín', txtProvincia: 'Chanchamayo',
     txtDistrito: 'Perené', txtCentroPoblado: null, txtNumeroConvenio: '319', fecInicioConvenio: null, fecFinConvenio: null,
     fecTerminoAdenda: null, txtCadenaProductiva: 'Café', canSociasMujeres: 10, canSociosHombres: 20, numHectareas: 50,
