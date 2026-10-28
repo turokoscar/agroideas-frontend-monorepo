@@ -42,8 +42,6 @@ export interface Anexo21Datos {
   fecInicioReunion: string | null;
   /** Firma del acta: el mismo día que el inicio. */
   fecFinReunion: string | null;
-  txtLocal: string | null;
-  txtDireccionLocal: string | null;
   txtOrganizacion: string | null;
   txtProfesionalAgroideas: string | null;
   codDniProfesional: string | null;

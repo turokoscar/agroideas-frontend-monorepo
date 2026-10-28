@@ -55,13 +55,13 @@ export function faltantesActa(a: Anexo21Datos): ErrorCampo[] {
     if (!presente) faltan.push({ id, mensaje });
   };
   exigir(lleno(a.txtLocalidad), 'acta-localidad', 'Indique la localidad.');
-  exigir(lleno(a.txtDistrito), 'acta-distrito', 'Indique el distrito.');
-  exigir(lleno(a.txtProvincia), 'acta-provincia', 'Indique la provincia.');
-  exigir(lleno(a.txtRegion), 'acta-region', 'Indique la región.');
+  exigir(
+    lleno(a.txtRegion) && lleno(a.txtProvincia) && lleno(a.txtDistrito),
+    null,
+    'El SEL no registra la región, provincia y distrito de la OA: regularícelos en el SEL.'
+  );
   exigir(!!a.fecInicioReunion, 'acta-inicio', 'Indique la fecha y hora de inicio.');
   exigir(!!a.fecFinReunion, 'acta-hora-firma', 'Indique la hora de firma.');
-  exigir(lleno(a.txtLocal), 'acta-local', 'Indique el local de la reunión.');
-  exigir(lleno(a.txtDireccionLocal), 'acta-direccion', 'Indique la dirección del local.');
   exigir(lleno(a.txtOrganizacion), null, 'El SEL no registra la organización agraria.');
   exigir(lleno(a.txtProfesionalAgroideas), 'acta-profesional', 'Indique el profesional de AGROIDEAS.');
   exigir(lleno(a.codDniProfesional), 'acta-dni-profesional', 'Indique el DNI del profesional.');

@@ -14,15 +14,13 @@ function acta(extra: Partial<Anexo21Dto> = {}): Anexo21Dto {
     ideUsuario: 0,
     fecRegistro: '2026-10-20T00:00:00',
     fecModificacion: '2026-10-20T00:00:00',
-    faltantes: ['Local de la reunión'],
+    faltantes: ['DNI del profesional de AGROIDEAS'],
     txtLocalidad: 'Perené',
     txtDistrito: 'Perené',
     txtProvincia: 'Chanchamayo',
     txtRegion: 'Junín',
     fecInicioReunion: null,
     fecFinReunion: null,
-    txtLocal: null,
-    txtDireccionLocal: null,
     txtOrganizacion: 'Cooperativa Bio Coffee Perú',
     txtProfesionalAgroideas: null,
     codDniProfesional: null,
@@ -83,7 +81,7 @@ describe('ActaCierreComponent', () => {
     expect(api.obtenerAnexo21).toHaveBeenCalledWith(5);
     expect(c.acta()?.txtProfesionalAgroideas).toBe('Rosa Quispe');
     expect(fixture.nativeElement.textContent).toContain('Despulpadora');
-    expect(fixture.nativeElement.textContent).toContain('Indique el local de la reunión.');
+    expect(fixture.nativeElement.textContent).toContain('Indique el DNI del profesional.');
   });
 
   it('resalta los ítems cuya cantidad verificada difiere de lo ejecutado en KOFIX', () => {
@@ -153,25 +151,25 @@ describe('ActaCierreComponent', () => {
     c.guardar();
     fixture.detectChanges();
     expect(api.guardarAnexo21).toHaveBeenCalled();
-    expect(c.errorDe('acta-local')).toBe('Indique el local de la reunión.');
+    expect(c.errorDe('acta-dni-profesional')).toBe('Indique el DNI del profesional.');
 
-    actual(c).txtLocal = 'Local comunal';
+    actual(c).codDniProfesional = '41234567';
     c.marcarSucio();
     fixture.detectChanges();
-    expect(c.errorDe('acta-local')).toBeNull();
-    expect((fixture.nativeElement as HTMLElement).querySelector('#acta-local')?.getAttribute('aria-invalid')).toBeNull();
+    expect(c.errorDe('acta-dni-profesional')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('#acta-dni-profesional')?.getAttribute('aria-invalid')).toBeNull();
   });
 
   it('cada faltante de la lista lleva a su campo', () => {
     const fixture = crear();
     const enlace = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b =>
-      b.textContent?.includes('Indique el local de la reunión.')
+      b.textContent?.includes('Indique el DNI del profesional.')
     ) as HTMLButtonElement;
     enlace.click();
     fixture.detectChanges();
     TestBed.inject(ApplicationRef).tick();
-    expect(document.activeElement?.id).toBe('acta-local');
-    expect(fixture.componentInstance.errorDe('acta-local')).not.toBeNull();
+    expect(document.activeElement?.id).toBe('acta-dni-profesional');
+    expect(fixture.componentInstance.errorDe('acta-dni-profesional')).not.toBeNull();
   });
 
   it('registrar se habilita con el acta guardada, completa y el PDF elegido', () => {

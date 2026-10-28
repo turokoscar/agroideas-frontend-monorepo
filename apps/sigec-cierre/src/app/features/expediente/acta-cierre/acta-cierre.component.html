@@ -44,40 +44,27 @@
           <app-error-campo para="acta-localidad" [mensaje]="errorDe('acta-localidad')" />
         </div>
         <div class="form-field">
-          <label class="form-label" for="acta-distrito">Distrito <span class="form-label-required">*</span></label>
-          <input id="acta-distrito" [appInvalido]="errorDe('acta-distrito')" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtDistrito" (ngModelChange)="marcarSucio()" />
-          <app-error-campo para="acta-distrito" [mensaje]="errorDe('acta-distrito')" />
+          <label class="form-label" for="acta-distrito">Distrito</label>
+          <input id="acta-distrito" type="text" class="form-input" [value]="a.txtDistrito ?? ''" disabled />
         </div>
         <div class="form-field">
-          <label class="form-label" for="acta-provincia">Provincia <span class="form-label-required">*</span></label>
-          <input id="acta-provincia" [appInvalido]="errorDe('acta-provincia')" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtProvincia" (ngModelChange)="marcarSucio()" />
-          <app-error-campo para="acta-provincia" [mensaje]="errorDe('acta-provincia')" />
+          <label class="form-label" for="acta-provincia">Provincia</label>
+          <input id="acta-provincia" type="text" class="form-input" [value]="a.txtProvincia ?? ''" disabled />
         </div>
         <div class="form-field">
-          <label class="form-label" for="acta-region">Región <span class="form-label-required">*</span></label>
-          <input id="acta-region" [appInvalido]="errorDe('acta-region')" type="text" maxlength="100" class="form-input" [(ngModel)]="a.txtRegion" (ngModelChange)="marcarSucio()" />
-          <app-error-campo para="acta-region" [mensaje]="errorDe('acta-region')" />
+          <label class="form-label" for="acta-region">Región</label>
+          <input id="acta-region" type="text" class="form-input" [value]="a.txtRegion ?? ''" disabled />
         </div>
         <div class="form-field">
           <label class="form-label" for="acta-inicio">Siendo las … horas del día <span class="form-label-required">*</span></label>
           <input id="acta-inicio" [appInvalido]="errorDe('acta-inicio')" type="datetime-local" class="form-input" [ngModel]="a.fecInicioReunion" (ngModelChange)="cambiarInicio($event)" />
           <app-error-campo para="acta-inicio" [mensaje]="errorDe('acta-inicio')" />
         </div>
-        <div class="form-field">
-          <label class="form-label" for="acta-local">En el local de <span class="form-label-required">*</span></label>
-          <input id="acta-local" [appInvalido]="errorDe('acta-local')" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtLocal" (ngModelChange)="marcarSucio()" />
-          <app-error-campo para="acta-local" [mensaje]="errorDe('acta-local')" />
-        </div>
-        <div class="form-field sm:col-span-2">
-          <label class="form-label" for="acta-direccion">Sito en <span class="form-label-required">*</span></label>
-          <input id="acta-direccion" [appInvalido]="errorDe('acta-direccion')" type="text" maxlength="250" class="form-input" [(ngModel)]="a.txtDireccionLocal" (ngModelChange)="marcarSucio()" />
-          <app-error-campo para="acta-direccion" [mensaje]="errorDe('acta-direccion')" />
-        </div>
-        <div class="form-field sm:col-span-2">
+        <div class="form-field lg:col-span-3">
           <label class="form-label" for="acta-organizacion">Por parte de la Organización Agraria</label>
           <input id="acta-organizacion" type="text" class="form-input" [value]="a.txtOrganizacion ?? ''" disabled />
         </div>
-        <div class="form-field">
+        <div class="form-field lg:col-span-3">
           <label class="form-label" for="acta-profesional">Por AGROIDEAS, el Sr(a). <span class="form-label-required">*</span></label>
           <input id="acta-profesional" [appInvalido]="errorDe('acta-profesional')" type="text" maxlength="200" class="form-input" [(ngModel)]="a.txtProfesionalAgroideas" (ngModelChange)="marcarSucio()" />
           <app-error-campo para="acta-profesional" [mensaje]="errorDe('acta-profesional')" />
@@ -92,7 +79,7 @@
           <input id="acta-pnt" type="text" class="form-input" [value]="a.txtPlanNegocio ?? ''" disabled />
         </div>
       </div>
-      <p class="text-[11px] text-muted-foreground/70">La organización y el plan de negocio vienen del SEL y no se editan aquí.</p>
+      <p class="text-[11px] text-muted-foreground/70">La organización, el plan de negocio, el distrito, la provincia y la región vienen del SEL y no se editan aquí.</p>
     </section>
 
     <!-- PRIMERO -->

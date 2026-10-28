@@ -3,7 +3,7 @@ import { erroresBloqueantesActa, faltantesActa } from './validacion-acta';
 
 const completa = (): Anexo21Datos => ({
   txtLocalidad: 'La Cascarilla', txtDistrito: 'Jaén', txtProvincia: 'Jaén', txtRegion: 'Cajamarca',
-  fecInicioReunion: '2026-10-21T09:00', fecFinReunion: '2026-10-21T12:00', txtLocal: 'Local comunal', txtDireccionLocal: 'Plaza s/n',
+  fecInicioReunion: '2026-10-21T09:00', fecFinReunion: '2026-10-21T12:00',
   txtOrganizacion: 'Perfiles Coffee', txtProfesionalAgroideas: 'Rosa Quispe', codDniProfesional: '12345678', txtPlanNegocio: 'PNT café',
   bienes: [{ numOrden: 1, txtDescripcion: 'Despulpadora', txtUnidadMedida: 'unidad', canCantidad: 1, txtObservaciones: null, ideItemSel: 7, canProgramada: 1, canEjecutada: 1, impEjecutado: 10 }],
   servicios: [], txtPresidente: 'Juan Pérez',
@@ -19,8 +19,9 @@ describe('validación del Acta', () => {
   });
 
   it('faltantes: mismos campos que CompletitudAnexo21, con el id de su control', () => {
-    const a = { ...completa(), txtLocal: ' ', fecFinReunion: null, logros: [], asistentes: [], txtNumeroConvenio: null };
-    expect(faltantesActa(a).map(f => f.id)).toEqual(['acta-hora-firma', 'acta-local', 'acta-logros', null, 'acta-asistentes']);
+    const a = { ...completa(), txtLocalidad: ' ', txtDistrito: null, fecFinReunion: null, logros: [], asistentes: [], txtNumeroConvenio: null };
+    expect(faltantesActa(a).map(f => f.id)).toEqual(['acta-localidad', null, 'acta-hora-firma', 'acta-logros', null, 'acta-asistentes']);
+    expect(faltantesActa(a)[1].mensaje).toContain('regularícelos en el SEL');
   });
 
   it('bloqueantes: celdas vacías de filas, DNI inválido o repetido y horario incoherente', () => {
