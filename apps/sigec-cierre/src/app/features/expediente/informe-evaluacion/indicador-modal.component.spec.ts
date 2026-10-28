@@ -63,4 +63,21 @@ describe('IndicadorModalComponent', () => {
     expect(habilitados).toEqual(['ind-actividad', 'ind-comentarios']);
     expect(fixture.componentInstance.valido()).toBe(true);
   });
+
+  it('unidad, línea base y resultado van en una fila; medio de verificación y comentarios, uno debajo del otro', () => {
+    const fixture = crear({ ...nuevoIndicador(1), txtConcepto: 'Ventas', txtUnidadMedida: 'Kilogramo (kg)', numLineaBase: 100, numResultado: 80 });
+    const el = fixture.nativeElement as HTMLElement;
+    const campo = (id: string) => el.querySelector('#' + id)?.closest('.form-field') as HTMLElement;
+
+    const fila = campo('ind-unidad').parentElement as HTMLElement;
+    expect(fila.className).toContain('sm:grid-cols-3');
+    expect([campo('ind-lb'), campo('ind-resultado')].every(c => c.parentElement === fila)).toBe(true);
+
+    const sustento = campo('ind-medio').parentElement as HTMLElement;
+    expect(campo('ind-comentarios').parentElement).toBe(sustento);
+    expect(sustento.className).not.toContain('grid-cols-2');
+
+    expect(el.querySelector('thead')?.textContent).toContain('Programado (Kilogramo (kg))');
+    expect(el.querySelector('tfoot')?.textContent).toContain('-20 %');
+  });
 });
