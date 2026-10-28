@@ -72,6 +72,8 @@ export class ActaCierreComponent {
   intentoItem = signal(false);
 
   guardada = computed(() => (this.acta()?.ideAnexo21 ?? 0) > 0);
+  /** Catálogo de unidades de medida del SEL; vacío si el SEL no lo tiene (entonces la unidad se escribe). */
+  unidadesMedida = computed(() => this.acta()?.unidadesMedidaSel ?? []);
   completa = computed(() => this.guardada() && (this.acta()?.faltantes.length ?? 1) === 0 && !this.sucio());
   puedeRegistrar = computed(() => this.completa() && !!this.archivo() && !this.registrando());
 

@@ -72,6 +72,8 @@ export interface Anexo21Dto extends Anexo21Datos {
   representantesLegalesSel: RepresentanteSelDto[];
   /** Objetivos específicos del marco lógico del SEL para los logros (opciones; no se guardan). Vacío: se escriben. */
   objetivosEspecificosSel: string[];
+  /** Unidades de medida del catálogo del SEL para los bienes y servicios agregados a mano (opciones; no se guardan). */
+  unidadesMedidaSel: string[];
 }
 
 export interface RepresentanteSelDto {

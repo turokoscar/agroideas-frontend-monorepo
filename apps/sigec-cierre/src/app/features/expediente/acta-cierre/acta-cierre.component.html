@@ -297,7 +297,14 @@
                 <td class="p-2.5">
                   @if (item.ideItemSel !== null) { {{ item.txtUnidadMedida }} }
                   @else {
-                    <input type="text" maxlength="50" class="form-input" aria-label="Unidad de medida" [id]="lista + '-unidad-' + $index" [appInvalido]="errorDe(lista + '-unidad-' + $index)" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()" />
+                    @if (unidadesMedida().length > 0) {
+                      <select class="form-select" aria-label="Unidad de medida" [id]="lista + '-unidad-' + $index" [appInvalido]="errorDe(lista + '-unidad-' + $index)" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()">
+                        <option value="">Seleccione…</option>
+                        @for (u of unidadesMedida(); track u) { <option [value]="u">{{ u }}</option> }
+                      </select>
+                    } @else {
+                      <input type="text" maxlength="50" class="form-input" aria-label="Unidad de medida" [id]="lista + '-unidad-' + $index" [appInvalido]="errorDe(lista + '-unidad-' + $index)" [(ngModel)]="item.txtUnidadMedida" (ngModelChange)="marcarSucio()" />
+                    }
                     <app-error-campo [para]="lista + '-unidad-' + $index" [mensaje]="errorDe(lista + '-unidad-' + $index)" />
                   }
                 </td>
@@ -352,7 +359,15 @@
         </div>
         <div class="form-field">
           <label class="form-label" for="item-unidad">Unidad de medida <span class="form-label-required">*</span></label>
-          <input id="item-unidad" [appInvalido]="errorItem('item-unidad')" type="text" maxlength="50" class="form-input" [(ngModel)]="n.txtUnidadMedida" />
+          @if (unidadesMedida().length > 0) {
+            <select id="item-unidad" [appInvalido]="errorItem('item-unidad')" class="form-select" [(ngModel)]="n.txtUnidadMedida">
+              <option value="">Seleccione una unidad…</option>
+              @for (u of unidadesMedida(); track u) { <option [value]="u">{{ u }}</option> }
+            </select>
+            <span class="text-[11px] text-muted-foreground/70">Catálogo de unidades de medida del SEL.</span>
+          } @else {
+            <input id="item-unidad" [appInvalido]="errorItem('item-unidad')" type="text" maxlength="50" class="form-input" [(ngModel)]="n.txtUnidadMedida" />
+          }
           <app-error-campo para="item-unidad" [mensaje]="errorItem('item-unidad')" />
         </div>
         <div class="form-field">
@@ -362,7 +377,7 @@
         </div>
         <div class="form-field sm:col-span-2">
           <label class="form-label" for="item-observaciones">Observaciones</label>
-          <input id="item-observaciones" type="text" maxlength="500" class="form-input" [(ngModel)]="n.txtObservaciones" />
+          <textarea id="item-observaciones" rows="3" maxlength="500" class="form-textarea" [(ngModel)]="n.txtObservaciones"></textarea>
         </div>
       </div>
     }

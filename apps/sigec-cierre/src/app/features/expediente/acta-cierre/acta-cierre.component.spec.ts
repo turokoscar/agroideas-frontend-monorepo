@@ -37,6 +37,7 @@ function acta(extra: Partial<Anexo21Dto> = {}): Anexo21Dto {
     asistentes: [],
     representantesLegalesSel: [],
     objetivosEspecificosSel: [],
+    unidadesMedidaSel: [],
     ...extra
   };
 }
@@ -262,6 +263,19 @@ describe('ActaCierreComponent', () => {
 
     expect(textos).toContainEqual(['Seleccione un representante legal…', 'ANA ROJAS — TESORERA', 'JUAN PEREZ — PRESIDENTE']);
     expect(textos).toContainEqual(['Seleccione un objetivo específico…', 'Renovar cafetales', 'Mejorar la calidad']);
+  });
+
+  it('con el catálogo del SEL, la unidad del ítem se elige y las observaciones van en un textarea', () => {
+    api.obtenerAnexo21.mockReturnValue(of(acta({ unidadesMedidaSel: ['Kilogramo (kg)', 'unidad'] })));
+    const fixture = crear();
+    fixture.componentInstance.abrirItem('servicios');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const unidad = el.querySelector('#item-unidad') as HTMLSelectElement;
+
+    expect(unidad.tagName).toBe('SELECT');
+    expect(Array.from(unidad.options).map(o => o.textContent?.trim())).toEqual(['Seleccione una unidad…', 'Kilogramo (kg)', 'unidad']);
+    expect(el.querySelector('#item-observaciones')?.tagName).toBe('TEXTAREA');
   });
 
   it('sin datos del SEL, presidente y objetivo se escriben', () => {
