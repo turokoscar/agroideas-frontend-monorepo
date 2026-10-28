@@ -189,5 +189,12 @@ describe('Anexo20CierreComponent', () => {
     expect(c.soloLectura()).toBe(true);
     expect(cierre.listarPlazos).not.toHaveBeenCalled();
   });
-});
 
+  it('el centro poblado y el término con adenda se leen del SEL: la OA no los registra', () => {
+    const el: HTMLElement = crear().nativeElement;
+    expect(el.textContent).toContain('No registrado en el SEL');
+    expect(el.textContent).toContain('Sin adenda de plazo en el SEL');
+    expect(el.querySelector('input[maxlength="150"]')).toBeNull();
+    expect(el.querySelector('input[type="date"]')).toBeNull();
+  });
+});

@@ -87,6 +87,10 @@
         <div><dt class="text-muted-foreground">Cadena productiva</dt><dd class="font-medium text-foreground">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
         <div><dt class="text-muted-foreground">Socios (mujeres / hombres)</dt><dd class="font-medium text-foreground">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
         <div><dt class="text-muted-foreground">Hectáreas</dt><dd class="font-medium text-foreground">{{ a.numHectareas ?? '—' }}</dd></div>
+        <div><dt class="text-muted-foreground">Centro poblado</dt>
+          <dd class="font-medium" [class.text-foreground]="a.txtCentroPoblado" [class.text-muted-foreground]="!a.txtCentroPoblado">{{ a.txtCentroPoblado ?? 'No registrado en el SEL' }}</dd></div>
+        <div><dt class="text-muted-foreground">Término con adenda</dt>
+          <dd class="font-medium" [class.text-foreground]="a.fecTerminoAdenda" [class.text-muted-foreground]="!a.fecTerminoAdenda">{{ (a.fecTerminoAdenda | date: 'dd/MM/yyyy') ?? 'Sin adenda de plazo en el SEL' }}</dd></div>
       </dl>
       <p class="text-[11px] text-muted-foreground">Estos datos vienen del SEL y no se editan aquí.</p>
 
@@ -97,16 +101,6 @@
           <input type="number" min="0" step="0.01" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             [disabled]="soloLectura() || contrapartidaDelSel()" [(ngModel)]="a.impFinanciamientoOa" (ngModelChange)="marcarSucio()" />
           @if (contrapartidaDelSel()) { <span class="block text-[11px] text-muted-foreground">Contrapartida aprobada en el SEL.</span> }
-        </label>
-        <label class="space-y-1 text-xs">
-          <span class="font-semibold text-foreground">Centro poblado</span>
-          <input type="text" maxlength="150" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            [disabled]="soloLectura()" [(ngModel)]="a.txtCentroPoblado" (ngModelChange)="marcarSucio()" />
-        </label>
-        <label class="space-y-1 text-xs">
-          <span class="font-semibold text-foreground">Término con adenda</span>
-          <input type="date" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            [disabled]="soloLectura()" [(ngModel)]="a.fecTerminoAdenda" (ngModelChange)="marcarSucio()" />
         </label>
       </div>
     </section>
