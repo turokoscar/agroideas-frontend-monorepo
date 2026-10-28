@@ -485,3 +485,20 @@ la UN ya no los edita.
 - **Calidad del dato:** en `BD_SEL_DEV` solo 484 de 9.729 proyectos tienen `localidad`. En el 13348 dice
   "Huancayo - Huancayo - Junín", que se parece más a una ubicación que a un centro poblado. No hay ninguna ampliación
   registrada.
+
+### Ajustes de UX tras revisar las pantallas — 2026-10-28 (sin commit)
+- **Modal de indicadores:** concepto en la primera fila; unidad, línea base y resultado al cierre en una fila de tres;
+  tabla "Programación y ejecución por año" con la unidad en el encabezado, la variación en una insignia por tono
+  (verde, ámbar, rojo si es crítica) y la variación frente a la LB al pie; medio de verificación y comentarios uno
+  debajo del otro, creciendo con el texto. Se corrige el `NG0600` del `effect` del modal (`allowSignalWrites`).
+- **Textos largos con formato ligero** (decisión del owner frente a un editor WYSIWYG): se guardan como texto plano,
+  así que la API, el PDF y el límite de 8.000 caracteres no cambian.
+  - **Paso 3 en una columna:** los textos van uno debajo del otro, con un ancho máximo de 1.024 px (`max-w-5xl`),
+    letra de 14 px e interlineado de 1,625.
+  - **Barra de formato en los 12 textos:** "Viñetas" y "Numerada" convierten las líneas elegidas en lista o la quitan
+    (`shared/formato-ligero.ts`, funciones puras con sus pruebas). Enter continúa la lista, y Enter en un ítem vacío
+    la termina. Las ediciones pasan por el evento `input`, así que ngModel, el guardado automático y el alto del campo
+    se comportan igual que al teclear.
+  - **API:** `PrecargaAnexo22` arma Logros con una viñeta por logro del Acta (prueba nueva; 388 en verde). Lato, la
+    fuente de QuestPDF, tiene el carácter "•". Un borrador ya guardado conserva su texto.
+- **Pruebas:** sigec-cierre 256; lint y build en verde. Revisado en el navegador sin modificar el borrador guardado.

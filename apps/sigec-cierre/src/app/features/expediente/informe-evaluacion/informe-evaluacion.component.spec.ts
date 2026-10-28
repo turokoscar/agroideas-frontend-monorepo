@@ -527,4 +527,39 @@ describe('InformeEvaluacionComponent', () => {
       expect(el.textContent).not.toContain('/ 8,000');
     });
   });
+
+  describe('formato ligero en los textos', () => {
+    it('el paso 3 va en una columna y cada texto tiene viñetas y numeración que escriben texto plano', async () => {
+      const fixture = crear();
+      const c = fixture.componentInstance;
+      c.irAPaso('conclusiones');
+      fixture.detectChanges();
+      // ngModel escribe su valor inicial en una microtarea: se espera antes de teclear.
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+      const lecciones = el.querySelector('#a22-lecciones') as HTMLTextAreaElement;
+      expect(lecciones.closest('.space-y-6')).not.toBeNull();
+      expect(el.querySelector('.lg\\:grid-cols-2 #a22-lecciones')).toBeNull();
+
+      lecciones.value = 'Asistencia técnica oportuna\nCompras en conjunto';
+      lecciones.dispatchEvent(new Event('input'));
+      lecciones.setSelectionRange(0, lecciones.value.length);
+      const vinetas = Array.from(lecciones.closest('.form-field')?.querySelectorAll('[role="toolbar"] button') ?? [])
+        .find(b => b.textContent?.includes('Viñetas')) as HTMLButtonElement;
+      vinetas.click();
+      expect(c.anexo()?.txtLeccionesAprendidas).toBe('• Asistencia técnica oportuna\n• Compras en conjunto');
+      expect(c.sucio()).toBe(true);
+
+      lecciones.setSelectionRange(lecciones.value.length, lecciones.value.length);
+      const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+      lecciones.dispatchEvent(enter);
+      expect(enter.defaultPrevented).toBe(true);
+      expect(c.anexo()?.txtLeccionesAprendidas).toBe('• Asistencia técnica oportuna\n• Compras en conjunto\n• ');
+    });
+
+    it('firmado no muestra la barra de formato', () => {
+      api.obtenerAnexo22.mockReturnValue(of(anexo({ ideAnexo22: 9, faltantes: [], estAnexo22: 'FIRMADO' })));
+      expect((crear().nativeElement as HTMLElement).querySelector('[role="toolbar"]')).toBeNull();
+    });
+  });
 });

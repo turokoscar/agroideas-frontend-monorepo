@@ -170,12 +170,13 @@
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">VII a XI. Conclusiones de la evaluación</h5>
       @if (!ro) { <ng-container [ngTemplateOutlet]="resultadoEvaluacion" /> }
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <!-- Una columna: un texto debajo del otro, con un ancho de renglón cómodo de leer -->
+      <div class="max-w-5xl space-y-6">
         <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-logros', etiqueta: 'VII. Logros', campo: 'txtLogros', obligatorio: true, filas: 4, clase: '' }" />
         <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-lecciones', etiqueta: 'VIII. Lecciones aprendidas', campo: 'txtLeccionesAprendidas', obligatorio: true, filas: 4, clase: '' }" />
         <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-dificultades', etiqueta: 'IX. Dificultades', campo: 'txtDificultades', obligatorio: false, filas: 4, clase: '' }" />
         <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-conclusiones', etiqueta: 'X. Conclusiones', campo: 'txtConclusiones', obligatorio: true, filas: 4, clase: '' }" />
-        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-recomendaciones', etiqueta: 'XI. Recomendaciones', campo: 'txtRecomendaciones', obligatorio: true, filas: 3, clase: 'lg:col-span-2' }" />
+        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-recomendaciones', etiqueta: 'XI. Recomendaciones', campo: 'txtRecomendaciones', obligatorio: true, filas: 3, clase: '' }" />
       </div>
       @if (ro) { <ng-container [ngTemplateOutlet]="resultadoEvaluacion" /> }
     </section>
@@ -444,8 +445,21 @@
     <div class="form-field" [ngClass]="clase">
       <label class="form-label" [attr.for]="id">{{ etiqueta }} @if (obligatorio) { <span class="form-label-required">*</span> }</label>
       @if (ayuda) { <p [id]="id + '-ayuda'" class="text-[11px] text-muted-foreground">{{ ayuda }}</p> }
-      <textarea [id]="id" appCrecer [appInvalido]="obligatorio ? errorDe(id) : null" [ayudaId]="ayuda ? id + '-ayuda' : null" [rows]="filas"
-        class="form-textarea" [attr.maxlength]="longitudTexto" [disabled]="ro" [(ngModel)]="$any(a)[campo]" (ngModelChange)="marcarSucio()"></textarea>
+      @if (!ro) {
+        <!-- Formato ligero: listas en texto plano ("• " y "1. "); Enter continúa la lista y en un ítem vacío la termina -->
+        <div class="flex flex-wrap items-center gap-1" role="toolbar" [attr.aria-label]="'Formato de ' + etiqueta" [attr.aria-controls]="id">
+          @for (b of botonesFormato; track b.tipo) {
+            <button type="button" class="inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              [title]="b.ayuda" (mousedown)="$event.preventDefault()" (click)="darFormato(area, b.tipo)">
+              <span class="material-symbols-outlined text-[16px]" aria-hidden="true">{{ b.icono }}</span>{{ b.etiqueta }}
+            </button>
+          }
+          <span class="ml-1 text-[11px] text-muted-foreground/70">Enter continúa la lista.</span>
+        </div>
+      }
+      <textarea #area [id]="id" appCrecer [appInvalido]="obligatorio ? errorDe(id) : null" [ayudaId]="ayuda ? id + '-ayuda' : null" [rows]="filas"
+        class="form-textarea text-sm leading-relaxed" [attr.maxlength]="longitudTexto" [disabled]="ro" [(ngModel)]="$any(a)[campo]" (ngModelChange)="marcarSucio()"
+        (keydown.enter)="alPulsarEnter($event, area)"></textarea>
       <div class="flex items-start gap-2">
         <app-error-campo class="min-w-0 flex-1" [para]="id" [mensaje]="obligatorio ? errorDe(id) : null" />
         @if (!ro) {

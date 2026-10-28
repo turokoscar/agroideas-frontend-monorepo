@@ -23,6 +23,7 @@ import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
 import { CampoInvalidoDirective } from '../../../shared/campo-invalido.directive';
 import { ErrorCampoComponent } from '../../../shared/error-campo.component';
 import { CrecerDirective } from '../../../shared/crecer.directive';
+import { EdicionTexto, TipoLista, alternarLista, continuarLista } from '../../../shared/formato-ligero';
 import { AYUDA_TEXTO_ANEXO22 } from '../../../core/models/ayuda-anexo22';
 import { ValidacionFormulario } from '../../../shared/validacion-formulario';
 import { PasoAnexo22, RequisitoAnexo22, faltantesAnexo22, requisitosAnexo22 } from '../../../core/models/validacion-anexo22';
@@ -110,6 +111,35 @@ export class InformeEvaluacionComponent {
   readonly resultados = RESULTADOS;
   readonly umbral = environment.evaluacion.umbralDesviacionCriticaPct;
   readonly longitudTexto = environment.evaluacion.longitudTexto;
+
+  readonly botonesFormato: readonly { tipo: TipoLista; etiqueta: string; icono: string; ayuda: string }[] = [
+    { tipo: 'vinetas', etiqueta: 'Viñetas', icono: 'format_list_bulleted', ayuda: 'Convierte las líneas elegidas en una lista con viñetas (o la quita)' },
+    { tipo: 'numerada', etiqueta: 'Numerada', icono: 'format_list_numbered', ayuda: 'Convierte las líneas elegidas en una lista numerada (o la quita)' }
+  ];
+
+  /** Viñetas o numeración sobre las líneas elegidas (formato ligero: texto plano, ADR 0015). */
+  darFormato(area: HTMLTextAreaElement, tipo: TipoLista) {
+    this.aplicarEdicion(area, alternarLista(area.value, area.selectionStart, area.selectionEnd, tipo));
+  }
+
+  /** Enter dentro de una lista abre el ítem siguiente; en uno vacío, la termina. */
+  alPulsarEnter(evento: Event, area: HTMLTextAreaElement) {
+    const tecla = evento as KeyboardEvent;
+    if (tecla.shiftKey || tecla.isComposing || area.selectionStart !== area.selectionEnd) return;
+    const edicion = continuarLista(area.value, area.selectionStart);
+    if (!edicion) return;
+    tecla.preventDefault();
+    this.aplicarEdicion(area, edicion);
+  }
+
+  /** Escribe como si tecleara el usuario (`input`): ngModel, el guardado automático y el alto del campo siguen igual. */
+  private aplicarEdicion(area: HTMLTextAreaElement, edicion: EdicionTexto) {
+    if (edicion.texto.length > this.longitudTexto) return;
+    area.value = edicion.texto;
+    area.dispatchEvent(new Event('input', { bubbles: true }));
+    area.focus();
+    area.setSelectionRange(edicion.inicio, edicion.fin);
+  }
 
   /** Qué se espera del texto `campo` del informe, o null. */
   ayudaDe(campo: string): string | null {
