@@ -1,7 +1,7 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { NEVER, of, throwError } from 'rxjs';
+import { NEVER, Subject, of, throwError } from 'rxjs';
 import { ToastService } from '@agroideas/ui';
 import { ExpedienteComponent } from './expediente.component';
 import { CierreApiService } from '../../core/services/cierre-api.service';
@@ -9,6 +9,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { CierreDetalleDto } from '../../core/models/cierre.model';
 import { PlazoDto } from '../../core/models/plazo.model';
 import { CierreRol } from '../../core/models/rol-cierre.model';
+import { ObservacionUajDto } from '../../core/models/revision-legal.model';
 
 const detalle: CierreDetalleDto = {
   ideCierreConvenio: 12,
@@ -240,6 +241,34 @@ describe('ExpedienteComponent', () => {
     fixture.componentInstance.cambiarPestana('observaciones');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Se adjuntó');
+  });
+
+  it('si cambia el id antes de que responda la API, la respuesta tardía del expediente anterior se descarta', () => {
+    const anterior = new Subject<CierreDetalleDto>();
+    api.obtener.mockReturnValueOnce(anterior).mockReturnValue(of({ ...detalle, ideCierreConvenio: 13 }));
+    const fixture = crear();
+
+    fixture.componentRef.setInput('id', '13');
+    fixture.detectChanges();
+    anterior.next(detalle);
+    anterior.complete();
+
+    expect(api.obtener).toHaveBeenLastCalledWith(13);
+    expect(fixture.componentInstance.cierre()?.ideCierreConvenio).toBe(13);
+    expect(fixture.componentInstance.cargando()).toBe(false);
+  });
+
+  it('al abrir otro expediente no se ven, ni mientras carga, las observaciones del anterior', () => {
+    api.listarObservaciones.mockReturnValueOnce(of([{ ideObservacion: 1, numRonda: 1 } as ObservacionUajDto]));
+    const fixture = crear();
+    expect(fixture.componentInstance.observaciones()).toHaveLength(1);
+
+    api.obtener.mockReturnValue(NEVER);
+    fixture.componentRef.setInput('id', '13');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.cargando()).toBe(true);
+    expect(fixture.componentInstance.observaciones()).toEqual([]);
   });
 
   it('en ESPERA_ANEXO20 la UN puede presentar el Anexo 20 y la OA solo ve la indicación', () => {

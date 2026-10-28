@@ -1,7 +1,9 @@
-import { Component, Injector, OnDestroy, afterNextRender, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, Injector, OnDestroy, afterNextRender, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
+import { EMPTY, Observable, Subject, forkJoin, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import {
   CountdownTone,
   TableColumn,
@@ -75,6 +77,9 @@ export class ExpedienteComponent implements OnDestroy {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private injector = inject(Injector);
+  private destroyRef = inject(DestroyRef);
+  /** Cada recarga pedida; `switchMap` descarta la anterior para que una respuesta tardía no pise a la nueva. */
+  private recargas = new Subject<number>();
 
   /** `ideCierreConvenio`; llega del parámetro `:id` de la ruta o del componente padre. */
   id = input.required<string | number>();
@@ -181,6 +186,35 @@ export class ExpedienteComponent implements OnDestroy {
   readonly etiquetaEstadoPlazo = (estado: string) => ETIQUETA_ESTADO_PLAZO[estado as keyof typeof ETIQUETA_ESTADO_PLAZO] ?? estado;
 
   constructor() {
+    this.recargas
+      .pipe(
+        switchMap(id => {
+          this.cargando.set(true);
+          this.error.set(null);
+          this.auditorias.set(null);
+          this.envios.set(null);
+          // Al cambiar de expediente no deben verse, ni un instante, las observaciones del anterior.
+          if (this.cierre()?.ideCierreConvenio !== id) this.observaciones.set([]);
+          const observaciones = this.esPersonal()
+            ? this.api.listarObservaciones(id).pipe(catchError(() => of<ObservacionUajDto[]>([])))
+            : of<ObservacionUajDto[]>([]);
+          return forkJoin({ cierre: this.api.obtener(id), plazos: this.api.listarPlazos(id), observaciones }).pipe(
+            catchError(err => {
+              this.error.set(mensajeParaUsuario(err, 'No se pudo cargar el expediente de cierre.'));
+              this.cargando.set(false);
+              return EMPTY;
+            })
+          );
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe(({ cierre, plazos, observaciones }) => {
+        this.cierre.set(cierre);
+        this.plazos.set(plazos);
+        this.observaciones.set(observaciones);
+        this.cargando.set(false);
+      });
+
     effect(() => {
       const id = Number(this.id());
       untracked(() => this.cargar(id));
@@ -192,24 +226,7 @@ export class ExpedienteComponent implements OnDestroy {
   }
 
   cargar(id = Number(this.id())) {
-    this.cargando.set(true);
-    this.error.set(null);
-    this.auditorias.set(null);
-    this.envios.set(null);
-    if (this.esPersonal()) {
-      this.api.listarObservaciones(id).subscribe({ next: o => this.observaciones.set(o), error: () => this.observaciones.set([]) });
-    }
-    forkJoin({ cierre: this.api.obtener(id), plazos: this.api.listarPlazos(id) }).subscribe({
-      next: ({ cierre, plazos }) => {
-        this.cierre.set(cierre);
-        this.plazos.set(plazos);
-        this.cargando.set(false);
-      },
-      error: err => {
-        this.error.set(mensajeParaUsuario(err, 'No se pudo cargar el expediente de cierre.'));
-        this.cargando.set(false);
-      }
-    });
+    this.recargas.next(id);
   }
 
   /** Hay un cargo de notificación de la RDE vigente. */
@@ -242,23 +259,25 @@ export class ExpedienteComponent implements OnDestroy {
     this.pestana.set(pestana);
     const id = Number(this.id());
     if (pestana === 'bitacora' && this.auditorias() === null) {
-      this.cargarPestana(this.api.listarAuditorias(id), items => this.auditorias.set(items), 'la bitácora');
+      this.cargarPestana(id, this.api.listarAuditorias(id), items => this.auditorias.set(items), 'la bitácora');
     }
     if (pestana === 'envios' && this.envios() === null) {
-      this.cargarPestana(this.api.listarEnvios(id), items => this.envios.set(items), 'los correos enviados');
+      this.cargarPestana(id, this.api.listarEnvios(id), items => this.envios.set(items), 'los correos enviados');
     }
   }
 
-  private cargarPestana<T>(fuente: Observable<T[]>, guardar: (items: T[]) => void, que: string) {
+  /** Si mientras tanto se abrió otro expediente, la respuesta se descarta. */
+  private cargarPestana<T>(id: number, fuente: Observable<T[]>, guardar: (items: T[]) => void, que: string) {
     this.cargandoPestana.set(true);
-    fuente.subscribe({
+    fuente.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: items => {
-        guardar(items);
         this.cargandoPestana.set(false);
+        if (Number(this.id()) === id) guardar(items);
       },
       error: (err: unknown) => {
-        guardar([]);
         this.cargandoPestana.set(false);
+        if (Number(this.id()) !== id) return;
+        guardar([]);
         this.toast.error(`No se pudo cargar ${que}`, mensajeParaUsuario(err, 'Intente nuevamente.'));
       }
     });
