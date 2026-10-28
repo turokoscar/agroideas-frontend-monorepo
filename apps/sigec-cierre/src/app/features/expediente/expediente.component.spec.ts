@@ -288,5 +288,15 @@ describe('ExpedienteComponent', () => {
     expect(c.aunNoCorre(plazo)).toBe(true);
     expect(c.aunNoCorre({ ...plazo, fecLimite: new Date(Date.now() + 10 * 86_400_000).toISOString() })).toBe(false);
   });
-});
 
+  it('con margen, el plazo de la etapa activa va en una línea; el contador grande, solo si está por vencer', () => {
+    const conMargen = crear().nativeElement as HTMLElement;
+    expect(conMargen.querySelector('ui-countdown-banner')).toBeNull();
+    expect(conMargen.textContent).toMatch(/Evaluación de la UN:\s+quedan \d+ días/);
+    TestBed.resetTestingModule();
+
+    const porVencer = new Date(Date.now() + 2 * 86_400_000).toISOString();
+    api.listarPlazos.mockReturnValue(of([{ idePlazo: 1, ideCierreConvenio: 12, tipPlazo: 'EVALUACION_UN', fecInicio: '2026-10-01T00:00:00', canDias: 90, fecLimite: porVencer, codDepartamento: null, codProvincia: null, estPlazo: 'VIGENTE', fecCierre: null, txtContingencia: null, fecRegistro: '2026-10-01T00:00:00' }]));
+    expect((crear().nativeElement as HTMLElement).querySelector('ui-countdown-banner')).not.toBeNull();
+  });
+});

@@ -34,7 +34,12 @@ export class ValidacionFormulario {
 
   constructor(
     private injector: Injector,
-    private reglas: { bloqueantes: () => ErrorCampo[]; faltantes: () => ErrorCampo[] }
+    private reglas: {
+      bloqueantes: () => ErrorCampo[];
+      faltantes: () => ErrorCampo[];
+      /** Antes de enfocar un campo, lo hace visible (p. ej. abre el paso del formulario donde está). */
+      mostrarCampo?: (id: string) => void;
+    }
   ) {}
 
   /** Una edición del formulario. */
@@ -56,6 +61,7 @@ export class ValidacionFormulario {
   /** Lleva el foco (y la vista) al control `id`. */
   enfocar(id: string | null): void {
     if (!id) return;
+    this.reglas.mostrarCampo?.(id);
     afterNextRender(
       () => {
         const control = document.getElementById(id);

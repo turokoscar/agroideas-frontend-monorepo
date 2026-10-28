@@ -1,7 +1,7 @@
-import { Component, Injector, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, Injector, afterNextRender, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { ToastService, UIButtonComponent, UIModalComponent, UiStateComponent, UiStatusPillComponent, UiStep, UiStepperComponent } from '@agroideas/ui';
 import { FormatConvenioPipe, formatConvenioNumber, mensajeParaUsuario } from '@agroideas/utils';
 import { environment } from '../../../../environments/environment';
 import { CierreApiService } from '../../../core/services/cierre-api.service';
@@ -22,8 +22,11 @@ import { IndicadorModalComponent } from './indicador-modal.component';
 import { SelectorPdfComponent } from '../../../shared/selector-pdf.component';
 import { CampoInvalidoDirective } from '../../../shared/campo-invalido.directive';
 import { ErrorCampoComponent } from '../../../shared/error-campo.component';
+import { CrecerDirective } from '../../../shared/crecer.directive';
+import { AYUDA_TEXTO_ANEXO22 } from '../../../core/models/ayuda-anexo22';
 import { ValidacionFormulario } from '../../../shared/validacion-formulario';
-import { faltantesAnexo22 } from '../../../core/models/validacion-anexo22';
+import { PasoAnexo22, RequisitoAnexo22, faltantesAnexo22, requisitosAnexo22 } from '../../../core/models/validacion-anexo22';
+import { CambiosPendientesService } from '../../../core/services/cambios-pendientes.service';
 
 /** Secciones cuyas filas se editan en el modal: las manuales y la VI (actividad y comentarios). */
 type SeccionEditable = SeccionManual | 'practicaAmbiental';
@@ -37,6 +40,17 @@ const SECCIONES: Readonly<Record<SeccionEditable, { titulo: string; extra: Colum
 };
 
 /** Fila abierta en el modal: una copia, que reemplaza a la original (o se agrega) al aceptar. */
+/** Pasos del formulario (ADR 0015, D1), en orden. La sección I y la V no son un paso: son la referencia de todos. */
+const PASOS: readonly { clave: PasoAnexo22; titulo: string; secciones: string }[] = [
+  { clave: 'indicadores', titulo: 'Indicadores', secciones: 'II, III y VI' },
+  { clave: 'financiera', titulo: 'Ejecución financiera', secciones: 'IV' },
+  { clave: 'conclusiones', titulo: 'Conclusiones y resultado', secciones: 'VII a XI' },
+  { clave: 'firma', titulo: 'Firmar y presentar', secciones: '' }
+];
+
+/** Último paso abierto de cada expediente, para volver donde se quedó (comodidad del navegador: puede no estar). */
+const CLAVE_PASO = (ideCierre: number) => `sigec-cierre:anexo22:paso:${ideCierre}`;
+
 interface EdicionIndicador {
   seccion: SeccionEditable;
   indice: number | null;
@@ -65,10 +79,12 @@ interface EdicionIndicador {
     SelectorPdfComponent,
     UiStatusPillComponent,
     UiStateComponent,
+    UiStepperComponent,
     FormatConvenioPipe,
     TablaIndicadoresComponent,
     IndicadorModalComponent,
     CampoInvalidoDirective,
+    CrecerDirective,
     ErrorCampoComponent
   ],
   templateUrl: './informe-evaluacion.component.html'
@@ -76,6 +92,7 @@ interface EdicionIndicador {
 export class InformeEvaluacionComponent {
   private api = inject(CierreApiService);
   private toast = inject(ToastService);
+  private injector = inject(Injector);
 
   ideCierre = input.required<number>();
   /** Plazo de la evaluación de la UN (90 días): si venció, la derivación exige contingencia. */
@@ -92,6 +109,12 @@ export class InformeEvaluacionComponent {
 
   readonly resultados = RESULTADOS;
   readonly umbral = environment.evaluacion.umbralDesviacionCriticaPct;
+  readonly longitudTexto = environment.evaluacion.longitudTexto;
+
+  /** Qué se espera del texto `campo` del informe, o null. */
+  ayudaDe(campo: string): string | null {
+    return AYUDA_TEXTO_ANEXO22[campo as keyof typeof AYUDA_TEXTO_ANEXO22] ?? null;
+  }
 
   cargando = signal(false);
   error = signal<string | null>(null);
@@ -105,14 +128,116 @@ export class InformeEvaluacionComponent {
   archivo = signal<File | null>(null);
   contingencia = '';
   anexo = signal<Anexo22Dto | null>(null);
+  /** Hora del último guardado de esta sesión (manual o automático), para la barra de acciones. */
+  ultimoGuardado = signal<Date | null>(null);
+  /** Falló el último guardado automático: el borrador sigue con cambios pendientes. */
+  errorAutoguardado = signal(false);
+  /** Ediciones hechas: si cambia mientras se guarda, lo escrito entretanto no se pisa con la respuesta. */
+  private ediciones = 0;
+  private temporizador: ReturnType<typeof setTimeout> | null = null;
 
   /** Validación por campo (ADR 0014, Fase 5): las filas de indicadores se validan en su modal; aquí, lo que falta. */
-  readonly validacion = new ValidacionFormulario(inject(Injector), {
+  readonly validacion = new ValidacionFormulario(this.injector, {
     bloqueantes: () => [],
     faltantes: () => {
       const a = this.anexo();
       return a ? faltantesAnexo22(a) : [];
+    },
+    mostrarCampo: id => {
+      const requisito = this.requisitosInforme().find(r => r.id === id);
+      if (requisito) this.paso.set(requisito.paso);
     }
+  });
+
+  /** Paso del formulario que se está trabajando. */
+  paso = signal<PasoAnexo22>('indicadores');
+  /** Panel "Datos del convenio" (I y V) abierto; al editar empieza plegado (ADR 0015, D3). */
+  datosAbiertos = signal(false);
+  /** Detalle de bienes y servicios de la 4.2 abierto; plegado, se ve su resumen. */
+  itemsAbiertos = signal(false);
+
+  /** Totales de bienes y de servicios de la 4.2 (vienen de KOFIX, no se editan). */
+  resumenItems = computed(() => {
+    const a = this.anexo();
+    if (!a) return [];
+    return [
+      { titulo: 'Bienes', filas: a.bienes },
+      { titulo: 'Servicios', filas: a.servicios }
+    ].map(({ titulo, filas }) => ({
+      titulo,
+      cantidad: filas.length,
+      programado: filas.reduce((suma, i) => suma + i.impProgramado, 0),
+      ejecutado: filas.reduce((suma, i) => suma + i.impEjecutado, 0)
+    }));
+  });
+
+  /** Ya se descargó el PDF en esta sesión (sub-paso 2 de la firma). */
+  descargado = signal(false);
+
+  /** Requisitos para presentar, con su paso; se recalculan con cada edición (las edita ngModel, sin señales). */
+  requisitosInforme = computed<RequisitoAnexo22[]>(() => {
+    this.validacion.faltantes();
+    const a = this.anexo();
+    return a ? requisitosAnexo22(a) : [];
+  });
+
+  pasosStepper = computed<UiStep[]>(() =>
+    PASOS.map(p => {
+      const delPaso = this.requisitosInforme().filter(r => r.paso === p.clave);
+      const hechos = delPaso.filter(r => r.cumple).length;
+      const listo = p.clave === 'firma' ? this.completo() : hechos === delPaso.length;
+      return {
+        key: p.clave,
+        title: p.titulo,
+        subtitle: p.clave === 'firma' ? (this.completo() ? 'Listo para firmar' : 'Con el informe completo') : `${p.secciones} · ${hechos} de ${delPaso.length}`,
+        status: p.clave === this.paso() ? 'current' : listo ? 'done' : 'pending'
+      };
+    })
+  );
+
+  /** Lo que falta, agrupado por paso, para el paso de la firma. */
+  faltantesPorPaso = computed(() =>
+    PASOS.map(p => ({ clave: p.clave, titulo: p.titulo, faltantes: this.requisitosInforme().filter(r => r.paso === p.clave && !r.cumple) }))
+      .filter(g => g.faltantes.length > 0)
+  );
+
+  pasoAnterior = computed(() => PASOS[PASOS.findIndex(p => p.clave === this.paso()) - 1]?.clave ?? null);
+  pasoSiguiente = computed(() => PASOS[PASOS.findIndex(p => p.clave === this.paso()) + 1]?.clave ?? null);
+
+  /** Anterior o siguiente, desde la barra al pie: lleva la vista al inicio de los pasos. */
+  moverPaso(sentido: -1 | 1) {
+    const destino = sentido < 0 ? this.pasoAnterior() : this.pasoSiguiente();
+    if (destino) this.irAPaso(destino, true);
+  }
+
+  /** Abre el paso y lo recuerda; `subir`: lleva la vista al inicio de los pasos (desde la barra, al pie). */
+  irAPaso(clave: PasoAnexo22, subir = false) {
+    this.paso.set(clave);
+    try {
+      localStorage.setItem(CLAVE_PASO(this.ideCierre()), clave);
+    } catch {
+      // Sin almacenamiento (ventana privada, bloqueado): solo no se recuerda.
+    }
+    if (subir) {
+      afterNextRender(() => document.getElementById('a22-pasos')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), {
+        injector: this.injector
+      });
+    }
+  }
+
+  private pasoGuardado(): PasoAnexo22 {
+    try {
+      const guardado = localStorage.getItem(CLAVE_PASO(this.ideCierre()));
+      return PASOS.find(p => p.clave === guardado)?.clave ?? 'indicadores';
+    } catch {
+      return 'indicadores';
+    }
+  }
+
+  /** Requisitos cumplidos del total, para el avance de la barra de acciones. */
+  avance = computed(() => {
+    const requisitos = this.requisitosInforme();
+    return { cumplidos: requisitos.filter(r => r.cumple).length, total: requisitos.length };
   });
 
   /** Mensaje de error del control `id`, o null (para la plantilla). */
@@ -153,15 +278,22 @@ export class InformeEvaluacionComponent {
       const id = this.ideCierre();
       untracked(() => this.cargar(id));
     });
+    const quitar = inject(CambiosPendientesService).registrar(() => this.sucio());
+    inject(DestroyRef).onDestroy(() => {
+      quitar();
+      this.cancelarAutoguardado();
+    });
   }
 
   cargar(id = this.ideCierre()) {
+    this.cancelarAutoguardado();
     this.cargando.set(true);
     this.error.set(null);
     this.api.obtenerAnexo22(id).subscribe({
       next: anexo => {
         this.anexo.set(anexo);
         this.sucio.set(false);
+        this.paso.set(this.pasoGuardado());
         this.cargando.set(false);
         this.firmadoCambio.emit(anexo.estAnexo22 === 'FIRMADO');
       },
@@ -179,7 +311,21 @@ export class InformeEvaluacionComponent {
 
   marcarSucio() {
     this.sucio.set(true);
+    this.ediciones++;
     this.validacion.tocar();
+    this.programarAutoguardado();
+  }
+
+  /** Guarda el borrador solo tras `esperaAutoguardadoMs` sin editar (ADR 0015, D2). */
+  private programarAutoguardado() {
+    this.cancelarAutoguardado();
+    if (this.firmado()) return;
+    this.temporizador = setTimeout(() => this.guardar(true), environment.evaluacion.esperaAutoguardadoMs);
+  }
+
+  private cancelarAutoguardado() {
+    if (this.temporizador) clearTimeout(this.temporizador);
+    this.temporizador = null;
   }
 
   /** Abre el modal con una fila nueva de la sección. */
@@ -215,24 +361,48 @@ export class InformeEvaluacionComponent {
     return aprobado > 0 ? Math.round((ejecutado / aprobado) * 10000) / 100 : null;
   }
 
-  guardar() {
+  /**
+   * `automatico`: lo dispara la espera tras editar; no avisa con toasts ni marca los faltantes. Un guardado no pisa lo
+   * que el usuario escribe: si editó mientras se guardaba, o si es automático (la API recorta los textos, y el espacio
+   * que se acaba de teclear se perdería), solo se toman de la respuesta el estado y los faltantes.
+   */
+  guardar(automatico = false) {
     const anexo = this.anexo();
-    if (!anexo) return;
+    if (!anexo || this.guardando() || this.firmado()) return;
+    this.cancelarAutoguardado();
+    const edicionesAlEnviar = this.ediciones;
     this.guardando.set(true);
     this.api.guardarAnexo22(this.ideCierre(), anexo).subscribe({
       next: guardado => {
-        this.anexo.set(guardado);
-        this.sucio.set(false);
+        const editoMientras = this.ediciones !== edicionesAlEnviar;
+        if (automatico || editoMientras) {
+          const { ideAnexo22, estAnexo22, numVersion, faltantes } = guardado;
+          this.anexo.update(actual => (actual ? { ...actual, ideAnexo22, estAnexo22, numVersion, faltantes } : actual));
+        } else {
+          this.anexo.set(guardado);
+        }
         this.guardando.set(false);
+        this.errorAutoguardado.set(false);
+        this.ultimoGuardado.set(new Date());
+        if (editoMientras) {
+          this.programarAutoguardado();
+        } else {
+          this.sucio.set(false);
+        }
+        if (automatico) return;
         if (guardado.faltantes.length === 0) {
           this.toast.success('Informe guardado', 'Descárguelo para firmarlo y preséntelo firmado.');
         } else {
           this.validacion.mostrar.set(true);
-          this.toast.info('Borrador guardado', 'Los campos marcados en rojo faltan para presentar el informe.');
+          this.toast.info('Borrador guardado', 'Lo que falta para presentarlo se indica en cada paso y en «Firmar y presentar».');
         }
       },
       error: err => {
         this.guardando.set(false);
+        if (automatico) {
+          this.errorAutoguardado.set(true);
+          return;
+        }
         this.toast.error('No se pudo guardar el informe', mensajeParaUsuario(err, 'Intente nuevamente.'));
       }
     });
@@ -249,6 +419,7 @@ export class InformeEvaluacionComponent {
     this.api.descargarAnexo22(this.ideCierre()).subscribe({
       next: blob => {
         this.descargando.set(false);
+        this.descargado.set(true);
         this.guardarArchivo(blob, `Anexo22_${this.convenioArchivo()}_v${this.anexo()?.numVersion ?? 1}.pdf`);
       },
       error: err => {

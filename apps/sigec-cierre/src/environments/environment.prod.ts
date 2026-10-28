@@ -22,7 +22,9 @@ export const environment: AppSettings = {
     tamanoMaximoPdfMb: 10
   },
   evaluacion: {
-    umbralDesviacionCriticaPct: -20
+    umbralDesviacionCriticaPct: -20,
+    esperaAutoguardadoMs: 3000,
+    longitudTexto: 8000
   },
   revisionLegal: {
     maximoObservaciones: 50,

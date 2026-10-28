@@ -26,10 +26,32 @@ describe('TablaIndicadoresComponent', () => {
     expect(el.textContent).toContain('SEL + RTF');
   });
 
-  it('resalta la desviación crítica (12 frente a 18 programado: −33,33 %)', () => {
+  it('marca la desviación crítica en la celda de variación, no en la fila (12 frente a 18 programado: −33,33 %)', () => {
     const el: HTMLElement = crear([delSistema]).nativeElement;
-    expect(el.querySelector('tbody tr')?.className).toContain('bg-destructive/5');
-    expect(el.textContent).toContain('-33.33 %');
+    const fila = el.querySelector('tbody tr') as HTMLElement;
+    expect(fila.className).not.toContain('destructive');
+    const critica = fila.querySelector('.text-destructive') as HTMLElement;
+    expect(critica.textContent).toContain('-33.33 %');
+    expect(critica.closest('td')?.cellIndex).toBe(6);
+  });
+
+  it('resume la fila con el último año con meta; el detalle de los tres años se abre por fila', () => {
+    const fila: IndicadorEvaluacionDto = { ...delSistema, numProgAnio2: 20, numEjecAnio2: 19, numProgAnio3: 24, numEjecAnio3: null };
+    const fixture = crear([fila]);
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelectorAll('thead th').length).toBe(10);
+    expect(fixture.componentInstance.referencia(fila)).toEqual({ anio: 3, programado: 24, ejecutado: null, variacion: null });
+    expect(el.textContent).toContain('Crítica en otro año');
+
+    const desplegar = el.querySelector('button[aria-expanded]') as HTMLButtonElement;
+    expect(desplegar.getAttribute('aria-expanded')).toBe('false');
+    expect(el.textContent).not.toContain('Año 2');
+    desplegar.click();
+    fixture.detectChanges();
+    expect(desplegar.getAttribute('aria-expanded')).toBe('true');
+    const detalle = el.querySelector('#' + desplegar.getAttribute('aria-controls')) as HTMLElement;
+    expect(detalle.textContent).toContain('Año 2');
+    expect(detalle.textContent).toContain('19 de 20');
   });
 
   it('las filas manuales se editan y se quitan', () => {

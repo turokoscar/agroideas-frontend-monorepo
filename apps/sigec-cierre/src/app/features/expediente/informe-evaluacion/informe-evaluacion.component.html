@@ -15,93 +15,72 @@
       <app-ui-status-pill [tone]="ro ? 'success' : 'neutral'" [text]="(ro ? 'Firmado' : 'Borrador') + ' · versión ' + a.numVersion" />
     </div>
 
-    @if (criticos() > 0) {
+    @if (ro && criticos() > 0) {
       <div class="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-foreground">
         <span class="material-symbols-outlined text-[18px] text-destructive">trending_down</span>
         <span>{{ criticos() }} indicador(es) con desviación crítica (una caída de más de {{ -umbral }} % frente a lo programado en algún año). Se resaltan en las tablas.</span>
       </div>
     }
-    @if (!ro && rtfPendiente(); as r) {
-      <div class="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
-        <span class="material-symbols-outlined text-[18px] text-warning">info</span>
-        <span>Para elevar el expediente a la DE, además del informe firmado: {{ r.txtDetalle }}</span>
+
+    <!-- Datos del convenio (ADR 0015, D3): I y V se consultan, no se recorren; al editar van plegados -->
+    @if (ro) {
+      <ng-container [ngTemplateOutlet]="infoGeneral" />
+    } @else {
+      <div class="rounded-lg border border-border/60 bg-card">
+        <button type="button" class="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+          [attr.aria-expanded]="datosAbiertos()" [attr.aria-controls]="datosAbiertos() ? 'a22-datos-convenio' : null" (click)="datosAbiertos.set(!datosAbiertos())">
+          <span class="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">folder_open</span>
+          <span class="min-w-0 flex-1 text-xs">
+            <span class="block font-semibold text-foreground">Datos del convenio</span>
+            <span class="block truncate text-muted-foreground">
+              {{ a.txtOrganizacion ?? 'Organización sin nombre' }} · Convenio {{ a.txtNumeroConvenio | formatConvenio: a.fecInicioConvenio }} ·
+              I. Información general y V. Monitoreo (del SEL y RTF, no se editan aquí)
+            </span>
+          </span>
+          <span class="text-xs font-semibold text-primary">{{ datosAbiertos() ? 'Ocultar' : 'Ver' }}</span>
+          <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">{{ datosAbiertos() ? 'expand_less' : 'expand_more' }}</span>
+        </button>
       </div>
-    }
-    @if (!ro && validacion.faltantes().length > 0) {
-      <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
-        <p class="font-semibold">Para generar y presentar el informe falta (elija uno para ir al campo):</p>
-        <ul class="mt-1 list-disc gap-x-8 pl-5 sm:columns-2 lg:columns-3">
-          @for (f of validacion.faltantes(); track f.mensaje) {
-            <li>
-              @if (f.id) {
-                <button type="button" class="text-left underline decoration-warning/50 underline-offset-2 hover:decoration-foreground" (click)="validacion.mostrar.set(true); validacion.enfocar(f.id)">
-                  {{ f.mensaje }}
-                </button>
-              } @else {
-                {{ f.mensaje }}
-              }
-            </li>
-          }
-        </ul>
-      </div>
+      @if (datosAbiertos()) {
+        <div id="a22-datos-convenio" class="space-y-4">
+          <ng-container [ngTemplateOutlet]="infoGeneral" />
+          <ng-container [ngTemplateOutlet]="monitoreo" />
+        </div>
+      }
     }
 
-    <!-- I. Información general -->
-    <section class="form-card-flat space-y-4">
-      <h5 class="form-section-title">I. Información general</h5>
-      <dl class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
-        <div><dt class="form-label">Organización</dt><dd class="font-semibold text-foreground">{{ a.txtOrganizacion ?? '—' }}</dd></div>
-        <div><dt class="form-label">RUC</dt><dd class="text-foreground">{{ a.codRuc ?? '—' }}</dd></div>
-        <div class="sm:col-span-2"><dt class="form-label">Plan de negocio</dt><dd class="text-foreground">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
-        <div><dt class="form-label">Convenio N°</dt><dd class="text-foreground">{{ a.txtNumeroConvenio | formatConvenio: a.fecInicioConvenio }}</dd></div>
-        <div><dt class="form-label">Ubicación</dt><dd class="text-foreground">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
-        <div><dt class="form-label">Vigencia</dt><dd class="text-foreground">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
-        <div><dt class="form-label">Cadena productiva</dt><dd class="text-foreground">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
-        <div><dt class="form-label">Socios (mujeres / hombres)</dt><dd class="text-foreground">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
-        <div><dt class="form-label">Hectáreas</dt><dd class="text-foreground">{{ a.numHectareas ?? '—' }}</dd></div>
-      </dl>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div class="form-field">
-          <label class="form-label" for="a22-centro-poblado">Centro poblado</label>
-          <input id="a22-centro-poblado" type="text" maxlength="150" class="form-input" [disabled]="ro" [(ngModel)]="a.txtCentroPoblado" (ngModelChange)="marcarSucio()" />
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="a22-adenda">Término con adenda</label>
-          <input id="a22-adenda" type="date" class="form-input" [disabled]="ro" [ngModel]="a.fecTerminoAdenda?.slice(0, 10)" (ngModelChange)="a.fecTerminoAdenda = $event || null; marcarSucio()" />
-        </div>
+    @if (!ro) {
+      <!-- Pasos del informe (ADR 0015, D1): se recorren en cualquier orden -->
+      <div id="a22-pasos" class="scroll-mt-4 rounded-lg border border-border/60 bg-card p-3">
+        <ui-stepper [steps]="pasosStepper()" ariaLabel="Pasos del Informe de Evaluación" navigable freeNavigation (stepClick)="irAPaso($any($event))" />
       </div>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div>
-          <p class="form-label">1.2 Problema identificado</p>
-          @if (a.problematica.length === 0) { <p class="text-xs text-muted-foreground/70">El SEL no registra el problema identificado.</p> }
-          <ol class="list-decimal space-y-1 pl-5 text-xs text-foreground">
-            @for (p of a.problematica; track p.numOrden) { <li>{{ p.txtProblema }}@if (p.txtCausa) { <span class="text-muted-foreground/70"> · Causa: {{ p.txtCausa }}</span> }</li> }
-          </ol>
+      @if (paso() === 'indicadores' && criticos() > 0) {
+        <div class="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-foreground">
+          <span class="material-symbols-outlined text-[18px] text-destructive">trending_down</span>
+          <span>{{ criticos() }} indicador(es) con desviación crítica (una caída de más de {{ -umbral }} % frente a lo programado en algún año). Se resaltan en las tablas.</span>
         </div>
-        <div class="space-y-1 text-xs text-foreground">
-          <p class="form-label">1.3 Objetivos</p>
-          <p><span class="font-semibold">General:</span> {{ a.txtObjetivoGeneral ?? '—' }}</p>
-          <p class="whitespace-pre-line"><span class="font-semibold">Específicos:</span> {{ a.txtObjetivosEspecificos ?? '—' }}</p>
-        </div>
-      </div>
-      <p class="text-[11px] text-muted-foreground/70">Datos del SEL: no se editan aquí.</p>
-    </section>
+      }
+    }
 
+    @if (ro || paso() === 'indicadores') {
     <!-- II. Indicadores de resultados -->
     <section class="form-card-flat space-y-5">
       <h5 class="form-section-title">II. Análisis de indicadores de resultados</h5>
       <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.1 Producción y productividad', filas: a.produccion, extra: null, seccion: null, analisis: 'txtAnalisisProduccion', vacio: 'El SEL no registra indicadores de producción.' }" />
-      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.2 Precios', filas: a.precios, extra: null, seccion: 'precios', analisis: 'txtAnalisisPrecios', vacio: 'Agregue los indicadores de precios.' }" />
-      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.3 Comercialización', filas: a.comercializacion, extra: 'destino', seccion: 'comercializacion', analisis: 'txtAnalisisComercializacion', vacio: 'Agregue los indicadores de comercialización.' }" />
-      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.4 Ingresos', filas: a.ingresos, extra: null, seccion: 'ingresos', analisis: 'txtAnalisisIngresos', vacio: 'Agregue los indicadores de ingresos.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.2 Precios', filas: a.precios, extra: null, seccion: 'precios', analisis: 'txtAnalisisPrecios', vacio: 'Sin indicadores de precios.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.3 Comercialización', filas: a.comercializacion, extra: 'destino', seccion: 'comercializacion', analisis: 'txtAnalisisComercializacion', vacio: 'Sin indicadores de comercialización.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: '2.4 Ingresos', filas: a.ingresos, extra: null, seccion: 'ingresos', analisis: 'txtAnalisisIngresos', vacio: 'Sin indicadores de ingresos.' }" />
     </section>
 
     <!-- III. Objetivos específicos -->
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">III. Indicadores de objetivos específicos</h5>
-      <ng-container *ngTemplateOutlet="bloque; context: { titulo: null, filas: a.objetivosEspecificos, extra: 'objetivo', seccion: 'objetivosEspecificos', analisis: 'txtAnalisisObjetivos', vacio: 'Agregue los indicadores por objetivo específico.' }" />
+      <ng-container *ngTemplateOutlet="bloque; context: { titulo: null, filas: a.objetivosEspecificos, extra: 'objetivo', seccion: 'objetivosEspecificos', analisis: 'txtAnalisisObjetivos', vacio: 'Sin indicadores por objetivo específico.' }" />
     </section>
 
+    }
+
+    @if (ro || paso() === 'financiera') {
     <!-- IV. Ejecución financiera -->
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">IV. Ejecución financiera</h5>
@@ -131,124 +110,202 @@
           </tbody>
         </table>
       </div>
-      <p class="text-[11px] text-muted-foreground/70">
+      <p class="text-xs text-muted-foreground">
         Los aprobados vienen del marco lógico del SEL (aporte de AGROIDEAS y de la organización). Lo ejecutado por AGROIDEAS viene de
         KOFIX; lo ejecutado por la organización lo registra la UN.
       </p>
-      <div class="form-field">
-        <label class="form-label" for="a22-analisis-fin">Análisis de la ejecución por fuente <span class="form-label-required">*</span></label>
-        <textarea id="a22-analisis-fin" [appInvalido]="errorDe('a22-analisis-fin')" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisFinanciamiento" (ngModelChange)="marcarSucio()"></textarea>
-        <app-error-campo para="a22-analisis-fin" [mensaje]="errorDe('a22-analisis-fin')" />
-      </div>
+      <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-analisis-fin', etiqueta: 'Análisis de la ejecución por fuente', campo: 'txtAnalisisFinanciamiento', obligatorio: true, filas: 3, clase: '' }" />
 
       <p class="form-label">4.2 Ejecución por bien y servicio (KOFIX)</p>
-      <ng-container *ngTemplateOutlet="items; context: { titulo: 'Bienes', filas: a.bienes }" />
-      <ng-container *ngTemplateOutlet="items; context: { titulo: 'Servicios', filas: a.servicios }" />
-      <div class="form-field">
-        <label class="form-label" for="a22-analisis-items">Análisis de la ejecución por bien y servicio <span class="form-label-required">*</span></label>
-        <textarea id="a22-analisis-items" [appInvalido]="errorDe('a22-analisis-items')" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtAnalisisItems" (ngModelChange)="marcarSucio()"></textarea>
-        <app-error-campo para="a22-analisis-items" [mensaje]="errorDe('a22-analisis-items')" />
-      </div>
-    </section>
-
-    <!-- V. Monitoreo -->
-    <section class="form-card-flat space-y-3">
-      <h5 class="form-section-title">V. Reporte final de monitoreo (RTF por paso crítico)</h5>
-      <div class="overflow-x-auto rounded-lg border border-border/60">
-        <table class="w-full min-w-[520px] border-collapse text-left text-xs">
-          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
-            <tr><th class="p-2.5">Año</th><th class="p-2.5">Paso crítico</th><th class="p-2.5">Periodo</th><th class="p-2.5">Presentación del RTF</th></tr>
-          </thead>
-          <tbody>
-            @for (m of a.monitoreo; track m.numPasoCritico) {
-              <tr class="border-b border-border/40">
-                <td class="p-2.5">{{ m.numAnio }}</td>
-                <td class="p-2.5 font-semibold text-foreground">{{ m.numPasoCritico }}</td>
-                <td class="p-2.5">{{ (m.fecInicio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (m.fecFin | date: 'dd/MM/yyyy') ?? '—' }}</td>
-                <td class="p-2.5">{{ (m.fecPresentacion | date: 'dd/MM/yyyy') ?? 'Sin presentar' }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="4" class="p-4 text-center text-muted-foreground/70">Sin pasos críticos.</td></tr>
+      @if (!ro) {
+        <div class="rounded-lg border border-border/60">
+          <button type="button" class="flex w-full flex-wrap items-center gap-x-6 gap-y-1 rounded-lg p-3 text-left text-xs transition-colors hover:bg-muted/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            [attr.aria-expanded]="itemsAbiertos()" [attr.aria-controls]="itemsAbiertos() ? 'a22-items' : null" (click)="itemsAbiertos.set(!itemsAbiertos())">
+            @for (r of resumenItems(); track r.titulo) {
+              <span>
+                <span class="font-semibold text-foreground">{{ r.titulo }} ({{ r.cantidad }})</span>
+                <span class="text-muted-foreground"> · ejecutado S/ {{ r.ejecutado | number: '1.2-2' }} de {{ r.programado | number: '1.2-2' }}
+                  @if (pctEjecucion(r.programado, r.ejecutado) !== null) { ({{ pctEjecucion(r.programado, r.ejecutado) | number: '1.0-2' }} %) }</span>
+              </span>
             }
-          </tbody>
-        </table>
-      </div>
+            <span class="ml-auto flex items-center gap-1 font-semibold text-primary">
+              {{ itemsAbiertos() ? 'Ocultar el detalle' : 'Ver el detalle' }}
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">{{ itemsAbiertos() ? 'expand_less' : 'expand_more' }}</span>
+            </span>
+          </button>
+        </div>
+      }
+      @if (ro || itemsAbiertos()) {
+        <div id="a22-items" class="space-y-3">
+          <ng-container *ngTemplateOutlet="items; context: { titulo: 'Bienes', filas: a.bienes }" />
+          <ng-container *ngTemplateOutlet="items; context: { titulo: 'Servicios', filas: a.servicios }" />
+        </div>
+      }
+      <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-analisis-items', etiqueta: 'Análisis de la ejecución por bien y servicio', campo: 'txtAnalisisItems', obligatorio: true, filas: 3, clase: '' }" />
     </section>
 
+    }
+
+    @if (ro) { <ng-container [ngTemplateOutlet]="monitoreo" /> }
+
+    @if (ro || paso() === 'indicadores') {
     <!-- VI. Práctica ambiental -->
     <section class="form-card-flat space-y-3">
       <h5 class="form-section-title">VI. Práctica ambiental</h5>
-      <app-tabla-indicadores [filas]="a.practicaAmbiental" columnaExtra="actividad" [soloLectura]="ro" vacio="El SEL no registra indicadores ambientales."
-        (editar)="editarFila('practicaAmbiental', $event)" />
+      @if (a.practicaAmbiental.length === 0) {
+        <div class="flex items-center gap-3 rounded-lg border border-dashed border-border p-3 text-xs">
+          <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">info</span>
+          <span class="font-semibold text-foreground">El SEL no registra indicadores ambientales.</span>
+        </div>
+      } @else {
+        <app-tabla-indicadores [filas]="a.practicaAmbiental" columnaExtra="actividad" [soloLectura]="ro" vacio="El SEL no registra indicadores ambientales."
+          (editar)="editarFila('practicaAmbiental', $event)" />
+      }
     </section>
 
+    }
+
+    @if (ro || paso() === 'conclusiones') {
     <!-- VII a XI y resultado -->
     <section class="form-card-flat space-y-4">
       <h5 class="form-section-title">VII a XI. Conclusiones de la evaluación</h5>
+      @if (!ro) { <ng-container [ngTemplateOutlet]="resultadoEvaluacion" /> }
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div class="form-field">
-          <label class="form-label" for="a22-logros">VII. Logros <span class="form-label-required">*</span></label>
-          <textarea id="a22-logros" [appInvalido]="errorDe('a22-logros')" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLogros" (ngModelChange)="marcarSucio()"></textarea>
-          <app-error-campo para="a22-logros" [mensaje]="errorDe('a22-logros')" />
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="a22-lecciones">VIII. Lecciones aprendidas <span class="form-label-required">*</span></label>
-          <textarea id="a22-lecciones" [appInvalido]="errorDe('a22-lecciones')" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtLeccionesAprendidas" (ngModelChange)="marcarSucio()"></textarea>
-          <app-error-campo para="a22-lecciones" [mensaje]="errorDe('a22-lecciones')" />
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="a22-dificultades">IX. Dificultades</label>
-          <textarea id="a22-dificultades" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtDificultades" (ngModelChange)="marcarSucio()"></textarea>
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="a22-conclusiones">X. Conclusiones <span class="form-label-required">*</span></label>
-          <textarea id="a22-conclusiones" [appInvalido]="errorDe('a22-conclusiones')" rows="4" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtConclusiones" (ngModelChange)="marcarSucio()"></textarea>
-          <app-error-campo para="a22-conclusiones" [mensaje]="errorDe('a22-conclusiones')" />
-        </div>
-        <div class="form-field lg:col-span-2">
-          <label class="form-label" for="a22-recomendaciones">XI. Recomendaciones <span class="form-label-required">*</span></label>
-          <textarea id="a22-recomendaciones" [appInvalido]="errorDe('a22-recomendaciones')" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="a.txtRecomendaciones" (ngModelChange)="marcarSucio()"></textarea>
-          <app-error-campo para="a22-recomendaciones" [mensaje]="errorDe('a22-recomendaciones')" />
-        </div>
+        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-logros', etiqueta: 'VII. Logros', campo: 'txtLogros', obligatorio: true, filas: 4, clase: '' }" />
+        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-lecciones', etiqueta: 'VIII. Lecciones aprendidas', campo: 'txtLeccionesAprendidas', obligatorio: true, filas: 4, clase: '' }" />
+        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-dificultades', etiqueta: 'IX. Dificultades', campo: 'txtDificultades', obligatorio: false, filas: 4, clase: '' }" />
+        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-conclusiones', etiqueta: 'X. Conclusiones', campo: 'txtConclusiones', obligatorio: true, filas: 4, clase: '' }" />
+        <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-recomendaciones', etiqueta: 'XI. Recomendaciones', campo: 'txtRecomendaciones', obligatorio: true, filas: 3, clase: 'lg:col-span-2' }" />
       </div>
-      <fieldset id="a22-resultado" tabindex="-1" class="space-y-2 focus:outline-none" [attr.aria-invalid]="errorDe('a22-resultado') ? true : null"
-        [attr.aria-describedby]="errorDe('a22-resultado') ? 'a22-resultado-error' : null">
-        <legend class="form-label">Resultado de la evaluación <span class="form-label-required">*</span></legend>
-        <div class="flex flex-wrap gap-2">
-          @for (r of resultados; track r.valor) {
-            <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs"
-              [ngClass]="a.tipResultado === r.valor ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground'">
-              <input type="radio" name="a22-resultado" [value]="r.valor" [disabled]="ro" [(ngModel)]="a.tipResultado" (ngModelChange)="marcarSucio()" />
-              {{ r.etiqueta }}
-            </label>
-          }
-        </div>
-        <app-error-campo para="a22-resultado" [mensaje]="errorDe('a22-resultado')" />
-      </fieldset>
+      @if (ro) { <ng-container [ngTemplateOutlet]="resultadoEvaluacion" /> }
     </section>
 
-    <!-- Acciones -->
+    }
+
+    <!-- Acciones: barra fija al pie mientras se edita (ADR 0015, D2) -->
     @if (!ro) {
-      <div class="flex flex-wrap items-center gap-2">
+      @let av = avance();
+      <div class="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-border bg-card/95 px-3 py-2.5 shadow-lg backdrop-blur">
         <ui-button icon="save" label="Guardar informe" [loading]="guardando()" [disabled]="guardando()" (onClick)="guardar()" />
-        <ui-button icon="download" label="Descargar para firmar" appearance="soft" severity="secondary"
-          [loading]="descargando()" [disabled]="!completo() || descargando()" (onClick)="descargar()" />
-        @if (sucio()) { <span class="text-[11px] text-warning">Hay cambios sin guardar.</span> }
+        <span class="flex items-center gap-1.5 text-xs" role="status" aria-live="polite"
+          [ngClass]="errorAutoguardado() ? 'text-destructive' : sucio() ? 'text-warning' : 'text-muted-foreground'">
+          <span class="material-symbols-outlined text-[16px]">
+            {{ guardando() ? 'sync' : errorAutoguardado() ? 'cloud_off' : sucio() ? 'edit_note' : guardado() ? 'cloud_done' : 'draft' }}
+          </span>
+          @if (guardando()) {
+            Guardando…
+          } @else if (errorAutoguardado()) {
+            No se pudo guardar automáticamente. Pulse "Guardar informe".
+          } @else if (sucio()) {
+            Cambios sin guardar
+          } @else if (ultimoGuardado()) {
+            Guardado a las {{ ultimoGuardado() | date: 'HH:mm' }}
+          } @else if (guardado()) {
+            Sin cambios
+          } @else {
+            Aún no se ha guardado
+          }
+        </span>
+        <span class="ml-auto flex items-center gap-2 text-xs text-muted-foreground" [attr.aria-label]="av.cumplidos + ' de ' + av.total + ' requisitos completos'">
+          <span class="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+            <span class="block h-full rounded-full bg-primary transition-all" [style.width.%]="av.total ? (av.cumplidos / av.total) * 100 : 0"></span>
+          </span>
+          {{ av.cumplidos }} de {{ av.total }} completos
+        </span>
+        <span class="flex items-center gap-2">
+          <ui-button icon="arrow_back" label="Anterior" appearance="soft" severity="secondary" size="sm" [disabled]="!pasoAnterior()"
+            (onClick)="moverPaso(-1)" />
+          <ui-button icon="arrow_forward" label="Siguiente" appearance="soft" size="sm" [disabled]="!pasoSiguiente()"
+            (onClick)="moverPaso(1)" />
+        </span>
       </div>
 
-      <section class="form-card-flat space-y-3">
-        <h5 class="form-section-title">Presentar el informe firmado</h5>
-        <app-selector-pdf etiqueta="Informe de Evaluación firmado" ayuda="Firmado por el especialista, en PDF" [(archivo)]="archivo" />
-        <div class="flex flex-wrap items-center gap-2">
-          <ui-button icon="draw" label="Presentar informe firmado" [disabled]="!completo() || !archivo() || presentando()" (onClick)="confirmarPresentar.set(true)" />
-          @if (!completo()) {
-            <span class="text-[11px] text-muted-foreground/70">Se habilita con el informe guardado, completo y sin cambios pendientes.</span>
-            @if (validacion.faltantes().length > 0) {
-              <ui-button size="sm" appearance="soft" severity="warning" icon="checklist" label="Revisar lo que falta" (onClick)="validacion.revisar()" />
-            }
+      @if (paso() === 'firma') {
+        <section class="form-card-flat space-y-4">
+          <h5 class="form-section-title">Firmar y presentar el informe</h5>
+          @if (rtfPendiente(); as r) {
+            <div class="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-foreground">
+              <span class="material-symbols-outlined text-[18px] text-warning">info</span>
+              <span>Para elevar el expediente a la DE, además del informe firmado: {{ r.txtDetalle }}</span>
+            </div>
           }
-        </div>
-      </section>
+          <ol class="space-y-4">
+            <ng-template #marca let-hecho="hecho" let-n="n">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                [ngClass]="hecho ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'">
+                @if (hecho) { <span class="material-symbols-outlined text-[16px]" aria-hidden="true">check</span><span class="sr-only">Listo:</span> } @else { {{ n }} }
+              </span>
+            </ng-template>
+
+            <li class="flex items-start gap-3">
+              <ng-container [ngTemplateOutlet]="marca" [ngTemplateOutletContext]="{ hecho: completo(), n: 1 }" />
+              <div class="min-w-0 flex-1 space-y-2 text-xs">
+                <p class="font-semibold text-foreground">Complete y guarde el informe</p>
+                @if (completo()) {
+                  <p class="text-muted-foreground">El informe está completo y guardado.</p>
+                } @else if (faltantesPorPaso().length > 0) {
+                  <p class="text-muted-foreground">Falta lo siguiente (elija uno para ir al campo):</p>
+                  @for (g of faltantesPorPaso(); track g.clave) {
+                    <div>
+                      <p class="font-semibold text-foreground">{{ g.titulo }}</p>
+                      <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                        @for (f of g.faltantes; track f.mensaje) {
+                          <li>
+                            @if (f.id) {
+                              <button type="button" class="text-left underline decoration-warning/50 underline-offset-2 hover:decoration-foreground"
+                                (click)="validacion.mostrar.set(true); validacion.enfocar(f.id)">{{ f.mensaje }}</button>
+                            } @else {
+                              {{ f.mensaje }}
+                            }
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                } @else {
+                  <p class="text-muted-foreground">Guarde el informe para continuar.</p>
+                }
+              </div>
+            </li>
+
+            <li class="flex items-start gap-3">
+              <ng-container [ngTemplateOutlet]="marca" [ngTemplateOutletContext]="{ hecho: descargado(), n: 2 }" />
+              <div class="min-w-0 flex-1 space-y-2 text-xs">
+                <p class="font-semibold text-foreground">Descargue el PDF para firmarlo</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <ui-button icon="download" label="Descargar para firmar" appearance="soft" severity="secondary"
+                    [loading]="descargando()" [disabled]="!completo() || descargando()" (onClick)="descargar()" />
+                  @if (!completo()) { <span class="text-muted-foreground/70">Se habilita con el informe completo y guardado (punto 1).</span> }
+                </div>
+              </div>
+            </li>
+
+            <li class="flex items-start gap-3">
+              <ng-container [ngTemplateOutlet]="marca" [ngTemplateOutletContext]="{ hecho: !!archivo(), n: 3 }" />
+              <div class="min-w-0 flex-1 space-y-2 text-xs">
+                <p class="font-semibold text-foreground">Fírmelo y súbalo en PDF</p>
+                <p class="text-muted-foreground">El especialista firma el PDF descargado fuera del sistema.</p>
+                <app-selector-pdf etiqueta="Informe de Evaluación firmado" ayuda="Firmado por el especialista, en PDF" [(archivo)]="archivo" />
+              </div>
+            </li>
+
+            <li class="flex items-start gap-3">
+              <ng-container [ngTemplateOutlet]="marca" [ngTemplateOutletContext]="{ hecho: false, n: 4 }" />
+              <div class="min-w-0 flex-1 space-y-2 text-xs">
+                <p class="font-semibold text-foreground">Preséntelo</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <ui-button icon="draw" label="Presentar informe firmado" [disabled]="!completo() || !archivo() || presentando()" (onClick)="confirmarPresentar.set(true)" />
+                  @if (!completo()) {
+                    <span class="text-muted-foreground/70">Se habilita con el informe completo y guardado (punto 1).</span>
+                  } @else if (!archivo()) {
+                    <span class="text-muted-foreground/70">Se habilita al subir el PDF firmado (punto 3).</span>
+                  }
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+      }
     } @else if (modo() === 'evaluacion') {
       <section class="form-card-flat space-y-3">
         <h5 class="form-section-title">Elevar el Expediente Único a la Dirección Ejecutiva</h5>
@@ -297,20 +354,134 @@
     }
   </div>
 
+  <!-- I. Información general: en el panel de datos al editar, en su lugar con el informe firmado -->
+  <ng-template #infoGeneral>
+    <section class="form-card-flat space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h5 class="form-section-title">I. Información general</h5>
+        <app-ui-status-pill tone="primary" [showIcon]="false" text="Del SEL · no se edita aquí" />
+      </div>
+      <dl class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+        <div><dt class="form-label">Organización</dt><dd class="font-semibold text-foreground">{{ a.txtOrganizacion ?? '—' }}</dd></div>
+        <div><dt class="form-label">RUC</dt><dd class="text-foreground">{{ a.codRuc ?? '—' }}</dd></div>
+        <div class="sm:col-span-2"><dt class="form-label">Plan de negocio</dt><dd class="text-foreground">{{ a.txtPlanNegocio ?? '—' }}</dd></div>
+        <div><dt class="form-label">Convenio N°</dt><dd class="text-foreground">{{ a.txtNumeroConvenio | formatConvenio: a.fecInicioConvenio }}</dd></div>
+        <div><dt class="form-label">Ubicación</dt><dd class="text-foreground">{{ a.txtRegion ?? '—' }} / {{ a.txtProvincia ?? '—' }} / {{ a.txtDistrito ?? '—' }}</dd></div>
+        <div><dt class="form-label">Vigencia</dt><dd class="text-foreground">{{ (a.fecInicioConvenio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (a.fecFinConvenio | date: 'dd/MM/yyyy') ?? '—' }}</dd></div>
+        <div><dt class="form-label">Cadena productiva</dt><dd class="text-foreground">{{ a.txtCadenaProductiva ?? '—' }}</dd></div>
+        <div><dt class="form-label">Socios (mujeres / hombres)</dt><dd class="text-foreground">{{ a.canSociasMujeres ?? '—' }} / {{ a.canSociosHombres ?? '—' }}</dd></div>
+        <div><dt class="form-label">Hectáreas</dt><dd class="text-foreground">{{ a.numHectareas ?? '—' }}</dd></div>
+        <div><dt class="form-label">Centro poblado</dt>
+          <dd [ngClass]="a.txtCentroPoblado ? 'text-foreground' : 'text-muted-foreground'">{{ a.txtCentroPoblado ?? 'No registrado en el SEL' }}</dd></div>
+        <div><dt class="form-label">Término con adenda</dt>
+          <dd [ngClass]="a.fecTerminoAdenda ? 'text-foreground' : 'text-muted-foreground'">{{ (a.fecTerminoAdenda | date: 'dd/MM/yyyy') ?? 'Sin adenda de plazo en el SEL' }}</dd></div>
+      </dl>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div>
+          <p class="form-label">1.2 Problema identificado</p>
+          @if (a.problematica.length === 0) { <p class="text-xs text-muted-foreground/70">El SEL no registra el problema identificado.</p> }
+          <ol class="list-decimal space-y-1 pl-5 text-xs text-foreground">
+            @for (p of a.problematica; track p.numOrden) { <li>{{ p.txtProblema }}@if (p.txtCausa) { <span class="text-muted-foreground/70"> · Causa: {{ p.txtCausa }}</span> }</li> }
+          </ol>
+        </div>
+        <div class="space-y-1 text-xs text-foreground">
+          <p class="form-label">1.3 Objetivos</p>
+          <p><span class="font-semibold">General:</span> {{ a.txtObjetivoGeneral ?? '—' }}</p>
+          <p class="whitespace-pre-line"><span class="font-semibold">Específicos:</span> {{ a.txtObjetivosEspecificos ?? '—' }}</p>
+        </div>
+      </div>
+    </section>
+  </ng-template>
+
+  <!-- V. Monitoreo: en el panel de datos al editar, en su lugar con el informe firmado -->
+  <ng-template #monitoreo>
+    <section class="form-card-flat space-y-3">
+      <h5 class="form-section-title">V. Reporte final de monitoreo (RTF por paso crítico)</h5>
+      <div class="overflow-x-auto rounded-lg border border-border/60">
+        <table class="w-full min-w-[520px] border-collapse text-left text-xs">
+          <thead class="border-b border-border/60 bg-muted/40 text-muted-foreground">
+            <tr><th class="p-2.5">Año</th><th class="p-2.5">Paso crítico</th><th class="p-2.5">Periodo</th><th class="p-2.5">Presentación del RTF</th></tr>
+          </thead>
+          <tbody>
+            @for (m of a.monitoreo; track m.numPasoCritico) {
+              <tr class="border-b border-border/40">
+                <td class="p-2.5">{{ m.numAnio }}</td>
+                <td class="p-2.5 font-semibold text-foreground">{{ m.numPasoCritico }}</td>
+                <td class="p-2.5">{{ (m.fecInicio | date: 'dd/MM/yyyy') ?? '—' }} al {{ (m.fecFin | date: 'dd/MM/yyyy') ?? '—' }}</td>
+                <td class="p-2.5">{{ (m.fecPresentacion | date: 'dd/MM/yyyy') ?? 'Sin presentar' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="p-4 text-center text-muted-foreground/70">Sin pasos críticos.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-template>
+
+  <!-- Resultado: encabeza el paso 3 al editar, cierra la sección con el informe firmado -->
+  <ng-template #resultadoEvaluacion>
+      <fieldset id="a22-resultado" tabindex="-1" class="space-y-2 focus:outline-none" [attr.aria-invalid]="errorDe('a22-resultado') ? true : null"
+        [attr.aria-describedby]="errorDe('a22-resultado') ? 'a22-resultado-error' : null">
+        <legend class="form-label">Resultado de la evaluación <span class="form-label-required">*</span></legend>
+        <div class="flex flex-wrap gap-2">
+          @for (r of resultados; track r.valor) {
+            <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+              [ngClass]="a.tipResultado === r.valor ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground'">
+              <input type="radio" name="a22-resultado" [value]="r.valor" [disabled]="ro" [(ngModel)]="a.tipResultado" (ngModelChange)="marcarSucio()" />
+              {{ r.etiqueta }}
+            </label>
+          }
+        </div>
+        <app-error-campo para="a22-resultado" [mensaje]="errorDe('a22-resultado')" />
+      </fieldset>
+  </ng-template>
+
+  <!-- Texto largo del informe (ADR 0015, D7): ayuda bajo la etiqueta, crece con el contenido y cuenta los caracteres -->
+  <ng-template #campoTexto let-id="id" let-etiqueta="etiqueta" let-campo="campo" let-obligatorio="obligatorio" let-filas="filas" let-clase="clase">
+    @let largo = ($any(a)[campo] ?? '').length;
+    @let ayuda = ro ? null : ayudaDe(campo);
+    <div class="form-field" [ngClass]="clase">
+      <label class="form-label" [attr.for]="id">{{ etiqueta }} @if (obligatorio) { <span class="form-label-required">*</span> }</label>
+      @if (ayuda) { <p [id]="id + '-ayuda'" class="text-[11px] text-muted-foreground">{{ ayuda }}</p> }
+      <textarea [id]="id" appCrecer [appInvalido]="obligatorio ? errorDe(id) : null" [ayudaId]="ayuda ? id + '-ayuda' : null" [rows]="filas"
+        class="form-textarea" [attr.maxlength]="longitudTexto" [disabled]="ro" [(ngModel)]="$any(a)[campo]" (ngModelChange)="marcarSucio()"></textarea>
+      <div class="flex items-start gap-2">
+        <app-error-campo class="min-w-0 flex-1" [para]="id" [mensaje]="obligatorio ? errorDe(id) : null" />
+        @if (!ro) {
+          <span class="ml-auto shrink-0 text-[11px]" [ngClass]="largo >= longitudTexto * 0.9 ? 'font-semibold text-warning' : 'text-muted-foreground/70'"
+            [attr.aria-label]="largo + ' de ' + longitudTexto + ' caracteres'">{{ largo | number }} / {{ longitudTexto | number }}</span>
+        }
+      </div>
+    </div>
+  </ng-template>
+
   <!-- Bloque de una sección de indicadores con su análisis -->
   <ng-template #bloque let-titulo="titulo" let-filas="filas" let-extra="extra" let-seccion="seccion" let-analisis="analisis" let-vacio="vacio">
     <div class="space-y-2">
       @if (titulo) { <p class="form-label">{{ titulo }}</p> }
-      <app-tabla-indicadores [filas]="filas" [columnaExtra]="extra" [soloLectura]="ro" [vacio]="vacio"
-        (editar)="editarFila(seccion, $event)" (quitar)="quitarFila(seccion, $event)" />
-      @if (seccion && !ro) {
-        <div class="flex justify-end"><ui-button size="sm" appearance="soft" icon="add" label="Agregar indicador" (onClick)="agregarFila(seccion)" /></div>
+      @if (filas.length === 0) {
+        <!-- Sin indicadores: una línea en lugar de la tabla vacía, con la opción de agregarlos (ADR 0015, Fase 3) -->
+        <div class="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border p-3 text-xs">
+          <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">{{ seccion && !ro ? 'playlist_add' : 'info' }}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block font-semibold text-foreground">{{ vacio }}</span>
+            @if (seccion && !ro) {
+              <span class="block text-muted-foreground">Si la verificación de campo constató información que no se reportó (por ejemplo, ventas), agréguela como indicador.</span>
+            }
+          </span>
+          @if (seccion && !ro) {
+            <ui-button size="sm" appearance="soft" icon="add" label="Agregar indicador" (onClick)="agregarFila(seccion)" />
+          }
+        </div>
+      } @else {
+        <app-tabla-indicadores [filas]="filas" [columnaExtra]="extra" [soloLectura]="ro" [vacio]="vacio"
+          (editar)="editarFila(seccion, $event)" (quitar)="quitarFila(seccion, $event)" />
+        @if (seccion && !ro) {
+          <div class="flex justify-end"><ui-button size="sm" appearance="soft" icon="add" label="Agregar indicador" (onClick)="agregarFila(seccion)" /></div>
+        }
       }
-      <div class="form-field">
-        <label class="form-label" [attr.for]="'a22-' + analisis">Análisis <span class="form-label-required">*</span></label>
-        <textarea [id]="'a22-' + analisis" [appInvalido]="errorDe('a22-' + analisis)" rows="3" class="form-textarea" [disabled]="ro" [(ngModel)]="$any(a)[analisis]" (ngModelChange)="marcarSucio()"></textarea>
-        <app-error-campo [para]="'a22-' + analisis" [mensaje]="errorDe('a22-' + analisis)" />
-      </div>
+      <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-' + analisis, etiqueta: 'Análisis', campo: analisis, obligatorio: true, filas: 3, clase: '' }" />
     </div>
   </ng-template>
 

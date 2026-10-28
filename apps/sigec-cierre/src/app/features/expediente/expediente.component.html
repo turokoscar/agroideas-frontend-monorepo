@@ -284,6 +284,15 @@
             <span class="material-symbols-outlined text-[18px] text-muted-foreground" aria-hidden="true">schedule</span>
             El plazo corre desde el {{ plazo.fecInicio | date: 'dd/MM/yyyy' }}.
           </p>
+        } @else if (plazo.estPlazo === 'VIGENTE' && tonoPlazo(plazo) === 'primary') {
+          <!-- Con margen, una línea; el contador grande queda para cuando el plazo está por vencer o vencido (ADR 0015, Fase 4) -->
+          <p class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-foreground">
+            <span class="material-symbols-outlined text-[18px] text-primary" aria-hidden="true">alarm</span>
+            <span>
+              <span class="font-semibold">{{ etiquetaTipoPlazo(plazo.tipPlazo) }}:</span>
+              quedan {{ restantes(plazo) }} días · vence el {{ plazo.fecLimite | date: 'dd/MM/yyyy' }}
+            </span>
+          </p>
         } @else if (plazo.estPlazo === 'VIGENTE') {
           <ui-countdown-banner
             [hours]="horasRestantes().get(etapa.clave) ?? 0"

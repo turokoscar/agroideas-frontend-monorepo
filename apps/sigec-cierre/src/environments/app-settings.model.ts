@@ -46,6 +46,13 @@ export interface AppSettings {
      * `VariacionIndicador.UmbralDesviacionCritica` de sigec-api-cierre (−20).
      */
     umbralDesviacionCriticaPct: number;
+    /**
+     * Espera desde la última edición del borrador del Anexo 22 hasta guardarlo solo, en ms (ADR 0015, D2). El borrador
+     * se guarda con el mismo `PUT` que el botón Guardar.
+     */
+    esperaAutoguardadoMs: number;
+    /** Caracteres máximos de cada texto del Anexo 22: `ValidadoresAnexo22.MaximoTexto` de sigec-api-cierre (deben coincidir). */
+    longitudTexto: number;
   };
   revisionLegal: {
     /** Límites de `ObservarUajRequestValidator` y `SubsanacionRequestValidator` de sigec-api-cierre (deben coincidir). */

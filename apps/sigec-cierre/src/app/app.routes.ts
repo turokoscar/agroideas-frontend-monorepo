@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Route } from '@angular/router';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
+import { cambiosPendientesGuard } from './core/guards/cambios-pendientes.guard';
 import { AuthService } from './core/services/auth.service';
 import { ROLES_PERSONAL } from './core/models/rol-cierre.model';
 
@@ -44,7 +45,8 @@ export const appRoutes: Route[] = [
         // Personal y OA: la API decide si el usuario puede ver ese expediente (la OA, solo el suyo).
         path: 'expedientes/:id',
         loadComponent: () => import('./features/expediente/expediente.component').then(m => m.ExpedienteComponent),
-        canActivate: [roleGuard([...ROLES_PERSONAL, 'OA'])]
+        canActivate: [roleGuard([...ROLES_PERSONAL, 'OA'])],
+        canDeactivate: [cambiosPendientesGuard]
       },
       {
         path: '',
