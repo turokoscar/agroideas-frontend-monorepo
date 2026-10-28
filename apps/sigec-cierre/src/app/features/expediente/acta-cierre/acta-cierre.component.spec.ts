@@ -93,12 +93,41 @@ describe('ActaCierreComponent', () => {
     expect(c.difiere({ ...item, canEjecutada: null })).toBe(false);
   });
 
+  it('agregar un bien abre un modal; los errores se marcan por campo al intentar agregar', () => {
+    const fixture = crear();
+    const c = fixture.componentInstance;
+    c.abrirItem('bienes');
+    fixture.detectChanges();
+    expect(c.nuevoItem()?.lista).toBe('bienes');
+    expect(c.errorItem('item-descripcion')).toBeNull();
+
+    c.agregarItem();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(actual(c).bienes).toHaveLength(1);
+    expect(c.errorItem('item-descripcion')).toBe('Indique la descripción.');
+    expect(c.errorItem('item-cantidad')).toBe('Indique la cantidad verificada.');
+    expect(el.querySelector('#item-unidad')?.getAttribute('aria-invalid')).toBe('true');
+    expect(el.querySelector('#item-unidad-error')?.textContent).toContain('Indique la unidad de medida.');
+    expect(document.activeElement?.id).toBe('item-descripcion');
+
+    c.nuevoItem.update(n => n && { ...n, txtDescripcion: ' Mochila fumigadora ', txtUnidadMedida: 'unidad', canCantidad: 3, txtObservaciones: ' ' });
+    expect(c.errorItem('item-descripcion')).toBeNull();
+    c.agregarItem();
+    expect(c.nuevoItem()).toBeNull();
+    expect(actual(c).bienes[1]).toMatchObject({ numOrden: 2, txtDescripcion: 'Mochila fumigadora', canCantidad: 3, txtObservaciones: null, ideItemSel: null });
+    expect(c.sucio()).toBe(true);
+  });
+
   it('las filas agregadas a mano se pueden quitar y se renumeran', () => {
     const { componentInstance: c } = crear();
-    c.agregarItem('bienes');
-    c.agregarItem('bienes');
+    for (const descripcion of ['Mochila', 'Balanza']) {
+      c.abrirItem('bienes');
+      c.nuevoItem.update(n => n && { ...n, txtDescripcion: descripcion, txtUnidadMedida: 'unidad', canCantidad: 1 });
+      c.agregarItem();
+    }
     c.quitarItem('bienes', 1);
-    expect(actual(c).bienes.map(b => b.numOrden)).toEqual([1, 2]);
+    expect(actual(c).bienes.map(b => [b.numOrden, b.txtDescripcion])).toEqual([[1, 'Despulpadora'], [2, 'Balanza']]);
     expect(c.sucio()).toBe(true);
   });
 

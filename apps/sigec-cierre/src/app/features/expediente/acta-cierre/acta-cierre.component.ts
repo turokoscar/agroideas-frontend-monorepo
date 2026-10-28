@@ -13,6 +13,15 @@ import { ValidacionFormulario } from '../../../shared/validacion-formulario';
 
 type ListaItems = 'bienes' | 'servicios';
 
+/** Bien o servicio no programado que se agrega desde el modal (el resto de la fila son referencias de KOFIX). */
+interface NuevoItem {
+  lista: ListaItems;
+  txtDescripcion: string;
+  txtUnidadMedida: string;
+  canCantidad: number | null;
+  txtObservaciones: string;
+}
+
 /**
  * Verificación de campo y Acta de Cierre (Anexo 21), ADR 0013 Fase 2. La llenan la UR o la UN con el
  * expediente en `EN_VERIFICACION`: el formulario viene precargado (organización, PNT y convenio del SEL;
@@ -57,6 +66,10 @@ export class ActaCierreComponent {
   sucio = signal(false);
   archivo = signal<File | null>(null);
   acta = signal<Anexo21Dto | null>(null);
+  /** Bien o servicio que se está agregando en el modal; null si está cerrado. */
+  nuevoItem = signal<NuevoItem | null>(null);
+  /** Los errores del modal se muestran recién al intentar agregar, como en el resto del acta. */
+  intentoItem = signal(false);
 
   guardada = computed(() => (this.acta()?.ideAnexo21 ?? 0) > 0);
   completa = computed(() => this.guardada() && (this.acta()?.faltantes.length ?? 1) === 0 && !this.sucio());
@@ -138,20 +151,51 @@ export class ActaCierreComponent {
     return item.canEjecutada !== null && Number(item.canCantidad) !== Number(item.canEjecutada);
   }
 
-  agregarItem(lista: ListaItems) {
+  abrirItem(lista: ListaItems) {
+    this.intentoItem.set(false);
+    this.nuevoItem.set({ lista, txtDescripcion: '', txtUnidadMedida: '', canCantidad: null, txtObservaciones: '' });
+  }
+
+  /** Errores del modal de ítem por control (método: el formulario se edita mutando la copia). */
+  erroresItem(): Partial<Record<'item-descripcion' | 'item-unidad' | 'item-cantidad', string>> {
+    const n = this.nuevoItem();
+    if (!n) return {};
+    const errores: Partial<Record<'item-descripcion' | 'item-unidad' | 'item-cantidad', string>> = {};
+    if (!n.txtDescripcion.trim()) errores['item-descripcion'] = 'Indique la descripción.';
+    if (!n.txtUnidadMedida.trim()) errores['item-unidad'] = 'Indique la unidad de medida.';
+    if (n.canCantidad === null || `${n.canCantidad}` === '') errores['item-cantidad'] = 'Indique la cantidad verificada.';
+    else if (Number(n.canCantidad) < 0) errores['item-cantidad'] = 'La cantidad no puede ser negativa.';
+    return errores;
+  }
+
+  /** Mensaje de error del control `id` del modal, o null mientras no se intente agregar. */
+  errorItem(id: 'item-descripcion' | 'item-unidad' | 'item-cantidad'): string | null {
+    return this.intentoItem() ? (this.erroresItem()[id] ?? null) : null;
+  }
+
+  agregarItem() {
+    const n = this.nuevoItem();
+    if (!n) return;
+    const primero = Object.keys(this.erroresItem())[0];
+    if (primero) {
+      this.intentoItem.set(true);
+      document.getElementById(primero)?.focus();
+      return;
+    }
     this.mutar(a =>
-      a[lista].push({
-        numOrden: a[lista].length + 1,
-        txtDescripcion: '',
-        txtUnidadMedida: '',
-        canCantidad: 0,
-        txtObservaciones: null,
+      a[n.lista].push({
+        numOrden: a[n.lista].length + 1,
+        txtDescripcion: n.txtDescripcion.trim(),
+        txtUnidadMedida: n.txtUnidadMedida.trim(),
+        canCantidad: Number(n.canCantidad),
+        txtObservaciones: n.txtObservaciones.trim() || null,
         ideItemSel: null,
         canProgramada: null,
         canEjecutada: null,
         impEjecutado: null
       })
     );
+    this.nuevoItem.set(null);
   }
 
   quitarItem(lista: ListaItems, indice: number) {

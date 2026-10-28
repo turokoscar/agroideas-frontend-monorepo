@@ -326,10 +326,47 @@
         </table>
       </div>
       <div class="flex justify-end">
-        <ui-button size="sm" appearance="soft" icon="add" label="Agregar fila" (onClick)="agregarItem(lista)" />
+        <ui-button size="sm" appearance="soft" icon="add" [label]="lista === 'bienes' ? 'Agregar bien' : 'Agregar servicio'" (onClick)="abrirItem(lista)" />
       </div>
     </div>
   </ng-template>
+
+  @let n = nuevoItem();
+  <app-ui-modal
+    [visible]="!!n"
+    [title]="n?.lista === 'servicios' ? 'Agregar servicio' : 'Agregar bien'"
+    subtitle="Un bien o servicio no programado en el SEL que se verificó en campo."
+    icon="add_box"
+    maxWidth="560px"
+    saveLabel="Agregar"
+    saveIcon="add"
+    (onHide)="nuevoItem.set(null)"
+    (onSave)="agregarItem()"
+  >
+    @if (n) {
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="form-field sm:col-span-2">
+          <label class="form-label" for="item-descripcion">Descripción <span class="form-label-required">*</span></label>
+          <input id="item-descripcion" [appInvalido]="errorItem('item-descripcion')" type="text" maxlength="500" class="form-input" [(ngModel)]="n.txtDescripcion" />
+          <app-error-campo para="item-descripcion" [mensaje]="errorItem('item-descripcion')" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="item-unidad">Unidad de medida <span class="form-label-required">*</span></label>
+          <input id="item-unidad" [appInvalido]="errorItem('item-unidad')" type="text" maxlength="50" class="form-input" [(ngModel)]="n.txtUnidadMedida" />
+          <app-error-campo para="item-unidad" [mensaje]="errorItem('item-unidad')" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="item-cantidad">Cantidad verificada <span class="form-label-required">*</span></label>
+          <input id="item-cantidad" [appInvalido]="errorItem('item-cantidad')" type="number" min="0" class="form-input text-right" [(ngModel)]="n.canCantidad" />
+          <app-error-campo para="item-cantidad" [mensaje]="errorItem('item-cantidad')" />
+        </div>
+        <div class="form-field sm:col-span-2">
+          <label class="form-label" for="item-observaciones">Observaciones</label>
+          <input id="item-observaciones" type="text" maxlength="500" class="form-input" [(ngModel)]="n.txtObservaciones" />
+        </div>
+      </div>
+    }
+  </app-ui-modal>
 
   <app-ui-modal
     [visible]="confirmar()"
