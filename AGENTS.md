@@ -1,6 +1,6 @@
 # AGROIDEAS Frontend Monorepo — Agent Guide
 
-**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (SIGEC apps, lib export tables) — kept in sync as of 2026-09-17.
+**Companion to `CLAUDE.md`.** This file adds detail `CLAUDE.md` omits (per-app summaries, lib export tables) — kept in sync as of 2026-11-04.
 
 ## Commands (use `npx nx` — no npm scripts)
 
@@ -12,15 +12,18 @@ npx nx serve sigec-cierre        # dev server on :4400
 npx nx test <project>            # Jest
 npx nx test <project> -- --testPathPattern=<pattern>
 npx nx test <project> -- -t "test name"
-npx nx e2e <project>-e2e        # Playwright e2e
+npx nx e2e <project>-e2e        # Playwright e2e (see note below)
 npx nx lint <project>
 npx nx build <project>           # → dist/apps/<app>/browser/
 npx nx run-many -t lint,test,build
 npx nx affected -t lint,test,build
+npx nx check-tailwind-tokens kofix-ejecucion   # classes Tailwind JIT silently drops (ADR 0008)
 npx nx show projects
 npx nx graph
 npx nx reset                     # clear cache (after version/generator/config changes)
 ```
+
+**E2E is mostly generated scaffolding:** each project has only `example.spec.ts`, which still expects the generator's `Welcome` heading (kofix also has `menus-seguridad.spec.ts`) — not a verification gate. Each `playwright.config.ts` uses its app's own port (`sigec-rtf` passes `--port=4300` in `webServer.command`).
 
 **Docker builds:** `Dockerfile` (kofix-ejecucion, `--configuration=quality`), `Dockerfile.sat-ui` (`production`), `Dockerfile.sigec-rtf-ui` and `Dockerfile.sigec-cierre-ui` (`quality`; their Nginx proxies the relative API paths of `environment.quality.ts`). API Dockerfiles, compose and deploy scripts live in `AGROIDEAS/despliegue`.
 
@@ -41,7 +44,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 **Apps must not** import `primeng`, `@angular/material`, `@angular/cdk`, `bootstrap`, `sweetalert2`, `leaflet`, `chart.js`, `pdfjs-dist` directly — consume via `@agroideas/*` libs (`no-restricted-imports` in root `eslint.config.js`).
 
-**Watch out:** `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
+**Watch out:** the `menu` lib is aliased `@agroideas-frontend-monorepo/menu` in `tsconfig.base.json` (not `@agroideas/menu`). It exports `MenuItem`/`MenuAgrupado` via `index.ts` but `MenuRepository` (in `domain/repositories/`) is not exported.
 
 **Shared layout:** `UiAppShellComponent` (`@agroideas/ui`) provides the responsive sidebar (static at `md+`, off-canvas + backdrop below, closes on navigation and `Escape`); apps plug their menu into the `[shell-brand] [shell-nav] [shell-user] [shell-header]` slots. Its only input is `colapsadoEscritorio` (optional desktop icon-only collapse, owned by the host app). `sigec-rtf`, `sigec-cierre`, `sat-ui`, and now `kofix-ejecucion` all use it from a single layout component — kofix migrated off its own PrimeNG `LayoutService`.
 
@@ -52,27 +55,27 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - **kofix-ejecucion** (:7100, `scope:kofix`): Clean Architecture — `domain/` (models, abstract repos, usecases), `data/` (repo impls, mappers), `presentation/` (pages lazy-loaded via `loadComponent`). Composition root (`app.config.ts`) binds abstract repos to impls via `useExisting`. `inlineStyleLanguage: "css"` (global, but most components use `.sass`). Auth via shared `@agroideas/auth` interceptor. Real backend permission provider. Talks to three .NET APIs (`apiSeguridad`, `apiEjecucion`, `apiGeneral`). Needs `@angular/localize/init` polyfill. Allows `sweetalert2` and `leaflet` as CommonJS deps.
 - **sat-ui** (:4200, `scope:sat`): Feature-based — `core/` (services, guards), `features/`, `shared/`. `inlineStyleLanguage: "scss"`. Auth now goes through the shared `authInterceptor`/`AUTH_LOGOUT_HANDLER` from `@agroideas/auth` (no local interceptor anymore). Permissions provider is a stub (`of([])`). Its backend is a different one (:7081, `txtNombres`/`codUsuario`), so it does not use the `sel-usuario` mapper — only `inicialesDeNombre`.
 - **sigec-rtf** (:4300, `scope:sigec`): Feature-based with `core/` (guards, services) and `features/` (login, oa-dashboard, reportes, etc.). `inlineStyleLanguage: "scss"`. Newer app, follows SAT-like structure. Session comes from `sel-api-seguridad` (:7101) via the shared mapper.
-- **sigec-cierre** (:4400, `scope:sigec`): Feature-based with `core/` and `features/` (login, bandeja, mi-cierre, sin-acceso), built under ADR 0013. Same auth backend as sigec-rtf but its own role catalog (`core/models/rol-cierre.model.ts`): all roles kept, unknown roles dropped, guards redirect to `rutaInicio(roles)`.
+- **sigec-cierre** (:4400, `scope:sigec`): Feature-based with `core/` and `features/` (login, bandeja, mi-cierre, expediente, evaluaciones-impacto, administracion, sin-acceso), built under ADR 0013 (UX: ADR 0014 and 0015). Same auth backend as sigec-rtf but its own role catalog (`core/models/rol-cierre.model.ts`): all roles kept, unknown roles dropped, guards redirect to `rutaInicio(roles)`. Tunable values go in `environment*.ts`, typed by `environments/app-settings.model.ts`.
 
 ## Lib state
 
 | Lib | Status | Exports |
 |-----|--------|---------|
 | `theme` | done | `tokens.css` (HSL vars), `tailwind-preset.js`, `base.css`, `theme.ts` |
-| `ui` | done | Standalone components — `ui-app-shell`, `ui-button`, `ui-card`, `ui-status-pill`, `ui-kpi`, `ui-progress-bar`, `ui-modal`, `ui-filter-bar`, `ui-data-table`, `ui-pagination`, `ui-select-search`, `ui-countdown`, `ui-dropzone`, `ui-file-chip` — plus `ToastService`. Heavy ones live in separate entry points, not the barrel: `@agroideas/ui/chart` (`ui-chart`, Chart.js), `@agroideas/ui/map` (`ui-map`, Leaflet), `@agroideas/ui/pdf-viewer` (`ui-pdf-viewer`, pdf.js) |
-| `utils` | done | `cn`, `currency`, `date-formatter`, `jwt.util`, `permissions`, `response.dto`, `storage-keys`, `format-date` pipe, `roles` |
+| `ui` | done | Standalone components — `ui-app-shell`, `ui-button`, `ui-card`, `ui-status-pill`, `ui-kpi`, `ui-progress-bar`, `ui-modal`, `ui-filter-bar`, `ui-data-table`, `ui-pagination`, `ui-select-search`, `ui-autocomplete`, `ui-tabs`, `ui-stepper`, `ui-state`, `ui-countdown`, `ui-dropzone`, `ui-file-chip`, `ui-info-tooltip`, `ui-toast-container` — plus `ToastService`. Heavy ones live in separate entry points, not the barrel: `@agroideas/ui/chart` (`ui-chart`, Chart.js), `@agroideas/ui/map` (`ui-map`, Leaflet), `@agroideas/ui/pdf-viewer` (`ui-pdf-viewer`, pdf.js) |
+| `utils` | done | `cn`, `currency`, `convenio-number`, `date-formatter`, `error-message`, `jwt.util`, `permissions`, `response.dto`, `storage-keys`, `format-date` and `format-convenio` pipes, `roles` |
 | `security` | done | `PermissionService`, `HasPermissionDirective`, `permissionGuard` |
-| `auth` | done | `authInterceptor` (HttpInterceptorFn), `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY` injection tokens |
+| `auth` | done | `authInterceptor` (HttpInterceptorFn); `AUTH_LOGOUT_HANDLER`, `AUTH_TOKEN_KEY`, `AUTH_LOGIN_ROUTE` injection tokens; `sel-usuario` mapper (`mapSelUsuario`, `nombreCompleto`, `iniciales`, `inicialesDeNombre`, `normalizarRol`) |
 | `feedback` | done | `AlertService` (SweetAlert2 wrapper) — methods: `show`, `toast`, `showResponse`, `confirm` |
-| `menu` | done | Exports `MenuItem`/`MenuAgrupado` models and stub component. `MenuRepository` (in `domain/repositories/`) is not exported. |
-| `http` | scaffold | Only re-exports `ResponseDto` from `@agroideas/utils`; no own code |
+| `menu` | scaffold | Exports `MenuItem`/`MenuAgrupado` models and stub component; no app consumes it. `MenuRepository` (in `domain/repositories/`) is not exported. |
+| `http` | scaffold | Only re-exports `ResponseDto` from `@agroideas/utils`; its generated component isn't exported and no app consumes it |
 
 ## Gotchas
 
 - **ESLint stack pinned** — `eslint 9.14.0` + `typescript-eslint 8.13.0` must be upgraded together (enforced via `overrides` in `package.json`). `angular-eslint` follows `^18.3.0`. Mismatches crash linting.
 - `@typescript-eslint/ban-ts-comment` is **off for `**/*.html`** (Nx flat config leaks TS rules onto Angular templates).
 - **Design system chain:** `libs/theme/src/styles/tokens.css` (HSL CSS vars) → `tailwind-preset.js` → `base.css`. No brand hex outside this lib. Apps wire `base.css` in `project.json` `styles` array (NOT `@import` in `.scss` — that leaves `@tailwind` unprocessed). No `postcss.config.js` (managed via Angular build).
-- **kofix-ejecucion lint** passes with 0 errors but 259 warnings (intentional style debt — mostly `no-explicit-any`/`no-unused-vars`). Its `eslint.config.js` has transitional overrides downgrading style rules to `warn` — it does **not** relax `no-restricted-imports`; direct provider imports (PrimeNG/SweetAlert2/Leaflet) are still an error and kofix has none. The a11y template rules were fully remediated under [ADR 0008](docs/adr/0008-remediacion-ui-kofix-ejecucion.md).
+- **kofix-ejecucion lint** passes with 0 errors but 238 warnings as of 2026-11-04 (intentional style debt — mostly `no-explicit-any`/`no-unused-vars`). Its `eslint.config.js` has transitional overrides downgrading style rules to `warn` — it does **not** relax `no-restricted-imports`; direct provider imports (PrimeNG/SweetAlert2/Leaflet) are still an error and kofix has none. The a11y template rules were fully remediated under [ADR 0008](docs/adr/0008-remediacion-ui-kofix-ejecucion.md).
 - **sat-ui** now uses the shared `@agroideas/auth` interceptor (no local `jwt.interceptor.ts`). Its permissions provider is not connected to backend.
 - **All components** are `standalone: true` (no NgModules).
 - **Nx generators:** always pass `--projectNameAndRootFormat=as-provided` or Nx 19.x duplicates names.
@@ -80,12 +83,13 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 - **TypeScript ~5.5.2** — not 5.6+.
 - **Prettier:** `singleQuote: true` (`.prettierrc`).
 - **No CI/CD** — no GitHub workflows, Jenkinsfile, husky, or lint-staged.
+- **Commit messages and ADRs** are written in Spanish; commits describe the change as a full sentence and cite the ADR/phase when there is one.
 
 ## References
 
 - `CONTRIBUTING.md` — generator commands and tag reference
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — full ADR
-- `docs/adr/0002-modernizacion-sat-ui-buenas-practicas-angular.md`
-- `docs/adr/0003-unificacion-visual-reusabilidad-sat-ui.md`
+- `docs/adr/` — numbered ADRs (0002–0015) by app/feature
+- `apps/{kofix-ejecucion,sigec-rtf,sigec-cierre}/CLAUDE.md` — app-specific rules
 - `docs/plan-implementacion-monorepo.md` — phased plan
 - `docs/phase-0/version-pins.md` — why the lint stack is pinned

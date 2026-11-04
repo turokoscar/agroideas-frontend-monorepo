@@ -25,8 +25,8 @@ it requires reading across these layers:
 - **Transitional ESLint override** (`apps/kofix-ejecucion/eslint.config.js`): it downgrades
   inherited style rules (`no-explicit-any`, `no-unused-vars`, `no-non-null-assertion`, etc.) to
   `warn`. It does **not** touch `no-restricted-imports` — direct PrimeNG/SweetAlert2/Leaflet
-  imports are still an `error` and kofix has none. kofix lint passes with 0 errors but 259
-  warnings (tracked debt, to shrink as this code moves into `@agroideas/ui`/`@agroideas/utils`;
+  imports are still an `error` and kofix has none. kofix lint passes with 0 errors but 238
+  warnings as of 2026-11-04 (tracked debt, to shrink as this code moves into `@agroideas/ui`/`@agroideas/utils`;
   mostly `no-explicit-any`/`no-unused-vars` now — the a11y template rules
   (`label-has-associated-control`, `interactive-supports-focus`, `click-events-have-key-events`)
   were fully resolved under [ADR 0008](../../docs/adr/0008-remediacion-ui-kofix-ejecucion.md)

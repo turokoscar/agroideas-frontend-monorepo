@@ -28,10 +28,19 @@ npx nx serve sat-ui                      # :4200 (Angular default)
 npx nx serve sigec-rtf --port=4300       # no port in project.json — without the flag it
                                          #   takes :4200 and collides with sat-ui
 npx nx serve sigec-cierre                # :4400 (port in project.json)
+
+npx nx lint <project>                    # also `nx test <project>` (Jest)
+npx nx build <project>                   # → dist/apps/<app>/browser/ (default config: production)
+npx nx affected -t lint,test,build       # or `nx run-many -t ...` for everything
+npx nx check-tailwind-tokens kofix-ejecucion   # classes Tailwind JIT silently drops (ADR 0008)
 ```
 
 No CI/CD is configured (no GitHub workflows, Jenkinsfile, husky, or lint-staged) — lint/test/build
-are run manually or via the commands above.
+are run manually with the commands above.
+
+E2E (`nx e2e <app>-e2e`, Playwright) is mostly generated scaffolding: each project has only
+`example.spec.ts`, which still expects the generator's `Welcome` heading (kofix also has
+`menus-seguridad.spec.ts`). Don't treat it as a verification gate.
 
 Run a single test file / single test:
 ```sh
@@ -65,7 +74,8 @@ API Dockerfiles, compose services and `deploy_sigec_*.sh` scripts live in `AGROI
 - `apps/{kofix-ejecucion, sat-ui, sigec-rtf, sigec-cierre}` (scopes `kofix`/`sat`/`sigec`) —
   apps in different scopes never import each other.
 - `libs/{theme,ui,auth,http,feedback,security,utils,menu}` — all `scope:shared`, imported as
-  `@agroideas/*`.
+  `@agroideas/*` (except `menu`, still aliased `@agroideas-frontend-monorepo/menu` in
+  `tsconfig.base.json`).
 - Every `project.json` carries `scope:*` + `type:*` tags. `@nx/enforce-module-boundaries`
   (root `eslint.config.js`) enforces direction:
   - `scope:kofix|sat|sigec` → same scope or `scope:shared` only.
@@ -143,8 +153,8 @@ shared interceptor.
 ## Critical conventions & gotchas
 
 - **Pinned lint stack — upgrade together, never individually:** `eslint 9.14.0` +
-  `typescript-eslint 8.13.0` + `angular-eslint 18.4.3`, forced via `overrides` in
-  `package.json`. Mismatches crash linting. Rationale: `docs/phase-0/version-pins.md`.
+  `typescript-eslint 8.13.0` are forced via `overrides` in `package.json`; `angular-eslint` is
+  `^18.3.0` (18.4.3 in the lockfile) and must stay compatible. Mismatches crash linting. Rationale: `docs/phase-0/version-pins.md`.
   TypeScript is also pinned (`~5.5.2`, not 5.6+) for the same compatibility reason.
 - `@typescript-eslint/ban-ts-comment` is turned **off for `**/*.html`** in root
   `eslint.config.js` (a fileless TS rule from the Nx preset leaks onto Angular templates).
@@ -157,6 +167,8 @@ shared interceptor.
 - KOFIX specs were converted Jasmine→Jest (`toBeTrue()`→`toBe(true)`, `jasmine.createSpy`→
   `jest.fn`, `jasmine.objectContaining`→`expect.objectContaining`). Keep new specs Jest-native.
 - All components are `standalone: true` (no NgModules).
+- Commit messages and ADRs are written in Spanish; commits describe the change as a full
+  sentence and cite the ADR/phase when there is one (e.g. `... (ADR 0014 Fase 5)`).
 
 ## State of the libs (Fase 3 in progress)
 **Heavy `ui` components have their own entry points** — `@agroideas/ui/chart` (Chart.js),
@@ -169,13 +181,17 @@ apps; keep heavy providers out of it and never add module-level side effects (e.
 `standard_fonts/`) are copied from `node_modules/pdfjs-dist` via `assets` in the consuming
 app's `project.json` (today only `sigec-rtf`) — never commit copies to `public/`.
 
-`@agroideas/http` is still Nx scaffolding (an unused placeholder component) — nothing
-depends on it yet. `@agroideas/menu` exports `MenuItem`/`MenuAgrupado` models and a menu
+`@agroideas/http` is still Nx scaffolding — its barrel only re-exports `ResponseDto` from
+`@agroideas/utils` (the generated component isn't exported) and nothing depends on it yet.
+`@agroideas/menu` exports `MenuItem`/`MenuAgrupado` models and a menu
 component stub from `index.ts`, but its `MenuRepository` (in `domain/repositories/`) is not
 exported and no app consumes the lib yet — treat it the same as `http`, not as a populated lib.
 
 ## Key references
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — decisions + implementation log.
+- `docs/adr/` — numbered ADRs (0002–0015) by app/feature; check the relevant one before
+  changing a flow it covers.
+- `apps/{kofix-ejecucion,sigec-rtf,sigec-cierre}/CLAUDE.md` — app-specific rules.
 - `docs/plan-implementacion-monorepo.md` — phased plan with acceptance criteria.
 - `docs/phase-0/version-pins.md` — why the lint stack is pinned.
 - `CONTRIBUTING.md` — tag conventions and generator commands.
