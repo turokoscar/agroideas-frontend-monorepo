@@ -199,8 +199,8 @@ export class NoObjecionPageComponent implements OnInit {
                         this.loadNoObjeciones();
                     },
                     error: (err) => {
-                        // Error handled by AlertService or removed
-                        this.alertService.show('Error', 'No se pudo eliminar el registro.', 'error');
+                        // La API explica el rechazo (periodo cerrado, convenio fuera de la cartera, …).
+                        this.alertService.show('Error', err?.error?.mensaje || 'No se pudo eliminar el registro.', 'error');
                     }
                 });
             }

@@ -144,6 +144,14 @@ describe('EjecucionDetailPageComponent', () => {
         expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/convenios', 5]);
     });
 
+    it('desde el estado de error vuelve al listado de convenios', () => {
+        createComponent('5');
+
+        component.irAConvenios();
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith(['/main/convenios']);
+    });
+
     it('should format currency, defaulting missing values to a dash', () => {
         createComponent('5');
         expect(component.formatCurrency(undefined)).toBe('-');

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { NoObjecionPageComponent } from './no-objecion.page';
@@ -138,6 +138,18 @@ describe('NoObjecionPageComponent', () => {
 
             expect(mockRepo.delete).toHaveBeenCalledWith(1);
             expect(mockAlert.toast).toHaveBeenCalledWith('No Objeción eliminada con éxito.');
+        });
+
+        it('muestra el motivo que devuelve la API cuando rechaza la eliminación', async () => {
+            fixture.detectChanges();
+            component.noObjeciones.set([buildNoObjecion({ id: 1, numSolicitudes: 0 })]);
+            mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: true });
+            mockRepo.delete = jest.fn().mockReturnValue(throwError(() => ({ status: 400, error: { mensaje: 'El periodo 05/2026 está cerrado.' } })));
+
+            component.deleteNoObjecion(1);
+            await Promise.resolve();
+
+            expect(mockAlert.show).toHaveBeenCalledWith('Error', 'El periodo 05/2026 está cerrado.', 'error');
         });
     });
 

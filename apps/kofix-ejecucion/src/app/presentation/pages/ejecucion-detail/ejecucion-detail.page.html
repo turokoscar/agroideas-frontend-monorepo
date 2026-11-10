@@ -92,4 +92,14 @@
       </div>
     </div>
   </div>
+} @else if (stateService.error()) {
+  <!-- Carga fallida (p. ej. 403: el convenio no está en la cartera del usuario) -->
+  <div class="px-6 py-8 w-full">
+    <ui-state kind="error" [message]="stateService.error()!" retryLabel="" framed />
+    <div class="mt-4 flex justify-center">
+      <ui-button label="Volver a convenios" icon="arrow_back" severity="secondary" appearance="soft" (onClick)="irAConvenios()" />
+    </div>
+  </div>
+} @else if (stateService.loading()) {
+  <ui-state kind="loading" message="Cargando el convenio…" />
 }

@@ -1,4 +1,4 @@
-import { UIButtonComponent, UiKpiComponent } from '@agroideas/ui';
+import { UIButtonComponent, UiKpiComponent, UiStateComponent } from '@agroideas/ui';
 import { formatConvenioNumber, formatCurrency } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -25,6 +25,7 @@ import { KardexVarianzaTabComponent } from '../../components/kardex-varianza-tab
         CommonModule,
         UiKpiComponent,
         UIButtonComponent,
+        UiStateComponent,
         ConvenioDetailTabsComponent,
         NoObjecionPageComponent,
         DesembolsoPageComponent,
@@ -91,6 +92,11 @@ export class EjecucionDetailPageComponent implements OnInit {
                 this.loadingKardex.set(false);
             }
         });
+    }
+
+    /** Desde el estado de error: no hay convenio al que volver. */
+    irAConvenios(): void {
+        this.router.navigate(['/main/convenios']);
     }
 
     goBack(): void {

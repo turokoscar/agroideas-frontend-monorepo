@@ -1,4 +1,4 @@
-import { UIButtonComponent, UiKpiComponent } from '@agroideas/ui';
+import { UIButtonComponent, UiKpiComponent, UiStateComponent } from '@agroideas/ui';
 import { formatConvenioNumber, formatCurrency } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -17,7 +17,7 @@ import { ConvenioFichaTecnicaTabComponent } from '../../components/convenio-fich
 @Component({
     selector: 'app-convenio-detail-page',
     standalone: true,
-    imports: [CommonModule, UiKpiComponent, UIButtonComponent, ConvenioFichaTecnicaTabComponent],
+    imports: [CommonModule, UiKpiComponent, UIButtonComponent, UiStateComponent, ConvenioFichaTecnicaTabComponent],
     templateUrl: './convenio-detail.page.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

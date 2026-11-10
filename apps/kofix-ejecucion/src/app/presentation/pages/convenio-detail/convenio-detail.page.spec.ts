@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AlertService } from '@agroideas/feedback';
 import { ConvenioDetailPageComponent } from './convenio-detail.page';
 import { ConvenioStateService } from '../../../shared/services/convenio-state.service';
@@ -69,6 +70,20 @@ describe('ConvenioDetailPageComponent', () => {
 
         expect(mockUseCase.execute).toHaveBeenCalledWith(5);
         expect(component.stateService.convenio()?.id).toBe(5);
+    });
+
+    it('muestra el mensaje de la API y un botón para volver si no puede cargar el convenio (403)', () => {
+        mockUseCase = {
+            execute: jest.fn().mockReturnValue(throwError(() => new HttpErrorResponse({
+                status: 403, error: { exitoso: false, mensaje: 'Acceso denegado. Este convenio no pertenece a su cartera asignada.' }
+            })))
+        };
+        createComponent('9').detectChanges();
+
+        const html: HTMLElement = fixture.nativeElement;
+        expect(html.querySelector('[role="alert"]')?.textContent).toContain('no pertenece a su cartera');
+        expect(html.textContent).not.toContain('Asociación');
+        expect(html.textContent).toContain('Volver a convenios');
     });
 
     it('should not attempt to load without a route id', () => {
