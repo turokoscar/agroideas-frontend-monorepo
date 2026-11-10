@@ -422,20 +422,15 @@
 
   <!-- Resultado: encabeza el paso 3 al editar, cierra la sección con el informe firmado -->
   <ng-template #resultadoEvaluacion>
-      <fieldset id="a22-resultado" tabindex="-1" class="space-y-2 focus:outline-none" [attr.aria-invalid]="errorDe('a22-resultado') ? true : null"
-        [attr.aria-describedby]="errorDe('a22-resultado') ? 'a22-resultado-error' : null">
-        <legend class="form-label">Resultado de la evaluación <span class="form-label-required">*</span></legend>
-        <div class="flex flex-wrap gap-2">
-          @for (r of resultados; track r.valor) {
-            <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs"
-              [ngClass]="a.tipResultado === r.valor ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground'">
-              <input type="radio" name="a22-resultado" [value]="r.valor" [disabled]="ro" [(ngModel)]="a.tipResultado" (ngModelChange)="marcarSucio()" />
-              {{ r.etiqueta }}
-            </label>
-          }
-        </div>
+      <div class="form-field sm:max-w-md">
+        <label class="form-label" for="a22-resultado">Resultado de la evaluación <span class="form-label-required">*</span></label>
+        <select id="a22-resultado" class="form-select" [appInvalido]="errorDe('a22-resultado')" [disabled]="ro"
+          [(ngModel)]="a.tipResultado" (ngModelChange)="marcarSucio()">
+          <option [ngValue]="null">Seleccionar</option>
+          @for (r of resultados; track r.valor) { <option [ngValue]="r.valor">{{ r.etiqueta }}</option> }
+        </select>
         <app-error-campo para="a22-resultado" [mensaje]="errorDe('a22-resultado')" />
-      </fieldset>
+      </div>
   </ng-template>
 
   <!-- Texto largo del informe (ADR 0015, D7): ayuda bajo la etiqueta, crece con el contenido y cuenta los caracteres -->
@@ -481,7 +476,8 @@
           <span class="min-w-0 flex-1">
             <span class="block font-semibold text-foreground">{{ vacio }}</span>
             @if (seccion && !ro) {
-              <span class="block text-muted-foreground">Si la verificación de campo constató información que no se reportó (por ejemplo, ventas), agréguela como indicador.</span>
+              <span class="block text-muted-foreground">Si la verificación de campo constató información que no se reportó (por ejemplo, ventas), agréguela como indicador.
+                Mientras no haya indicadores, el análisis es opcional.</span>
             }
           </span>
           @if (seccion && !ro) {
@@ -495,7 +491,7 @@
           <div class="flex justify-end"><ui-button size="sm" appearance="soft" icon="add" label="Agregar indicador" (onClick)="agregarFila(seccion)" /></div>
         }
       }
-      <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-' + analisis, etiqueta: 'Análisis', campo: analisis, obligatorio: true, filas: 3, clase: '' }" />
+      <ng-container [ngTemplateOutlet]="campoTexto" [ngTemplateOutletContext]="{ id: 'a22-' + analisis, etiqueta: 'Análisis', campo: analisis, obligatorio: !seccion || filas.length > 0, filas: 3, clase: '' }" />
     </div>
   </ng-template>
 

@@ -392,7 +392,7 @@ describe('InformeEvaluacionComponent', () => {
       expect(titulos(el)).toContain('VI. Práctica ambiental');
       expect(titulos(el)).not.toContain('IV. Ejecución financiera');
       expect(c.pasosStepper().map(p => [p.key, p.status, p.subtitle])).toEqual([
-        ['indicadores', 'current', 'II, III y VI · 0 de 5'],
+        ['indicadores', 'current', 'II, III y VI · 0 de 1'], // sin indicadores en 2.2 a III, solo se exige el análisis de 2.1
         ['financiera', 'pending', 'IV · 1 de 3'],
         ['conclusiones', 'pending', 'VII a XI · 0 de 5'],
         ['firma', 'pending', 'Con el informe completo']
@@ -561,5 +561,44 @@ describe('InformeEvaluacionComponent', () => {
       api.obtenerAnexo22.mockReturnValue(of(anexo({ ideAnexo22: 9, faltantes: [], estAnexo22: 'FIRMADO' })));
       expect((crear().nativeElement as HTMLElement).querySelector('[role="toolbar"]')).toBeNull();
     });
+  });
+
+  it('el resultado se elige en un select que empieza en "Seleccionar"', async () => {
+    const fixture = crear();
+    const c = fixture.componentInstance;
+    c.irAPaso('conclusiones');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const resultado = fixture.nativeElement.querySelector('#a22-resultado') as HTMLSelectElement;
+
+    expect(resultado.tagName).toBe('SELECT');
+    expect(Array.from(resultado.options).map(o => o.textContent?.trim())).toEqual([
+      'Seleccionar', 'Convenio Ejecutado Conforme', 'Convenio Ejecutado con Observaciones', 'Convenio No Ejecutado'
+    ]);
+    expect(resultado.selectedIndex).toBe(0);
+
+    resultado.selectedIndex = 2;
+    resultado.dispatchEvent(new Event('change'));
+    expect(c.anexo()?.tipResultado).toBe('CON_OBSERVACIONES');
+    expect(c.sucio()).toBe(true);
+  });
+
+  it('el análisis de una sección sin indicadores no lleva asterisco; al agregar un indicador, sí', () => {
+    const fixture = crear();
+    const c = fixture.componentInstance;
+    const el: HTMLElement = fixture.nativeElement;
+    const obligatorio = (id: string) => !!el.querySelector(`label[for="${id}"] .form-label-required`);
+
+    expect(obligatorio('a22-txtAnalisisPrecios')).toBe(false);
+    expect(obligatorio('a22-txtAnalisisProduccion')).toBe(true);
+    expect(el.textContent).toContain('Mientras no haya indicadores, el análisis es opcional.');
+
+    c.agregarFila('precios');
+    const fila = filaEnEdicion(c);
+    fila.txtConcepto = 'Precio en chacra';
+    c.aceptarIndicador(fila);
+    fixture.detectChanges();
+    expect(obligatorio('a22-txtAnalisisPrecios')).toBe(true);
+    expect(c.validacion.faltantes().map(f => f.id)).toContain('a22-txtAnalisisPrecios');
   });
 });

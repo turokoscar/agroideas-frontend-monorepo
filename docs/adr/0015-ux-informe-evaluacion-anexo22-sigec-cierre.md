@@ -237,6 +237,7 @@ hallazgos se anotan en el Registro.
 
 ### Fase 6 — Análisis opcional en secciones sin indicadores (H-07) ⚪ condicional
 Solo si el owner lo aprueba (punto abierto 2).
+- ✅ Aprobada e implementada el 28/10/2026 (ver Registro). El PDF no necesitó cambios: un análisis vacío ya se imprime como "No se reportó información.".
 - **API:** `CompletitudAnexo22` deja de exigir el análisis de 2.2, 2.3 o 2.4 (y quizá III) cuando la sección no tiene
   indicadores; el PDF muestra "No aplica" en ese caso. Pruebas.
 - **UI:** `faltantesAnexo22` con la misma regla; el análisis de una sección vacía se muestra como opcional.
@@ -502,3 +503,14 @@ la UN ya no los edita.
   - **API:** `PrecargaAnexo22` arma Logros con una viñeta por logro del Acta (prueba nueva; 388 en verde). Lato, la
     fuente de QuestPDF, tiene el carácter "•". Un borrador ya guardado conserva su texto.
 - **Pruebas:** sigec-cierre 256; lint y build en verde. Revisado en el navegador sin modificar el borrador guardado.
+
+### Fase 6 — 2026-10-28: el análisis de una sección sin indicadores es opcional (sin commit)
+**Decisión del owner** (resuelve el punto abierto 2): si 2.2, 2.3, 2.4 o III no tienen indicadores, su análisis no se
+exige. El de 2.1 se sigue exigiendo siempre, porque sus indicadores vienen del SEL. Si se agrega un indicador a la
+sección, su análisis vuelve a ser obligatorio.
+- **sigec-api-cierre:** `CompletitudAnexo22` exige esos cuatro análisis solo con filas en su sección. El PDF ya
+  imprimía un análisis vacío como "No se reportó información.". Prueba nueva; 389 en verde.
+- **sigec-cierre:** `requisitosAnexo22` usa la misma regla, así que el avance cuenta solo los requisitos que aplican
+  (en el expediente 1, el paso 1 pasa de 5 requisitos a 1). El análisis de una sección vacía va sin asterisco, y su
+  línea "Sin indicadores…" avisa que el análisis es opcional. Pruebas nuevas en `validacion-anexo22.spec.ts` e
+  `informe-evaluacion.component.spec.ts`; 259 en verde, lint y build incluidos.

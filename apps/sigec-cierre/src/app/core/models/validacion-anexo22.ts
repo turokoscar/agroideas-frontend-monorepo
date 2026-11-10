@@ -6,7 +6,8 @@ const lleno = (texto: string | null | undefined) => !!texto && texto.trim().leng
 /**
  * Lo que falta para presentar el Anexo 22, con las mismas reglas que `CompletitudAnexo22` de la API (que sigue siendo la
  * que decide). Las tablas de indicadores no se exigen; lo que viene del SEL tampoco. Los análisis de las secciones II y
- * III usan el id `a22-<campo>` de la plantilla `bloque`.
+ * III usan el id `a22-<campo>` de la plantilla `bloque`. Los de 2.2, 2.3, 2.4 y III solo se exigen si su sección tiene
+ * indicadores (sin datos no hay nada que analizar); el de 2.1 siempre, porque sus indicadores vienen del SEL.
  */
 export function faltantesAnexo22(a: Anexo22Datos): ErrorCampo[] {
   return requisitosAnexo22(a)
@@ -33,11 +34,15 @@ export function requisitosAnexo22(a: Anexo22Datos): RequisitoAnexo22[] {
   const exigir = (presente: boolean, id: string | null, mensaje: string) => {
     requisitos.push({ paso, cumple: presente, id, mensaje });
   };
+  /** Análisis de una sección manual: solo es requisito si la sección tiene indicadores. */
+  const exigirAnalisis = (filas: readonly unknown[], texto: string | null | undefined, id: string, mensaje: string) => {
+    if (filas.length > 0) exigir(lleno(texto), id, mensaje);
+  };
   exigir(lleno(a.txtAnalisisProduccion), 'a22-txtAnalisisProduccion', 'Escriba el análisis de producción y productividad (2.1).');
-  exigir(lleno(a.txtAnalisisPrecios), 'a22-txtAnalisisPrecios', 'Escriba el análisis de precios (2.2).');
-  exigir(lleno(a.txtAnalisisComercializacion), 'a22-txtAnalisisComercializacion', 'Escriba el análisis de comercialización (2.3).');
-  exigir(lleno(a.txtAnalisisIngresos), 'a22-txtAnalisisIngresos', 'Escriba el análisis de ingresos (2.4).');
-  exigir(lleno(a.txtAnalisisObjetivos), 'a22-txtAnalisisObjetivos', 'Escriba el análisis del cumplimiento de metas (III).');
+  exigirAnalisis(a.precios, a.txtAnalisisPrecios, 'a22-txtAnalisisPrecios', 'Escriba el análisis de precios (2.2).');
+  exigirAnalisis(a.comercializacion, a.txtAnalisisComercializacion, 'a22-txtAnalisisComercializacion', 'Escriba el análisis de comercialización (2.3).');
+  exigirAnalisis(a.ingresos, a.txtAnalisisIngresos, 'a22-txtAnalisisIngresos', 'Escriba el análisis de ingresos (2.4).');
+  exigirAnalisis(a.objetivosEspecificos, a.txtAnalisisObjetivos, 'a22-txtAnalisisObjetivos', 'Escriba el análisis del cumplimiento de metas (III).');
   paso = 'financiera';
   exigir(
     a.financiamiento.some(f => f.tipFuente.toUpperCase() === 'AGROIDEAS'),
