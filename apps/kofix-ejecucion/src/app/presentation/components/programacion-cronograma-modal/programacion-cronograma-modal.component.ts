@@ -117,7 +117,7 @@ export class ProgramacionCronogramaModalComponent implements OnInit {
 
     loadData(): void {
         this.loading.set(true);
-        this.programacionRepo.getCronograma(this.item().id).subscribe({
+        this.programacionRepo.getCronograma(this.item().id, this.item().postulanteID!).subscribe({
             next: (detalles) => {
                 const currentMeses = [...this.meses()];
                 detalles.forEach(d => {

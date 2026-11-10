@@ -31,8 +31,9 @@ export class ProgramacionRepositoryImpl extends ProgramacionRepository {
         );
     }
 
-    override getCronograma(marcoLogicoId: number): Observable<any[]> {
-        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/items/${marcoLogicoId}/cronograma`).pipe(
+    override getCronograma(marcoLogicoId: number, postulanteId: number): Observable<any[]> {
+        // postulanteId: la API valida que el convenio esté en la cartera del usuario y que el ítem le pertenezca.
+        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/items/${marcoLogicoId}/cronograma`, { params: { postulanteId } }).pipe(
             map(res => res.datos || [])
         );
     }

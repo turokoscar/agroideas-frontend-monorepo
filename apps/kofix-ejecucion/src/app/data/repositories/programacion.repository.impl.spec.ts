@@ -31,12 +31,12 @@ describe('ProgramacionRepositoryImpl', () => {
     });
 
     it('should default getCronograma to an empty array', (done) => {
-        service.getCronograma(9).subscribe((items) => {
+        service.getCronograma(9, 190432).subscribe((items) => {
             expect(items).toEqual([]);
             done();
         });
 
-        httpMock.expectOne(`${baseUrl}/items/9/cronograma`).flush({});
+        httpMock.expectOne(`${baseUrl}/items/9/cronograma?postulanteId=190432`).flush({});
     });
 
     it('should fetch the estado-bloqueo of a postulante', (done) => {

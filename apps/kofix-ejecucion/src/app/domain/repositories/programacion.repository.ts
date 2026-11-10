@@ -9,7 +9,7 @@ export interface ProgramacionItemsResponse {
 export abstract class ProgramacionRepository {
     abstract getByPostulante(postulanteId: number, page: number, pageSize: number): Observable<ProgramacionItemsResponse>;
 
-    abstract getCronograma(marcoLogicoId: number): Observable<DetalleCronograma[]>;
+    abstract getCronograma(marcoLogicoId: number, postulanteId: number): Observable<DetalleCronograma[]>;
 
     abstract saveCronograma(request: GuardarCronogramaRequest): Observable<any>;
 

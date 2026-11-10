@@ -66,6 +66,12 @@ describe('ProgramacionCronogramaModalComponent', () => {
         });
     });
 
+    it('should request the cronograma with the item and its postulante', () => {
+        createComponent(buildItem({ id: 7, postulanteID: 190432 })).detectChanges();
+
+        expect(mockRepo.getCronograma).toHaveBeenCalledWith(7, 190432);
+    });
+
     it('should merge the backend cronograma into the initialized meses array', () => {
         mockRepo.getCronograma = jest.fn().mockReturnValue(of([{ mes: 2, metaFisica: 10, metaFinanciera: 100 }]));
 
