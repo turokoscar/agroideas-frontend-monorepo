@@ -1,4 +1,4 @@
-<div class="p-6 md:p-8 space-y-8 animate-fade-in font-display w-full max-w-full overflow-hidden block">
+<div class="page-container animate-fade-in font-display w-full max-w-full overflow-hidden">
     <ui-page-header class="border-b border-border pb-5" title="Resumen Ejecutivo" subtitle="Estado de ejecución presupuestal y convenios vigentes en el sistema.">
         <!-- Selector único de período: gobierna todos los gráficos del año -->
         <div page-header-actions class="flex items-center gap-2">
@@ -51,7 +51,7 @@
     }
 
     <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- 8 Columns Chart -->
         <div class="lg:col-span-8 w-full max-w-full overflow-hidden block">
             @if (!loadingChart() && errorChart()) {

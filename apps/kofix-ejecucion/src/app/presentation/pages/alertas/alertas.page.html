@@ -1,7 +1,7 @@
-<div class="px-6 py-4">
-    <ui-page-header class="mb-6" title="Alertas" subtitle="Convenios que requieren atención" />
+<div class="page-container">
+    <ui-page-header title="Alertas" subtitle="Convenios que requieren atención" />
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         @for (kpi of kpis(); track kpi.label) {
             <app-ui-kpi
                 [label]="kpi.label"

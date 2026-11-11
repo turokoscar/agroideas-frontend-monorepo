@@ -1,6 +1,6 @@
-<div class="page-container p-4 md:p-8">
+<div class="page-container">
     <!-- Header -->
-    <ui-page-header class="mb-6" title="Kardex de Ejecución" subtitle="Vista consolidada de todos los movimientos financieros">
+    <ui-page-header title="Kardex de Ejecución" subtitle="Vista consolidada de todos los movimientos financieros">
         @if (puedeCerrarMes()) {
             <ui-button
                 page-header-actions
@@ -13,7 +13,7 @@
     </ui-page-header>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <app-ui-kpi
             label="Movimientos"
             [value]="summary().totalMovimientos.toString()"
