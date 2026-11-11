@@ -58,6 +58,22 @@ describe('ReporteMensualChartComponent', () => {
         expect(ejecutado.data[0]).toBe(10);
     });
 
+    it('no grafica el saldo si la API no lo envía', () => {
+        expect(component.datasets().map(d => d.label)).toEqual(['Programado', 'Ejecutado']);
+    });
+
+    it('grafica el saldo acumulado como tercera serie cuando la API lo envía', () => {
+        fixture.componentRef.setInput('data', [
+            { mes: 1, programado: 1000, ejecutado: 300, saldo: 700 },
+            { mes: 2, programado: 500, ejecutado: 900, saldo: 300 }
+        ]);
+
+        const saldo = component.datasets()[2];
+
+        expect(saldo.label).toBe('Saldo');
+        expect(saldo.data.slice(0, 3)).toEqual([700, 300, 0]);
+    });
+
     it('should not own a year selector (the page drives the period)', () => {
         expect(fixture.nativeElement.querySelector('select')).toBeNull();
         expect(fixture.nativeElement.textContent).toContain('Año 2026');

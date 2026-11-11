@@ -41,6 +41,8 @@ export interface ReporteMensualItem {
     mes: number;
     programado: number;
     ejecutado: number;
+    /** Programado acumulado menos ejecutado acumulado, desde enero del año hasta este mes. */
+    saldo?: number;
 }
 
 export interface ReporteMensualResponse {
