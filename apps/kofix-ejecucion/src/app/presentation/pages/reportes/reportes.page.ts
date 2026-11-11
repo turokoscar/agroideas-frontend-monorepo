@@ -48,42 +48,6 @@ export class ReportesPageComponent {
             value: ReportesPageComponent.AVANCE_MENSUAL,
             icon: 'grid_view',
             description: 'Programado, ejecutado y saldo por región y mes, con semáforo de desempeño (ADR-028)'
-        },
-        {
-            label: 'Resumen de Ejecución',
-            value: 'resumen-ejecucion',
-            icon: 'analytics',
-            description: 'Ejecución acumulada, saldo disponible y porcentajes por convenio'
-        },
-        {
-            label: 'Kardex de Movimientos',
-            value: 'kardex',
-            icon: 'swap_horiz',
-            description: 'Movimientos de entrada y salida consolidados'
-        },
-        {
-            label: 'Estado de Convenios',
-            value: 'estado-convenios',
-            icon: 'assignment',
-            description: 'Lista de convenios con estado actual'
-        },
-        {
-            label: 'Programación Multianual',
-            value: 'programacion',
-            icon: 'calendar_month',
-            description: 'Programación mensual y anual por convenio'
-        },
-        {
-            label: 'Convenios con Riesgo',
-            value: 'convenios-riesgo',
-            icon: 'warning',
-            description: 'Convenios que presentan alertas o situaciones críticas'
-        },
-        {
-            label: 'Programado vs Ejecutado',
-            value: 'programado-vs-ejecutado',
-            icon: 'compare_arrows',
-            description: 'Comparativo entre montos programados y ejecución real por periodo'
         }
     ];
 

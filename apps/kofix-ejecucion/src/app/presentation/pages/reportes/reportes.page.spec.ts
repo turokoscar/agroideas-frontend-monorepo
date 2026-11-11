@@ -33,8 +33,8 @@ describe('ReportesPageComponent', () => {
     });
 
     it('should select the matching reporte option on change', () => {
-        component.onReporteChange('kardex');
-        expect(component.selectedReporte()?.label).toBe('Kardex de Movimientos');
+        component.onReporteChange(ReportesPageComponent.AVANCE_MENSUAL);
+        expect(component.selectedReporte()?.label).toBe('Avance mensual por región');
     });
 
     it('should clear the selection when the value has no matching option', () => {
@@ -48,8 +48,8 @@ describe('ReportesPageComponent', () => {
         expect(execute).not.toHaveBeenCalled();
     });
 
-    it('ofrece el avance mensual por región como primer tipo de reporte', () => {
-        expect(component.reporteOptions[0].value).toBe(ReportesPageComponent.AVANCE_MENSUAL);
+    it('lista únicamente los reportes implementados (avance mensual por región)', () => {
+        expect(component.reporteOptions.map(o => o.value)).toEqual([ReportesPageComponent.AVANCE_MENSUAL]);
     });
 
     it('propone por defecto el año en curso', () => {
@@ -101,15 +101,6 @@ describe('ReportesPageComponent', () => {
         fixture.detectChanges();
 
         expect(fixture.nativeElement.textContent).toContain('No hay programación ni ejecución en el periodo');
-    });
-
-    it('los demás tipos siguen pendientes y lo avisan', () => {
-        component.onReporteChange('kardex');
-
-        component.generarReporte();
-
-        expect(execute).not.toHaveBeenCalled();
-        expect(alert.show).toHaveBeenCalledWith('Reporte en preparación', expect.any(String), 'info');
     });
 
     it('deshabilita Excel y PDF mientras no haya un reporte con datos generado', () => {
