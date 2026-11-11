@@ -1,4 +1,4 @@
-import { StatusType, TableColumn, UiDataTableComponent, UiFilterBarComponent, UiKpiComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusType, TableColumn, UiDataTableComponent, UiFilterBarComponent, UiKpiComponent, UiStatusPillComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +15,7 @@ export interface AlertaOption {
     selector: 'app-alertas-page',
     standalone: true,
     imports: [
+        UiPageHeaderComponent,
         CommonModule,
         FormsModule,
         UiDataTableComponent,

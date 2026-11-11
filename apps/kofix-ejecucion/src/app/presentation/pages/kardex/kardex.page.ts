@@ -1,4 +1,4 @@
-import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiKpiComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiKpiComponent, UiStatusPillComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { PERMISSIONS, formatCurrency } from '@agroideas/utils';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
@@ -24,6 +24,7 @@ interface EstadoOption {
     selector: 'app-kardex-page',
     standalone: true,
     imports: [
+        UiPageHeaderComponent,
         CommonModule,
         FormsModule,
         UiDataTableComponent,

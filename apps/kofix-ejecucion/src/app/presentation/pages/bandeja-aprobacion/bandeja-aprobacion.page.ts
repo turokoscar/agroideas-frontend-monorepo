@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, inject, computed } 
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '@agroideas/feedback';
-import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent, UIModalComponent } from '@agroideas/ui';
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent, UIModalComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { formatCurrency } from '@agroideas/utils';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { finalize } from 'rxjs/operators';
@@ -11,6 +11,7 @@ import { finalize } from 'rxjs/operators';
     selector: 'app-bandeja-aprobacion-page',
     standalone: true,
     imports: [
+        UiPageHeaderComponent,
         CommonModule,
         FormsModule,
         UiDataTableComponent,

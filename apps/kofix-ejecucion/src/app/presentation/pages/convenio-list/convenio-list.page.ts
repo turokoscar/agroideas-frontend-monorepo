@@ -1,6 +1,6 @@
 import { PermissionService } from '@agroideas/security';
 import { PERMISSIONS, formatConvenioNumber, formatDate } from '@agroideas/utils';
-import { StatusTone, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusTone, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,7 +35,7 @@ const ESTADO_LABEL: Record<EstadoConvenio, string> = {
 @Component({
     selector: 'app-convenio-list-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
+    imports: [UiPageHeaderComponent, CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
     templateUrl: './convenio-list.page.html',
     styleUrls: ['./convenio-list.page.sass'],
     changeDetection: ChangeDetectionStrategy.OnPush

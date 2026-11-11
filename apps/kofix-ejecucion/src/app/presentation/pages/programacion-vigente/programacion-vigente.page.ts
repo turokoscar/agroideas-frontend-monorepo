@@ -1,4 +1,4 @@
-import { StatusTone, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusTone, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { formatConvenioNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -18,7 +18,7 @@ interface LazyLoadEvent {
 @Component({
     selector: 'app-programacion-vigente-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
+    imports: [UiPageHeaderComponent, CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
     templateUrl: './programacion-vigente.page.html',
     styleUrls: ['./programacion-vigente.page.sass'],
     changeDetection: ChangeDetectionStrategy.OnPush

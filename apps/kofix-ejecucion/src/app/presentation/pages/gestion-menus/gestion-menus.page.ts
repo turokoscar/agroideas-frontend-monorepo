@@ -7,7 +7,8 @@ import {
   UiDataTableComponent, 
   UiFilterBarComponent, 
   UiStatusPillComponent, 
-  UIModalComponent
+  UIModalComponent,
+  UiPageHeaderComponent
 } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { MenuItem } from '../../../domain/models/menu/menu.model';
@@ -19,6 +20,7 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-gestion-menus-page',
   standalone: true,
   imports: [
+    UiPageHeaderComponent,
     CommonModule, 
     FormsModule, 
     ReactiveFormsModule, 

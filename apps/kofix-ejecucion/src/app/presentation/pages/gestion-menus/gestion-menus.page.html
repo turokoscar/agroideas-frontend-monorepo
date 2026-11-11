@@ -1,12 +1,9 @@
 <div class="p-6 space-y-6">
 
   <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">Administración de Menús</h1>
-      <p class="text-sm text-slate-500 mt-1">Configura el árbol de navegación del sistema y restringe el acceso según el rol del usuario.</p>
-    </div>
-  </div>
+  <ui-page-header
+    title="Administración de Menús"
+    subtitle="Configura el árbol de navegación del sistema y restringe el acceso según el rol del usuario." />
 
   <!-- Filtros -->
   <app-ui-filter-bar (onSearch)="applyFilter()" [showAdd]="false">

@@ -1,4 +1,4 @@
-import { UIButtonComponent, UICardComponent, UiFilterBarComponent, UiStateComponent } from '@agroideas/ui';
+import { UIButtonComponent, UICardComponent, UiFilterBarComponent, UiStateComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +21,7 @@ export interface ReporteOption {
     selector: 'app-reportes-page',
     standalone: true,
     imports: [
+        UiPageHeaderComponent,
         CommonModule,
         FormsModule,
         UICardComponent,

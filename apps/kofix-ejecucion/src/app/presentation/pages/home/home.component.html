@@ -1,12 +1,7 @@
 <div class="p-6 md:p-8 space-y-8 animate-fade-in font-display w-full max-w-full overflow-hidden block">
-    <header class="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between dark:border-zinc-800">
-        <div>
-            <h1 class="text-2xl font-black uppercase text-slate-800 dark:text-white tracking-tight leading-tight">Resumen Ejecutivo</h1>
-            <p class="text-slate-500 text-sm mt-1">Estado de ejecución presupuestal y convenios vigentes en el sistema.</p>
-        </div>
-
+    <ui-page-header class="border-b border-border pb-5" title="Resumen Ejecutivo" subtitle="Estado de ejecución presupuestal y convenios vigentes en el sistema.">
         <!-- Selector único de período: gobierna todos los gráficos del año -->
-        <div class="flex items-center gap-2 self-start sm:self-auto">
+        <div page-header-actions class="flex items-center gap-2">
             <label for="periodoSelect" class="text-xs font-bold uppercase tracking-widest text-slate-500">Período</label>
             <div class="relative">
                 <select
@@ -21,7 +16,7 @@
                 <span class="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-lg text-slate-400" aria-hidden="true">expand_more</span>
             </div>
         </div>
-    </header>
+    </ui-page-header>
 
     <!-- Loading Resumen -->
     @if (loadingResumen()) {

@@ -1,19 +1,16 @@
 <div class="page-container p-4 md:p-8">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-foreground">Kardex de Ejecución</h1>
-            <p class="text-muted-foreground">Vista consolidada de todos los movimientos financieros</p>
-        </div>
+    <ui-page-header class="mb-6" title="Kardex de Ejecución" subtitle="Vista consolidada de todos los movimientos financieros">
         @if (puedeCerrarMes()) {
             <ui-button
+                page-header-actions
                 severity="danger"
                 icon="lock"
                 [label]="'Cerrar Periodo ' + (proximoMesACerrar().mes < 10 ? '0' : '') + proximoMesACerrar().mes + '/' + proximoMesACerrar().anio"
                 (onClick)="ejecutarCierreContable()">
             </ui-button>
         }
-    </div>
+    </ui-page-header>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

@@ -1,4 +1,4 @@
-import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UiPageHeaderComponent } from '@agroideas/ui';
 import { HasPermissionDirective } from '@agroideas/security';
 import { PERMISSIONS, formatConvenioNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
@@ -15,6 +15,7 @@ import { UbigeoCascadaFilterComponent, UbigeoFiltro } from '../../components/ubi
     selector: 'app-cartera-page',
     standalone: true,
     imports: [
+        UiPageHeaderComponent,
         CommonModule,
         FormsModule,
         UiDataTableComponent,

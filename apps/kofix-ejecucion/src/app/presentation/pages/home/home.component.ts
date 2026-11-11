@@ -1,3 +1,4 @@
+import { UiPageHeaderComponent } from '@agroideas/ui';
 import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +19,7 @@ const YEARS_AHEAD = 2;
     selector: 'app-home',
     standalone: true,
     imports: [
+        UiPageHeaderComponent,
         CommonModule,
         FormsModule,
         ResumenEjecutivoComponent,
