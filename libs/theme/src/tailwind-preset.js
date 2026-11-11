@@ -56,26 +56,31 @@ module.exports = {
         destructive: {
           DEFAULT: hsl('--destructive'),
           foreground: hsl('--destructive-foreground'),
+          strong: hsl('--destructive-strong'),
         },
         success: {
           DEFAULT: hsl('--success'),
           soft: hsl('--success-soft'),
           foreground: hsl('--success-foreground'),
+          strong: hsl('--success-strong'),
         },
         warning: {
           DEFAULT: hsl('--warning'),
           soft: hsl('--warning-soft'),
           foreground: hsl('--warning-foreground'),
+          strong: hsl('--warning-strong'),
         },
         danger: {
           DEFAULT: hsl('--danger'),
           soft: hsl('--danger-soft'),
           foreground: hsl('--danger-foreground'),
+          strong: hsl('--danger-strong'),
         },
         info: {
           DEFAULT: hsl('--info'),
           soft: hsl('--info-soft'),
           foreground: hsl('--info-foreground'),
+          strong: hsl('--info-strong'),
         },
         card: {
           DEFAULT: hsl('--card'),

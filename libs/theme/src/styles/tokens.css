@@ -69,21 +69,27 @@
   --popover: 0 0% 100%;
   --popover-foreground: 200 6% 9%;
 
-  /* Estados */
+  /* Estados. `*-strong`: mismo tono, más oscuro, para texto sobre el fondo suave del estado
+     (insignias, avisos): llega a 4.5:1 (WCAG AA) contra el token al 8% sobre blanco. */
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
+  --destructive-strong: 0 84% 45%;        /* #d31212 */
   --success: 105 68% 43%;
   --success-soft: 105 40% 94%;
   --success-foreground: 0 0% 100%;
+  --success-strong: 105 68% 29%;          /* #317c18 */
   --warning: 36 88% 50%;
   --warning-soft: 36 80% 95%;
   --warning-foreground: 0 0% 100%;
+  --warning-strong: 36 88% 32%;           /* #99600a */
   --danger: 16 77% 55%;
   --danger-soft: 16 70% 96%;
   --danger-foreground: 0 0% 100%;
+  --danger-strong: 16 77% 41%;            /* #b94318 */
   --info: 193 100% 45%;
   --info-soft: 193 60% 96%;
   --info-foreground: 0 0% 100%;
+  --info-strong: 193 100% 29%;            /* #007494 */
 
   /* Sidebar — verde oscuro institucional */
   --sidebar-background: 152 100% 27%;     /* #008F49 */

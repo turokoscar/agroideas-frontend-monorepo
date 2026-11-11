@@ -28,70 +28,66 @@
 .status-pill__label
   line-height: 1
 
-// ── Paleta por estado ───────────────────────────
+// ── Mixins (tokens del tema) ─────────────────────
+// El texto usa `--<token>-strong` (más oscuro) para llegar a 4.5:1 sobre el fondo suave; el punto y el borde,
+// el token base. `primary` ya es oscuro y no tiene variante strong.
+@mixin tono($token, $texto: '#{$token}-strong')
+  background: hsl(var(--#{$token}) / 0.08)
+  color: hsl(var(--#{$texto}))
+  border-color: hsl(var(--#{$token}) / 0.25)
+  .status-pill__dot
+    background: hsl(var(--#{$token}))
+
+@mixin neutro
+  background: hsl(var(--muted))
+  color: hsl(var(--muted-foreground))
+  border-color: hsl(var(--border))
+  .status-pill__dot
+    background: hsl(var(--muted-foreground))
+
+// Halo que late alrededor del punto, en el color del token.
+@mixin pulso($token)
+  .status-pill__dot
+    --pill-pulso: var(--#{$token})
+    box-shadow: 0 0 0 3px hsl(var(--pill-pulso) / 0.2)
+    animation: pill-pulso 2s ease infinite
+
+// ── Por estado (`status`) ────────────────────────
 
 // Activo / Aprobado / Abierto
 [data-status='Activo'],
 [data-status='Aprobado'],
 [data-status='Abierto']
-  background: rgba(22, 163, 74, 0.08)
-  color: #15803d
-  border-color: rgba(22, 163, 74, 0.15)
-  .status-pill__dot
-    background: #16a34a
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2)
-    animation: pulse-green 2s ease infinite
+  +tono(success)
+  +pulso(success)
 
 // Suspendido / Pendiente / Alta
 [data-status='Suspendido'],
 [data-status='Pendiente'],
 [data-status='Alta']
-  background: rgba(234, 179, 8, 0.08)
-  color: #a16207
-  border-color: rgba(234, 179, 8, 0.2)
-  .status-pill__dot
-    background: #ca8a04
-    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2)
-    animation: pulse-yellow 2s ease infinite
+  +tono(warning)
+  +pulso(warning)
 
 // Rechazado / Crítica
 [data-status='Rechazado'],
 [data-status='Crítica']
-  background: rgba(220, 38, 38, 0.07)
-  color: #b91c1c
-  border-color: rgba(220, 38, 38, 0.15)
+  +tono(destructive)
   .status-pill__dot
-    background: #dc2626
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18)
+    box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.18)
 
 // Finalizado / Cerrado / Baja
 [data-status='Finalizado'],
 [data-status='Cerrado'],
 [data-status='Baja']
-  background: rgba(100, 116, 139, 0.07)
-  color: #475569
-  border-color: rgba(100, 116, 139, 0.12)
-  .status-pill__dot
-    background: #94a3b8
+  +neutro
 
-// Media / Info
+// Media
 [data-status='Media']
-  background: rgba(14, 165, 233, 0.07)
-  color: #0369a1
-  border-color: rgba(14, 165, 233, 0.15)
-  .status-pill__dot
-    background: #0ea5e9
+  +tono(info)
 
-// ── Por tono (tokens del tema) ───────────────────
-@mixin tono($token)
-  background: hsl(var(--#{$token}) / 0.08)
-  color: hsl(var(--#{$token}))
-  border-color: hsl(var(--#{$token}) / 0.25)
-  .status-pill__dot
-    background: hsl(var(--#{$token}))
-
+// ── Por tono (`tone`) ────────────────────────────
 [data-tone='primary']
-  +tono(primary)
+  +tono(primary, primary)
 [data-tone='success']
   +tono(success)
 [data-tone='warning']
@@ -101,21 +97,11 @@
 [data-tone='info']
   +tono(info)
 [data-tone='neutral']
-  background: hsl(var(--muted))
-  color: hsl(var(--muted-foreground))
-  border-color: hsl(var(--border))
-  .status-pill__dot
-    background: hsl(var(--muted-foreground))
+  +neutro
 
 // ── Animaciones ──────────────────────────────────
-@keyframes pulse-green
+@keyframes pill-pulso
   0%, 100%
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2)
+    box-shadow: 0 0 0 3px hsl(var(--pill-pulso) / 0.2)
   50%
-    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.08)
-
-@keyframes pulse-yellow
-  0%, 100%
-    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2)
-  50%
-    box-shadow: 0 0 0 6px rgba(234, 179, 8, 0.08)
+    box-shadow: 0 0 0 6px hsl(var(--pill-pulso) / 0.08)
