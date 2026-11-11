@@ -3,8 +3,8 @@
   <!-- Page Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Convenios</h1>
-      <p class="page-subtitle">Consulta y seguimiento de convenios registrados</p>
+      <h1 class="text-2xl font-bold text-foreground">Convenios</h1>
+      <p class="text-sm text-muted-foreground">Consulta y seguimiento de convenios registrados</p>
     </div>
   </div>
 
@@ -15,7 +15,7 @@
     (onSearch)="onSearch()">
 
     <div class="filter-group filter-group--search">
-      <label class="filter-label" for="convenio-list-search">Filtro Rápido</label>
+      <label class="filter-label" for="convenio-list-search">Buscar</label>
       <div class="filter-search-wrap">
         <span class="material-symbols-outlined filter-search-icon">search</span>
         <input
@@ -104,10 +104,7 @@
         </div>
       }
       @if (col.field === 'estado') {
-        <div class="cell-semaforo">
-          <span class="semaforo" [ngClass]="getSemaphoreClass(row.estado)"></span>
-          <span class="semaforo__label">{{ getStatusLabel(row.estado) }}</span>
-        </div>
+        <app-ui-status-pill [tone]="getStatusTone(row.estado)" [text]="getStatusLabel(row.estado)" />
       }
     </ng-template>
   </app-ui-data-table>

@@ -1,15 +1,36 @@
 import { PermissionService } from '@agroideas/security';
-import { PERMISSIONS, formatConvenioNumber } from '@agroideas/utils';
-import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { PERMISSIONS, formatConvenioNumber, formatDate } from '@agroideas/utils';
+import { StatusTone, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Convenio } from '../../../domain/models/convenio.model';
+import { Convenio, EstadoConvenio } from '../../../domain/models/convenio.model';
 import { AlertService } from '@agroideas/feedback';
 import { ConvenioFiltros, ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { finalize } from 'rxjs/operators';
 import { UbigeoCascadaFilterComponent, UbigeoFiltro } from '../../components/ubigeo-cascada-filter/ubigeo-cascada-filter.component';
+
+interface LazyLoadEvent {
+    first?: number;
+    rows?: number;
+}
+
+/** Tono (tokens del tema) y etiqueta por estado -- cubre los 4 estados que calcula
+ *  mc-api-ejecucion (ConvenioCalculos: VIGENTE, POR_INICIAR, FINALIZADO, SIN_FECHA). */
+const ESTADO_TONE: Record<EstadoConvenio, StatusTone> = {
+    VIGENTE: 'success',
+    POR_INICIAR: 'warning',
+    FINALIZADO: 'neutral',
+    SIN_FECHA: 'danger'
+};
+
+const ESTADO_LABEL: Record<EstadoConvenio, string> = {
+    VIGENTE: 'Activo',
+    POR_INICIAR: 'Por Iniciar',
+    FINALIZADO: 'Finalizado',
+    SIN_FECHA: 'Sin Fecha'
+};
 
 @Component({
     selector: 'app-convenio-list-page',
@@ -58,10 +79,10 @@ export class ConvenioListPageComponent implements OnInit {
         this.loadData({ first: 0, rows: this.pageSize() });
     }
 
-    loadData(event?: any): void {
+    loadData(event: LazyLoadEvent): void {
         this.loading.set(true);
-        const page = event ? Math.floor(event.first / event.rows) + 1 : 1;
-        const rows = event?.rows || this.pageSize();
+        const rows = event.rows ?? this.pageSize();
+        const page = event.first ? Math.floor(event.first / rows) + 1 : 1;
 
         const filtros: ConvenioFiltros = {
             ...this.ubigeoFiltro(),
@@ -147,57 +168,15 @@ export class ConvenioListPageComponent implements OnInit {
         return formatConvenioNumber(convenio.numeroConvenio, convenio.fechaInicio);
     }
 
-    getSaldo(convenio: Convenio): number {
-        return convenio.saldoPorEjecutar ?? (convenio.montoAprobado - convenio.montoEjecutado);
+    getStatusTone(estado: EstadoConvenio): StatusTone {
+        return ESTADO_TONE[estado] ?? 'neutral';
     }
 
-    getRiesgo(convenio: Convenio): 'success' | 'warning' | 'danger' {
-        const saldo = this.getSaldo(convenio);
-        const porcentajeSaldo = saldo / convenio.montoAprobado;
-
-        if (porcentajeSaldo > 0.5) return 'success';
-        if (porcentajeSaldo > 0.15) return 'warning';
-        return 'danger';
-    }
-
-    getStatusType(estado: string): StatusType {
-        const map: Record<string, StatusType> = {
-            'VIGENTE': 'Activo',
-            'POR_INICIAR': 'Pendiente',
-            'FINALIZADO': 'Finalizado',
-            'SUSPENDIDO': 'Suspendido'
-        };
-        return map[estado] ?? 'Finalizado';
-    }
-
-    getStatusLabel(estado: string): string {
-        const map: Record<string, string> = {
-            'VIGENTE': 'Activo',
-            'POR_INICIAR': 'Por Iniciar',
-            'FINALIZADO': 'Finalizado',
-            'SUSPENDIDO': 'Suspendido'
-        };
-        return map[estado] ?? estado;
-    }
-
-    getSemaphoreClass(estado: string): string {
-        const map: Record<string, string> = {
-            'VIGENTE': 'semaforo--green',
-            'POR_INICIAR': 'semaforo--yellow',
-            'FINALIZADO': 'semaforo--red',
-            'SUSPENDIDO': 'semaforo--gray'
-        };
-        return map[estado] ?? 'semaforo--gray';
+    getStatusLabel(estado: EstadoConvenio): string {
+        return ESTADO_LABEL[estado] ?? estado;
     }
 
     formatDate(date: string): string {
-        if (!date) return '-';
-        const d = new Date(date);
-        return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    }
-
-    getPorcentajeEjecucion(convenio: Convenio): number {
-        if (!convenio.montoAprobado || convenio.montoAprobado <= 0) return 0;
-        return Math.round((convenio.montoEjecutado / convenio.montoAprobado) * 100);
+        return formatDate(date, { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 }

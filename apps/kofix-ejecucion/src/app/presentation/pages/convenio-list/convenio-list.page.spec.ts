@@ -6,7 +6,7 @@ import { PermissionService } from '@agroideas/security';
 import { ConvenioListPageComponent } from './convenio-list.page';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { CarteraRepository } from '../../../domain/repositories/cartera.repository';
-import { Convenio } from '../../../domain/models/convenio.model';
+import { Convenio, EstadoConvenio } from '../../../domain/models/convenio.model';
 
 describe('ConvenioListPageComponent', () => {
     let component: ConvenioListPageComponent;
@@ -133,22 +133,6 @@ describe('ConvenioListPageComponent', () => {
         });
     });
 
-    it('should compute the saldo, preferring saldoPorEjecutar', () => {
-        expect(component.getSaldo(buildConvenio({ saldoPorEjecutar: 300 }))).toBe(300);
-        expect(component.getSaldo(buildConvenio({ saldoPorEjecutar: undefined as any, montoAprobado: 1000, montoEjecutado: 700 }))).toBe(300);
-    });
-
-    it('should classify riesgo by remaining balance percentage', () => {
-        expect(component.getRiesgo(buildConvenio({ saldoPorEjecutar: 600, montoAprobado: 1000 }))).toBe('success');
-        expect(component.getRiesgo(buildConvenio({ saldoPorEjecutar: 200, montoAprobado: 1000 }))).toBe('warning');
-        expect(component.getRiesgo(buildConvenio({ saldoPorEjecutar: 50, montoAprobado: 1000 }))).toBe('danger');
-    });
-
-    it('should compute the execution percentage, guarding against a missing montoAprobado', () => {
-        expect(component.getPorcentajeEjecucion(buildConvenio({ montoAprobado: 1000, montoEjecutado: 250 }))).toBe(25);
-        expect(component.getPorcentajeEjecucion(buildConvenio({ montoAprobado: 0, montoEjecutado: 250 }))).toBe(0);
-    });
-
     it('should update pageSize when the table selector changes rows (ADR-019 Fase 3.5)', () => {
         component.onRowsChange(50);
 
@@ -188,11 +172,23 @@ describe('ConvenioListPageComponent', () => {
         });
     });
 
-    it('should map estado codes to status type, label, and semaphore class, defaulting unknown ones', () => {
-        expect(component.getStatusType('VIGENTE')).toBe('Activo');
-        expect(component.getStatusType('X')).toBe('Finalizado');
-        expect(component.getStatusLabel('SUSPENDIDO')).toBe('Suspendido');
-        expect(component.getSemaphoreClass('VIGENTE')).toBe('semaforo--green');
-        expect(component.getSemaphoreClass('X')).toBe('semaforo--gray');
+    it('should map every EstadoConvenio to a theme tone and label', () => {
+        expect(component.getStatusTone('VIGENTE')).toBe('success');
+        expect(component.getStatusTone('POR_INICIAR')).toBe('warning');
+        expect(component.getStatusTone('FINALIZADO')).toBe('neutral');
+        expect(component.getStatusTone('SIN_FECHA')).toBe('danger');
+        expect(component.getStatusLabel('VIGENTE')).toBe('Activo');
+        expect(component.getStatusLabel('POR_INICIAR')).toBe('Por Iniciar');
+        expect(component.getStatusLabel('SIN_FECHA')).toBe('Sin Fecha');
+    });
+
+    it('should default an unknown estado to a neutral tone and its raw code', () => {
+        expect(component.getStatusTone('X' as EstadoConvenio)).toBe('neutral');
+        expect(component.getStatusLabel('X' as EstadoConvenio)).toBe('X');
+    });
+
+    it('should format dates as dd/mm/yyyy without a timezone shift', () => {
+        expect(component.formatDate('2026-03-01')).toBe('01/03/2026');
+        expect(component.formatDate('')).toBe('-');
     });
 });
