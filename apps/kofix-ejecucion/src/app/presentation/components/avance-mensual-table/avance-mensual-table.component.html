@@ -9,26 +9,28 @@
         <tr>
           <th scope="col" rowspan="2" class="sticky left-0 z-10 bg-muted px-3 py-2 text-left font-semibold">Región</th>
           @for (m of reporte().meses; track m.anio * 100 + m.mes) {
-            <th scope="colgroup" colspan="3" class="border-l border-border px-2 py-1.5 text-center font-semibold">{{ nombreMes(m) }}</th>
+            <th scope="colgroup" colspan="4" class="border-l border-border px-2 py-1.5 text-center font-semibold">{{ nombreMes(m) }}</th>
           }
-          <th scope="colgroup" colspan="3" class="border-l-2 border-border px-2 py-1.5 text-center font-semibold">Total del periodo</th>
+          <th scope="colgroup" colspan="4" class="border-l-2 border-border px-2 py-1.5 text-center font-semibold">Total del periodo</th>
         </tr>
         <tr>
           @for (m of reporte().meses; track m.anio * 100 + m.mes) {
             <th scope="col" class="border-l border-border px-2 py-1 text-right font-medium">Prog.</th>
             <th scope="col" class="px-2 py-1 text-right font-medium">Ejec.</th>
             <th scope="col" class="px-2 py-1 text-right font-medium">Saldo</th>
+            <th scope="col" class="px-2 py-1 text-center font-medium">%</th>
           }
           <th scope="col" class="border-l-2 border-border px-2 py-1 text-right font-medium">Prog.</th>
           <th scope="col" class="px-2 py-1 text-right font-medium">Ejec.</th>
           <th scope="col" class="px-2 py-1 text-right font-medium">Saldo</th>
+          <th scope="col" class="px-2 py-1 text-center font-medium">%</th>
         </tr>
       </thead>
 
       <tbody>
         @for (fila of reporte().filas; track fila.region) {
-          <tr class="border-t border-border">
-            <th scope="row" class="sticky left-0 z-10 bg-card px-3 py-2 text-left font-semibold text-foreground">{{ fila.region }}</th>
+          <tr class="border-t border-border hover:bg-muted/20 transition-colors">
+            <th scope="row" class="sticky left-0 z-10 bg-card px-3 py-1.5 text-left font-semibold text-foreground whitespace-nowrap">{{ fila.region }}</th>
             @for (celda of fila.celdas; track $index) {
               <ng-container *ngTemplateOutlet="grupo; context: { $implicit: celda, region: fila.region, titulo: nombreMes(reporte().meses[$index]), total: false }"></ng-container>
             }
@@ -39,7 +41,7 @@
 
       <tfoot class="border-t-2 border-border font-semibold">
         <tr>
-          <th scope="row" class="sticky left-0 z-10 bg-muted px-3 py-2 text-left">{{ reporte().totalNacional.region }}</th>
+          <th scope="row" class="sticky left-0 z-10 bg-muted px-3 py-2 text-left whitespace-nowrap">{{ reporte().totalNacional.region }}</th>
           @for (celda of reporte().totalNacional.celdas; track $index) {
             <ng-container *ngTemplateOutlet="grupo; context: { $implicit: celda, region: reporte().totalNacional.region, titulo: nombreMes(reporte().meses[$index]), total: false }"></ng-container>
           }
@@ -52,7 +54,7 @@
   <ul class="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground" aria-label="Leyenda del semáforo">
     @for (item of leyenda(); track item.nivel) {
       <li class="flex items-center gap-1.5">
-        <span class="inline-flex h-4 w-6 items-center justify-center rounded" [class]="niveles[item.nivel].clase" aria-hidden="true">
+        <span class="inline-flex h-4 w-6 items-center justify-center rounded" [class]="niveles[item.nivel].claseBadge" aria-hidden="true">
           @if (niveles[item.nivel].icono) {
             <span class="material-symbols-outlined text-[12px]">{{ niveles[item.nivel].icono }}</span>
           }
@@ -63,21 +65,33 @@
   </ul>
 </div>
 
-<!-- Tres celdas de un mes (o del total), coloreadas según el nivel; el % va bajo el ejecutado. -->
+<!-- Cuatro subcolumnas por mes (Prog. | Ejec. | Saldo | %): montos en 1 sola línea y % como badge semáforo. -->
 <ng-template #grupo let-celda let-region="region" let-titulo="titulo" let-total="total">
-  <td class="px-2 py-1.5 text-right tabular-nums" [class]="clase(celda)"
+  <td class="px-2 py-1.5 text-right tabular-nums whitespace-nowrap" [class]="claseMonto(celda)"
       [class.border-l]="!total" [class.border-l-2]="total" [class.border-border]="true"
       [attr.title]="descripcion(region, titulo, celda)" [attr.aria-label]="descripcion(region, titulo, celda)">
     {{ monto(celda.programado) }}
   </td>
-  <td class="px-2 py-1.5 text-right tabular-nums" [class]="clase(celda)">
-    <span class="inline-flex items-center gap-0.5">
-      @if (icono(celda)) {
-        <span class="material-symbols-outlined text-[13px]">{{ icono(celda) }}</span>
-      }
-      {{ monto(celda.ejecutado) }}
-    </span>
-    <span class="block text-[10px] font-semibold">{{ porcentaje(celda) }}</span>
+  <td class="px-2 py-1.5 text-right tabular-nums whitespace-nowrap" [class]="claseMonto(celda)">
+    {{ monto(celda.ejecutado) }}
   </td>
-  <td class="px-2 py-1.5 text-right tabular-nums" [class]="clase(celda)">{{ monto(celda.saldo) }}</td>
+  <td class="px-2 py-1.5 text-right tabular-nums whitespace-nowrap" [class]="claseMonto(celda)">
+    {{ monto(celda.saldo) }}
+  </td>
+  <td class="px-1.5 py-1 text-center tabular-nums whitespace-nowrap" [class]="claseMonto(celda)"
+      [attr.title]="descripcion(region, titulo, celda)">
+    @if (celda.nivel === 'SIN_PROGRAMACION') {
+      <span class="text-muted-foreground/50">—</span>
+    } @else {
+      <span class="inline-flex items-center justify-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] leading-tight min-w-[3.25rem]"
+            [class]="claseBadge(celda)">
+        @if (icono(celda)) {
+          <span class="material-symbols-outlined text-[12px]">{{ icono(celda) }}</span>
+          <span>S/P</span>
+        } @else {
+          {{ porcentaje(celda) }}
+        }
+      </span>
+    }
+  </td>
 </ng-template>

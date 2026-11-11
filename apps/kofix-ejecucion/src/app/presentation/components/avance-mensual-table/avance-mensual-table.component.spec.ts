@@ -41,35 +41,35 @@ describe('AvanceMensualTableComponent', () => {
         html = fixture.nativeElement;
     });
 
-    it('arma un grupo Prog./Ejec./Saldo por mes más el total del periodo', () => {
+    it('arma un grupo Prog./Ejec./Saldo/% por mes más el total del periodo', () => {
         const encabezados = Array.from(html.querySelectorAll('thead tr:first-child th')).map(th => (th.textContent ?? '').trim());
         expect(encabezados).toEqual(['Región', 'Jul 2026', 'Ago 2026', 'Total del periodo']);
-        expect(html.querySelectorAll('thead tr:nth-child(2) th')).toHaveLength(9);
+        expect(html.querySelectorAll('thead tr:nth-child(2) th')).toHaveLength(12);
     });
 
     it('muestra una fila por región y el total nacional al pie', () => {
         const filas = Array.from(html.querySelectorAll('tbody th[scope="row"]')).map(th => (th.textContent ?? '').trim());
         expect(filas).toEqual(['CAJAMARCA', 'PUNO']);
         expect((html.querySelector('tfoot th')?.textContent ?? '').trim()).toBe('TOTAL NACIONAL');
-        // 1 encabezado de fila + 3 celdas x (2 meses + total)
-        expect(html.querySelectorAll('tbody tr:first-child td')).toHaveLength(9);
+        // 4 subcolumnas (Prog., Ejec., Saldo, %) x (2 meses + total) = 12 celdas
+        expect(html.querySelectorAll('tbody tr:first-child td')).toHaveLength(12);
     });
 
-    it('colorea cada grupo según el nivel que envía la API', () => {
+    it('colorea cada grupo y badge según el nivel que envía la API', () => {
         const celdas = html.querySelectorAll('tbody tr:first-child td');
         expect(celdas[0].className).toContain('bg-success-soft');           // CAJAMARCA jul: buena
-        expect(celdas[3].className).toContain('ring-danger');               // CAJAMARCA ago: alerta
+        expect(celdas[7].innerHTML).toContain('ring-danger');               // CAJAMARCA ago (% badge): alerta
         const puno = html.querySelectorAll('tbody tr:nth-child(2) td');
         expect(puno[0].className).toContain('bg-warning-soft');              // regular
-        expect(puno[3].className).toContain('bg-muted');                     // sin programación
+        expect(puno[4].className).toContain('bg-muted');                     // sin programación
     });
 
-    it('muestra el % bajo el ejecutado y el ícono de alerta en el ejecutado sin programación', () => {
+    it('muestra el % en su columna de semáforo y el ícono de alerta en el ejecutado sin programación', () => {
         const celdas = html.querySelectorAll('tbody tr:first-child td');
-        expect(celdas[1].textContent).toContain('95');
-        expect(celdas[1].textContent).toContain('%');
-        expect(celdas[4].textContent).toContain('warning');
-        expect(celdas[4].textContent).toContain('—');
+        expect(celdas[3].textContent).toContain('95');
+        expect(celdas[3].textContent).toContain('%');
+        expect(celdas[7].textContent).toContain('warning');
+        expect(celdas[7].textContent).toContain('S/P');
     });
 
     it('cuando programado y ejecutado son 0 muestra guión y nunca NaN (incluso si porcentaje viene undefined)', () => {
@@ -80,7 +80,7 @@ describe('AvanceMensualTableComponent', () => {
         fixture.detectChanges();
 
         const punoCeldas = html.querySelectorAll('tbody tr:nth-child(2) td');
-        expect(punoCeldas[4].textContent).toContain('—');
+        expect(punoCeldas[7].textContent).toContain('—');
         expect(html.textContent).not.toContain('NaN');
     });
 
@@ -88,7 +88,7 @@ describe('AvanceMensualTableComponent', () => {
         const primera = html.querySelector('tbody tr:first-child td');
         expect(primera?.getAttribute('aria-label')).toContain('CAJAMARCA, Jul 2026');
         expect(primera?.getAttribute('aria-label')).toContain('Buena');
-        expect(html.querySelectorAll('tbody tr:first-child td')[3].getAttribute('title')).toContain('Alerta: ejecutado sin programación');
+        expect(html.querySelectorAll('tbody tr:first-child td')[4].getAttribute('title')).toContain('Alerta: ejecutado sin programación');
     });
 
     it('la leyenda usa los umbrales que envía la API', () => {

@@ -5,13 +5,30 @@ import { CeldaAvance, NivelSemaforo, ReporteAvance } from '../../../domain/model
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
 
 /** Clases (tokens del tema) y texto de cada nivel del semáforo (ADR-028). */
-export const NIVELES: Record<NivelSemaforo, { clase: string; etiqueta: string; icono?: string }> = {
-    BUENA: { clase: 'bg-success-soft text-success', etiqueta: 'Buena' },
-    REGULAR: { clase: 'bg-warning-soft text-warning', etiqueta: 'Regular' },
-    MALA: { clase: 'bg-danger-soft text-danger', etiqueta: 'Mala' },
-    SIN_PROGRAMACION: { clase: 'bg-muted text-muted-foreground', etiqueta: 'Sin programación' },
+export const NIVELES: Record<NivelSemaforo, { claseMonto: string; claseBadge: string; etiqueta: string; icono?: string }> = {
+    BUENA: {
+        claseMonto: 'bg-success-soft/35 text-foreground',
+        claseBadge: 'bg-success-soft text-success font-bold',
+        etiqueta: 'Buena'
+    },
+    REGULAR: {
+        claseMonto: 'bg-warning-soft/35 text-foreground',
+        claseBadge: 'bg-warning-soft text-warning font-bold',
+        etiqueta: 'Regular'
+    },
+    MALA: {
+        claseMonto: 'bg-danger-soft/35 text-foreground',
+        claseBadge: 'bg-danger-soft text-danger font-bold',
+        etiqueta: 'Mala'
+    },
+    SIN_PROGRAMACION: {
+        claseMonto: 'bg-muted/30 text-muted-foreground/60',
+        claseBadge: 'bg-muted text-muted-foreground',
+        etiqueta: 'Sin programación'
+    },
     EJECUTADO_SIN_PROGRAMACION: {
-        clase: 'bg-card text-danger ring-1 ring-inset ring-danger',
+        claseMonto: 'bg-danger-soft/20 text-danger',
+        claseBadge: 'bg-card text-danger ring-1 ring-inset ring-danger font-bold',
         etiqueta: 'Alerta: ejecutado sin programación',
         icono: 'warning'
     }
@@ -44,9 +61,14 @@ export class AvanceMensualTableComponent {
         ];
     });
 
-    /** Clases del nivel de la celda (el contexto de ng-template no tiene tipo). */
-    clase(celda: CeldaAvance): string {
-        return NIVELES[celda.nivel]?.clase ?? '';
+    /** Clases de las celdas de monto (tinte suave; el contexto de ng-template no tiene tipo). */
+    claseMonto(celda: CeldaAvance): string {
+        return NIVELES[celda.nivel]?.claseMonto ?? '';
+    }
+
+    /** Clases del badge de % (semáforo de alto contraste). */
+    claseBadge(celda: CeldaAvance): string {
+        return NIVELES[celda.nivel]?.claseBadge ?? '';
     }
 
     icono(celda: CeldaAvance): string | undefined {
