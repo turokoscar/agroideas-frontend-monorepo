@@ -48,7 +48,7 @@ export class ReportesPageComponent {
             label: 'Avance mensual por región',
             value: ReportesPageComponent.AVANCE_MENSUAL,
             icon: 'grid_view',
-            description: 'Programado, ejecutado y saldo por región y mes, con semáforo de desempeño (ADR-028)'
+            description: 'Programado, ejecutado y saldo por región y mes, con semáforo de desempeño'
         }
     ];
 
