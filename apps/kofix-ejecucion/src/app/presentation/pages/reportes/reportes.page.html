@@ -14,7 +14,7 @@
                             id="reportes-tipo"
                             class="w-full rounded-xl border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                             [(ngModel)]="selectedReporteValue"
-                            (change)="onReporteChange($event)">
+                            (ngModelChange)="onReporteChange($event)">
                             <option [ngValue]="null">Seleccione un reporte</option>
                             @for (opt of reporteOptions; track opt.value) {
                                 <option [value]="opt.value">{{ opt.label }}</option>
@@ -76,7 +76,22 @@
 
         <div class="xl:col-span-3">
             <ui-card [title]="selectedReporte()?.label || 'Vista Previa'" [icon]="selectedReporte()?.icon || 'preview'">
-                @if (selectedReporte()) {
+                @if (esAvanceMensual()) {
+                    @if (loading()) {
+                        <ui-state kind="loading" message="Generando el reporte…" />
+                    } @else if (error()) {
+                        <ui-state kind="error" [message]="error()!" retryLabel="Reintentar" (retry)="generarReporte()" />
+                    } @else if (reporteAvance()) {
+                        @if (reporteAvance()!.filas.length) {
+                            <app-avance-mensual-table [reporte]="reporteAvance()!" />
+                        } @else {
+                            <ui-state kind="empty" icon="grid_view" message="No hay programación ni ejecución en el periodo para sus convenios." />
+                        }
+                    } @else {
+                        <ui-state kind="empty" icon="date_range" message="Elija el periodo y presione Generar Reporte."
+                            [detail]="selectedReporte()?.description ?? ''" />
+                    }
+                } @else if (selectedReporte()) {
                     <div class="flex flex-col items-center justify-center py-16 text-slate-400">
                         <span class="material-symbols-outlined text-5xl mb-3">preview</span>
                         <p class="font-medium">Vista previa del reporte</p>

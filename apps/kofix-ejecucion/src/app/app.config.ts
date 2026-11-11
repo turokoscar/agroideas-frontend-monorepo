@@ -18,6 +18,8 @@ import { ProgramacionRepository } from './domain/repositories/programacion.repos
 import { ProgramacionRepositoryImpl } from './data/repositories/programacion.repository.impl';
 import { CatalogoRepository } from './domain/repositories/catalogo.repository';
 import { CatalogoRepositoryImpl } from './data/repositories/catalogo.repository.impl';
+import { ReporteRepository } from './domain/repositories/reporte.repository';
+import { ReporteRepositoryImpl } from './data/repositories/reporte.repository.impl';
 import { ConvenioRepository } from './domain/repositories/convenio.repository';
 import { ConvenioRepositoryImpl } from './data/repositories/convenio.repository.impl';
 import { RendicionRepository } from './domain/repositories/rendicion.repository';
@@ -54,6 +56,7 @@ export const repositoryProviders: Provider[] = [
   { provide: NoObjecionRepository, useExisting: NoObjecionRepositoryImpl },
   { provide: ProgramacionRepository, useExisting: ProgramacionRepositoryImpl },
   { provide: CatalogoRepository, useExisting: CatalogoRepositoryImpl },
+  { provide: ReporteRepository, useExisting: ReporteRepositoryImpl },
   { provide: ConvenioRepository, useExisting: ConvenioRepositoryImpl },
   { provide: RendicionRepository, useExisting: RendicionRepositoryImpl },
   { provide: MenuRepository, useExisting: MenuRepositoryImpl },

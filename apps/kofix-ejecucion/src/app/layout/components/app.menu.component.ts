@@ -1,7 +1,6 @@
-import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { MenuRepository } from '../../domain/repositories/menu.repository';
-import { MenuAgrupado } from '../../domain/models/menu/menu.model';
+import { MenuStateService } from '../../shared/services/menu-state.service';
 
 @Component({
     selector: 'app-menu',
@@ -53,20 +52,19 @@ import { MenuAgrupado } from '../../domain/models/menu/menu.model';
     `
 })
 export class AppMenuComponent implements OnInit {
-    private readonly menuRepository = inject(MenuRepository);
+    /** Menús compartidos con `menuGuard`: se piden a la API una sola vez. */
+    private readonly menuState = inject(MenuStateService);
 
     /** Oculta las etiquetas de texto cuando el sidebar está colapsado a solo-íconos. */
     readonly colapsado = input(false);
 
-    menus = signal<MenuAgrupado[]>([]);
+    readonly menus = this.menuState.menus;
 
     ngOnInit(): void {
         this.loadMenus();
     }
 
     loadMenus(): void {
-        this.menuRepository.getMenus().subscribe({
-            next: (menus) => this.menus.set(menus)
-        });
+        this.menuState.asegurarCargados().subscribe();
     }
 }

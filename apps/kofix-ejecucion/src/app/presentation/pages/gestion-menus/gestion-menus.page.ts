@@ -11,6 +11,7 @@ import {
 } from '@agroideas/ui';
 import { AlertService } from '@agroideas/feedback';
 import { MenuItem } from '../../../domain/models/menu/menu.model';
+import { MenuStateService } from '../../../shared/services/menu-state.service';
 import { MenuRepository } from '../../../domain/repositories/menu.repository';
 import { finalize } from 'rxjs/operators';
 
@@ -33,6 +34,8 @@ import { finalize } from 'rxjs/operators';
 })
 export class GestionMenusPageComponent implements OnInit {
   private menuRepo = inject(MenuRepository);
+  /** Los menús dan acceso (menuGuard): tras cambiarlos se vuelven a pedir. */
+  private menuState = inject(MenuStateService);
   private alertService = inject(AlertService);
   private fb = inject(FormBuilder);
 
@@ -165,6 +168,7 @@ export class GestionMenusPageComponent implements OnInit {
         if (res.exitoso) {
           this.alertService.show('Éxito', isEdit ? 'Menú actualizado correctamente.' : 'Menú creado correctamente.', 'success');
           this.closeModal();
+          this.menuState.recargar();
           this.loadMenus();
         } else {
           this.alertService.show('Error', res.mensaje || 'Ocurrió un error al procesar el menú.', 'error');
@@ -184,6 +188,7 @@ export class GestionMenusPageComponent implements OnInit {
           next: (res) => {
             if (res.exitoso) {
               this.alertService.show('Eliminado', 'El menú ha sido desactivado.', 'success');
+              this.menuState.recargar();
               this.loadMenus();
             } else {
               this.alertService.show('Error', res.mensaje || 'No se pudo eliminar.', 'error');
@@ -228,6 +233,7 @@ export class GestionMenusPageComponent implements OnInit {
       this.menuRepo.assignRoleToMenu(menuId, rol).subscribe({
         next: (res) => {
           if (res.exitoso) {
+            this.menuState.recargar();
             this.loadMenuRoles(menuId);
           } else {
             checkbox.checked = false;
@@ -243,6 +249,7 @@ export class GestionMenusPageComponent implements OnInit {
       this.menuRepo.removeRoleFromMenu(menuId, rol).subscribe({
         next: (res) => {
           if (res.exitoso) {
+            this.menuState.recargar();
             this.loadMenuRoles(menuId);
           } else {
             checkbox.checked = true;

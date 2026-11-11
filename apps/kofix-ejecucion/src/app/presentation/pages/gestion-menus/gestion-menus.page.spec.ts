@@ -4,12 +4,14 @@ import { AlertService } from '@agroideas/feedback';
 import { GestionMenusPageComponent } from './gestion-menus.page';
 import { MenuRepository } from '../../../domain/repositories/menu.repository';
 import { MenuItem } from '../../../domain/models/menu/menu.model';
+import { MenuStateService } from '../../../shared/services/menu-state.service';
 
 describe('GestionMenusPageComponent', () => {
     let component: GestionMenusPageComponent;
     let fixture: ComponentFixture<GestionMenusPageComponent>;
     let mockRepo: jest.Mocked<Partial<MenuRepository>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
+    let mockMenuState: { recargar: jest.Mock };
 
     const buildMenu = (overrides: Partial<MenuItem> = {}): MenuItem => ({
         id: 1,
@@ -30,12 +32,14 @@ describe('GestionMenusPageComponent', () => {
             removeRoleFromMenu: jest.fn()
         };
         mockAlert = { show: jest.fn(), confirm: jest.fn() };
+        mockMenuState = { recargar: jest.fn() };
 
         await TestBed.configureTestingModule({
             imports: [GestionMenusPageComponent],
             providers: [
                 { provide: MenuRepository, useValue: mockRepo },
-                { provide: AlertService, useValue: mockAlert }
+                { provide: AlertService, useValue: mockAlert },
+                { provide: MenuStateService, useValue: mockMenuState }
             ]
         }).compileComponents();
 
@@ -165,6 +169,8 @@ describe('GestionMenusPageComponent', () => {
 
             expect(mockRepo.assignRoleToMenu).toHaveBeenCalledWith(5, 'ADMIN');
             expect(mockRepo.getRolesByMenuId).toHaveBeenCalledWith(5);
+            // Los menús dan acceso (menuGuard): el sidebar y el guard se actualizan sin recargar la página.
+            expect(mockMenuState.recargar).toHaveBeenCalled();
         });
 
         it('should revert the checkbox and alert when assigning fails', () => {

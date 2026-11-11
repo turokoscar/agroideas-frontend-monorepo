@@ -6,6 +6,7 @@ import { AuthRepository } from './domain/repositories/auth.repository';
 import { Router } from '@angular/router';
 import { AppLayoutComponent } from './layout/app.layout.component';
 import { permissionGuard } from '@agroideas/security';
+import { menuGuard } from './shared/guards/menu.guard';
 
 const authGuard = () => {
     const authRepo = inject(AuthRepository);
@@ -97,8 +98,9 @@ export const routes: Routes = [
             },
             {
                 path: 'reportes',
-                canActivate: [permissionGuard],
-                data: { permission: PERMISSIONS.ACCESO_APP },
+                // ADR-028: el acceso lo da el menú "Reportes" asignado al rol (la API exige lo mismo).
+                canActivate: [permissionGuard, menuGuard],
+                data: { permission: PERMISSIONS.ACCESO_APP, menu: '/main/reportes' },
                 loadComponent: () => import('./presentation/pages/reportes/reportes.page').then(m => m.ReportesPageComponent)
             },
             {
