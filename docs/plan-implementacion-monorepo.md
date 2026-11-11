@@ -228,9 +228,13 @@ a tocar unas 20 plantillas.
    con botón de volver): decidir si merecen una variante del componente o se quedan como están.
 5. **Limpieza:** `apps/kofix-ejecucion/src/app/app.component.html` tiene un `<h1>Test AuthRepository</h1>` que
    parece código de prueba olvidado.
-6. **Deuda de tokens relacionada:** la variante `status` de `ui-status-pill` sigue con colores hex fijos (la
-   variante `tone` ya usa tokens). `ui-progress-bar` y `ui-filter-bar` ya se pasaron a tokens (commits `8aea8c8`
-   y `9fa9549`).
+6. ~~**Deuda de tokens relacionada:** la variante `status` de `ui-status-pill` sigue con colores hex fijos.~~
+   ✅ Resuelto (2026-11-11, commit `c1d2930`): `status` y `tone` comparten los mismos estilos con tokens, y el texto
+   usa los nuevos tokens `--<estado>-strong` del tema (contraste ≥ 4.5:1, WCAG AA). `ui-progress-bar` y
+   `ui-filter-bar` también pasaron a tokens (commits `8aea8c8` y `9fa9549`).
+
+**Relacionado, ya ejecutado:** todas las páginas de kofix-ejecucion usan solo `page-container` como contenedor (el
+margen exterior lo pone `UiAppShellComponent`, la separación entre bloques el gap de 20px), commit `0ba4888`.
 
 **Criterios de aceptación:** ninguna página de las cuatro apps escribe su `<h1>` a mano (salvo los heros de login);
 cero `text-slate-*` en títulos y subtítulos; revisión visual de cada página migrada.
