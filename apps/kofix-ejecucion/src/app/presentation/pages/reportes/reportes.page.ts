@@ -1,4 +1,4 @@
-import { UIButtonComponent, UICardComponent, UiKpiComponent, UiStateComponent } from '@agroideas/ui';
+import { UIButtonComponent, UICardComponent, UiStateComponent } from '@agroideas/ui';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +23,6 @@ export interface ReporteOption {
     imports: [
         CommonModule,
         FormsModule,
-        UiKpiComponent,
         UICardComponent,
         UIButtonComponent,
         UiStateComponent,
