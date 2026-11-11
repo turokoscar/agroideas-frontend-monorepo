@@ -1,1 +1,18 @@
-// Empty SASS file for Reportes page
+// .page-container viene de @agroideas/theme (base.css); .filter-* de app-ui-filter-bar.
+
+:host
+  display: block
+
+// El tipo de reporte lleva el nombre más largo: ocupa el espacio que sobra en la barra.
+.filter-group--reporte
+  flex: 1 1 260px
+
+// Botones alineados con la base de los inputs (38px de alto en .filter-input).
+.reporte-acciones
+  display: flex
+  flex-wrap: wrap
+  align-items: center
+  gap: 0.5rem
+
+  @media (max-width: 640px)
+    width: 100%

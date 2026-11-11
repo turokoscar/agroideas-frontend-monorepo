@@ -1,70 +1,66 @@
-<div class="px-6 py-4 space-y-6">
+<div class="page-container">
     <div>
         <h1 class="text-2xl font-bold text-foreground">Reportes</h1>
-        <p class="text-sm text-muted-foreground mt-1">Genere reportes consolidados de la ejecución de convenios</p>
+        <p class="text-sm text-muted-foreground">Genere reportes consolidados de la ejecución de convenios</p>
     </div>
 
-    <ui-card [title]="'Parámetros'" [icon]="'tune'">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
-            <div class="lg:col-span-4">
-                <label class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1" for="reportes-tipo">Tipo de Reporte</label>
-                <select
-                    id="reportes-tipo"
-                    class="w-full rounded-xl border-input bg-card p-2.5 text-sm outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
-                    [(ngModel)]="selectedReporteValue"
-                    (ngModelChange)="onReporteChange($event)">
-                    <option [ngValue]="null">Seleccione un reporte</option>
-                    @for (opt of reporteOptions; track opt.value) {
-                        <option [value]="opt.value">{{ opt.label }}</option>
-                    }
-                </select>
-            </div>
-            <div class="lg:col-span-2">
-                <label class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1" for="reportes-fecha-inicio">Fecha Inicio</label>
-                <input
-                    id="reportes-fecha-inicio"
-                    type="date"
-                    [(ngModel)]="fechaInicio"
-                    class="w-full rounded-xl border-input bg-card p-2.5 text-sm outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div class="lg:col-span-2">
-                <label class="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1" for="reportes-fecha-fin">Fecha Fin</label>
-                <input
-                    id="reportes-fecha-fin"
-                    type="date"
-                    [(ngModel)]="fechaFin"
-                    class="w-full rounded-xl border-input bg-card p-2.5 text-sm outline-none focus:bg-card focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div class="md:col-span-2 lg:col-span-4 flex flex-wrap sm:flex-nowrap items-center gap-2">
-                <ui-button
-                    class="flex-1"
-                    block
-                    severity="primary"
-                    icon="file_open"
-                    label="Generar Reporte"
-                    [loading]="loading()"
-                    [disabled]="!selectedReporteValue"
-                    (onClick)="generarReporte()">
-                </ui-button>
-                <ui-button
-                    severity="success"
-                    icon="description"
-                    label="Excel"
-                    [loading]="exportando() === 'excel'"
-                    [disabled]="!puedeExportar()"
-                    (onClick)="exportarExcel()">
-                </ui-button>
-                <ui-button
-                    severity="danger"
-                    icon="picture_as_pdf"
-                    label="PDF"
-                    [loading]="exportando() === 'pdf'"
-                    [disabled]="!puedeExportar()"
-                    (onClick)="exportarPdf()">
-                </ui-button>
-            </div>
+    <app-ui-filter-bar [showSearch]="false">
+        <div class="filter-group filter-group--reporte">
+            <label class="filter-label" for="reportes-tipo">Tipo de Reporte</label>
+            <select
+                id="reportes-tipo"
+                class="filter-input"
+                [(ngModel)]="selectedReporteValue"
+                (ngModelChange)="onReporteChange($event)">
+                <option [ngValue]="null">Seleccione un reporte</option>
+                @for (opt of reporteOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                }
+            </select>
         </div>
-    </ui-card>
+        <div class="filter-group">
+            <label class="filter-label" for="reportes-fecha-inicio">Fecha Inicio</label>
+            <input
+                id="reportes-fecha-inicio"
+                type="date"
+                class="filter-input"
+                [(ngModel)]="fechaInicio">
+        </div>
+        <div class="filter-group">
+            <label class="filter-label" for="reportes-fecha-fin">Fecha Fin</label>
+            <input
+                id="reportes-fecha-fin"
+                type="date"
+                class="filter-input"
+                [(ngModel)]="fechaFin">
+        </div>
+        <div class="reporte-acciones">
+            <ui-button
+                severity="primary"
+                icon="file_open"
+                label="Generar Reporte"
+                [loading]="loading()"
+                [disabled]="!selectedReporteValue"
+                (onClick)="generarReporte()">
+            </ui-button>
+            <ui-button
+                severity="success"
+                icon="description"
+                label="Excel"
+                [loading]="exportando() === 'excel'"
+                [disabled]="!puedeExportar()"
+                (onClick)="exportarExcel()">
+            </ui-button>
+            <ui-button
+                severity="danger"
+                icon="picture_as_pdf"
+                label="PDF"
+                [loading]="exportando() === 'pdf'"
+                [disabled]="!puedeExportar()"
+                (onClick)="exportarPdf()">
+            </ui-button>
+        </div>
+    </app-ui-filter-bar>
 
     <ui-card [title]="selectedReporte()?.label || 'Vista Previa'" [icon]="selectedReporte()?.icon || 'preview'">
         @if (esAvanceMensual()) {
