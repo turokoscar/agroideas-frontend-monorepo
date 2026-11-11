@@ -58,7 +58,8 @@
                     size="sm"
                     icon="description"
                     label="Excel"
-                    [disabled]="!selectedReporte()"
+                    [loading]="exportando() === 'excel'"
+                    [disabled]="!puedeExportar()"
                     (onClick)="exportarExcel()">
                 </ui-button>
                 <ui-button
@@ -68,7 +69,8 @@
                     size="sm"
                     icon="picture_as_pdf"
                     label="PDF"
-                    [disabled]="!selectedReporte()"
+                    [loading]="exportando() === 'pdf'"
+                    [disabled]="!puedeExportar()"
                     (onClick)="exportarPdf()">
                 </ui-button>
             </div>

@@ -54,7 +54,7 @@ shared/
 | `/main/kardex` | `KardexPageComponent` | `ACCESO_KARDEX` |
 | `/main/alertas` | `AlertasPageComponent` | `MONITOREO_ALERTAS` |
 | `/main/bandeja-aprobacion` | `BandejaAprobacionPageComponent` | `MONITOREO_ALERTAS` |
-| `/main/reportes` | `ReportesPageComponent` | `ACCESO_APP` |
+| `/main/reportes` | `ReportesPageComponent` | `ACCESO_APP` + `menuGuard` (`/main/reportes`) |
 | `/main/gestion-menus` | `GestionMenusPageComponent` | `GESTION_CARTERA` |
 | `/main/styleguide` | `StyleguidePageComponent` | — |
 
@@ -72,7 +72,8 @@ KardexRepository        — kardex de productos/insumos
 AlertaRepository        — alertas y monitoreo
 CatalogoRepository      — catálogos generales (ubigeo, etc.)
 SunatRepository         — consulta RUC/DNI
-MenuRepository         — gestión dinámica de menús
+MenuRepository          — gestión dinámica de menús
+ReporteRepository       — reporte de avance mensual por región y descarga Excel/PDF (ADR-028)
 ```
 
 ## Contrato de APIs

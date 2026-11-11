@@ -10,15 +10,20 @@ describe('ReportesPageComponent', () => {
     let component: ReportesPageComponent;
     let fixture: ComponentFixture<ReportesPageComponent>;
     let execute: jest.Mock;
+    let descargar: jest.Mock;
     let alert: { show: jest.Mock };
 
     beforeEach(async () => {
         execute = jest.fn().mockReturnValue(of(reporteDePrueba()));
+        descargar = jest.fn().mockReturnValue(of({
+            blob: new Blob(['datos']),
+            nombreArchivo: 'avance-mensual_2026-07-01_2026-08-31.xlsx'
+        }));
         alert = { show: jest.fn() };
         await TestBed.configureTestingModule({
             imports: [ReportesPageComponent],
             providers: [
-                { provide: GetReporteAvanceMensualUseCase, useValue: { execute } },
+                { provide: GetReporteAvanceMensualUseCase, useValue: { execute, descargar } },
                 { provide: AlertService, useValue: alert }
             ]
         }).compileComponents();
@@ -105,5 +110,46 @@ describe('ReportesPageComponent', () => {
 
         expect(execute).not.toHaveBeenCalled();
         expect(alert.show).toHaveBeenCalledWith('Reporte en preparación', expect.any(String), 'info');
+    });
+
+    it('deshabilita Excel y PDF mientras no haya un reporte con datos generado', () => {
+        expect(component.puedeExportar()).toBe(false);
+        component.exportarExcel();
+        expect(descargar).not.toHaveBeenCalled();
+
+        component.onReporteChange(ReportesPageComponent.AVANCE_MENSUAL);
+        component.generarReporte();
+        expect(component.puedeExportar()).toBe(true);
+    });
+
+    it('descarga el Excel y el PDF con el nombre que envía la API', () => {
+        const espiaDescarga = jest.spyOn(
+            component as unknown as { dispararDescarga: (b: Blob, n: string) => void },
+            'dispararDescarga'
+        ).mockImplementation(() => undefined);
+
+        component.onReporteChange(ReportesPageComponent.AVANCE_MENSUAL);
+        component.generarReporte();
+
+        component.exportarExcel();
+        expect(descargar).toHaveBeenCalledWith('2026-07-01', '2026-08-31', 'excel');
+        expect(espiaDescarga).toHaveBeenCalledWith(expect.any(Blob), 'avance-mensual_2026-07-01_2026-08-31.xlsx');
+
+        descargar.mockReturnValueOnce(of({ blob: new Blob(['%PDF']), nombreArchivo: 'avance-mensual_2026-07-01_2026-08-31.pdf' }));
+        component.exportarPdf();
+        expect(descargar).toHaveBeenCalledWith('2026-07-01', '2026-08-31', 'pdf');
+        expect(espiaDescarga).toHaveBeenCalledWith(expect.any(Blob), 'avance-mensual_2026-07-01_2026-08-31.pdf');
+    });
+
+    it('si la exportación responde 400 o 403 lee el mensaje JSON dentro del blob y lo muestra', async () => {
+        const blobError = new Blob([JSON.stringify({ mensaje: 'No tiene acceso a Reportes.' })], { type: 'application/json' });
+        descargar.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403, error: blobError })));
+
+        component.onReporteChange(ReportesPageComponent.AVANCE_MENSUAL);
+        component.generarReporte();
+        component.exportarPdf();
+
+        await new Promise(resolve => setTimeout(resolve, 20));
+        expect(alert.show).toHaveBeenCalledWith('Error al exportar', 'No tiene acceso a Reportes.', 'error');
     });
 });
