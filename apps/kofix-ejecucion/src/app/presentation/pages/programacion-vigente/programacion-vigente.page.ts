@@ -1,9 +1,10 @@
-import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent } from '@agroideas/ui';
+import { StatusTone, TableColumn, UIButtonComponent, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent } from '@agroideas/ui';
 import { formatConvenioNumber } from '@agroideas/utils';
 import { ChangeDetectionStrategy, Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Convenio } from '../../../domain/models/convenio.model';
 import { ConvenioFiltrosVigente, ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { ExportService } from '../../../shared/services/export.service';
 import { finalize } from 'rxjs/operators';
@@ -17,7 +18,7 @@ interface LazyLoadEvent {
 @Component({
     selector: 'app-programacion-vigente-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
+    imports: [CommonModule, FormsModule, UiDataTableComponent, UiFilterBarComponent, UiProgressBarComponent, UiStatusPillComponent, UIButtonComponent, UbigeoCascadaFilterComponent],
     templateUrl: './programacion-vigente.page.html',
     styleUrls: ['./programacion-vigente.page.sass'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,9 +28,7 @@ export class ProgramacionVigentePageComponent implements OnInit {
     private router = inject(Router);
     exportService = inject(ExportService);
 
-    Math = Math;
-
-    convenios = signal<any[]>([]);
+    convenios = signal<Convenio[]>([]);
     loading = signal(false);
     totalRecords = signal(0);
     pageSize = signal(10);
@@ -71,7 +70,7 @@ export class ProgramacionVigentePageComponent implements OnInit {
         };
 
         this.convenioRepo.getVigente(page, size, this.search(), filtros).pipe(finalize(() => this.loading.set(false))).subscribe({
-            next: (res: { datos: any[], total: number }) => {
+            next: (res) => {
                 this.convenios.set(res.datos);
                 this.totalRecords.set(res.total);
             },
@@ -80,7 +79,7 @@ export class ProgramacionVigentePageComponent implements OnInit {
     }
 
     onSearch(): void {
-        this.loadData({ first: 0, rows: this.pageSize() } as LazyLoadEvent);
+        this.loadData({ first: 0, rows: this.pageSize() });
     }
 
     onRowsChange(rows: number): void {
@@ -97,42 +96,34 @@ export class ProgramacionVigentePageComponent implements OnInit {
         this.loadData({ first: 0, rows: this.pageSize() });
     }
 
-    getPorcentajeProgramado(item: any): number {
-        const monto = item.montoAprobado || item.aporteProgramadoAgroideas || 0;
-        const prog = item.programacionAcumulada || 0;
-        if (monto <= 0) return 0;
-        return Math.min((prog / monto) * 100, 100);
+    /** % de la programación acumulada sobre el monto aprobado, tope 100. */
+    getPorcentajeProgramado(convenio: Convenio): number {
+        if (!convenio.montoAprobado || convenio.montoAprobado <= 0) return 0;
+        return Math.min(((convenio.programacionAcumulada || 0) / convenio.montoAprobado) * 100, 100);
     }
 
-    getProgressLevel(item: any): string {
-        const pct = this.getPorcentajeProgramado(item);
-        if (pct >= 100) return 'full';
-        if (pct >= 50) return 'mid';
-        return 'low';
+    getStatusTone(convenio: Convenio): StatusTone {
+        const pct = this.getPorcentajeProgramado(convenio);
+        if (pct >= 100) return 'success';
+        if (pct >= 50) return 'info';
+        if (pct > 0) return 'warning';
+        return 'danger';
     }
 
-    getStatusType(item: any): StatusType {
-        const pct = this.getPorcentajeProgramado(item);
-        if (pct >= 100) return 'Activo';
-        if (pct >= 50) return 'Media';
-        if (pct > 0) return 'Pendiente';
-        return 'Crítica';
-    }
-
-    getStatusLabel(item: any): string {
-        const pct = this.getPorcentajeProgramado(item);
+    getStatusLabel(convenio: Convenio): string {
+        const pct = this.getPorcentajeProgramado(convenio);
         if (pct >= 100) return 'Programado';
-        if (pct >= 50) return 'En proceso';
         if (pct > 0) return 'En proceso';
         return 'No programado';
     }
 
-    goToProgramacion(item: any): void {
-        this.router.navigate(['/main/programacion-vigente', item.id]);
+    goToProgramacion(convenio: Convenio): void {
+        this.router.navigate(['/main/programacion-vigente', convenio.id]);
     }
 
-    formatConvenioNumber(item: any): string {
-        if (!item?.numeroConvenio) return '-';
-        return formatConvenioNumber(item.numeroConvenio, item.fechaInicio);
+    formatConvenioNumber(convenio: Convenio): string {
+        if (!convenio?.numeroConvenio) return '-';
+        // fechaInicio es la fecha de firma (mc-api-ejecucion la mapea desde FechaFirma).
+        return formatConvenioNumber(convenio.numeroConvenio, convenio.fechaInicio);
     }
 }

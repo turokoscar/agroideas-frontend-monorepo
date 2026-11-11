@@ -1,9 +1,9 @@
-<div class="p-6 space-y-6">
+<div class="page-container">
 
   <!-- Page Header -->
   <div>
-    <h1 class="text-2xl font-bold text-slate-800">Programación Mensual</h1>
-    <p class="text-sm text-slate-500 mt-1">Vista consolidada de la programación presupuestal por convenio</p>
+    <h1 class="text-2xl font-bold text-foreground">Programación Mensual</h1>
+    <p class="text-sm text-muted-foreground">Vista consolidada de la programación presupuestal por convenio</p>
   </div>
 
   <!-- Filtros -->
@@ -69,17 +69,15 @@
         </div>
       }
       @if (col.field === 'estado') {
-        <app-ui-status-pill [status]="getStatusType(row)" [text]="getStatusLabel(row)"></app-ui-status-pill>
+        <app-ui-status-pill [tone]="getStatusTone(row)" [text]="getStatusLabel(row)" />
       }
       @if (col.field === 'porcentajeProgramado') {
-        <div class="prog-bar-wrap">
-          <div class="prog-bar">
-            <div class="prog-bar__fill"
-              [attr.data-level]="getProgressLevel(row)"
-              [style.width.%]="getPorcentajeProgramado(row)">
-            </div>
-          </div>
-          <span class="prog-bar__label">{{ getPorcentajeProgramado(row) | number:'1.0-0' }}%</span>
+        <div class="cell-programado">
+          <app-ui-progress-bar
+            [value]="row.programacionAcumulada"
+            [maxValue]="row.montoAprobado"
+            [showLabel]="true">
+          </app-ui-progress-bar>
         </div>
       }
     </ng-template>

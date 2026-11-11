@@ -5,6 +5,7 @@ import { ProgramacionVigentePageComponent } from './programacion-vigente.page';
 import { ConvenioRepository } from '../../../domain/repositories/convenio.repository';
 import { CarteraRepository } from '../../../domain/repositories/cartera.repository';
 import { ExportService } from '../../../shared/services/export.service';
+import { Convenio } from '../../../domain/models/convenio.model';
 
 describe('ProgramacionVigentePageComponent', () => {
     let component: ProgramacionVigentePageComponent;
@@ -34,6 +35,15 @@ describe('ProgramacionVigentePageComponent', () => {
     });
 
     const filtrosVacios = { periodo: undefined };
+
+    const conv = (overrides: Partial<Convenio> = {}): Convenio => ({
+        id: 1, numeroConvenio: '12', ruc: '20100000001', razonSocial: 'Asociación', region: 'Cusco',
+        estado: 'VIGENTE', fechaInicio: '2026-06-01', fechaFin: '2026-12-31',
+        montoAprobado: 1000, montoProgramado: 0, montoEjecutado: 0, saldoPorProgramar: 0, saldoPorEjecutar: 0,
+        programacionAcumulada: 0, ejecucionAcumulada: 0, saldoDisponible: 0,
+        asignadoA: '', email: '', periodo: 2026, duracion: 12,
+        ...overrides
+    });
 
     it('should auto-load the first page on init', () => {
         fixture.detectChanges();
@@ -69,40 +79,31 @@ describe('ProgramacionVigentePageComponent', () => {
     });
 
     it('should clamp the progress percentage to 100 and handle a missing montoAprobado', () => {
-        expect(component.getPorcentajeProgramado({ montoAprobado: 1000, programacionAcumulada: 1500 })).toBe(100);
-        expect(component.getPorcentajeProgramado({ montoAprobado: 1000, programacionAcumulada: 250 })).toBe(25);
-        expect(component.getPorcentajeProgramado({ montoAprobado: 0, programacionAcumulada: 250 })).toBe(0);
+        expect(component.getPorcentajeProgramado(conv({ programacionAcumulada: 1500 }))).toBe(100);
+        expect(component.getPorcentajeProgramado(conv({ programacionAcumulada: 250 }))).toBe(25);
+        expect(component.getPorcentajeProgramado(conv({ montoAprobado: 0, programacionAcumulada: 250 }))).toBe(0);
     });
 
-    it('should fall back to aporteProgramadoAgroideas when montoAprobado is missing', () => {
-        expect(component.getPorcentajeProgramado({ aporteProgramadoAgroideas: 500, programacionAcumulada: 250 })).toBe(50);
-    });
+    it('should classify the status tone and label by threshold', () => {
+        expect(component.getStatusTone(conv({ programacionAcumulada: 1000 }))).toBe('success');
+        expect(component.getStatusTone(conv({ programacionAcumulada: 600 }))).toBe('info');
+        expect(component.getStatusTone(conv({ programacionAcumulada: 100 }))).toBe('warning');
+        expect(component.getStatusTone(conv({ programacionAcumulada: 0 }))).toBe('danger');
 
-    it('should classify the progress level by threshold', () => {
-        expect(component.getProgressLevel({ montoAprobado: 1000, programacionAcumulada: 1000 })).toBe('full');
-        expect(component.getProgressLevel({ montoAprobado: 1000, programacionAcumulada: 600 })).toBe('mid');
-        expect(component.getProgressLevel({ montoAprobado: 1000, programacionAcumulada: 100 })).toBe('low');
-    });
-
-    it('should classify the status type and label by threshold', () => {
-        expect(component.getStatusType({ montoAprobado: 1000, programacionAcumulada: 1000 })).toBe('Activo');
-        expect(component.getStatusType({ montoAprobado: 1000, programacionAcumulada: 600 })).toBe('Media');
-        expect(component.getStatusType({ montoAprobado: 1000, programacionAcumulada: 100 })).toBe('Pendiente');
-        expect(component.getStatusType({ montoAprobado: 1000, programacionAcumulada: 0 })).toBe('Crítica');
-
-        expect(component.getStatusLabel({ montoAprobado: 1000, programacionAcumulada: 1000 })).toBe('Programado');
-        expect(component.getStatusLabel({ montoAprobado: 1000, programacionAcumulada: 0 })).toBe('No programado');
+        expect(component.getStatusLabel(conv({ programacionAcumulada: 1000 }))).toBe('Programado');
+        expect(component.getStatusLabel(conv({ programacionAcumulada: 600 }))).toBe('En proceso');
+        expect(component.getStatusLabel(conv({ programacionAcumulada: 0 }))).toBe('No programado');
     });
 
     it('should navigate to the dedicated programacion-vigente detail page (ADR-019 Fase 3)', () => {
-        component.goToProgramacion({ id: 9 });
+        component.goToProgramacion(conv({ id: 9 }));
 
         expect(router.navigate).toHaveBeenCalledWith(['/main/programacion-vigente', 9]);
     });
 
     it('should format the convenio number from the row, defaulting to a dash when missing', () => {
-        expect(component.formatConvenioNumber({ numeroConvenio: '12', fechaInicio: '2026-06-01' })).toBe('0012-2026-ST');
-        expect(component.formatConvenioNumber({})).toBe('-');
+        expect(component.formatConvenioNumber(conv({ numeroConvenio: '12', fechaInicio: '2026-06-01' }))).toBe('0012-2026-ST');
+        expect(component.formatConvenioNumber(conv({ numeroConvenio: '' }))).toBe('-');
     });
 
     it('should update pageSize when the table selector changes rows (ADR-019 Fase 3.5)', () => {
