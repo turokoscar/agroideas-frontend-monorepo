@@ -199,6 +199,44 @@ Detalle en el ADR 0001 → Registro de implementación.
 
 ---
 
+## Iniciativa transversal — Encabezados de página con `ui-page-header`
+
+**Problema:** no existía un componente para el título y el subtítulo de página. Cada página los escribía a mano y
+cada app usaba un estilo distinto: `tracking-tight` en sigec-rtf, `font-display` en sat-ui, `text-slate-*` en vez de
+tokens en varias páginas de kofix y sat-ui, y `<h2>` en lugar de `<h1>` en sigec-cierre. Cambiar el estilo obligaba
+a tocar unas 20 plantillas.
+
+**Componente:** `UiPageHeaderComponent` (`libs/ui/src/lib/ui-page-header/`, exportado desde `@agroideas/ui`).
+- Pinta siempre un `<h1>` con `text-2xl font-bold tracking-tight text-foreground` y el subtítulo con
+  `text-sm text-muted-foreground`.
+- Entradas `title` y `subtitle`. Slot `[page-header-actions]` para botones o controles a la derecha (debajo, en
+  móvil). Slot `[page-header-subtitle]` para subtítulos con contenido propio.
+- No agrega margen exterior; el espacio lo pone la página (`page-container`).
+
+**Fase 1 — kofix-ejecucion  ✅ EJECUTADA (2026-11-11, commit `8f4b6c0`)**
+- Migradas: Convenios, Cartera, Programación Vigente, Ejecución, Alertas, Kardex (botón "Cerrar Periodo" como
+  acción), Bandeja de Aprobación, Reportes, Gestión de Menús y Home (selector de período como acción).
+- Ejecución, Alertas, Gestión de Menús y Home dejaron de usar `text-slate-*`.
+
+**Fase 2 — resto de apps y pendientes  ⏳ PENDIENTE**
+1. **sat-ui:** 7 páginas (5 con `font-display text-2xl font-bold text-foreground`, 2 con `text-slate-800 tracking-tight`).
+2. **sigec-rtf:** 5 páginas con `text-2xl font-bold tracking-tight text-foreground`. `oa-dashboard` usa el slot
+   `[page-header-subtitle]` porque su subtítulo incluye un `<span>` resaltado y tiene un indicador a la derecha
+   (slot de acciones).
+3. **sigec-cierre:** usa `<h2>` como título de página; pasarlo a `ui-page-header` (`<h1>`).
+4. **Encabezados de detalle de kofix** (`gastos-f1`, `programacion-vigente-detail`: `<h2>` en mayúsculas, truncado y
+   con botón de volver): decidir si merecen una variante del componente o se quedan como están.
+5. **Limpieza:** `apps/kofix-ejecucion/src/app/app.component.html` tiene un `<h1>Test AuthRepository</h1>` que
+   parece código de prueba olvidado.
+6. **Deuda de tokens relacionada:** la variante `status` de `ui-status-pill` sigue con colores hex fijos (la
+   variante `tone` ya usa tokens). `ui-progress-bar` y `ui-filter-bar` ya se pasaron a tokens (commits `8aea8c8`
+   y `9fa9549`).
+
+**Criterios de aceptación:** ninguna página de las cuatro apps escribe su `<h1>` a mano (salvo los heros de login);
+cero `text-slate-*` en títulos y subtítulos; revisión visual de cada página migrada.
+
+---
+
 ## Tabla de mapeo de componentes (KOFIX → DS → YACHACHIP)
 
 | `@agroideas/ui` | Origen KOFIX | Reemplaza en YACHACHIP |
@@ -210,6 +248,7 @@ Detalle en el ADR 0001 → Registro de implementación.
 | `ui-data-table` | `ui-data-table` | tablas Material |
 | `ui-modal` | `ui-modal` | dialogs Material |
 | `ui-filter-bar` / `ui-progress-bar` / `ui-map` | idem | (nuevos en YACHACHIP) |
+| `ui-page-header` | (nuevo; antes cabeceras hechas a mano) | cabeceras hechas a mano (fase 2 pendiente) |
 
 ## Inventario de librerías objetivo
 
