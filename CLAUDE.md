@@ -189,7 +189,7 @@ exported and no app consumes the lib yet — treat it the same as `http`, not as
 
 ## Key references
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — decisions + implementation log.
-- `docs/adr/` — numbered ADRs (0002–0015) by app/feature; check the relevant one before
+- `docs/adr/` — numbered ADRs (0002–0016) by app/feature; check the relevant one before
   changing a flow it covers.
 - `apps/{kofix-ejecucion,sigec-rtf,sigec-cierre}/CLAUDE.md` — app-specific rules.
 - `docs/plan-implementacion-monorepo.md` — phased plan with acceptance criteria.

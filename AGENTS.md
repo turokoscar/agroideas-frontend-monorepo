@@ -89,7 +89,7 @@ Enforced by `@nx/enforce-module-boundaries` via `project.json` tags:
 
 - `CONTRIBUTING.md` — generator commands and tag reference
 - `docs/adr/0001-migracion-monorepo-frontend-agroideas.md` — full ADR
-- `docs/adr/` — numbered ADRs (0002–0015) by app/feature
+- `docs/adr/` — numbered ADRs (0002–0016) by app/feature
 - `apps/{kofix-ejecucion,sigec-rtf,sigec-cierre}/CLAUDE.md` — app-specific rules
 - `docs/plan-implementacion-monorepo.md` — phased plan
 - `docs/phase-0/version-pins.md` — why the lint stack is pinned
