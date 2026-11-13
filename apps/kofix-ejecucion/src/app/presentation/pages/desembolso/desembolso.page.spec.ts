@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
-import { PermissionService } from '@agroideas/security';
 import { DesembolsoPageComponent } from './desembolso.page';
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
-import { Desembolso, DesembolsoChequePendiente } from '../../../domain/models/desembolso.model';
+import { Desembolso } from '../../../domain/models/desembolso.model';
 
 describe('DesembolsoPageComponent', () => {
     let component: DesembolsoPageComponent;
@@ -13,7 +12,6 @@ describe('DesembolsoPageComponent', () => {
     let mockDesembolsoRepo: jest.Mocked<Partial<DesembolsoRepository>>;
     let mockCatalogoRepo: jest.Mocked<Partial<CatalogoRepository>>;
     let mockAlert: jest.Mocked<Partial<AlertService>>;
-    let mockPermissionService: jest.Mocked<Partial<PermissionService>>;
 
     const buildDesembolso = (overrides: Partial<Desembolso> = {}): Desembolso => ({
         id: 1,
@@ -31,20 +29,17 @@ describe('DesembolsoPageComponent', () => {
     beforeEach(async () => {
         mockDesembolsoRepo = {
             getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
-            getChequesPendientesActivacion: jest.fn().mockReturnValue(of([])),
             anular: jest.fn()
         };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockAlert = { confirm: jest.fn(), show: jest.fn(), toast: jest.fn() };
-        mockPermissionService = { hasPermission: jest.fn().mockReturnValue(false) };
 
         await TestBed.configureTestingModule({
             imports: [DesembolsoPageComponent],
             providers: [
                 { provide: DesembolsoRepository, useValue: mockDesembolsoRepo },
                 { provide: CatalogoRepository, useValue: mockCatalogoRepo },
-                { provide: AlertService, useValue: mockAlert },
-                { provide: PermissionService, useValue: mockPermissionService }
+                { provide: AlertService, useValue: mockAlert }
             ]
         }).compileComponents();
 
@@ -65,20 +60,6 @@ describe('DesembolsoPageComponent', () => {
         fixture.detectChanges();
 
         expect(mockDesembolsoRepo.getByPostulante).not.toHaveBeenCalled();
-    });
-
-    it('should reflect the ACTIVAR_CHEQUES permission and load the bandeja when granted', () => {
-        mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
-        fixture.detectChanges();
-
-        expect((component as unknown as { puedeActivarCheque: () => boolean }).puedeActivarCheque()).toBe(true);
-        expect(mockDesembolsoRepo.getChequesPendientesActivacion).toHaveBeenCalledWith(5);
-    });
-
-    it('should not load the bandeja de cheques when the user lacks ACTIVAR_CHEQUES', () => {
-        fixture.detectChanges();
-
-        expect(mockDesembolsoRepo.getChequesPendientesActivacion).not.toHaveBeenCalled();
     });
 
     it('should format the numeroSolicitud padded to 4 digits plus the year of fechaSolicitud', () => {
@@ -108,53 +89,6 @@ describe('DesembolsoPageComponent', () => {
     it('should mark a desembolso as Rendido when the full amount was rendered', () => {
         expect(component.getEstadoRendicion({ montoTotalDesembolsado: 1000, montoRendido: 1000 } as Desembolso))
             .toEqual({ status: 'Aprobado', text: 'Rendido' });
-    });
-
-    const buildChequePendiente = (overrides: Partial<DesembolsoChequePendiente> = {}): DesembolsoChequePendiente => ({
-        id: 1,
-        ideCheque: 1,
-        correlativo: 'CH-2202-0001',
-        postulanteId: 5,
-        numeroSolicitud: 'SD-001',
-        monto: 500,
-        fechaDevengado: '2026-08-26',
-        ...overrides
-    });
-
-    describe('abrirActivarChequeModal', () => {
-        it('should show the activar-cheque modal with the selected cheque', () => {
-            fixture.detectChanges();
-            const cheque = buildChequePendiente();
-
-            component.abrirActivarChequeModal(cheque);
-
-            expect(component.showActivarChequeModal()).toBe(true);
-            expect(component.activandoCheque()).toBe(cheque);
-        });
-    });
-
-    describe('handleActivarChequeModalClose', () => {
-        it('should reload both the bandeja and the main list when confirmed', () => {
-            fixture.detectChanges();
-            component.showActivarChequeModal.set(true);
-            jest.clearAllMocks();
-
-            component.handleActivarChequeModalClose(true);
-
-            expect(component.showActivarChequeModal()).toBe(false);
-            expect(mockDesembolsoRepo.getChequesPendientesActivacion).toHaveBeenCalledWith(5);
-            expect(mockDesembolsoRepo.getByPostulante).toHaveBeenCalled();
-        });
-
-        it('should not reload when closed without confirming', () => {
-            fixture.detectChanges();
-            jest.clearAllMocks();
-
-            component.handleActivarChequeModalClose(false);
-
-            expect(mockDesembolsoRepo.getChequesPendientesActivacion).not.toHaveBeenCalled();
-            expect(mockDesembolsoRepo.getByPostulante).not.toHaveBeenCalled();
-        });
     });
 
     it('should reload the list when the modal closes requesting a refresh', () => {

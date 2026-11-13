@@ -11,8 +11,14 @@
       </div>
       <div>
         <span class="block text-slate-400 font-semibold uppercase text-[10px]">N° Memorándum AGROIDEAS</span>
-        <span class="font-semibold text-slate-700">{{ cheque().numeroSolicitud }}</span>
+        <span class="font-semibold text-slate-700">{{ numeroMemorandum() }}</span>
       </div>
+      @if (cheque().itemNombre) {
+        <div class="col-span-2">
+          <span class="block text-slate-400 font-semibold uppercase text-[10px]">Ítem</span>
+          <span class="font-semibold text-slate-700">{{ cheque().itemNombre }}</span>
+        </div>
+      }
       <div>
         <span class="block text-slate-400 font-semibold uppercase text-[10px]">Monto</span>
         <span class="font-semibold text-primary">S/ {{ cheque().monto | number:'1.2-2' }}</span>

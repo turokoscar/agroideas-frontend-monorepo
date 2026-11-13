@@ -1,6 +1,7 @@
 import { UIButtonComponent, UiKpiComponent, UiStateComponent } from '@agroideas/ui';
-import { formatConvenioNumber, formatCurrency } from '@agroideas/utils';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { PermissionService } from '@agroideas/security';
+import { PERMISSIONS, formatConvenioNumber, formatCurrency } from '@agroideas/utils';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Convenio } from '../../../domain/models/convenio.model';
@@ -12,11 +13,19 @@ import { DesembolsoPageComponent } from '../desembolso/desembolso.page';
 import { RendicionPageComponent } from '../rendicion/rendicion.page';
 import { ConvenioDetailTab, ConvenioDetailTabsComponent } from '../../components/convenio-detail-tabs/convenio-detail-tabs.component';
 import { KardexVarianzaTabComponent } from '../../components/kardex-varianza-tab/kardex-varianza-tab.component';
+import { ChequesGerenciaTabComponent } from '../../components/cheques-gerencia-tab/cheques-gerencia-tab.component';
+
+/** Identificador de cada pestaña; es también el valor de `?tab=` para enlazarla directamente. */
+export type EjecucionTabId = 'no-objeciones' | 'desembolsos' | 'cheques' | 'rendiciones' | 'kardex';
+
+interface EjecucionTab extends ConvenioDetailTab {
+    id: EjecucionTabId;
+}
 
 /**
  * Espacio de trabajo dedicado de Ejecución (ADR-019 Fase 3): No Objeciones, Desembolsos,
- * Rendiciones y Kardex & Varianza, reutilizados sin cambios desde lo que antes eran las
- * pestañas 2-5 de `ConvenioDetailPageComponent`.
+ * Cheques de Gerencia, Rendiciones y Kardex & Varianza. Las pestañas se identifican por id, no
+ * por posición, porque "Cheques de Gerencia" solo aparece con el permiso ACTIVAR_CHEQUES (ADR-020).
  */
 @Component({
     selector: 'app-ejecucion-detail-page',
@@ -30,7 +39,8 @@ import { KardexVarianzaTabComponent } from '../../components/kardex-varianza-tab
         NoObjecionPageComponent,
         DesembolsoPageComponent,
         RendicionPageComponent,
-        KardexVarianzaTabComponent
+        KardexVarianzaTabComponent,
+        ChequesGerenciaTabComponent
     ],
     templateUrl: './ejecucion-detail.page.html',
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -39,18 +49,26 @@ export class EjecucionDetailPageComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private kardexRepo = inject(KardexRepository);
+    private permissionService = inject(PermissionService);
     public stateService = inject(ConvenioStateService);
 
-    activeTabIndex = signal(0);
+    activeTab = signal<EjecucionTabId>('no-objeciones');
     kardexConsolidado = signal<KardexConsolidado[]>([]);
     loadingKardex = signal(false);
 
-    readonly tabs: ConvenioDetailTab[] = [
-        { label: 'No Objeciones' },
-        { label: 'Desembolsos' },
-        { label: 'Rendiciones' },
-        { label: 'Kardex & Varianza' }
-    ];
+    /** La bandeja de cheques solo la ven el Supervisor de Monitoreo y el Administrador. */
+    readonly puedeActivarCheques = computed(() => this.permissionService.hasPermission(PERMISSIONS.ACTIVAR_CHEQUES));
+
+    readonly tabs = computed<EjecucionTab[]>(() => [
+        { id: 'no-objeciones', label: 'No Objeciones' },
+        { id: 'desembolsos', label: 'Desembolsos' },
+        ...(this.puedeActivarCheques() ? [{ id: 'cheques' as const, label: 'Cheques de Gerencia' }] : []),
+        { id: 'rendiciones', label: 'Rendiciones' },
+        { id: 'kardex', label: 'Kardex & Varianza' }
+    ]);
+
+    /** Posición de la pestaña activa, para `app-convenio-detail-tabs`. */
+    readonly activeTabIndex = computed(() => this.tabs().findIndex(t => t.id === this.activeTab()));
 
     ngOnInit(): void {
         const id = this.route.snapshot.paramMap.get('id');
@@ -64,16 +82,19 @@ export class EjecucionDetailPageComponent implements OnInit {
         }
     }
 
+    /** Abre la pestaña de `?tab=`; ignora valores desconocidos o pestañas sin permiso. */
     setTabIndexByTab(tab: string): void {
-        const index = ['no-objeciones', 'desembolsos', 'rendiciones', 'kardex'].indexOf(tab);
+        const index = this.tabs().findIndex(t => t.id === tab);
         if (index >= 0) {
             this.setActiveTab(index);
         }
     }
 
     setActiveTab(index: number): void {
-        this.activeTabIndex.set(index);
-        if (index === 3) {
+        const tab = this.tabs()[index];
+        if (!tab) return;
+        this.activeTab.set(tab.id);
+        if (tab.id === 'kardex') {
             const convenio = this.stateService.convenio();
             if (convenio) {
                 this.loadKardexConsolidado(convenio.id);

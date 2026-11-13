@@ -61,28 +61,31 @@
     <div
       class="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
       <app-convenio-detail-tabs
-        [tabs]="tabs"
+        [tabs]="tabs()"
         [activeIndex]="activeTabIndex()"
         (tabChange)="setActiveTab($event)">
       </app-convenio-detail-tabs>
       <!-- Tab Content -->
       <div class="p-8">
-        @if (activeTabIndex() === 0) {
+        @if (activeTab() === 'no-objeciones') {
           <div>
             <app-no-objecion-page [convenioId]="convenio.id" [readOnly]="false"></app-no-objecion-page>
           </div>
         }
-        @if (activeTabIndex() === 1) {
+        @if (activeTab() === 'desembolsos') {
           <div>
             <app-desembolso-page [convenioId]="convenio.id" [readOnly]="false"></app-desembolso-page>
           </div>
         }
-        @if (activeTabIndex() === 2) {
+        @if (activeTab() === 'cheques') {
+          <app-cheques-gerencia-tab [convenioId]="convenio.id"></app-cheques-gerencia-tab>
+        }
+        @if (activeTab() === 'rendiciones') {
           <div>
             <app-rendicion-page [convenioId]="convenio.id" [readOnly]="false"></app-rendicion-page>
           </div>
         }
-        @if (activeTabIndex() === 3) {
+        @if (activeTab() === 'kardex') {
           <app-kardex-varianza-tab
             [convenio]="convenio"
             [kardexConsolidado]="kardexConsolidado()"

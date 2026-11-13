@@ -1,0 +1,47 @@
+<div class="page-container">
+
+  <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+    Cheques de gerencia en estado <strong>DEVENGADO</strong>. Al recibir la documentación sustentatoria
+    (contrapartida) de la organización, actívalos para pasarlos a <strong>GIRADO</strong>: recién entonces
+    el monto cuenta como ejecutado y el ítem se puede rendir.
+  </p>
+
+  <app-ui-data-table
+    [data]="chequesPendientes()"
+    [columns]="columns"
+    [loading]="loading()"
+    [hasActions]="true"
+    [paginator]="false"
+    [actionsTemplate]="chequeActions"
+    [rowTemplate]="rowTemplate"
+    icon="verified"
+    title="Cheques Pendientes de Activación"
+    [emptyIcon]="loadError() ? 'error' : 'verified'"
+    [emptyMessage]="loadError() ? 'No se pudieron cargar los cheques' : 'Sin cheques pendientes'"
+    [emptySubMessage]="loadError() ? 'Ocurrió un error al consultar los cheques pendientes. Intenta nuevamente.' : 'No hay cheques en estado DEVENGADO para este convenio.'">
+
+    <ng-template #rowTemplate let-row let-col="col">
+      @if (col.field === 'numeroSolicitud') {
+        {{ formatSolicitudNumber(row) }}
+      }
+    </ng-template>
+
+  </app-ui-data-table>
+
+</div>
+
+<!-- Acciones por fila -->
+<ng-template #chequeActions let-row>
+  <div class="row-actions">
+    <ui-button iconOnly appearance="soft" severity="success" size="sm" icon="verified"
+      ariaLabel="Activar Cheque" (onClick)="abrirActivarChequeModal(row)" />
+  </div>
+</ng-template>
+
+<!-- Modal de activación de cheque (DEVENGADO -> GIRADO) -->
+@if (showActivarChequeModal()) {
+  <app-activar-cheque-modal
+    [cheque]="activandoCheque()!"
+    (onClose)="handleActivarChequeModalClose($event)">
+  </app-activar-cheque-modal>
+}

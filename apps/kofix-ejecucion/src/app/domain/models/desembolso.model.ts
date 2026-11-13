@@ -48,6 +48,10 @@ export interface DesembolsoChequePendiente {
     correlativo: string;
     postulanteId: number;
     numeroSolicitud: string;
+    /** Da el año del N° Memorándum AGROIDEAS (`formatSolicitudNumber`). */
+    fechaSolicitud: string | Date;
+    /** Ítem de la N.O. al que corresponde el cheque (el cheque es por ítem). */
+    itemNombre?: string;
     monto: number;
     fechaDevengado: string | Date;
     observacion?: string;

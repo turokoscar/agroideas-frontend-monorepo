@@ -16,7 +16,9 @@ describe('ActivarChequeModalComponent', () => {
         ideCheque: 2,
         correlativo: 'CH-2202-0001',
         postulanteId: 2202,
-        numeroSolicitud: 'SD-001',
+        numeroSolicitud: '55',
+        fechaSolicitud: '2026-08-21',
+        itemNombre: 'Porongos',
         monto: 500,
         fechaDevengado: '2026-08-26'
     };
@@ -115,5 +117,15 @@ describe('ActivarChequeModalComponent', () => {
 
         expect(component.selectedFile()).toBeNull();
         expect(component.fileUrl()).toBeNull();
+    });
+
+    it('muestra el N° Memorándum con el formato numero-año', () => {
+        expect(component.numeroMemorandum()).toBe('0055-2026');
+    });
+
+    it('muestra el ítem del cheque', () => {
+        fixture.detectChanges();
+
+        expect(document.body.textContent).toContain('Porongos');
     });
 });

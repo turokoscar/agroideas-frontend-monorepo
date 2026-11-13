@@ -84,7 +84,10 @@ describe('EjecucionDetailPageComponent', () => {
     beforeEach(() => {
         mockUseCase = { execute: jest.fn().mockReturnValue(of(buildConvenio())) };
         mockKardexRepo = { getConsolidado: jest.fn().mockReturnValue(of([])) };
-        mockDesembolsoRepo = { getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })) };
+        mockDesembolsoRepo = {
+            getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
+            getChequesPendientesActivacion: jest.fn().mockReturnValue(of([]))
+        };
         mockCatalogoRepo = { getByGrupo: jest.fn().mockReturnValue(of([])) };
         mockRendicionRepo = { getByConvenio: jest.fn().mockReturnValue(of({ items: [], total: 0 })) };
         mockNoObjecionRepo = { getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })) };
@@ -134,6 +137,63 @@ describe('EjecucionDetailPageComponent', () => {
 
         expect(component.activeTabIndex()).toBe(2);
         expect(mockKardexRepo.getConsolidado).not.toHaveBeenCalled();
+    });
+
+    describe('pestaña Cheques de Gerencia (ADR-020)', () => {
+        const etiquetas = () => component.tabs().map(t => t.label);
+
+        it('no aparece sin el permiso ACTIVAR_CHEQUES', () => {
+            createComponent('5').detectChanges();
+
+            expect(etiquetas()).toEqual(['No Objeciones', 'Desembolsos', 'Rendiciones', 'Kardex & Varianza']);
+            expect(mockPermissionService.hasPermission).toHaveBeenCalledWith('ACTIVAR_CHEQUES');
+        });
+
+        it('aparece entre Desembolsos y Rendiciones con el permiso', () => {
+            mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
+            createComponent('5').detectChanges();
+
+            expect(etiquetas()).toEqual(['No Objeciones', 'Desembolsos', 'Cheques de Gerencia', 'Rendiciones', 'Kardex & Varianza']);
+        });
+
+        it('al abrirla muestra la bandeja del convenio', () => {
+            mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
+            createComponent('5').detectChanges();
+
+            component.setActiveTab(2);
+            fixture.detectChanges();
+
+            expect(component.activeTab()).toBe('cheques');
+            expect(mockDesembolsoRepo.getChequesPendientesActivacion).toHaveBeenCalledWith(5);
+            expect(fixture.nativeElement.querySelector('app-cheques-gerencia-tab')).not.toBeNull();
+        });
+
+        it('con el permiso, las pestañas siguientes conservan su contenido aunque cambie su posición', () => {
+            mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
+            createComponent('5', { tab: 'rendiciones' }).detectChanges();
+
+            expect(component.activeTab()).toBe('rendiciones');
+            expect(component.activeTabIndex()).toBe(3);
+
+            component.setActiveTab(4);
+
+            expect(component.activeTab()).toBe('kardex');
+            expect(mockKardexRepo.getConsolidado).toHaveBeenCalledWith(5);
+        });
+
+        it('se puede enlazar con ?tab=cheques', () => {
+            mockPermissionService.hasPermission = jest.fn().mockReturnValue(true);
+            createComponent('5', { tab: 'cheques' }).detectChanges();
+
+            expect(component.activeTab()).toBe('cheques');
+        });
+
+        it('ignora ?tab=cheques sin el permiso y queda en la primera pestaña', () => {
+            createComponent('5', { tab: 'cheques' }).detectChanges();
+
+            expect(component.activeTab()).toBe('no-objeciones');
+            expect(mockDesembolsoRepo.getChequesPendientesActivacion).not.toHaveBeenCalled();
+        });
     });
 
     it('should navigate back to the convenio ficha técnica', () => {

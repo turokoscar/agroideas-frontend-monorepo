@@ -1,6 +1,7 @@
 import { AlertService } from '@agroideas/feedback';
 import { UIButtonComponent, UIModalComponent, UiFileChipComponent } from '@agroideas/ui';
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject, input, signal } from '@angular/core';
+import { formatSolicitudNumber } from '@agroideas/utils';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inject, input, signal } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { finalize } from 'rxjs/operators';
 import { DesembolsoChequePendiente } from '../../../domain/models/desembolso.model';
@@ -15,6 +16,8 @@ import { DesembolsoRepository } from '../../../domain/repositories/desembolso.re
 })
 export class ActivarChequeModalComponent {
     cheque = input.required<DesembolsoChequePendiente>();
+    /** N° Memorándum con el formato numero-año (p. ej. 0055-2026). */
+    readonly numeroMemorandum = computed(() => formatSolicitudNumber(this.cheque().numeroSolicitud, this.cheque().fechaSolicitud));
     @Output() onClose = new EventEmitter<boolean>();
 
     visible = signal(true);
