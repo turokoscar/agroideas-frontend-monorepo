@@ -57,12 +57,6 @@ export class DesembolsoRepositoryImpl extends DesembolsoRepository {
         return this.http.delete<ResponseDto>(`${this.apiUrl}/${desembolsoId}`);
     }
 
-    override getPendientesRendicion(postulanteId: number): Observable<any[]> {
-        return this.http.get<ResponseDto<any[]>>(`${this.apiUrl}/postulante/${postulanteId}/pendientes-rendicion`).pipe(
-            map(res => res.datos || [])
-        );
-    }
-
     override getChequesPendientesActivacion(postulanteId: number): Observable<DesembolsoChequePendiente[]> {
         const params = new HttpParams().set('postulanteId', postulanteId.toString());
         return this.http.get<ResponseDto<DesembolsoChequePendiente[]>>(`${this.apiUrl}/cheques/pendientes-activacion`, { params }).pipe(
