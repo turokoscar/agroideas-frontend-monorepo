@@ -193,7 +193,7 @@ export class NoObjecionPageComponent implements OnInit {
         this.showItemsModal.set(false);
     }
 
-    downloadDocument(fileUrl: string): void {
+    downloadDocument(fileUrl: string, numero?: string): void {
         if (!fileUrl) {
             this.alertService.show('Información', 'Esta No Objeción no tiene un documento adjunto.', 'info');
             return;
@@ -204,7 +204,7 @@ export class NoObjecionPageComponent implements OnInit {
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = fileUrl.split('/').pop() || 'documento.pdf';
+                a.download = `${numero || 'documento'}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

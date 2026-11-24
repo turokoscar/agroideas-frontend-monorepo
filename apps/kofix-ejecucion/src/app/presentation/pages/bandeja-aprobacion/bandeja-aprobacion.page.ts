@@ -104,7 +104,7 @@ export class BandejaAprobacionPageComponent implements OnInit {
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = item.archivoUrl.split('/').pop() || 'no_objecion.pdf';
+                a.download = `${item.numeroNoObjecion || 'no_objecion'}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

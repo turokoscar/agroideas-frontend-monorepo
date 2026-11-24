@@ -90,7 +90,7 @@
     <ui-button iconOnly appearance="soft" severity="info" size="sm" icon="download"
       [disabled]="!row.archivoUrl"
       [ariaLabel]="row.archivoUrl ? 'Descargar documento' : 'Sin documento adjunto'"
-      (onClick)="downloadDocument(row.archivoUrl)" />
+      (onClick)="downloadDocument(row.archivoUrl, row.numeroDocumento)" />
     @if (!readOnly()) {
       @if (evaluacionDe(row); as evaluacionId) {
         <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit_note" [disabled]="!puedeOperarFinanzas()"
