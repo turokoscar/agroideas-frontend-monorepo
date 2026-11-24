@@ -15,6 +15,8 @@ export abstract class NoObjecionRepository {
     abstract downloadFile(fileUrl: string): Observable<Blob>;
     abstract getBandejaAprobacion(estado: string, offset?: number, limit?: number): Observable<{ items: any[], total: number }>;
     abstract evaluar(id: number, estado: string, observacion: string): Observable<any>;
+    /** API ADR-032: devuelve a PENDIENTE una N.O. aprobada, para corregirla. */
+    abstract devolver(id: number, justificacion: string): Observable<any>;
     /** ADR 0012 Fase 4: saldo rebajable por ítem e historial de rebajas. */
     abstract getSaldoRebaja(noObjecionId: number): Observable<NoObjecionRebajaSaldo>;
     /** ADR 0012 Fase 4: rebaja parcial (unidades enteras) o total ("Anular saldo"). */

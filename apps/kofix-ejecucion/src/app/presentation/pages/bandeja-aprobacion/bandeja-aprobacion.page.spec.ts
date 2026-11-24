@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
 import { BandejaAprobacionPageComponent } from './bandeja-aprobacion.page';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 
@@ -14,7 +15,8 @@ describe('BandejaAprobacionPageComponent', () => {
         mockRepo = {
             getBandejaAprobacion: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
             downloadFile: jest.fn(),
-            evaluar: jest.fn()
+            evaluar: jest.fn(),
+            devolver: jest.fn()
         };
         mockAlert = { show: jest.fn(), toast: jest.fn(), confirm: jest.fn() };
 
@@ -22,7 +24,8 @@ describe('BandejaAprobacionPageComponent', () => {
             imports: [BandejaAprobacionPageComponent],
             providers: [
                 { provide: NoObjecionRepository, useValue: mockRepo },
-                { provide: AlertService, useValue: mockAlert }
+                { provide: AlertService, useValue: mockAlert },
+                { provide: PermissionService, useValue: { hasPermission: (p: string) => p === 'SUPERVISOR' } }
             ]
         }).compileComponents();
 
@@ -43,6 +46,44 @@ describe('BandejaAprobacionPageComponent', () => {
 
         expect(component.activeTab()).toBe('APROBADO');
         expect(mockRepo.getBandejaAprobacion).toHaveBeenLastCalledWith('APROBADO', 0, 10);
+    });
+
+    describe('devolver (API ADR-032)', () => {
+        it('should return an approved no-objecion with its trimmed justification and reload', () => {
+            fixture.detectChanges();
+            (mockRepo.devolver as jest.Mock).mockReturnValue(of({ mensaje: 'ok' }));
+            component.openDevolverModal({ id: 6 });
+            component.justificacion.set('  Monto errado ');
+
+            component.devolver();
+
+            expect(mockRepo.devolver).toHaveBeenCalledWith(6, 'Monto errado');
+            expect(component.showDevolverModal()).toBe(false);
+            expect(mockRepo.getBandejaAprobacion).toHaveBeenCalledTimes(2);
+        });
+
+        it('should require a justification', () => {
+            fixture.detectChanges();
+            component.openDevolverModal({ id: 6 });
+            component.justificacion.set('   ');
+
+            component.devolver();
+
+            expect(mockRepo.devolver).not.toHaveBeenCalled();
+        });
+
+        it('should keep the modal open and show the API message on error', () => {
+            fixture.detectChanges();
+            (mockRepo.devolver as jest.Mock).mockReturnValue(throwError(() => ({ error: { mensaje: 'Tiene solicitudes' } })));
+            component.openDevolverModal({ id: 6 });
+            component.justificacion.set('x');
+
+            component.devolver();
+
+            expect(mockAlert.show).toHaveBeenCalledWith('Error', 'Tiene solicitudes', 'error');
+            expect(component.showDevolverModal()).toBe(true);
+            expect(component.isSubmitting()).toBe(false);
+        });
     });
 
     describe('formatDocNumber', () => {

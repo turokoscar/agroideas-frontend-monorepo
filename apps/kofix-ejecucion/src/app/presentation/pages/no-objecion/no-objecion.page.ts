@@ -69,7 +69,8 @@ export class NoObjecionPageComponent implements OnInit {
         { field: 'fechaDocumento', header: 'Fecha', type: 'date', width: '110px', align: 'center' },
         { field: 'totalMonto', header: 'Adjudicado Vigente', type: 'currency', align: 'right', width: '150px' },
         { field: 'saldoMonto', header: 'Sin Solicitar', type: 'currency', align: 'right', width: '140px' },
-        { field: 'estadoNombre', header: 'Estado', type: 'custom', width: '120px', align: 'center' },
+        { field: 'estadoAprobacion', header: 'Evaluación', type: 'custom', width: '120px', align: 'center' },
+        { field: 'estadoNombre', header: 'Uso', type: 'custom', width: '120px', align: 'center' },
         { field: 'observacion', header: 'Observación' },
     ];
 
@@ -133,14 +134,25 @@ export class NoObjecionPageComponent implements OnInit {
         this.showModal.set(true);
     }
 
+    /** API ADR-032: aprobar y luego desembolsar; una N.O. aprobada no se modifica ni elimina. */
+    estaAprobada(row: NoObjecion): boolean {
+        return row.estadoAprobacion === 'APROBADO';
+    }
+
+    /** Motivo por el que no se puede editar ni eliminar, o null si se puede. */
+    motivoNoModificable(row: NoObjecion): string | null {
+        if (this.estaAprobada(row)) return 'está aprobada';
+        return this.tieneMovimientos(row) ? 'tiene desembolsos o rebajas' : null;
+    }
+
     /** Editar/eliminar solo sin desembolsos ni rebajas (una N.O. rebajada conserva su trazabilidad). */
     tieneMovimientos(row: NoObjecion): boolean {
         return (row.numSolicitudes || 0) > 0 || (row.numRebajas || 0) > 0;
     }
 
-    /** Rebajar / anular saldo: con permiso OPERACIONES_FINANCIERAS y si queda saldo no solicitado (ADR 0012 Fase 4). */
+    /** Rebajar / anular saldo: N.O. aprobada, con permiso OPERACIONES_FINANCIERAS y saldo no solicitado (ADR 0012 Fase 4). */
     puedeRebajar(row: NoObjecion): boolean {
-        return this.puedeOperarFinanzas() && (row.saldoMonto || 0) > 0;
+        return this.puedeOperarFinanzas() && this.estaAprobada(row) && (row.saldoMonto || 0) > 0;
     }
 
     openRebajaModal(row: NoObjecion): void {
@@ -158,8 +170,9 @@ export class NoObjecionPageComponent implements OnInit {
 
     editNoObjecion(id: number): void {
         const noObj = this.noObjeciones().find(n => n.id === id);
-        if (noObj && this.tieneMovimientos(noObj)) {
-            this.alertService.show('Acción no permitida', 'No se puede modificar una No Objeción que ya tiene desembolsos o rebajas.', 'warning');
+        const motivo = noObj ? this.motivoNoModificable(noObj) : null;
+        if (motivo) {
+            this.alertService.show('Acción no permitida', `No se puede modificar la No Objeción: ${motivo}.`, 'warning');
             return;
         }
 
@@ -186,8 +199,9 @@ export class NoObjecionPageComponent implements OnInit {
 
     deleteNoObjecion(id: number): void {
         const noObj = this.noObjeciones().find(n => n.id === id);
-        if (noObj && this.tieneMovimientos(noObj)) {
-            this.alertService.show('Acción no permitida', 'No se puede eliminar una No Objeción que ya tiene desembolsos o rebajas.', 'warning');
+        const motivo = noObj ? this.motivoNoModificable(noObj) : null;
+        if (motivo) {
+            this.alertService.show('Acción no permitida', `No se puede eliminar la No Objeción: ${motivo}.`, 'warning');
             return;
         }
 

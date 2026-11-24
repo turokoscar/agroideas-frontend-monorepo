@@ -118,6 +118,10 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
         return this.http.post<ResponseDto>(`${this.apiUrl}/${id}/evaluaciones`, { estado, observacion });
     }
 
+    override devolver(id: number, justificacion: string): Observable<any> {
+        return this.http.post<ResponseDto>(`${this.apiUrl}/${id}/devolucion-evaluacion`, { justificacion });
+    }
+
     override getSaldoRebaja(noObjecionId: number): Observable<NoObjecionRebajaSaldo> {
         return this.http.get<ResponseDto<NoObjecionRebajaSaldo>>(`${this.apiUrl}/${noObjecionId}/rebajas/saldo`).pipe(
             map(res => res.datos as NoObjecionRebajaSaldo)

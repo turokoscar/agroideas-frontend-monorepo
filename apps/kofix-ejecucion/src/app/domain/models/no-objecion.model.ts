@@ -30,6 +30,9 @@ export interface NoObjecion {
     /** ADR 0012 Fase 4: monto rebajado y número de rebajas (totalMonto ya es el adjudicado vigente). */
     montoRebajado?: number;
     numRebajas?: number;
+    /** Evaluación (API ADR-032): PENDIENTE / APROBADO / RECHAZADO. */
+    estadoAprobacion?: string;
+    observacionSupervisor?: string;
     detalles: NoObjecionDetail[];
 }
 

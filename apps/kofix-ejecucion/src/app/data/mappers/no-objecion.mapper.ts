@@ -19,6 +19,8 @@ export class NoObjecionMapper {
             numSolicitudes: dto.numSolicitudes,
             montoRebajado: dto.montoRebajado ?? 0,
             numRebajas: dto.numRebajas ?? 0,
+            estadoAprobacion: dto.estadoAprobacion,
+            observacionSupervisor: dto.observacionSupervisor,
             detalles: (dto.detalles || []).map((d: any) => this.fromDetailApi(d))
         };
     }

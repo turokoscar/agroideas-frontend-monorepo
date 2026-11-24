@@ -21,6 +21,7 @@ describe('NoObjecionPageComponent', () => {
         postulanteId: 5,
         detalles: [],
         numSolicitudes: 0,
+        estadoAprobacion: 'PENDIENTE',
         ...overrides
     });
 
@@ -67,6 +68,29 @@ describe('NoObjecionPageComponent', () => {
 
         it('should pass through a number with a dash unchanged', () => {
             expect(component.formatDocNumber('0007-2025', null)).toBe('0007-2025');
+        });
+    });
+
+    describe('evaluación (API ADR-032)', () => {
+        it('should block editing and deleting an approved no-objecion', () => {
+            fixture.detectChanges();
+            component.noObjeciones.set([buildNoObjecion({ id: 1, estadoAprobacion: 'APROBADO' })]);
+
+            component.editNoObjecion(1);
+            component.deleteNoObjecion(1);
+
+            expect(component.showModal()).toBe(false);
+            expect(mockAlert.show).toHaveBeenCalledTimes(2);
+            expect(mockAlert.confirm).not.toHaveBeenCalled();
+        });
+
+        it('should allow editing a rejected no-objecion', () => {
+            expect(component.motivoNoModificable(buildNoObjecion({ estadoAprobacion: 'RECHAZADO' }))).toBeNull();
+        });
+
+        it('should only allow rebajas on an approved no-objecion with balance', () => {
+            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 100 }))).toBe(false);
+            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 100, estadoAprobacion: 'APROBADO' }))).toBe(true);
         });
     });
 
@@ -163,28 +187,28 @@ describe('NoObjecionPageComponent', () => {
     // ADR 0012 Fase 4: rebaja / anulación del saldo no solicitado
     describe('rebaja', () => {
         it('should only allow rebajar when there is saldo no solicitado', () => {
-            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 4000 }))).toBe(true);
-            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 0 }))).toBe(false);
+            expect(component.puedeRebajar(buildNoObjecion({ estadoAprobacion: 'APROBADO', saldoMonto: 4000 }))).toBe(true);
+            expect(component.puedeRebajar(buildNoObjecion({ estadoAprobacion: 'APROBADO', saldoMonto: 0 }))).toBe(false);
             expect(mockPermissionService.hasPermission).toHaveBeenCalledWith('OPERACIONES_FINANCIERAS');
         });
 
         it('should hide the rebaja button without OPERACIONES_FINANCIERAS, even with saldo', () => {
             mockPermissionService.hasPermission = jest.fn().mockReturnValue(false);
-            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [buildNoObjecion({ id: 6, saldoMonto: 4000 })], total: 1 }));
+            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [buildNoObjecion({ id: 6, estadoAprobacion: 'APROBADO', saldoMonto: 4000 })], total: 1 }));
             fixture = TestBed.createComponent(NoObjecionPageComponent);
             component = fixture.componentInstance;
             fixture.componentRef.setInput('convenioId', 5);
             fixture.detectChanges();
 
-            expect(component.puedeRebajar(buildNoObjecion({ saldoMonto: 4000 }))).toBe(false);
+            expect(component.puedeRebajar(buildNoObjecion({ estadoAprobacion: 'APROBADO', saldoMonto: 4000 }))).toBe(false);
             expect(fixture.nativeElement.querySelector('[aria-label="Rebajar / Anular saldo"]')).toBeNull();
-            component.openRebajaModal(buildNoObjecion({ id: 6, saldoMonto: 4000 }));
+            component.openRebajaModal(buildNoObjecion({ id: 6, estadoAprobacion: 'APROBADO', saldoMonto: 4000 }));
             expect(component.showRebajaModal()).toBe(false);
         });
 
         it('should render the rebaja button only for rows with saldo when the user has the permission', () => {
             mockRepo.getByPostulante = jest.fn().mockReturnValue(of({
-                items: [buildNoObjecion({ id: 6, saldoMonto: 4000 }), buildNoObjecion({ id: 7, saldoMonto: 0 })],
+                items: [buildNoObjecion({ id: 6, estadoAprobacion: 'APROBADO', saldoMonto: 4000 }), buildNoObjecion({ id: 7, estadoAprobacion: 'APROBADO', saldoMonto: 0 })],
                 total: 2
             }));
             fixture.detectChanges();
@@ -193,14 +217,14 @@ describe('NoObjecionPageComponent', () => {
         });
 
         it('should open the rebaja modal for the selected row', () => {
-            component.openRebajaModal(buildNoObjecion({ id: 6, saldoMonto: 4000 }));
+            component.openRebajaModal(buildNoObjecion({ id: 6, estadoAprobacion: 'APROBADO', saldoMonto: 4000 }));
 
             expect(component.showRebajaModal()).toBe(true);
             expect(component.rebajaNoObjecionId()).toBe(6);
         });
 
         it('should not open the rebaja modal without saldo', () => {
-            component.openRebajaModal(buildNoObjecion({ id: 6, saldoMonto: 0 }));
+            component.openRebajaModal(buildNoObjecion({ id: 6, estadoAprobacion: 'APROBADO', saldoMonto: 0 }));
 
             expect(component.showRebajaModal()).toBe(false);
         });

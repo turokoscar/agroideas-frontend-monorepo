@@ -93,6 +93,16 @@
               (onClick)="openEvaluarModal(row)">
             </ui-button>
           }
+          @if (activeTab() === 'APROBADO' && puedeDevolver()) {
+            <ui-button
+              appearance="soft"
+              severity="warning"
+              size="sm"
+              label="Devolver"
+              icon="undo"
+              (onClick)="openDevolverModal(row)">
+            </ui-button>
+          }
         </div>
       }
     </ng-template>
@@ -173,4 +183,27 @@
       </div>
     </div>
   }
+</app-ui-modal>
+
+<!-- Modal: devolver a pendiente (API ADR-032) -->
+<app-ui-modal
+  [visible]="showDevolverModal()"
+  title="Devolver a pendiente"
+  [subtitle]="selectedItem() ? 'N° ' + selectedItem().numeroNoObjecion : ''"
+  icon="undo"
+  [isSubmitting]="isSubmitting()"
+  saveLabel="Devolver"
+  [saveDisabled]="!justificacion().trim()"
+  maxWidth="520px"
+  (onSave)="devolver()"
+  (onHide)="closeDevolverModal()">
+  <p class="text-xs text-slate-600 mb-4">
+    La No Objeción volverá a estado pendiente para corregirse y se extornará su apertura en el Kardex.
+    No procede si tiene solicitudes de desembolso o rebajas.
+  </p>
+  <label class="form-label" for="bandeja-aprobacion-justificacion">
+    Justificación <span class="form-label-required">*</span>
+  </label>
+  <textarea id="bandeja-aprobacion-justificacion" rows="4" maxlength="500" class="form-textarea"
+    [ngModel]="justificacion()" (ngModelChange)="justificacion.set($event)"></textarea>
 </app-ui-modal>

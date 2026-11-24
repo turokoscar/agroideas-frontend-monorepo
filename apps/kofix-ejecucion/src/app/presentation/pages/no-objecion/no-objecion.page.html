@@ -46,6 +46,11 @@
           {{ formatDocNumber(row.numeroDocumento, row.fechaDocumento) }}
         </span>
       }
+      @if (col.field === 'estadoAprobacion') {
+        <span [title]="row.observacionSupervisor || ''">
+          <app-ui-status-pill [status]="getBadgeStatus(row.estadoAprobacion)" [text]="row.estadoAprobacion"></app-ui-status-pill>
+        </span>
+      }
       @if (col.field === 'estadoNombre') {
         <app-ui-status-pill [status]="getBadgeStatus(row.estadoNombre)" [text]="row.estadoNombre"></app-ui-status-pill>
       }
@@ -66,12 +71,12 @@
       (onClick)="downloadDocument(row.archivoUrl)" />
     @if (!readOnly()) {
       <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
-        [ariaLabel]="tieneMovimientos(row) ? 'No se puede editar: tiene desembolsos o rebajas' : 'Editar'"
-        [disabled]="tieneMovimientos(row)"
+        [ariaLabel]="motivoNoModificable(row) ? 'No se puede editar: ' + motivoNoModificable(row) : 'Editar'"
+        [disabled]="!!motivoNoModificable(row)"
         (onClick)="editNoObjecion(row.id)" />
       <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
-        [ariaLabel]="tieneMovimientos(row) ? 'No se puede eliminar: tiene desembolsos o rebajas' : 'Eliminar'"
-        [disabled]="tieneMovimientos(row)"
+        [ariaLabel]="motivoNoModificable(row) ? 'No se puede eliminar: ' + motivoNoModificable(row) : 'Eliminar'"
+        [disabled]="!!motivoNoModificable(row)"
         (onClick)="deleteNoObjecion(row.id)" />
       <!-- ADR 0012 Fase 4: rebaja parcial o anulación del saldo no solicitado -->
       @if (puedeRebajar(row)) {

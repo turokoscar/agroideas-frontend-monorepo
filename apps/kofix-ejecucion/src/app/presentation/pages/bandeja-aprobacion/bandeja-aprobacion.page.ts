@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, inject, computed } 
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '@agroideas/feedback';
+import { PermissionService } from '@agroideas/security';
 import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiStatusPillComponent, UIModalComponent, UiPageHeaderComponent } from '@agroideas/ui';
-import { formatCurrency } from '@agroideas/utils';
+import { formatCurrency, PERMISSIONS } from '@agroideas/utils';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { finalize } from 'rxjs/operators';
 
@@ -27,6 +28,10 @@ import { finalize } from 'rxjs/operators';
 export class BandejaAprobacionPageComponent implements OnInit {
     private noObjecionRepo = inject(NoObjecionRepository);
     private alertService = inject(AlertService);
+    private permissionService = inject(PermissionService);
+
+    /** Devolver a pendiente exige el mismo permiso que la API (ADR-032). */
+    protected readonly puedeDevolver = computed(() => this.permissionService.hasPermission(PERMISSIONS.SUPERVISOR));
 
     loading = signal(false);
     activeTab = signal<'PENDIENTE' | 'APROBADO' | 'RECHAZADO'>('PENDIENTE');
@@ -120,6 +125,39 @@ export class BandejaAprobacionPageComponent implements OnInit {
     closeEvaluarModal(): void {
         this.showEvalModal.set(false);
         this.selectedItem.set(null);
+    }
+
+    // Devolver a pendiente una N.O. aprobada, para corregirla (API ADR-032)
+    showDevolverModal = signal(false);
+    justificacion = signal('');
+
+    openDevolverModal(item: any): void {
+        this.selectedItem.set(item);
+        this.justificacion.set('');
+        this.showDevolverModal.set(true);
+    }
+
+    closeDevolverModal(): void {
+        this.showDevolverModal.set(false);
+        this.selectedItem.set(null);
+    }
+
+    devolver(): void {
+        const item = this.selectedItem();
+        const justificacion = this.justificacion().trim();
+        if (!item || !justificacion) return;
+
+        this.isSubmitting.set(true);
+        this.noObjecionRepo.devolver(item.id, justificacion).pipe(finalize(() => this.isSubmitting.set(false))).subscribe({
+            next: (res: any) => {
+                this.alertService.show('Éxito', res.mensaje || 'No Objeción devuelta a pendiente.', 'success');
+                this.closeDevolverModal();
+                this.loadData();
+            },
+            error: (err: any) => {
+                this.alertService.show('Error', err.error?.mensaje || 'No se pudo devolver la No Objeción.', 'error');
+            }
+        });
     }
 
     procesarEvaluacion(estado: 'APROBADO' | 'RECHAZADO'): void {
