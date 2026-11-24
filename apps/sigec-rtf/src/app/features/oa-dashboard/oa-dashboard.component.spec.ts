@@ -67,6 +67,39 @@ describe('OaDashboardComponent', () => {
       expect(fixture.componentInstance.isLoading()).toBe(false);
       expect(fixture.componentInstance.hasError()).toBe(true);
     });
+
+    it('muestra el estado "sin convenio" con el mensaje del backend cuando el dashboard responde 404', () => {
+      const fixture = crearComponente('1');
+      fixture.detectChanges();
+
+      httpMock.expectOne(`${apiUrl}/postulantes/actual`).flush(ok({ postulanteId: 210827 }));
+      httpMock.expectOne(`${apiUrl}/postulantes/210827/dashboard`).flush(
+        { respuesta: 'ERROR', mensaje: 'El Plan de Negocios aún no tiene convenio firmado.', datos: null },
+        { status: 404, statusText: 'Not Found' });
+      fixture.detectChanges();
+
+      const c = fixture.componentInstance;
+      expect(c.isLoading()).toBe(false);
+      expect(c.hasError()).toBe(false);
+      expect(c.sinConvenio()).toBe('El Plan de Negocios aún no tiene convenio firmado.');
+      const texto = fixture.nativeElement.textContent as string;
+      expect(texto).toContain('Plan de Negocios sin convenio firmado');
+      expect(texto).not.toContain('Reintentar');
+      expect(texto).not.toContain('Registrar RTF');
+    });
+
+    it('sigue marcando hasError (con Reintentar) cuando el dashboard falla por otro motivo', () => {
+      const fixture = crearComponente('1');
+      fixture.detectChanges();
+
+      httpMock.expectOne(`${apiUrl}/postulantes/actual`).flush(ok({ postulanteId: 210827 }));
+      httpMock.expectOne(`${apiUrl}/postulantes/210827/dashboard`).flush(
+        { respuesta: 'ERROR', mensaje: 'No se pudo consultar el convenio en el sistema General (HTTP 503).', datos: null },
+        { status: 502, statusText: 'Bad Gateway' });
+
+      expect(fixture.componentInstance.hasError()).toBe(true);
+      expect(fixture.componentInstance.sinConvenio()).toBeNull();
+    });
   });
 
   describe('statusLabel', () => {

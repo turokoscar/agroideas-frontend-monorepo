@@ -8,6 +8,7 @@
         Vista consolidada del plan de negocios · <span class="font-medium text-primary">{{ rtfService.oa() }}</span>
       </p>
     </div>
+    @if (!sinConvenio()) {
     <div class="flex items-center gap-2">
       <div class="flex items-center gap-2 text-xs bg-surface-container border border-border px-3 py-1.5 rounded-lg">
         <span class="material-symbols-outlined text-[16px] text-muted-foreground">calendar_today</span>
@@ -22,6 +23,7 @@
         Registrar RTF
       </a>
     </div>
+    }
   </div>
 
   <!-- Loading State -->
@@ -68,8 +70,17 @@
     </div>
   }
 
+  <!-- Sin convenio firmado: estado informativo, no de error -->
+  @if (sinConvenio() && !isLoading()) {
+    <div class="rounded-xl border border-border bg-surface-container-lowest p-6 text-center" role="status">
+      <span class="material-symbols-outlined text-[32px] text-muted-foreground">contract</span>
+      <p class="mt-2 text-sm font-medium text-foreground">Plan de Negocios sin convenio firmado</p>
+      <p class="mt-1 text-xs text-muted-foreground">{{ sinConvenio() }}</p>
+    </div>
+  }
+
   <!-- Main Content -->
-  @if (!isLoading() && !hasError()) {
+  @if (!isLoading() && !hasError() && !sinConvenio()) {
 
     <!-- CTA Banner if RTF is PENDIENTE -->
     @if (rtfService.rtfStatus() === 'PENDIENTE' || rtfService.rtfStatus() === 'EN_EDICION') {

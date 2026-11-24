@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject, OnInit, signal, computed } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RtfService } from '../../core/services/rtf.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FormatConvenioPipe } from '@agroideas/utils';
@@ -47,6 +48,11 @@ export class OaDashboardComponent implements OnInit {
 
   isLoading = signal(true);
   hasError = signal(false);
+  /**
+   * Mensaje del backend cuando el Plan de Negocios aún no tiene convenio firmado (404 del dashboard).
+   * No es un error: la OA sigue en etapa de solicitud, por eso se muestra un estado informativo sin "Reintentar".
+   */
+  sinConvenio = signal<string | null>(null);
   observacionesPendientes = signal(0);
 
   activePasoCriticoId = computed(() => {
@@ -69,6 +75,7 @@ export class OaDashboardComponent implements OnInit {
   reload() {
     this.isLoading.set(true);
     this.hasError.set(false);
+    this.sinConvenio.set(null);
 
     const usuarioId = Number(this.authService.user()?.id);
     if (!usuarioId) {
@@ -90,8 +97,12 @@ export class OaDashboardComponent implements OnInit {
         this.cargarObservacionesPendientes();
         this.cargarCierre();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading.set(false);
+        if (err?.status === 404 && err.url?.endsWith('/dashboard')) {
+          this.sinConvenio.set(err.error?.mensaje || 'El Plan de Negocios aún no tiene convenio firmado.');
+          return;
+        }
         this.hasError.set(true);
       }
     });
