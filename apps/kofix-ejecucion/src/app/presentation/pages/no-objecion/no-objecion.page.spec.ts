@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { NoObjecionPageComponent } from './no-objecion.page';
@@ -29,7 +29,6 @@ describe('NoObjecionPageComponent', () => {
     beforeEach(async () => {
         mockRepo = {
             getByPostulante: jest.fn().mockReturnValue(of({ items: [], total: 0 })),
-            delete: jest.fn(),
             downloadFile: jest.fn()
         };
         mockAlert = { show: jest.fn(), toast: jest.fn(), confirm: jest.fn() };
@@ -74,20 +73,19 @@ describe('NoObjecionPageComponent', () => {
     });
 
     describe('evaluación (API ADR-032)', () => {
-        it('should block editing and deleting an approved no-objecion', () => {
-            fixture.detectChanges();
-            component.noObjeciones.set([buildNoObjecion({ id: 1, estadoAprobacion: 'APROBADO' })]);
+        it('should link a no-objecion to its evaluation and leave the earlier ones without it', () => {
+            component.evaluaciones.set([{ id: 7, noObjecionId: 1, estado: 'PENDIENTE', fechaCreacion: '', numItems: 1 }]);
 
-            component.editNoObjecion(1);
-            component.deleteNoObjecion(1);
-
-            expect(component.showModal()).toBe(false);
-            expect(mockAlert.show).toHaveBeenCalledTimes(2);
-            expect(mockAlert.confirm).not.toHaveBeenCalled();
+            expect(component.evaluacionDe(buildNoObjecion({ id: 1 }))).toBe(7);
+            expect(component.evaluacionDe(buildNoObjecion({ id: 2 }))).toBeNull();
         });
 
-        it('should allow editing a rejected no-objecion', () => {
-            expect(component.motivoNoModificable(buildNoObjecion({ estadoAprobacion: 'RECHAZADO' }))).toBeNull();
+        it('should not offer to register, edit or delete a no-objecion directly', () => {
+            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [buildNoObjecion({ id: 6 })], total: 1 }));
+            fixture.detectChanges();
+
+            expect(fixture.nativeElement.querySelector('[aria-label="Editar"], [aria-label="Eliminar"]')).toBeNull();
+            expect(fixture.nativeElement.textContent).not.toContain('Nueva No Objeción');
         });
 
         it('should only allow rebajas on an approved no-objecion with balance', () => {
@@ -96,38 +94,14 @@ describe('NoObjecionPageComponent', () => {
         });
     });
 
-    describe('editNoObjecion', () => {
-        it('should block editing a no-objecion that already has desembolsos', () => {
-            fixture.detectChanges();
-            component.noObjeciones.set([buildNoObjecion({ id: 1, numSolicitudes: 2 })]);
-
-            component.editNoObjecion(1);
-
-            expect(component.showModal()).toBe(false);
-            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.any(String), 'warning');
-        });
-
-        it('should open the edit modal when there are no desembolsos', () => {
-            fixture.detectChanges();
-            component.noObjeciones.set([buildNoObjecion({ id: 1, numSolicitudes: 0 })]);
-
-            component.editNoObjecion(1);
-
-            expect(component.showModal()).toBe(true);
-            expect(component.modalMode()).toBe('edit');
-            expect(component.selectedNoObjecionId()).toBe(1);
-        });
-    });
-
     describe('viewNoObjecion', () => {
-        it('should open the lightweight items modal without touching the registration modal', () => {
+        it('should open the lightweight items modal ', () => {
             fixture.detectChanges();
 
             component.viewNoObjecion(1);
 
             expect(component.showItemsModal()).toBe(true);
             expect(component.viewingNoObjecionId()).toBe(1);
-            expect(component.showModal()).toBe(false);
         });
 
         it('should close the items modal without reloading the list', () => {
@@ -139,43 +113,6 @@ describe('NoObjecionPageComponent', () => {
 
             expect(component.showItemsModal()).toBe(false);
             expect(mockRepo.getByPostulante).not.toHaveBeenCalled();
-        });
-    });
-
-    describe('deleteNoObjecion', () => {
-        it('should block deleting a no-objecion that already has desembolsos', () => {
-            fixture.detectChanges();
-            component.noObjeciones.set([buildNoObjecion({ id: 1, numSolicitudes: 1 })]);
-
-            component.deleteNoObjecion(1);
-
-            expect(mockAlert.confirm).not.toHaveBeenCalled();
-            expect(mockAlert.show).toHaveBeenCalledWith('Acción no permitida', expect.any(String), 'warning');
-        });
-
-        it('should delete and reload when confirmed', async () => {
-            fixture.detectChanges();
-            component.noObjeciones.set([buildNoObjecion({ id: 1, numSolicitudes: 0 })]);
-            mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: true });
-            mockRepo.delete = jest.fn().mockReturnValue(of(null));
-
-            component.deleteNoObjecion(1);
-            await Promise.resolve();
-
-            expect(mockRepo.delete).toHaveBeenCalledWith(1);
-            expect(mockAlert.toast).toHaveBeenCalledWith('No Objeción eliminada con éxito.');
-        });
-
-        it('muestra el motivo que devuelve la API cuando rechaza la eliminación', async () => {
-            fixture.detectChanges();
-            component.noObjeciones.set([buildNoObjecion({ id: 1, numSolicitudes: 0 })]);
-            mockAlert.confirm = jest.fn().mockResolvedValue({ isConfirmed: true });
-            mockRepo.delete = jest.fn().mockReturnValue(throwError(() => ({ status: 400, error: { mensaje: 'El periodo 05/2026 está cerrado.' } })));
-
-            component.deleteNoObjecion(1);
-            await Promise.resolve();
-
-            expect(mockAlert.show).toHaveBeenCalledWith('Error', 'El periodo 05/2026 está cerrado.', 'error');
         });
     });
 
@@ -242,18 +179,6 @@ describe('NoObjecionPageComponent', () => {
             expect(mockRepo.getByPostulante).toHaveBeenCalled();
         });
 
-        it('should block editing and deleting a no-objecion that has rebajas', () => {
-            const rebajada = buildNoObjecion({ id: 6, numSolicitudes: 0, numRebajas: 1 });
-            mockRepo.getByPostulante = jest.fn().mockReturnValue(of({ items: [rebajada], total: 1 }));
-            fixture.detectChanges();
-
-            component.editNoObjecion(6);
-            component.deleteNoObjecion(6);
-
-            expect(component.showModal()).toBe(false);
-            expect(mockAlert.confirm).not.toHaveBeenCalled();
-            expect(mockAlert.show).toHaveBeenCalledTimes(2);
-        });
 
         it('should map the API estados to status pills', () => {
             expect(component.getBadgeStatus('Rebajada')).toBe('Media');

@@ -75,13 +75,4 @@ describe('NoObjecionRepositoryImpl', () => {
         service.downloadFile('abc').subscribe();
         expect(mockFileStorage.downloadFile).toHaveBeenCalledWith('abc');
     });
-
-    it('should build the create() request through NoObjecionMapper.toApiRequest', () => {
-        service.create({ tipoDocumentoId: 1, numeroDocumento: 'DOC-1', fechaDocumento: '2026-08-01', postulanteId: 3, detalles: [] }).subscribe();
-
-        const req = httpMock.expectOne(baseUrl);
-        expect(req.request.method).toBe('POST');
-        expect(req.request.body.numeroDocumento).toBe('DOC-1');
-        req.flush({ respuesta: 'OK' });
-    });
 });

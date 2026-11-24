@@ -44,20 +44,6 @@ export class NoObjecionRepositoryImpl extends NoObjecionRepository {
         );
     }
 
-    override create(noObjecion: NoObjecion): Observable<ResponseDto> {
-        const request = NoObjecionMapper.toApiRequest(noObjecion);
-        return this.http.post<ResponseDto>(this.apiUrl, request);
-    }
-
-    override update(id: number, noObjecion: NoObjecion): Observable<ResponseDto> {
-        const request = NoObjecionMapper.toApiRequest(noObjecion);
-        return this.http.put<ResponseDto>(`${this.apiUrl}/${id}`, request);
-    }
-
-    override delete(id: number): Observable<ResponseDto> {
-        return this.http.delete<ResponseDto>(`${this.apiUrl}/${id}`);
-    }
-
     override getBalances(postulanteId: number): Observable<Record<string, NoObjecionBalance>> {
         return this.http.get<ResponseDto<Record<string, any>>>(`${this.apiUrl}/postulante/${postulanteId}/balances`).pipe(
             map(res => {

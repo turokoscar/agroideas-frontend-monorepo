@@ -6,7 +6,6 @@ import { ChangeDetectionStrategy, Component, Input, OnInit, computed, inject, si
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-objecion-modal.component';
 import { NoObjecionItemsModalComponent } from '../../components/no-objecion-items-modal/no-objecion-items-modal.component';
 import { NoObjecionRebajaModalComponent } from '../../components/no-objecion-rebaja-modal/no-objecion-rebaja-modal.component';
 import { EvaluacionResumen } from '../../../domain/models/evaluacion-no-objecion.model';
@@ -24,7 +23,6 @@ import { finalize } from 'rxjs/operators';
         UiDataTableComponent,
         UiFilterBarComponent,
         UiStatusPillComponent,
-        NoObjecionModalComponent,
         NoObjecionItemsModalComponent,
         NoObjecionRebajaModalComponent,
         UIButtonComponent
@@ -56,11 +54,6 @@ export class NoObjecionPageComponent implements OnInit {
     searchTerm = signal('');
     fechaInicio = signal('');
     fechaFin = signal('');
-
-    // Modal de registro/edición
-    showModal = signal(false);
-    modalMode = signal<'create' | 'edit'>('create');
-    selectedNoObjecionId = signal<number | undefined>(undefined);
 
     // Modal de rebaja / anulación del saldo no solicitado (ADR 0012 Fase 4)
     showRebajaModal = signal(false);
@@ -163,28 +156,14 @@ export class NoObjecionPageComponent implements OnInit {
         });
     }
 
-    // Acciones del Modal
-    openRegisterModal(): void {
-        this.modalMode.set('create');
-        this.selectedNoObjecionId.set(undefined);
-        this.showModal.set(true);
-    }
-
-    /** API ADR-032: aprobar y luego desembolsar; una N.O. aprobada no se modifica ni elimina. */
+    /** API ADR-032: aprobar y luego desembolsar. */
     estaAprobada(row: NoObjecion): boolean {
         return row.estadoAprobacion === 'APROBADO';
     }
 
-    /** Motivo por el que no se puede editar ni eliminar, o null si se puede. */
-    motivoNoModificable(row: NoObjecion): string | null {
-        if (this.estaAprobada(row)) return 'está aprobada';
-        if (this.evaluaciones().some(e => e.noObjecionId === row.id)) return 'se gestiona desde su evaluación';
-        return this.tieneMovimientos(row) ? 'tiene desembolsos o rebajas' : null;
-    }
-
-    /** Editar/eliminar solo sin desembolsos ni rebajas (una N.O. rebajada conserva su trazabilidad). */
-    tieneMovimientos(row: NoObjecion): boolean {
-        return (row.numSolicitudes || 0) > 0 || (row.numRebajas || 0) > 0;
+    /** Evaluación desde la que se gestiona la N.O.; las anteriores al ADR-032 no tienen. */
+    evaluacionDe(row: NoObjecion): number | null {
+        return this.evaluaciones().find(e => e.noObjecionId === row.id)?.id ?? null;
     }
 
     /** Rebajar / anular saldo: N.O. aprobada, con permiso OPERACIONES_FINANCIERAS y saldo no solicitado (ADR 0012 Fase 4). */
@@ -205,57 +184,13 @@ export class NoObjecionPageComponent implements OnInit {
         }
     }
 
-    editNoObjecion(id: number): void {
-        const noObj = this.noObjeciones().find(n => n.id === id);
-        const motivo = noObj ? this.motivoNoModificable(noObj) : null;
-        if (motivo) {
-            this.alertService.show('Acción no permitida', `No se puede modificar la No Objeción: ${motivo}.`, 'warning');
-            return;
-        }
-
-        this.modalMode.set('edit');
-        this.selectedNoObjecionId.set(id);
-        this.showModal.set(true);
-    }
-
     viewNoObjecion(id: number): void {
         this.viewingNoObjecionId.set(id);
         this.showItemsModal.set(true);
     }
 
-    handleModalClose(refresh: boolean): void {
-        this.showModal.set(false);
-        if (refresh) {
-            this.loadNoObjeciones();
-        }
-    }
-
     handleItemsModalClose(): void {
         this.showItemsModal.set(false);
-    }
-
-    deleteNoObjecion(id: number): void {
-        const noObj = this.noObjeciones().find(n => n.id === id);
-        const motivo = noObj ? this.motivoNoModificable(noObj) : null;
-        if (motivo) {
-            this.alertService.show('Acción no permitida', `No se puede eliminar la No Objeción: ${motivo}.`, 'warning');
-            return;
-        }
-
-        this.alertService.confirm('¿Eliminar No Objeción?', 'Esta acción no se puede deshacer.').then(result => {
-            if (result.isConfirmed) {
-                this.noObjecionRepo.delete(id).subscribe({
-                    next: () => {
-                        this.alertService.toast('No Objeción eliminada con éxito.');
-                        this.loadNoObjeciones();
-                    },
-                    error: (err) => {
-                        // La API explica el rechazo (periodo cerrado, convenio fuera de la cartera, …).
-                        this.alertService.show('Error', err?.error?.mensaje || 'No se pudo eliminar el registro.', 'error');
-                    }
-                });
-            }
-        });
     }
 
     downloadDocument(fileUrl: string): void {

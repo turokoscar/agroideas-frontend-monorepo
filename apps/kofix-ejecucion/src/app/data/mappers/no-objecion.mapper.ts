@@ -69,24 +69,4 @@ export class NoObjecionMapper {
             saldoFinanciero: dto.saldoFinanciero ?? ((dto.aporteAgroideas ?? 0) - (dto.montoComprometido ?? 0))
         };
     }
-
-    static toApiRequest(noObjecion: Partial<NoObjecion>): any {
-        return {
-            tipoDocumentoId: noObjecion.tipoDocumentoId,
-            numeroDocumento: noObjecion.numeroDocumento,
-            fechaDocumento: noObjecion.fechaDocumento,
-            archivoUrl: noObjecion.archivoUrl,
-            postulanteId: noObjecion.postulanteId,
-            observacion: noObjecion.observacion,
-            detalles: noObjecion.detalles?.map(d => ({
-                itemMlId: d.itemMlId,
-                cantidad: d.cantidad,
-                precioAdjudicado: d.precioAdjudicado,
-                montoAdjudicado: d.montoAdjudicado,
-                rucProveedor: d.rucProveedor,
-                razonSocialProveedor: d.razonSocialProveedor,
-                tipoItemRef: d.tipoItemRef
-            }))
-        };
-    }
 }

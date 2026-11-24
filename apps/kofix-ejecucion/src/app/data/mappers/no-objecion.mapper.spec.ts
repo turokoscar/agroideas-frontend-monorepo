@@ -60,31 +60,4 @@ describe('NoObjecionMapper', () => {
         expect(result.saldoFisico).toBe(7);
         expect(result.saldoFinanciero).toBe(14000);
     });
-
-    it('should map domain Partial<NoObjecion> to API request DTO', () => {
-        const domainModel = {
-            tipoDocumentoId: 2,
-            numeroDocumento: 'N-999',
-            fechaDocumento: '2026-08-01',
-            postulanteId: 88,
-            detalles: [
-                {
-                    itemMlId: 12,
-                    cantidad: 2,
-                    precioAdjudicado: 1000,
-                    montoAdjudicado: 2000,
-                    rucProveedor: '20999999999',
-                    razonSocialProveedor: 'Proveedor Test SRL'
-                }
-            ]
-        };
-
-        const apiRequest = NoObjecionMapper.toApiRequest(domainModel as any);
-
-        expect(apiRequest.tipoDocumentoId).toBe(2);
-        expect(apiRequest.postulanteId).toBe(88);
-        expect(apiRequest.detalles.length).toBe(1);
-        expect(apiRequest.detalles[0].itemMlId).toBe(12);
-        expect(apiRequest.detalles[0].montoAdjudicado).toBe(2000);
-    });
 });

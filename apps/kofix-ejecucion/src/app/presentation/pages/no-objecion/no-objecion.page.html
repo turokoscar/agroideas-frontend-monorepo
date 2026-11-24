@@ -2,7 +2,7 @@
 
   <!-- Filtros -->
   <app-ui-filter-bar (onSearch)="applyFilters()" [showSearch]="true"
-    [showAdd]="!readOnly()" addLabel="Nueva No Objeción" (onAdd)="openRegisterModal()">
+    [showAdd]="false">
     <div class="filter-group filter-group--search">
       <label class="filter-label" for="no-objecion-search">Buscar</label>
       <div class="filter-search-wrap">
@@ -92,14 +92,10 @@
       [ariaLabel]="row.archivoUrl ? 'Descargar documento' : 'Sin documento adjunto'"
       (onClick)="downloadDocument(row.archivoUrl)" />
     @if (!readOnly()) {
-      <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit"
-        [ariaLabel]="motivoNoModificable(row) ? 'No se puede editar: ' + motivoNoModificable(row) : 'Editar'"
-        [disabled]="!!motivoNoModificable(row)"
-        (onClick)="editNoObjecion(row.id)" />
-      <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete"
-        [ariaLabel]="motivoNoModificable(row) ? 'No se puede eliminar: ' + motivoNoModificable(row) : 'Eliminar'"
-        [disabled]="!!motivoNoModificable(row)"
-        (onClick)="deleteNoObjecion(row.id)" />
+      @if (evaluacionDe(row); as evaluacionId) {
+        <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit_note" [disabled]="!puedeOperarFinanzas()"
+          ariaLabel="Abrir su evaluación" (onClick)="abrirEvaluacion(evaluacionId)" />
+      }
       <!-- ADR 0012 Fase 4: rebaja parcial o anulación del saldo no solicitado -->
       @if (puedeRebajar(row)) {
         <ui-button iconOnly appearance="soft" severity="warning" size="sm" icon="content_cut"
@@ -109,16 +105,6 @@
     }
   </div>
 </ng-template>
-
-<!-- Modal -->
-@if (showModal()) {
-  <app-no-objecion-modal
-    [convenioId]="convenioId()"
-    [mode]="modalMode()"
-    [noObjecionId]="selectedNoObjecionId()"
-    (onClose)="handleModalClose($event)">
-  </app-no-objecion-modal>
-}
 
 <!-- Modal de rebaja / anulación de saldo (ADR 0012 Fase 4) -->
 @if (showRebajaModal()) {

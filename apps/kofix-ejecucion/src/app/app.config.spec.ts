@@ -25,7 +25,6 @@ import { GetConvenioByIdUseCase } from './domain/usecases/get-convenio-by-id.use
 import { GetTodosConveniosUseCase } from './domain/usecases/get-todos-convenios.usecase';
 import { GetVigenteConveniosUseCase } from './domain/usecases/get-vigente-convenios.usecase';
 import { GetNoObjecionesByConvenioUseCase } from './domain/usecases/no-objecion/get-no-objeciones.usecase';
-import { SaveNoObjecionUseCase } from './domain/usecases/no-objecion/save-no-objecion.usecase';
 import { GetProgramacionByConvenioUseCase } from './domain/usecases/programacion/get-programacion.usecase';
 import { SaveProgramacionUseCase } from './domain/usecases/programacion/save-programacion.usecase';
 import { DeleteRendicionUseCase } from './domain/usecases/rendicion/delete-rendicion.usecase';
@@ -66,7 +65,6 @@ describe('DI wiring (app.config)', () => {
         GetTodosConveniosUseCase,
         GetVigenteConveniosUseCase,
         GetNoObjecionesByConvenioUseCase,
-        SaveNoObjecionUseCase,
         GetProgramacionByConvenioUseCase,
         SaveProgramacionUseCase,
         DeleteRendicionUseCase,
