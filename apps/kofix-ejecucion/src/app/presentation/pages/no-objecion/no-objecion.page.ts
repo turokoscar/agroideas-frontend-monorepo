@@ -5,9 +5,12 @@ import { StatusType, TableColumn, UIButtonComponent, UiDataTableComponent, UiFil
 import { ChangeDetectionStrategy, Component, Input, OnInit, computed, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NoObjecionModalComponent } from '../../components/no-objecion-modal/no-objecion-modal.component';
 import { NoObjecionItemsModalComponent } from '../../components/no-objecion-items-modal/no-objecion-items-modal.component';
 import { NoObjecionRebajaModalComponent } from '../../components/no-objecion-rebaja-modal/no-objecion-rebaja-modal.component';
+import { EvaluacionResumen } from '../../../domain/models/evaluacion-no-objecion.model';
+import { EvaluacionNoObjecionRepository } from '../../../domain/repositories/evaluacion-no-objecion.repository';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
 import { finalize } from 'rxjs/operators';
@@ -35,12 +38,16 @@ export class NoObjecionPageComponent implements OnInit {
     readOnly = input<boolean>(false);
 
     private noObjecionRepo = inject(NoObjecionRepository);
+    private evaluacionRepo = inject(EvaluacionNoObjecionRepository);
+    private router = inject(Router);
     private alertService = inject(AlertService);
     private permissionService = inject(PermissionService);
 
     /** Rebajar / anular saldo exige el mismo permiso que la API (ADR 0012 Fase 4). */
     protected readonly puedeOperarFinanzas = computed(() => this.permissionService.hasPermission(PERMISSIONS.OPERACIONES_FINANCIERAS));
 
+    /** Evaluaciones de proveedores del convenio (API ADR-032 entrega 2). */
+    evaluaciones = signal<EvaluacionResumen[]>([]);
     noObjeciones = signal<NoObjecion[]>([]);
     loading = signal(false);
     totalRecords = signal(0);
@@ -75,6 +82,7 @@ export class NoObjecionPageComponent implements OnInit {
     ];
 
     private statusMap: Record<string, StatusType> = {
+        'BORRADOR': 'Pendiente',
         'PENDIENTE': 'Pendiente',
         'APROBADO':  'Aprobado',
         'RECHAZADO': 'Rechazado',
@@ -102,6 +110,34 @@ export class NoObjecionPageComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadNoObjeciones();
+        this.loadEvaluaciones();
+    }
+
+    loadEvaluaciones(): void {
+        const id = this.convenioId();
+        if (!id) return;
+        this.evaluacionRepo.getByPostulante(id).subscribe({ next: e => this.evaluaciones.set(e), error: () => undefined });
+    }
+
+    nuevaEvaluacion(): void {
+        this.evaluacionRepo.crear(this.convenioId()).subscribe({
+            next: id => this.abrirEvaluacion(id),
+            error: err => this.alertService.show('Error', err?.error?.mensaje || 'No se pudo crear la evaluación.', 'error')
+        });
+    }
+
+    abrirEvaluacion(id: number): void {
+        this.router.navigate(['/main/ejecucion', this.convenioId(), 'evaluaciones', id]);
+    }
+
+    eliminarEvaluacion(id: number): void {
+        this.alertService.confirm('¿Eliminar la evaluación?', 'Se perderán los datos ingresados.').then(r => {
+            if (!r.isConfirmed) return;
+            this.evaluacionRepo.eliminar(id).subscribe({
+                next: () => this.loadEvaluaciones(),
+                error: err => this.alertService.show('Error', err?.error?.mensaje || 'No se pudo eliminar la evaluación.', 'error')
+            });
+        });
     }
 
     applyFilters(): void {
@@ -142,6 +178,7 @@ export class NoObjecionPageComponent implements OnInit {
     /** Motivo por el que no se puede editar ni eliminar, o null si se puede. */
     motivoNoModificable(row: NoObjecion): string | null {
         if (this.estaAprobada(row)) return 'está aprobada';
+        if (this.evaluaciones().some(e => e.noObjecionId === row.id)) return 'se gestiona desde su evaluación';
         return this.tieneMovimientos(row) ? 'tiene desembolsos o rebajas' : null;
     }
 

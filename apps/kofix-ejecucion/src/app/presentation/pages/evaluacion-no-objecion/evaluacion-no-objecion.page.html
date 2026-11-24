@@ -1,0 +1,289 @@
+@if (cargando()) {
+  <ui-state kind="loading" message="Cargando la evaluación…" />
+} @else if (error()) {
+  <ui-state kind="error" [message]="error()!" retryLabel="" framed />
+} @else {
+@if (evaluacion(); as e) {
+<div class="page-container">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <ui-button severity="subtle" iconOnly icon="arrow_back" ariaLabel="Volver" (onClick)="volver()" />
+      <div class="min-w-0">
+        <h2 class="text-lg font-bold text-slate-900">Evaluación de proveedores N° {{ e.id }}</h2>
+        <p class="text-xs text-slate-500 truncate">{{ propuestas()?.razonSocial }}</p>
+      </div>
+      <app-ui-status-pill [status]="estadoPill(e.estado)" [text]="e.estado"></app-ui-status-pill>
+    </div>
+    <div class="text-xs" aria-live="polite" data-testid="estado-guardado">
+      @if (errorGuardado()) {
+        <span class="text-red-600 font-semibold">{{ errorGuardado() }}</span>
+        <ui-button size="sm" appearance="soft" severity="danger" label="Reintentar" (onClick)="guardar()" />
+      } @else if (guardando()) { <span class="text-slate-500">Guardando…</span> }
+      @else if (pendienteGuardar()) { <span class="text-amber-600">Cambios sin guardar</span> }
+      @else if (e.editable) { <span class="text-emerald-600">Guardado</span> }
+    </div>
+  </div>
+
+  @if (!e.editable) {
+    <div class="text-xs bg-slate-50 border border-slate-200 rounded-lg p-3">La evaluación está en estado {{ e.estado }}: solo lectura.</div>
+  } @else if (e.noObjecionId && e.observacionSupervisor) {
+    <div class="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3"><b>Motivo de la devolución o rechazo:</b> {{ e.observacionSupervisor }}</div>
+  }
+
+  <div class="flex flex-wrap border-b border-slate-200" role="tablist">
+    @for (p of pasos; track p.id) {
+      <button type="button" role="tab" [attr.aria-selected]="paso() === p.id" (click)="paso.set(p.id)"
+        class="py-2.5 px-4 text-xs font-semibold border-b-2 transition-all"
+        [class.border-primary]="paso() === p.id" [class.text-primary]="paso() === p.id"
+        [class.border-transparent]="paso() !== p.id">{{ p.titulo }}</button>
+    }
+  </div>
+
+  <fieldset [disabled]="!e.editable" class="bg-white border border-slate-200 rounded-xl p-5 space-y-5 min-w-0">
+
+  @switch (paso()) {
+  @case ('solicitud') {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="form-field"><label class="form-label" for="ev-carta">Carta de la OA N° *</label>
+        <input id="ev-carta" class="form-input" maxlength="50" [(ngModel)]="e.cartaOa" (ngModelChange)="cambio()" /></div>
+      <div class="form-field"><label class="form-label" for="ev-fcarta">Fecha de la carta *</label>
+        <input id="ev-fcarta" type="date" class="form-input" [(ngModel)]="e.fechaCartaOa" (ngModelChange)="cambio()" /></div>
+      <div class="form-field"><label class="form-label" for="ev-frec">Fecha de recepción *</label>
+        <input id="ev-frec" type="date" class="form-input" [(ngModel)]="e.fechaRecepcion" (ngModelChange)="cambio()" /></div>
+      <div class="form-field"><label class="form-label" for="ev-exp">Expediente *</label>
+        <input id="ev-exp" class="form-input" maxlength="50" [(ngModel)]="e.expediente" (ngModelChange)="cambio()" /></div>
+      <div class="form-field"><label class="form-label" for="ev-sgd">Expediente SGD</label>
+        <input id="ev-sgd" class="form-input" maxlength="50" [(ngModel)]="e.expedienteSgd" (ngModelChange)="cambio()" /></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="form-field"><label class="form-label" for="ev-poa">POA</label>
+          <input id="ev-poa" class="form-input" maxlength="50" [placeholder]="propuestas()?.poa || ''" [(ngModel)]="e.poa" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-pc">Paso crítico *</label>
+          <input id="ev-pc" class="form-input" maxlength="50" [(ngModel)]="e.pasoCritico" (ngModelChange)="cambio()" /></div>
+      </div>
+      <div class="form-field"><label class="form-label" for="ev-evaluador">Especialista (DE:) *</label>
+        <input id="ev-evaluador" class="form-input" maxlength="200" [(ngModel)]="e.evaluador" (ngModelChange)="cambio()" /></div>
+      <div class="form-field"><label class="form-label" for="ev-cargo">Cargo del evaluador *</label>
+        <select id="ev-cargo" class="form-select" [(ngModel)]="e.cargoEvaluador" (ngModelChange)="cambio()">
+          <option [ngValue]="null">Seleccione…</option><option value="Especialista">Especialista</option>
+          <option value="Locador de servicio">Locador de servicio</option><option value="Monitor externo">Monitor externo</option>
+        </select></div>
+    </div>
+
+    <div>
+      <h4 class="text-xs font-semibold text-slate-800 mb-2">Documentos del expediente</h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+        @for (d of documentos; track d.campo) {
+          <div class="flex items-center justify-between text-xs py-1 border-b border-slate-100">
+            <span>{{ d.nombre }}</span>
+            <span class="flex gap-3">
+              <label class="flex items-center gap-1"><input type="radio" [name]="d.campo" [value]="true" [(ngModel)]="e[d.campo]" (ngModelChange)="cambio()" /> Sí</label>
+              <label class="flex items-center gap-1"><input type="radio" [name]="d.campo" [value]="false" [(ngModel)]="e[d.campo]" (ngModelChange)="cambio()" /> No</label>
+            </span>
+          </div>
+        }
+      </div>
+      <div class="form-field mt-3"><label class="form-label" for="ev-obsexp">Observaciones del expediente</label>
+        <textarea id="ev-obsexp" rows="2" maxlength="2000" class="form-textarea" [(ngModel)]="e.observacionExpediente" (ngModelChange)="cambio()"></textarea></div>
+    </div>
+
+    <details>
+      <summary class="text-xs font-semibold text-slate-800 cursor-pointer">Antecedentes opcionales (si se dejan vacíos, no se imprimen)</summary>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+        <div class="form-field"><label class="form-label" for="ev-ip">Informe de verificación de proveedor N°</label><input id="ev-ip" class="form-input" maxlength="50" [(ngModel)]="e.informeProveedor" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-fip">Fecha</label><input id="ev-fip" type="date" class="form-input" [(ngModel)]="e.fechaInformeProveedor" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-cip">Consultor</label><input id="ev-cip" class="form-input" maxlength="200" [(ngModel)]="e.consultorProveedor" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-ii">Informe de infraestructura N°</label><input id="ev-ii" class="form-input" maxlength="50" [(ngModel)]="e.informeInfraestructura" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-fii">Fecha</label><input id="ev-fii" type="date" class="form-input" [(ngModel)]="e.fechaInformeInfraestructura" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-cii">Consultor</label><input id="ev-cii" class="form-input" maxlength="200" [(ngModel)]="e.consultorInfraestructura" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-co">Carta de observaciones N°</label><input id="ev-co" class="form-input" maxlength="50" [(ngModel)]="e.cartaObservaciones" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-fco">Fecha</label><input id="ev-fco" type="date" class="form-input" [(ngModel)]="e.fechaCartaObservaciones" (ngModelChange)="cambio()" /></div>
+        <span class="hidden md:block"></span>
+        <div class="form-field"><label class="form-label" for="ev-le">Levantamiento: carta N°</label><input id="ev-le" class="form-input" maxlength="50" [(ngModel)]="e.levantamiento" (ngModelChange)="cambio()" /></div>
+        <div class="form-field"><label class="form-label" for="ev-fle">Fecha</label><input id="ev-fle" type="date" class="form-input" [(ngModel)]="e.fechaLevantamiento" (ngModelChange)="cambio()" /></div>
+      </div>
+    </details>
+  }
+
+  @case ('items') {
+    @if (disponibles().length > 0 && e.editable) {
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-semibold text-slate-800">Ítems con saldo ({{ disponibles().length }})</h4>
+          <ui-button size="sm" appearance="soft" severity="primary" label="Agregar todos" (onClick)="agregarTodos()" />
+        </div>
+        <div class="max-h-56 overflow-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
+          @for (p of disponibles(); track p.id) {
+            <button type="button" class="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex justify-between gap-3" (click)="agregarItem(p)">
+              <span>{{ p.codigo }}. {{ p.nombre }}</span>
+              <span class="text-slate-500 shrink-0">{{ p.saldoFisico | number:'1.0-5' }} · {{ moneda(p.saldoFinanciero) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead><tr class="text-left text-slate-500 border-b border-slate-200"><th class="py-2">Ítem</th><th class="w-32">Cantidad</th><th class="text-right">Aprobado</th><th class="text-right">AGROIDEAS</th><th class="text-right">OA</th><th></th></tr></thead>
+        <tbody>
+          @for (i of e.items; track i.itemMlId) {
+            <tr class="border-b border-slate-100">
+              <td class="py-2 pr-2">{{ nombre(i.itemMlId) }} <span class="text-slate-400">{{ calculado(i.itemMlId)?.unidadMedida }}</span></td>
+              <td><input type="number" min="0" step="any" class="form-input" [attr.aria-label]="'Cantidad de ' + nombre(i.itemMlId)" [(ngModel)]="i.cantidad" (ngModelChange)="cambio()" /></td>
+              <td class="text-right">{{ moneda(calculado(i.itemMlId)?.aprobado?.base) }}</td>
+              <td class="text-right">{{ moneda(calculado(i.itemMlId)?.aprobado?.agroideas) }}</td>
+              <td class="text-right">{{ moneda(calculado(i.itemMlId)?.aprobado?.oa) }}</td>
+              <td class="text-right"><ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete" ariaLabel="Quitar ítem" [disabled]="!e.editable" (onClick)="quitarItem(i.itemMlId)" /></td>
+            </tr>
+          } @empty { <tr><td colspan="6" class="py-8 text-center text-slate-400">Agregue los ítems de la solicitud.</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @case ('cotizaciones') {
+    @if (e.items.length === 0) { <p class="text-xs text-slate-500">Primero agregue los ítems.</p> }
+    @else {
+    <div class="flex flex-wrap gap-2">
+      @for (c of e.cotizaciones; track $index) {
+        <button type="button" (click)="hojaActiva.set($index)" class="px-3 py-1.5 rounded-lg border text-xs"
+          [class.border-primary]="hojaActiva() === $index" [class.text-primary]="hojaActiva() === $index" [class.border-slate-200]="hojaActiva() !== $index">
+          {{ c.razonSocial || c.ruc || 'Nueva hoja' }}
+        </button>
+      }
+      <ui-button size="sm" appearance="soft" severity="primary" icon="add" label="Nueva hoja" [disabled]="!e.editable" (onClick)="agregarHoja()" />
+    </div>
+    @if (hoja(); as h) {
+      <div class="grid grid-cols-1 md:grid-cols-[180px_160px_1fr_auto] gap-3 items-end">
+        <div class="form-field"><label class="form-label" for="hoja-ruc">RUC</label>
+          <input id="hoja-ruc" data-captura inputmode="numeric" maxlength="11" class="form-input" [ngModel]="h.ruc" (ngModelChange)="cambioRuc(h, $event)" (keydown.enter)="siguiente($event)" /></div>
+        <div class="form-field"><label class="form-label" for="hoja-fecha">Fecha de cotización</label>
+          <input id="hoja-fecha" data-captura type="date" class="form-input" [(ngModel)]="h.fechaCotizacion" (ngModelChange)="cambio()" (keydown.enter)="siguiente($event)" /></div>
+        <div class="text-xs pb-2">
+          @if (rucRepetido(h)) { <span class="text-red-600">Ya existe una hoja con este RUC.</span> }
+          @else if (h.verificado) {
+            <b>{{ h.razonSocial }}</b><br />
+            <span [class.text-emerald-600]="activoYHabido(h)" [class.text-red-600]="!activoYHabido(h)">{{ h.estadoSunat }} / {{ h.condicionSunat }}</span>
+            @if (h.fechaInscripcion) { <span class="text-slate-500"> · Inscrito {{ h.fechaInscripcion | date:'dd/MM/yyyy' }}</span> }
+          } @else if (h.verificado === false) {
+            <span class="text-amber-600">SUNAT no respondió: no verificado.</span>
+            <input class="form-input mt-1" aria-label="Razón social" placeholder="Razón social" maxlength="300" [(ngModel)]="h.razonSocial" (ngModelChange)="cambio()" />
+          } @else if (rucValido(h.ruc)) { <span class="text-slate-500">Consultando SUNAT…</span> }
+        </div>
+        <ui-button iconOnly appearance="soft" severity="danger" icon="delete" ariaLabel="Quitar hoja" [disabled]="!e.editable" (onClick)="quitarHoja()" />
+      </div>
+      <table class="w-full text-xs">
+        <thead><tr class="text-left text-slate-500 border-b border-slate-200"><th class="py-2">Ítem</th><th class="text-right w-20">Cant.</th><th class="w-36">Precio unitario</th><th class="text-right w-32">Total</th><th class="w-40">Cumple esp. / TDR</th></tr></thead>
+        <tbody>
+          @for (i of e.items; track i.itemMlId) {
+            @let p = precio(h, i.itemMlId);
+            <tr class="border-b border-slate-100">
+              <td class="py-1.5 pr-2">{{ nombre(i.itemMlId) }}</td>
+              <td class="text-right pr-3">{{ i.cantidad | number:'1.0-5' }}</td>
+              <td><input data-captura type="number" min="0" step="any" class="form-input text-right" [attr.aria-label]="'Precio de ' + nombre(i.itemMlId)" [(ngModel)]="p.precioUnitario" (ngModelChange)="cambioPrecio(p)" (keydown.enter)="siguiente($event)" /></td>
+              <td class="text-right">{{ p.precioUnitario ? moneda(i.cantidad * p.precioUnitario) : '' }}</td>
+              <td>@if (p.precioUnitario) {
+                <select class="form-select" [attr.aria-label]="'Cumple ' + nombre(i.itemMlId)" [(ngModel)]="p.cumple" (ngModelChange)="cambio()"><option [ngValue]="null">Sin marcar</option><option [ngValue]="true">Sí</option><option [ngValue]="false">No</option></select>
+              }</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="flex gap-2"><ui-button size="sm" appearance="soft" severity="success" label="Toda la hoja cumple" [disabled]="!e.editable" (onClick)="aplicarCumple(h, true)" /></div>
+        <div class="flex items-end gap-3 text-xs">
+          <div class="form-field"><label class="form-label" for="hoja-total">Total del papel (opcional)</label><input id="hoja-total" data-captura type="number" step="any" class="form-input text-right" [(ngModel)]="totalPapel[h.ruc]" /></div>
+          <div class="pb-2">Suma: <b>{{ moneda(total(h)) }}</b>
+            @if (diferenciaPapel(h); as dif) { <span class="text-red-600 font-semibold"> · No cuadra por {{ moneda(dif) }}</span> }
+            @else if (totalPapel[h.ruc]) { <span class="text-emerald-600"> · Cuadra</span> }
+          </div>
+        </div>
+      </div>
+    }
+    }
+  }
+
+  @case ('evaluacion') {
+    @if (e.editable) { <ui-button size="sm" appearance="soft" severity="primary" icon="done_all" label="Adjudicar sugeridos" (onClick)="adjudicarSugeridos()" /> }
+    @for (i of e.items; track i.itemMlId) {
+      @let c = calculado(i.itemMlId);
+      <div class="border border-slate-200 rounded-lg p-4 space-y-3">
+        <div class="flex flex-wrap justify-between gap-2">
+          <div class="text-xs"><b>{{ nombre(i.itemMlId) }}</b> <span class="text-slate-500">· {{ i.cantidad | number:'1.0-5' }} {{ c?.unidadMedida }} · Aprobado {{ moneda(c?.aprobado?.base) }} · AGROIDEAS {{ c?.porcentajeAgroideas }}%</span>
+            @if (c?.especificaciones) { <p class="text-[11px] text-slate-500 mt-1">{{ c?.especificaciones }}</p> }
+          </div>
+          <select class="form-select w-40" [attr.aria-label]="'Resultado de ' + nombre(i.itemMlId)" [ngModel]="i.resultado" (ngModelChange)="cambioResultado(i.itemMlId, $event)">
+            <option [ngValue]="null">Sin resultado</option><option ngValue="VALIDADO">Validado</option><option ngValue="NO_VALIDADO">No validado</option></select>
+        </div>
+        <table class="w-full text-xs">
+          <thead><tr class="text-left text-slate-500 border-b border-slate-200"><th class="w-10"></th><th>Proveedor</th><th>SUNAT</th><th>Cumple</th><th class="text-right">Precio</th><th class="text-right">Total</th></tr></thead>
+          <tbody>
+            @for (o of ofertas(i.itemMlId); track o.hoja.ruc) {
+              <tr class="border-b border-slate-100" [class.bg-emerald-50]="o.precio.adjudicado">
+                <td class="py-1.5"><input type="radio" [name]="'adj-' + i.itemMlId" [checked]="o.precio.adjudicado" [disabled]="i.resultado === 'NO_VALIDADO'" [attr.aria-label]="'Adjudicar a ' + (o.hoja.razonSocial || o.hoja.ruc)" (change)="elegir(i.itemMlId, o.hoja.ruc)" /></td>
+                <td>{{ o.hoja.razonSocial || o.hoja.ruc }} @if (c?.rucSugerido === o.hoja.ruc) { <span class="text-emerald-700">(menor precio que cumple)</span> }</td>
+                <td [class.text-red-600]="!activoYHabido(o.hoja)">{{ o.hoja.verificado ? o.hoja.estadoSunat + ' / ' + o.hoja.condicionSunat : 'No verificado' }}</td>
+                <td>{{ o.precio.cumple === null ? '—' : o.precio.cumple ? 'Sí' : 'No' }}</td>
+                <td class="text-right">{{ moneda(o.precio.precioUnitario) }}</td>
+                <td class="text-right">{{ moneda(i.cantidad * (o.precio.precioUnitario || 0)) }}</td>
+              </tr>
+            } @empty { <tr><td colspan="6" class="py-3 text-center text-slate-400">Sin cotizaciones.</td></tr> }
+          </tbody>
+        </table>
+        @if (c?.adjudicado; as m) {
+          <div class="flex flex-wrap gap-4 text-xs"><span>AGROIDEAS <b>{{ moneda(m.agroideas) }}</b></span><span>OA <b>{{ moneda(m.oa) }}</b></span>
+            <span [class.text-amber-700]="m.diferencia > 0">Diferencia (OA) <b>{{ moneda(m.diferencia) }}</b></span></div>
+        }
+        @if (i.resultado === 'NO_VALIDADO') {
+          <div class="form-field"><label class="form-label" [for]="'mot-' + i.itemMlId">Motivo *</label><textarea [id]="'mot-' + i.itemMlId" rows="2" maxlength="1000" class="form-textarea" [(ngModel)]="i.motivo" (ngModelChange)="cambio()"></textarea></div>
+        }
+        @if (ofertas(i.itemMlId).length < 3) {
+          <div class="form-field"><label class="form-label" [for]="'jc-' + i.itemMlId">Justificación por menos de tres cotizaciones *</label><textarea [id]="'jc-' + i.itemMlId" rows="1" maxlength="1000" class="form-textarea" [(ngModel)]="i.justificacionCotizaciones" (ngModelChange)="cambio()"></textarea></div>
+        }
+        @if (requiereJustificarPrecio(i.itemMlId)) {
+          <div class="form-field"><label class="form-label" [for]="'jp-' + i.itemMlId">Justificación: no es el menor precio *</label><textarea [id]="'jp-' + i.itemMlId" rows="1" maxlength="1000" class="form-textarea" [(ngModel)]="i.justificacionPrecio" (ngModelChange)="cambio()"></textarea></div>
+        }
+        <div class="form-field">
+          <div class="flex justify-between"><label class="form-label" [for]="'obs-' + i.itemMlId">Observación</label>
+            @if (e.editable) { <button type="button" class="text-[11px] text-primary" (click)="usarTextoBase(i.itemMlId)">Usar texto base</button> }</div>
+          <textarea [id]="'obs-' + i.itemMlId" rows="2" maxlength="2000" class="form-textarea" [(ngModel)]="i.observacion" (ngModelChange)="cambio()"></textarea>
+        </div>
+      </div>
+    } @empty { <p class="text-xs text-slate-500">Primero agregue los ítems.</p> }
+  }
+
+  @case ('envio') {
+    <div class="form-field"><label class="form-label" for="ev-com">Comentarios y/u observaciones del informe</label>
+      <textarea id="ev-com" rows="3" maxlength="2000" class="form-textarea" [(ngModel)]="e.comentario" (ngModelChange)="cambio()"></textarea></div>
+
+    @if (pendientes().length > 0) {
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-xs text-amber-900" data-testid="pendientes">
+        <b>Falta completar ({{ pendientes().length }}):</b>
+        <ul class="list-disc pl-5 mt-1 space-y-0.5">@for (p of pendientes(); track $index) { <li>{{ p }}</li> }</ul>
+      </div>
+    } @else { <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">La evaluación está completa.</div> }
+
+    <div class="flex flex-wrap items-center gap-3">
+      <ui-button icon="description" label="Generar informe (Word)" severity="primary" [loading]="procesando()" [disabled]="!e.editable || pendientes().length > 0" (onClick)="generarInforme()" />
+      @if (informeVigente()) { <span class="text-xs text-emerald-700">Informe generado con los datos actuales.</span> }
+      @else if (e.versionInforme) { <span class="text-xs text-amber-700">La evaluación cambió: genere el informe de nuevo.</span> }
+    </div>
+
+    <div class="border-t border-slate-200 pt-4 space-y-3">
+      <h4 class="text-xs font-semibold text-slate-800">Informe firmado</h4>
+      <p class="text-xs text-slate-500">El Word sale sin número ni fecha: los asigna el SGD. Regístrelos aquí al subir el PDF firmado.</p>
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_180px_1fr] gap-3 items-end">
+        <div class="form-field"><label class="form-label" for="ev-num">Número del informe *</label><input id="ev-num" class="form-input" maxlength="50" placeholder="Ej. 166-2026-NSAC" [(ngModel)]="numeroInforme" /></div>
+        <div class="form-field"><label class="form-label" for="ev-finf">Fecha del informe *</label><input id="ev-finf" type="date" class="form-input" [(ngModel)]="fechaInforme" /></div>
+        <div class="form-field"><label class="form-label" for="ev-pdf">PDF firmado *</label>
+          @if (archivoInforme(); as f) { <ui-file-chip [name]="f.name" [size]="f.size" (onRemove)="archivoInforme.set(null)" /> }
+          @else { <input id="ev-pdf" type="file" accept="application/pdf" class="text-xs" (change)="seleccionarInforme($event)" /> }
+        </div>
+      </div>
+      <div class="flex justify-end"><ui-button icon="send" label="Enviar a aprobación" severity="success" [disabled]="!puedeEnviar()" (onClick)="enviar()" /></div>
+    </div>
+  }
+  }
+  </fieldset>
+</div>
+}
+}

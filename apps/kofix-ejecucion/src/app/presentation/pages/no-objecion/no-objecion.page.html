@@ -21,6 +21,28 @@
     </div>
   </app-ui-filter-bar>
 
+  <!-- Evaluaciones de proveedores (API ADR-032 entrega 2) -->
+  <section class="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-slate-800">Evaluaciones de proveedores</h3>
+      @if (!readOnly() && puedeOperarFinanzas()) {
+        <ui-button size="sm" severity="primary" icon="add" label="Nueva evaluación" (onClick)="nuevaEvaluacion()" />
+      }
+    </div>
+    @for (e of evaluaciones(); track e.id) {
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs border-t border-slate-100 pt-2">
+        <span><b>N° {{ e.id }}</b> · {{ e.cartaOa || 'Sin carta' }} · {{ e.numItems }} ítems @if (e.numeroInforme) { · Informe {{ e.numeroInforme }} }</span>
+        <span class="flex items-center gap-2">
+          <app-ui-status-pill [status]="getBadgeStatus(e.estado)" [text]="e.estado"></app-ui-status-pill>
+          <ui-button iconOnly appearance="soft" severity="primary" size="sm" icon="edit_note" [ariaLabel]="'Abrir evaluación ' + e.id" [disabled]="!puedeOperarFinanzas()" (onClick)="abrirEvaluacion(e.id)" />
+          @if (!readOnly() && puedeOperarFinanzas() && !e.noObjecionId) {
+            <ui-button iconOnly appearance="soft" severity="danger" size="sm" icon="delete" [ariaLabel]="'Eliminar evaluación ' + e.id" (onClick)="eliminarEvaluacion(e.id)" />
+          }
+        </span>
+      </div>
+    } @empty { <p class="text-xs text-slate-400">Sin evaluaciones registradas.</p> }
+  </section>
+
   <!-- Tabla -->
   <app-ui-data-table
     [data]="noObjeciones()"

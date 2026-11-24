@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { AlertService } from '@agroideas/feedback';
 import { PermissionService } from '@agroideas/security';
 import { NoObjecionPageComponent } from './no-objecion.page';
+import { EvaluacionNoObjecionRepository } from '../../../domain/repositories/evaluacion-no-objecion.repository';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { NoObjecion } from '../../../domain/models/no-objecion.model';
 
@@ -38,6 +39,7 @@ describe('NoObjecionPageComponent', () => {
             imports: [NoObjecionPageComponent],
             providers: [
                 { provide: NoObjecionRepository, useValue: mockRepo },
+                { provide: EvaluacionNoObjecionRepository, useValue: { getByPostulante: () => of([]) } },
                 { provide: AlertService, useValue: mockAlert },
                 { provide: PermissionService, useValue: mockPermissionService }
             ]

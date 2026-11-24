@@ -79,6 +79,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./presentation/pages/ejecucion-detail/ejecucion-detail.page').then(m => m.EjecucionDetailPageComponent)
             },
             {
+                path: 'ejecucion/:id/evaluaciones/:evaluacionId',
+                canActivate: [permissionGuard],
+                data: { permission: PERMISSIONS.OPERACIONES_FINANCIERAS },
+                loadComponent: () => import('./presentation/pages/evaluacion-no-objecion/evaluacion-no-objecion.page').then(m => m.EvaluacionNoObjecionPageComponent)
+            },
+            {
                 path: 'alertas',
                 canActivate: [permissionGuard],
                 data: { permission: PERMISSIONS.MONITOREO_ALERTAS },

@@ -9,6 +9,7 @@ import { KardexRepository } from '../../../domain/repositories/kardex.repository
 import { DesembolsoRepository } from '../../../domain/repositories/desembolso.repository';
 import { CatalogoRepository } from '../../../domain/repositories/catalogo.repository';
 import { RendicionRepository } from '../../../domain/repositories/rendicion.repository';
+import { EvaluacionNoObjecionRepository } from '../../../domain/repositories/evaluacion-no-objecion.repository';
 import { NoObjecionRepository } from '../../../domain/repositories/no-objecion.repository';
 import { Convenio } from '../../../domain/models/convenio.model';
 
@@ -61,6 +62,7 @@ describe('EjecucionDetailPageComponent', () => {
                 { provide: CatalogoRepository, useValue: mockCatalogoRepo },
                 { provide: RendicionRepository, useValue: mockRendicionRepo },
                 { provide: NoObjecionRepository, useValue: mockNoObjecionRepo },
+                { provide: EvaluacionNoObjecionRepository, useValue: { getByPostulante: () => of([]) } },
                 { provide: AlertService, useValue: mockAlert },
                 { provide: PermissionService, useValue: mockPermissionService },
                 { provide: Router, useValue: mockRouter },
