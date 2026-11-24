@@ -33,6 +33,8 @@ export interface NoObjecion {
     /** Evaluación (API ADR-032): PENDIENTE / APROBADO / RECHAZADO. */
     estadoAprobacion?: string;
     observacionSupervisor?: string;
+    /** BORRADOR / EMITIDA; sin valor si no tiene carta vigente (API ADR-032 entrega 3). */
+    estadoCarta?: string;
     detalles: NoObjecionDetail[];
 }
 

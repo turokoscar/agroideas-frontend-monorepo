@@ -6,6 +6,7 @@ import { ChangeDetectionStrategy, Component, Input, OnInit, computed, inject, si
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NoObjecionCartaModalComponent } from '../../components/no-objecion-carta-modal/no-objecion-carta-modal.component';
 import { NoObjecionItemsModalComponent } from '../../components/no-objecion-items-modal/no-objecion-items-modal.component';
 import { NoObjecionRebajaModalComponent } from '../../components/no-objecion-rebaja-modal/no-objecion-rebaja-modal.component';
 import { EvaluacionResumen } from '../../../domain/models/evaluacion-no-objecion.model';
@@ -25,6 +26,7 @@ import { finalize } from 'rxjs/operators';
         UiStatusPillComponent,
         NoObjecionItemsModalComponent,
         NoObjecionRebajaModalComponent,
+        NoObjecionCartaModalComponent,
         UIButtonComponent
     ],
     templateUrl: './no-objecion.page.html',
@@ -59,6 +61,9 @@ export class NoObjecionPageComponent implements OnInit {
     showRebajaModal = signal(false);
     rebajaNoObjecionId = signal<number | undefined>(undefined);
 
+    /** N.O. cuya carta se muestra (API ADR-032 entrega 3). */
+    cartaDe = signal<NoObjecion | null>(null);
+
     // Modal ligero de solo lectura (ver ítems)
     showItemsModal = signal(false);
     viewingNoObjecionId = signal<number | undefined>(undefined);
@@ -70,6 +75,7 @@ export class NoObjecionPageComponent implements OnInit {
         { field: 'totalMonto', header: 'Adjudicado Vigente', type: 'currency', align: 'right', width: '150px' },
         { field: 'saldoMonto', header: 'Sin Solicitar', type: 'currency', align: 'right', width: '140px' },
         { field: 'estadoAprobacion', header: 'Evaluación', type: 'custom', width: '120px', align: 'center' },
+        { field: 'estadoCarta', header: 'Carta', type: 'custom', width: '110px', align: 'center' },
         { field: 'estadoNombre', header: 'Uso', type: 'custom', width: '120px', align: 'center' },
         { field: 'observacion', header: 'Observación' },
     ];
@@ -79,6 +85,7 @@ export class NoObjecionPageComponent implements OnInit {
         'PENDIENTE': 'Pendiente',
         'APROBADO':  'Aprobado',
         'RECHAZADO': 'Rechazado',
+        'EMITIDA': 'Aprobado',
         // Estados que calcula la API (ADR 0012 Fase 4)
         'Registrado': 'Pendiente',
         'En Uso':     'Activo',
@@ -169,6 +176,16 @@ export class NoObjecionPageComponent implements OnInit {
     /** Rebajar / anular saldo: N.O. aprobada, con permiso OPERACIONES_FINANCIERAS y saldo no solicitado (ADR 0012 Fase 4). */
     puedeRebajar(row: NoObjecion): boolean {
         return this.puedeOperarFinanzas() && this.estaAprobada(row) && (row.saldoMonto || 0) > 0;
+    }
+
+    /** Solo las N.O. aprobadas con evaluación de proveedores tienen carta. */
+    tieneCarta(row: NoObjecion): boolean {
+        return this.estaAprobada(row) && this.evaluacionDe(row) !== null;
+    }
+
+    handleCartaModalClose(refresh: boolean): void {
+        this.cartaDe.set(null);
+        if (refresh) this.loadNoObjeciones();
     }
 
     openRebajaModal(row: NoObjecion): void {

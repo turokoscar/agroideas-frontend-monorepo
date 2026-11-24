@@ -14,6 +14,8 @@ import { DesembolsoRepository } from './domain/repositories/desembolso.repositor
 import { DesembolsoRepositoryImpl } from './data/repositories/desembolso.repository.impl';
 import { NoObjecionRepository } from './domain/repositories/no-objecion.repository';
 import { NoObjecionRepositoryImpl } from './data/repositories/no-objecion.repository.impl';
+import { CartaNoObjecionRepository } from './domain/repositories/carta-no-objecion.repository';
+import { CartaNoObjecionRepositoryImpl } from './data/repositories/carta-no-objecion.repository.impl';
 import { EvaluacionNoObjecionRepository } from './domain/repositories/evaluacion-no-objecion.repository';
 import { EvaluacionNoObjecionRepositoryImpl } from './data/repositories/evaluacion-no-objecion.repository.impl';
 import { ProgramacionRepository } from './domain/repositories/programacion.repository';
@@ -56,6 +58,7 @@ export const repositoryProviders: Provider[] = [
   { provide: AuthRepository, useExisting: AuthRepositoryImpl },
   { provide: DesembolsoRepository, useExisting: DesembolsoRepositoryImpl },
   { provide: NoObjecionRepository, useExisting: NoObjecionRepositoryImpl },
+  { provide: CartaNoObjecionRepository, useExisting: CartaNoObjecionRepositoryImpl },
   { provide: EvaluacionNoObjecionRepository, useExisting: EvaluacionNoObjecionRepositoryImpl },
   { provide: ProgramacionRepository, useExisting: ProgramacionRepositoryImpl },
   { provide: CatalogoRepository, useExisting: CatalogoRepositoryImpl },

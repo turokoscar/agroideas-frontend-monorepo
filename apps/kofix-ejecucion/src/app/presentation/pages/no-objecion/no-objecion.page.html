@@ -73,6 +73,11 @@
           <app-ui-status-pill [status]="getBadgeStatus(row.estadoAprobacion)" [text]="row.estadoAprobacion"></app-ui-status-pill>
         </span>
       }
+      @if (col.field === 'estadoCarta') {
+        @if (row.estadoCarta) {
+          <app-ui-status-pill [status]="getBadgeStatus(row.estadoCarta)" [text]="row.estadoCarta"></app-ui-status-pill>
+        } @else { — }
+      }
       @if (col.field === 'estadoNombre') {
         <app-ui-status-pill [status]="getBadgeStatus(row.estadoNombre)" [text]="row.estadoNombre"></app-ui-status-pill>
       }
@@ -91,6 +96,10 @@
       [disabled]="!row.archivoUrl"
       [ariaLabel]="row.archivoUrl ? 'Descargar documento' : 'Sin documento adjunto'"
       (onClick)="downloadDocument(row.archivoUrl, row.numeroDocumento)" />
+    @if (tieneCarta(row)) {
+      <ui-button iconOnly appearance="soft" severity="success" size="sm" icon="mail"
+        ariaLabel="Carta de No Objeción" (onClick)="cartaDe.set(row)" />
+    }
     @if (!readOnly()) {
       @if (evaluacionDe(row); as evaluacionId) {
         <ui-button iconOnly appearance="soft" severity="accent" size="sm" icon="edit_note" [disabled]="!puedeOperarFinanzas()"
@@ -112,6 +121,12 @@
     [noObjecionId]="rebajaNoObjecionId()!"
     (closed)="handleRebajaModalClose($event)">
   </app-no-objecion-rebaja-modal>
+}
+
+<!-- Carta de No Objeción (API ADR-032 entrega 3) -->
+@if (cartaDe(); as no) {
+  <app-no-objecion-carta-modal [noObjecionId]="no.id!" [readOnly]="readOnly()" [numSolicitudes]="no.numSolicitudes ?? 0"
+    (closed)="handleCartaModalClose($event)" />
 }
 
 <!-- Modal ligero de solo lectura -->
